@@ -1,78 +1,41 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"log"
 	"os"
-
-	"github.com/muidea/magicToolkit/core"
 )
 
-var defaultTemplate = `
-{
-	"name": "%s",
-	"items": [
-		{
-			"name": "cmd",
-			"type": 0,
-			"subItems": [
-				{
-					"name": "%s",
-					"type": 0,
-					"subItems": [
-						{
-							"name": "main.go",
-							"type": 1,
-							"subItems": []
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "core",
-			"type": 0,
-			"subItems": [
-				{
-					"name": "core.go",
-					"type": 1,
-					"subItems": []
-				},
-				{
-					"name": "route",
-					"type": 0,
-					"subItems": []
-				},
-				{
-					"name": "handler",
-					"type": 0,
-					"subItems": []
-				}								
-			]
-		},
-		{
-			"name": "model",
-			"type": 0,
-			"subItems": []
-		}
-	]
+type action struct {
+	name         string
+	value        bool
+	defaultValue bool
+	description  string
+	funcPtr      func(string)
 }
-`
+
+var actionList = []*action{}
+var help = false
 
 func main() {
+	for idx := range actionList {
+		val := actionList[idx]
+		flag.BoolVar(&val.value, val.name, val.defaultValue, val.description)
+	}
+
+	flag.Parse()
 	curPath, curErr := os.Getwd()
 	if curErr != nil {
 		log.Printf("get current work directory failed, err:%s", curErr.Error())
 		return
 	}
 
-	core := &core.Core{}
-
-	data := fmt.Sprintf(defaultTemplate, "TT", "TT")
-
-	curErr = core.Create(curPath, []byte(data))
-	if curErr != nil {
-		log.Printf("Create template failed, err:%s", curErr.Error())
-		return
+	for _, val := range actionList {
+		if val.value {
+			val.funcPtr(curPath)
+			return
+		}
 	}
+
+	flag.Usage()
 }
