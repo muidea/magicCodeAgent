@@ -71,7 +71,13 @@ var defaultTemplate = `
 		{
 			"name": "config",
 			"type": 0,
-			"subItems": []
+			"subItems": [
+				{
+					"name": "config.go",
+					"type": 1,
+					"subItems": []
+				}
+			]
 		},
 		{
 			"name": "docker",

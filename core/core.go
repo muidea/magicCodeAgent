@@ -82,6 +82,11 @@ func (s *Core) walkItem(itemPath string, item *model.Item) (err error) {
 		return
 	}
 
+	err = createFile(itemPath, item)
+	return
+}
+
+func createFile(itemPath string, item *model.Item) (err error) {
 	fullPath := strings.Join([]string{itemPath, item.Name}, "/")
 	existFlag, existErr := exists(fullPath)
 	if existErr != nil {
@@ -100,14 +105,21 @@ func (s *Core) walkItem(itemPath string, item *model.Item) (err error) {
 	}
 	defer filePtr.Close()
 
-	_, pathName := path.Split(itemPath)
-	if item.Name == "main.go" {
-		pathName = "main"
+	fileExt := ""
+	itemsInfo := strings.Split(item.Name, ".")
+	if len(itemsInfo) > 1 {
+		fileExt = itemsInfo[len(itemsInfo)-1]
 	}
+	switch fileExt {
+	case "go":
+		_, pathName := path.Split(itemPath)
+		if item.Name == "main.go" {
+			pathName = "main"
+		}
 
-	filePtr.WriteString(fmt.Sprintf("package %s", pathName))
-
-	return
+		filePtr.WriteString(fmt.Sprintf("package %s", pathName))
+	}
+	return nil
 }
 
 func exists(itemPath string) (bool, error) {
