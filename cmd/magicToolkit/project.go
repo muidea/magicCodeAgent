@@ -67,6 +67,34 @@ var defaultTemplate = `
 			"name": "model",
 			"type": 0,
 			"subItems": []
+		},
+		{
+			"name": "config",
+			"type": 0,
+			"subItems": []
+		},
+		{
+			"name": "docker",
+			"type": 0,
+			"subItems": [
+				{
+					"name": "bootstrap.sh",
+					"type": 1,
+					"subItems": []
+				},{
+					"name": "build.sh",
+					"type": 1,
+					"subItems": []
+				},{
+					"name": "Dockerfile",
+					"type": 1,
+					"subItems": []
+				},{
+					"name": "wait-for-it.sh",
+					"type": 1,
+					"subItems": []
+				}
+			]
 		}
 	]
 }

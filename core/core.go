@@ -2,8 +2,10 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/muidea/magicToolkit/model"
@@ -26,8 +28,8 @@ func (s *Core) Create(curPath string, data []byte) (err error) {
 	return
 }
 
-func (s *Core) walkTemplate(path string, template *model.Template) (err error) {
-	fullPath := strings.Join([]string{path, template.Name}, "/")
+func (s *Core) walkTemplate(itemPath string, template *model.Template) (err error) {
+	fullPath := strings.Join([]string{itemPath, template.Name}, "/")
 	existFlag, existErr := exists(fullPath)
 	if existErr != nil {
 		err = existErr
@@ -52,9 +54,10 @@ func (s *Core) walkTemplate(path string, template *model.Template) (err error) {
 	return
 }
 
-func (s *Core) walkItem(path string, item *model.Item) (err error) {
+func (s *Core) walkItem(itemPath string, item *model.Item) (err error) {
+	itemPath = strings.ToLower(itemPath)
 	if item.IsDir() {
-		fullPath := strings.Join([]string{path, item.Name}, "/")
+		fullPath := strings.Join([]string{itemPath, item.Name}, "/")
 		existFlag, existErr := exists(fullPath)
 		if existErr != nil {
 			err = existErr
@@ -79,11 +82,36 @@ func (s *Core) walkItem(path string, item *model.Item) (err error) {
 		return
 	}
 
+	fullPath := strings.Join([]string{itemPath, item.Name}, "/")
+	existFlag, existErr := exists(fullPath)
+	if existErr != nil {
+		err = existErr
+		return
+	}
+
+	if existFlag {
+		return
+	}
+
+	filePtr, fileErr := os.Create(fullPath)
+	if fileErr != nil {
+		err = fileErr
+		return
+	}
+	defer filePtr.Close()
+
+	_, pathName := path.Split(itemPath)
+	if item.Name == "main.go" {
+		pathName = "main"
+	}
+
+	filePtr.WriteString(fmt.Sprintf("package %s", pathName))
+
 	return
 }
 
-func exists(path string) (bool, error) {
-	_, err := os.Stat(path)
+func exists(itemPath string) (bool, error) {
+	_, err := os.Stat(itemPath)
 	if err == nil {
 		return true, nil
 	}
