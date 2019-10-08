@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/muidea/magicBatis/client"
 )
 
