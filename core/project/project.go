@@ -1,8 +1,10 @@
-package core
+package project
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -13,6 +15,76 @@ import (
 
 // Core core define
 type Core struct {
+}
+
+func (s *Core) getTemplateFile(fileName string) (ret *os.File, err error) {
+	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
+	if toolKitPath == "" {
+		err = fmt.Errorf("no found toolkitPath")
+		return
+	}
+
+	templatePath := path.Join(toolKitPath, "template")
+	existsFlag, existsErr := exists(templatePath)
+	if !existsFlag || existsErr != nil {
+		err = fmt.Errorf("no found toolkit template path")
+		return
+	}
+
+	templateFile := path.Join(templatePath, fmt.Sprintf("%s.template", fileName))
+	existsFlag, existsErr = exists(templateFile)
+	if !existsFlag || existsErr != nil {
+		err = fmt.Errorf("no found toolkit template file")
+		return
+	}
+
+	ret, err = os.Open(templateFile)
+
+	return
+}
+
+func (s *Core) cloneTemplateFile(fullFilePath string) (err error) {
+	projectName := os.Getenv("projectName")
+	if projectName == "" {
+		err = fmt.Errorf("illegal projectName")
+		return
+	}
+
+	filePtr, fileErr := os.Create(fullFilePath)
+	if fileErr != nil {
+		err = fileErr
+		return
+	}
+	defer filePtr.Close()
+
+	_, fileName := path.Split(fullFilePath)
+	templateFile, templateErr := s.getTemplateFile(fileName)
+	if templateErr == nil {
+		defer templateFile.Close()
+
+		buf := bufio.NewReader(templateFile)
+		for {
+			strLine, strErr := buf.ReadString('\n')
+			if strErr != nil {
+				if strErr == io.EOF {
+					err = nil
+					return
+				}
+
+				err = strErr
+				return
+			}
+
+			strLine = strings.ReplaceAll(strLine, "%projectName%", projectName)
+
+			_, err = filePtr.WriteString(strLine)
+			if err != nil {
+				return
+			}
+		}
+	}
+
+	return
 }
 
 // Create create
@@ -82,11 +154,11 @@ func (s *Core) walkItem(itemPath string, item *model.Item) (err error) {
 		return
 	}
 
-	err = createFile(itemPath, item)
+	err = s.createFile(itemPath, item)
 	return
 }
 
-func createFile(itemPath string, item *model.Item) (err error) {
+func (s *Core) createFile(itemPath string, item *model.Item) (err error) {
 	fullPath := strings.Join([]string{itemPath, item.Name}, "/")
 	existFlag, existErr := exists(fullPath)
 	if existErr != nil {
@@ -95,6 +167,11 @@ func createFile(itemPath string, item *model.Item) (err error) {
 	}
 
 	if existFlag {
+		return
+	}
+
+	err = s.cloneTemplateFile(fullPath)
+	if err == nil {
 		return
 	}
 

@@ -4,8 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
-	"github.com/muidea/magicToolkit/core"
+	"github.com/muidea/magicToolkit/core/project"
 )
 
 var projectName = ""
@@ -112,7 +113,9 @@ func createProject(curPath string) {
 		return
 	}
 
-	core := &core.Core{}
+	os.Setenv("projectName", projectName)
+
+	core := &project.Core{}
 
 	data := fmt.Sprintf(defaultTemplate, projectName, projectName)
 
