@@ -1,0 +1,20 @@
+FROM centos
+
+LABEL Author="rangh"
+LABEL Application="%projectName%"
+
+RUN mkdir -p /var/app
+
+WORKDIR /var/app
+
+ADD %projectName% /var/app/%projectName%
+ADD bootstrap.sh /var/app/bootstrap.sh
+ADD wait-for-it.sh /var/app/wait-for-it.sh
+
+RUN chmod +x /var/app/%projectName%
+RUN chmod +x /var/app/bootstrap.sh
+RUN chmod +x /var/app/wait-for-it.sh
+
+ENTRYPOINT [ "/var/app/bootstrap.sh" ]
+
+EXPOSE 8080

@@ -1,0 +1,42 @@
+package config
+
+import "flag"
+
+var endpointName = "%projectName%"
+var casService = "http://127.0.0.1:8081"
+var userService = "http://127.0.0.1:8082"
+var fileService = "http://127.0.0.1:8083"
+var batisService = "http://127.0.0.1:8080"
+
+func init() {
+	flag.StringVar(&endpointName, "EndpointName", endpointName, "%projectName% endpoint name.")
+	flag.StringVar(&casService, "CasService", casService, "magicCas service address")
+	flag.StringVar(&userService, "UserService", userService, "magicUser service address")
+	flag.StringVar(&fileService, "FileService", fileService, "magicFile service address")
+	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis service address")
+}
+
+//EndpointName endpointName
+func EndpointName() string {
+	return endpointName
+}
+
+//CasService cas service addr
+func CasService() string {
+	return casService
+}
+
+//UserService user service addr
+func UserService() string {
+	return userService
+}
+
+//FileService file service addr
+func FileService() string {
+	return fileService
+}
+
+//BatisService batis service addr
+func BatisService() string {
+	return batisService
+}
