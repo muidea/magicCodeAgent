@@ -159,16 +159,8 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 	router.AddRoute(createAccountRoute, s)
 
 	s.privateRouteRegistry.AddHandler("/drp/user/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
-	//deleteAccountRoute := commonRoute.CreateCasRoute("/drp/user/delete/:id", "DELETE", s.sessionRegistry, s.DeleteAccount)
-	//router.AddRoute(deleteAccountRoute, s)
-
 	s.privateRouteRegistry.AddHandler("/drp/user/update/:id", "GET", casModel.WritePrivate, s.UpdateAccount)
-	//updateAccountRoute := commonRoute.CreateCasRoute("/drp/user/update/:id", "GET", s.sessionRegistry, s.UpdateAccount)
-	//router.AddRoute(updateAccountRoute)
-
 	s.privateRouteRegistry.AddHandler("/drp/user/query/all/", "GET", casModel.ReadPrivate, s.QueryAllAccount)
-	//queryAllAccountRoute := commonRoute.CreateCasRoute("/drp/user/query/all/", "GET", s.sessionRegistry, s.QueryAllAccount)
-	//router.AddRoute(queryAllAccountRoute)
 
 	// upload file
 	//---------------------------------------------------------------------------------------
