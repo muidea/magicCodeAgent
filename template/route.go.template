@@ -1,0 +1,213 @@
+package route
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"time"
+
+	commonConst "github.com/muidea/magicCommon/common"
+	"github.com/muidea/magicCommon/foundation/net"
+
+	"github.com/muidea/magicCommon/session"
+
+	"github.com/muidea/%projectName%/config"
+	"github.com/muidea/%projectName%/core/handler"
+	"github.com/muidea/%projectName%/model"
+
+	userClient "github.com/muidea/magicUser/client"
+	userModel "github.com/muidea/magicUser/model"
+
+	casClient "github.com/muidea/magicCas/client"
+	casModel "github.com/muidea/magicCas/model"
+	casPrivate "github.com/muidea/magicCas/toolkit/private"
+	engine "github.com/muidea/magicEngine"
+)
+
+// Registry 路由信息
+type Registry struct {
+	commonHandler   handler.CommonHandler
+	sessionRegistry session.Registry
+
+	privateRouteRegistry casPrivate.RouteRegistry
+
+	userService string
+	casService  string
+	fileService string
+}
+
+// NewRoute create route
+func NewRoute(
+	sessionRegistry session.Registry,
+	commonHandler handler.CommonHandler,
+) *Registry {
+
+	casService := config.CasService()
+	route := &Registry{
+		sessionRegistry:      sessionRegistry,
+		serviceUserGroup:     groupPtr,
+		commonHandler:        commonHandler,
+		privateRouteRegistry: casPrivate.NewRouteRegistry(casService, sessionRegistry),
+		casService:           casService,
+		userService:          config.UserService(),
+		fileService:          config.FileService(),
+	}
+	
+	return route
+}
+
+func (s *Registry) updateSessionAccount(sessionInfo *commonConst.SessionInfo, session session.Session) {
+	casClient := casClient.NewClient(s.casService)
+	defer casClient.Release()
+	casClient.BindSession(sessionInfo)
+
+	var err error
+	defer func() {
+		if err != nil {
+			s.clearSessionAccount(sessionInfo, session)
+		}
+	}()
+
+	accountPtr, accountSession, accountErr := casClient.StatusAccount()
+	if accountErr != nil {
+		err = accountErr
+		log.Printf("get account status failed, err:%s", accountErr.Error())
+		return
+	}
+
+	session.SetOption(commonConst.AuthAccount, accountPtr)
+	session.SetOption(commonConst.SessionIdentity, accountSession)
+}
+
+func (s *Registry) clearSessionAccount(sessionInfo *commonConst.SessionInfo, session session.Session) {
+	session.RemoveOption(commonConst.AuthAccount)
+	session.RemoveOption(commonConst.SessionIdentity)
+}
+
+func (s *Registry) writeCreateUserRecord(res http.ResponseWriter, req *http.Request) {
+	account := &casModel.AccountLite{}
+	err := net.ParseJSONBody(req, account)
+	if err != nil {
+		return
+	}
+
+	memo := fmt.Sprintf("新建账号%s", account.Account)
+	s.writelog(res, req, memo)
+}
+
+func (s *Registry) writeUpdateUserPasswordRecord(res http.ResponseWriter, req *http.Request) {
+	account := &casModel.AccountLite{}
+	err := net.ParseJSONBody(req, account)
+	if err != nil {
+		return
+	}
+
+	memo := fmt.Sprintf("修改账号%s密码", account.Account)
+	s.writelog(res, req, memo)
+}
+
+// Handle middleware handler
+func (s *Registry) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	sessionInfo := &commonConst.SessionInfo{}
+	sessionInfo.Decode(req)
+	sessionInfo.ID = curSession.ID()
+	sessionInfo.Scope = commonConst.ShareSession
+
+	values := req.URL.Query()
+	sessionInfo.Merge(values)
+	req.URL.RawQuery = values.Encode()
+
+	ctx.Next()
+
+	switch req.URL.Path {
+	case "/drp/user/login/":
+	case "/drp/user/status/":
+		s.updateSessionAccount(sessionInfo, curSession)
+	case "/drp/user/logout/":
+		s.clearSessionAccount(sessionInfo, curSession)
+	case "/drp/user/change/password/":
+		s.writeUpdateUserPasswordRecord(res, req)
+	case "/drp/user/create/":
+		s.writeCreateUserRecord(res, req)
+	}
+}
+
+// RegisterRoute 注册路由
+func (s *Registry) RegisterRoute(router engine.Router) {
+	// account login,logout,status,changepassword
+	//---------------------------------------------------------------------------------------
+	statusURL := net.JoinURL(s.casService, "/access/status/")
+	statusRoute := engine.CreateProxyRoute("/drp/user/status/", "GET", statusURL, true)
+	router.AddRoute(statusRoute, s)
+
+	loginURL := net.JoinURL(s.casService, "/access/login/")
+	loginRoute := engine.CreateProxyRoute("/drp/user/login/", "POST", loginURL, true)
+	router.AddRoute(loginRoute, s)
+
+	logoutURL := net.JoinURL(s.casService, "/access/logout/")
+	logoutRoute := engine.CreateProxyRoute("/drp/user/logout/", "DELETE", logoutURL, true)
+	router.AddRoute(logoutRoute, s)
+
+	changePasswordURL := net.JoinURL(s.casService, "/account/password/")
+	changePasswordRoute := engine.CreateProxyRoute("/drp/user/change/password/", "PUT", changePasswordURL, true)
+	router.AddRoute(changePasswordRoute, s)
+
+	createAccountURL := net.JoinURL(s.casService, "/account/create/")
+	createAccountRoute := engine.CreateProxyRoute("/drp/user/create/", "POST", createAccountURL, true)
+	router.AddRoute(createAccountRoute, s)
+
+	s.privateRouteRegistry.AddHandler("/drp/user/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
+	//deleteAccountRoute := commonRoute.CreateCasRoute("/drp/user/delete/:id", "DELETE", s.sessionRegistry, s.DeleteAccount)
+	//router.AddRoute(deleteAccountRoute, s)
+
+	s.privateRouteRegistry.AddHandler("/drp/user/update/:id", "GET", casModel.WritePrivate, s.UpdateAccount)
+	//updateAccountRoute := commonRoute.CreateCasRoute("/drp/user/update/:id", "GET", s.sessionRegistry, s.UpdateAccount)
+	//router.AddRoute(updateAccountRoute)
+
+	s.privateRouteRegistry.AddHandler("/drp/user/query/all/", "GET", casModel.ReadPrivate, s.QueryAllAccount)
+	//queryAllAccountRoute := commonRoute.CreateCasRoute("/drp/user/query/all/", "GET", s.sessionRegistry, s.QueryAllAccount)
+	//router.AddRoute(queryAllAccountRoute)
+
+	// upload file
+	//---------------------------------------------------------------------------------------
+	uploadFileURL := net.JoinURL(s.fileService, "/file/upload/")
+	uploadFileRoute := engine.CreateProxyRoute("/drp/file/upload/", "POST", uploadFileURL, true)
+	router.AddRoute(uploadFileRoute, s)
+
+	viewFileURL := net.JoinURL(s.fileService, "/file/download/")
+	viewFileRoute := engine.CreateProxyRoute("/drp/file/view/", "GET", viewFileURL, true)
+	router.AddRoute(viewFileRoute, s)
+
+	s.privateRouteRegistry.RegisterRoute(router)
+}
+
+func (s *Registry) writelog(res http.ResponseWriter, req *http.Request, memo string) {
+	address := net.GetHTTPRemoteAddress(req)
+	account := ""
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authVal, ok := curSession.GetOption(commonConst.AuthAccount)
+	if ok {
+		for {
+			accountLite, accountOK := authVal.(*casModel.AccountLite)
+			if accountOK {
+				account = accountLite.Account
+				break
+			}
+
+			endpointLite, endpointOK := authVal.(*casModel.EndpointLite)
+			if endpointOK {
+				account = endpointLite.Endpoint
+				break
+			}
+
+			break
+		}
+	}
+
+	_, logErr := s.commonHandler.WriteOpLog(account, address, memo)
+	if logErr != nil {
+		log.Printf("WriteOpLog failed, err:%s", logErr.Error())
+	}
+}

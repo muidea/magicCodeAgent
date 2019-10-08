@@ -1,0 +1,24 @@
+package handler
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/muidea/magicBatis/client"
+)
+
+// CommonHandler common handler
+type CommonHandler interface {
+}
+
+// NewCommonHandler 新建CommonHandler
+func NewCommonHandler(clnt client.Client) (CommonHandler, error) {
+	handler := &commonHandler{batisClnt: clnt}
+
+	return handler, nil
+}
+
+type commonHandler struct {
+	batisClnt client.Client
+}
+
