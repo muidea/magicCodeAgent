@@ -55,19 +55,37 @@ var defaultTemplate = `
 				{
 					"name": "route",
 					"type": 0,
-					"subItems": []
+					"subItems": [
+						{
+							"name": "route.go",
+							"type": 1,
+							"subItems": []
+						}
+					]
 				},
 				{
 					"name": "handler",
 					"type": 0,
-					"subItems": []
+					"subItems": [
+						{
+							"name": "common.go",
+							"type": 1,
+							"subItems": []
+						}
+					]
 				}								
 			]
 		},
 		{
 			"name": "model",
 			"type": 0,
-			"subItems": []
+			"subItems": [
+				{
+					"name": "helper.go",
+					"type": 1,
+					"subItems": []
+				}				
+			]
 		},
 		{
 			"name": "config",
