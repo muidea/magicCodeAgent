@@ -2,10 +2,13 @@ package handler
 
 import (
 	"github.com/muidea/magicBatis/client"
+	"github.com/muidea/%projectName%/model"
 )
 
 // CommonHandler common handler
 type CommonHandler interface {
+	UpdateSysConfig(cfg *model.SysConfig) (*model.SysConfig, error)
+	GetSysConfig() (*model.SysConfig, error)
 }
 
 // NewCommonHandler 新建CommonHandler
@@ -19,3 +22,21 @@ type commonHandler struct {
 	batisClnt client.Client
 }
 
+func (s *commonHandler) UpdateSysConfig(cfg *model.SysConfig) (ret *model.SysConfig, err error) {
+	err = s.batisClnt.UpdateEntity(cfg)
+	if err == nil {
+		ret = cfg
+	}
+
+	return
+}
+
+func (s *commonHandler) GetSysConfig() (ret *model.SysConfig, err error) {
+	val := &model.SysConfig{}
+	err = s.batisClnt.QueryEntity(val)
+	if err == nil {
+		ret = val
+	}
+
+	return
+}
