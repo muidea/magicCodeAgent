@@ -122,15 +122,15 @@ func (s *Registry) Handle(ctx engine.RequestContext, res http.ResponseWriter, re
 	ctx.Next()
 
 	switch req.URL.Path {
-	case "/drp/user/login/":
-	case "/drp/user/status/":
+	case "/user/login/":
+	case "/user/status/":
 		s.updateSessionAccount(sessionInfo, curSession)
-	case "/drp/user/logout/":
+	case "/user/logout/":
 		s.clearSessionAccount(sessionInfo, curSession)
-	case "/drp/user/change/password/":
-		s.writeUpdateUserPasswordRecord(res, req)
-	case "/drp/user/create/":
+	case "/user/create/":
 		s.writeCreateUserRecord(res, req)
+	case "/user/change/password/":
+		s.writeUpdateUserPasswordRecord(res, req)
 	}
 }
 
@@ -139,37 +139,37 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 	// account login,logout,status,changepassword
 	//---------------------------------------------------------------------------------------
 	statusURL := net.JoinURL(s.casService, "/access/status/")
-	statusRoute := engine.CreateProxyRoute("/drp/user/status/", "GET", statusURL, true)
+	statusRoute := engine.CreateProxyRoute("/user/status/", "GET", statusURL, true)
 	router.AddRoute(statusRoute, s)
 
 	loginURL := net.JoinURL(s.casService, "/access/login/")
-	loginRoute := engine.CreateProxyRoute("/drp/user/login/", "POST", loginURL, true)
+	loginRoute := engine.CreateProxyRoute("/user/login/", "POST", loginURL, true)
 	router.AddRoute(loginRoute, s)
 
 	logoutURL := net.JoinURL(s.casService, "/access/logout/")
-	logoutRoute := engine.CreateProxyRoute("/drp/user/logout/", "DELETE", logoutURL, true)
+	logoutRoute := engine.CreateProxyRoute("/user/logout/", "DELETE", logoutURL, true)
 	router.AddRoute(logoutRoute, s)
 
-	changePasswordURL := net.JoinURL(s.casService, "/account/password/")
-	changePasswordRoute := engine.CreateProxyRoute("/drp/user/change/password/", "PUT", changePasswordURL, true)
-	router.AddRoute(changePasswordRoute, s)
-
 	createAccountURL := net.JoinURL(s.casService, "/account/create/")
-	createAccountRoute := engine.CreateProxyRoute("/drp/user/create/", "POST", createAccountURL, true)
+	createAccountRoute := engine.CreateProxyRoute("/user/create/", "POST", createAccountURL, true)
 	router.AddRoute(createAccountRoute, s)
 
-	s.privateRouteRegistry.AddHandler("/drp/user/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
-	s.privateRouteRegistry.AddHandler("/drp/user/update/:id", "GET", casModel.WritePrivate, s.UpdateAccount)
-	s.privateRouteRegistry.AddHandler("/drp/user/query/all/", "GET", casModel.ReadPrivate, s.QueryAllAccount)
+	changePasswordURL := net.JoinURL(s.casService, "/account/password/")
+	changePasswordRoute := engine.CreateProxyRoute("/user/change/password/", "PUT", changePasswordURL, true)
+	router.AddRoute(changePasswordRoute, s)
+
+	s.privateRouteRegistry.AddHandler("/user/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
+	s.privateRouteRegistry.AddHandler("/user/update/:id", "GET", casModel.WritePrivate, s.UpdateAccount)
+	s.privateRouteRegistry.AddHandler("/user/query/all/", "GET", casModel.ReadPrivate, s.QueryAllAccount)
 
 	// upload file
 	//---------------------------------------------------------------------------------------
 	uploadFileURL := net.JoinURL(s.fileService, "/file/upload/")
-	uploadFileRoute := engine.CreateProxyRoute("/drp/file/upload/", "POST", uploadFileURL, true)
+	uploadFileRoute := engine.CreateProxyRoute("/file/upload/", "POST", uploadFileURL, true)
 	router.AddRoute(uploadFileRoute, s)
 
 	viewFileURL := net.JoinURL(s.fileService, "/file/download/")
-	viewFileRoute := engine.CreateProxyRoute("/drp/file/view/", "GET", viewFileURL, true)
+	viewFileRoute := engine.CreateProxyRoute("/file/view/", "GET", viewFileURL, true)
 	router.AddRoute(viewFileRoute, s)
 
 	s.privateRouteRegistry.RegisterRoute(router)
