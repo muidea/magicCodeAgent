@@ -84,7 +84,12 @@ var defaultTemplate = `
 					"name": "helper.go",
 					"type": 1,
 					"subItems": []
-				}				
+				},
+				{
+					"name": "sysconfig.go",
+					"type": 1,
+					"subItems": []
+				}
 			]
 		},
 		{
