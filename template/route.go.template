@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	commonConst "github.com/muidea/magicCommon/common"
 	"github.com/muidea/magicCommon/foundation/net"
@@ -13,15 +12,11 @@ import (
 
 	"github.com/muidea/%projectName%/config"
 	"github.com/muidea/%projectName%/core/handler"
-	"github.com/muidea/%projectName%/model"
-
-	userClient "github.com/muidea/magicUser/client"
-	userModel "github.com/muidea/magicUser/model"
 
 	casClient "github.com/muidea/magicCas/client"
 	casModel "github.com/muidea/magicCas/model"
 	casPrivate "github.com/muidea/magicCas/toolkit/private"
-	engine "github.com/muidea/magicEngine"
+	engine "github.com/muidea/magicEngine"	
 )
 
 // Registry 路由信息
@@ -158,6 +153,8 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 	changePasswordRoute := engine.CreateProxyRoute("/user/change/password/", "PUT", changePasswordURL, true)
 	router.AddRoute(changePasswordRoute, s)
 
+	// update user,query user,delete user
+	//---------------------------------------------------------------------------------------
 	s.privateRouteRegistry.AddHandler("/user/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
 	s.privateRouteRegistry.AddHandler("/user/update/:id", "GET", casModel.WritePrivate, s.UpdateAccount)
 	s.privateRouteRegistry.AddHandler("/user/query/all/", "GET", casModel.ReadPrivate, s.QueryAllAccount)
