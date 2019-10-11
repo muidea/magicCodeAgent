@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	commonConst "github.com/muidea/magicCommon/common"
+	commonCommon "github.com/muidea/magicCommon/common"
 	"github.com/muidea/magicCommon/foundation/net"
 
 	"github.com/muidea/magicCommon/session"
@@ -51,7 +51,7 @@ func NewRoute(
 	return route
 }
 
-func (s *Registry) updateSessionAccount(sessionInfo *commonConst.SessionInfo, session session.Session) {
+func (s *Registry) updateSessionAccount(sessionInfo *commonCommon.SessionInfo, session session.Session) {
 	casClient := casClient.NewClient(s.casService)
 	defer casClient.Release()
 	casClient.BindSession(sessionInfo)
@@ -70,13 +70,13 @@ func (s *Registry) updateSessionAccount(sessionInfo *commonConst.SessionInfo, se
 		return
 	}
 
-	session.SetOption(commonConst.AuthAccount, accountPtr)
-	session.SetOption(commonConst.SessionIdentity, accountSession)
+	session.SetOption(commonCommon.AuthAccount, accountPtr)
+	session.SetOption(commonCommon.SessionIdentity, accountSession)
 }
 
-func (s *Registry) clearSessionAccount(sessionInfo *commonConst.SessionInfo, session session.Session) {
-	session.RemoveOption(commonConst.AuthAccount)
-	session.RemoveOption(commonConst.SessionIdentity)
+func (s *Registry) clearSessionAccount(sessionInfo *commonCommon.SessionInfo, session session.Session) {
+	session.RemoveOption(commonCommon.AuthAccount)
+	session.RemoveOption(commonCommon.SessionIdentity)
 }
 
 func (s *Registry) writeCreateUserRecord(res http.ResponseWriter, req *http.Request) {
@@ -105,10 +105,10 @@ func (s *Registry) writeUpdateUserPasswordRecord(res http.ResponseWriter, req *h
 func (s *Registry) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
-	sessionInfo := &commonConst.SessionInfo{}
+	sessionInfo := &commonCommon.SessionInfo{}
 	sessionInfo.Decode(req)
 	sessionInfo.ID = curSession.ID()
-	sessionInfo.Scope = commonConst.ShareSession
+	sessionInfo.Scope = commonCommon.ShareSession
 
 	values := req.URL.Query()
 	sessionInfo.Merge(values)
@@ -176,7 +176,7 @@ func (s *Registry) writelog(res http.ResponseWriter, req *http.Request, memo str
 	address := net.GetHTTPRemoteAddress(req)
 	account := ""
 	curSession := s.sessionRegistry.GetSession(res, req)
-	authVal, ok := curSession.GetOption(commonConst.AuthAccount)
+	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
 	if ok {
 		for {
 			accountLite, accountOK := authVal.(*casModel.AccountLite)
