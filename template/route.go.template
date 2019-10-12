@@ -16,7 +16,7 @@ import (
 	casClient "github.com/muidea/magicCas/client"
 	casModel "github.com/muidea/magicCas/model"
 	casPrivate "github.com/muidea/magicCas/toolkit/private"
-	engine "github.com/muidea/magicEngine"	
+	engine "github.com/muidea/magicEngine"
 )
 
 // Registry 路由信息
@@ -40,14 +40,13 @@ func NewRoute(
 	casService := config.CasService()
 	route := &Registry{
 		sessionRegistry:      sessionRegistry,
-		serviceUserGroup:     groupPtr,
 		commonHandler:        commonHandler,
-		privateRouteRegistry: casPrivate.NewRouteRegistry(casService, sessionRegistry),
+		privateRouteRegistry: casPrivate.NewRouteRegistry(sessionRegistry),
 		casService:           casService,
 		userService:          config.UserService(),
 		fileService:          config.FileService(),
 	}
-	
+
 	return route
 }
 
@@ -155,9 +154,9 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 
 	// update user,query user,delete user
 	//---------------------------------------------------------------------------------------
-	s.privateRouteRegistry.AddHandler("/user/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
-	s.privateRouteRegistry.AddHandler("/user/update/:id", "GET", casModel.WritePrivate, s.UpdateAccount)
 	s.privateRouteRegistry.AddHandler("/user/query/all/", "GET", casModel.ReadPrivate, s.QueryAllAccount)
+	s.privateRouteRegistry.AddHandler("/user/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
+	s.privateRouteRegistry.AddHandler("/user/update/status/", "GET", casModel.WritePrivate, s.UpdateStatusAccount)
 
 	// upload file
 	//---------------------------------------------------------------------------------------
