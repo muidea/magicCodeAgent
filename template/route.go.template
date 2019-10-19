@@ -12,7 +12,6 @@ import (
 
 	"github.com/muidea/%projectName%/config"
 	"github.com/muidea/%projectName%/core/handler"
-	"github.com/muidea/%projectName%/model"
 
 	casClient "github.com/muidea/magicCas/client"
 	casModel "github.com/muidea/magicCas/model"
