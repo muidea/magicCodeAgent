@@ -141,7 +141,7 @@ func (s *Registry) queryAccount(currentSession session.Session, id int) (ret *ca
 	return
 }
 
-func (s *Registry) updateAccountStatus(currentSession session.Session, account *casModel.AccountLite) (ret *casModel.AccountLite, err error) {
+func (s *Registry) updateAccount(currentSession session.Session, account *casModel.AccountLite) (ret *casModel.AccountLite, err error) {
 	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 
@@ -152,35 +152,54 @@ func (s *Registry) updateAccountStatus(currentSession session.Session, account *
 	}
 
 	clnt.BindSession(sessionVal.(*commonConst.SessionInfo))
-	ret, err = clnt.UpdateAccountStatus(account)
+	ret, err = clnt.UpdateAccount(account)
 	return
 }
 
-// UpdateStatusAccount update account status
-func (s *Registry) UpdateStatusAccount(res http.ResponseWriter, req *http.Request) {
+// UpdateAccount update account
+func (s *Registry) UpdateAccount(res http.ResponseWriter, req *http.Request) {
 	result := &commonDef.Result{}
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
-		account, err := strconv.Atoi(req.URL.Query().Get("account"))
-		if err != nil || account <= 0 {
-			result.ErrorCode = commonDef.IllegalParam
-			result.Reason = "参数非法"
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			log.Printf("update account failed, illegal id, id:%s, err:%s", value, err.Error())
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数"
+			break
 		}
 
-		status, err := strconv.Atoi(req.URL.Query().Get("status"))
-		if err != nil {
-			result.ErrorCode = commonDef.IllegalParam
-			result.Reason = "参数非法"
-		}
-
-		accountLite, accountErr := s.queryAccount(curSession, account)
+		accountLite, accountErr := s.queryAccount(curSession, id)
 		if accountErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "参数非法"
 		}
 
-		accountLite.Status = casModel.GetStatus(status)
-		_, err = s.updateAccountStatus(curSession, accountLite)
+		strStatus := req.URL.Query().Get("status")
+		if strStatus != "" {
+			status, err := strconv.Atoi(strStatus)
+			if err != nil {
+				result.ErrorCode = commonDef.IllegalParam
+				result.Reason = "参数非法"
+				break
+			}
+			accountLite.Status = casModel.GetStatus(status)
+		}
+
+		strPrivateGroup := req.URL.Query().Get("privateGroup")
+		if strPrivateGroup != "" {
+			privateGroup, err := strconv.Atoi(strPrivateGroup)
+			if err != nil {
+				result.ErrorCode = commonDef.IllegalParam
+				result.Reason = "参数非法"
+				break
+			}
+
+			accountLite.PrivateGroup = &casModel.PrivateGroupLite{ID: privateGroup}
+		}
+
+		_, err = s.updateAccount(curSession, accountLite)
 		if err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "更新信息出错,更新账号信息失败"

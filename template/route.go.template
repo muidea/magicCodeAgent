@@ -158,6 +158,12 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 	s.privateRouteRegistry.AddHandler("/user/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
 	s.privateRouteRegistry.AddHandler("/user/update/status/", "GET", casModel.WritePrivate, s.UpdateStatusAccount)
 
+	// private
+	//---------------------------------------------------------------------------------------
+	s.privateRouteRegistry.AddHandler("/private/query/", "GET", casModel.ReadPrivate, s.QueryPrivateGroup)
+	s.privateRouteRegistry.AddHandler("/private/save/", "POST", casModel.WritePrivate, s.SavePrivateGroup)
+	s.privateRouteRegistry.AddHandler("/private/destory/", "GET", casModel.DeletePrivate, s.DestoryPrivateGroup)
+
 	// upload file
 	//---------------------------------------------------------------------------------------
 	uploadFileURL := net.JoinURL(s.fileService, "/file/upload/")
@@ -167,6 +173,8 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 	viewFileURL := net.JoinURL(s.fileService, "/file/download/")
 	viewFileRoute := engine.CreateProxyRoute("/file/view/", "GET", viewFileURL, true)
 	router.AddRoute(viewFileRoute, s)
+
+	// add more route define
 
 	s.privateRouteRegistry.RegisterRoute(router)
 }
