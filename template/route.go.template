@@ -15,20 +15,16 @@ import (
 
 	casClient "github.com/muidea/magicCas/client"
 	casModel "github.com/muidea/magicCas/model"
-	casEndpoint "github.com/muidea/magicCas/toolkit/endpoint"
 	casPrivate "github.com/muidea/magicCas/toolkit/private"
 	engine "github.com/muidea/magicEngine"
 	userClient "github.com/muidea/magicUser/client"
 	userModel "github.com/muidea/magicUser/model"
 )
 
-const _podName = "appPod"
-
 // Registry 路由信息
 type Registry struct {
 	commonHandler        handler.CommonHandler
 	sessionRegistry      session.Registry
-	privatePod           *casModel.PodLite
 	privateRouteRegistry casPrivate.RouteRegistry
 
 	userService string
@@ -41,16 +37,10 @@ func NewRoute(
 	sessionRegistry session.Registry,
 	commonHandler handler.CommonHandler,
 ) *Registry {
-	casEndpoint := casEndpoint.NewEndpoint(config.EndpointName(), config.IdentifyID(), config.AuthToken(), config.CasService())
-	podPtr, podErr := casEndpoint.QueryPod()
-	if podErr != nil {
-		return nil
-	}
 
 	route := &Registry{
 		sessionRegistry:      sessionRegistry,
 		commonHandler:        commonHandler,
-		privatePod:           podPtr,
 		privateRouteRegistry: casPrivate.NewRouteRegistry(sessionRegistry),
 		casService:           config.CasService(),
 		userService:          config.UserService(),
@@ -122,9 +112,6 @@ func (s *Registry) Handle(ctx engine.RequestContext, res http.ResponseWriter, re
 	values := req.URL.Query()
 	sessionInfo.Merge(values)
 	req.URL.RawQuery = values.Encode()
-
-	//将当前的pod设置到当前session
-	curSession.SetOption(casPrivate.CurrentPrivatePod, s.privatePod)
 
 	ctx.Next()
 
