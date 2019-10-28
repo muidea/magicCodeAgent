@@ -60,7 +60,17 @@ var defaultTemplate = `
 							"name": "route.go",
 							"type": 1,
 							"subItems": []
-						}
+						},
+						{
+							"name": "account.go",
+							"type": 1,
+							"subItems": []
+						},
+						{
+							"name": "private.go",
+							"type": 1,
+							"subItems": []
+						},
 					]
 				},
 				{
