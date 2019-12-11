@@ -99,6 +99,11 @@ var defaultTemplate = `
                     "name": "sysconfig.go",
                     "type": 1,
                     "subItems": []
+                },
+                {
+                    "name": "log.go",
+                    "type": 1,
+                    "subItems": []
                 }
             ]
         },
