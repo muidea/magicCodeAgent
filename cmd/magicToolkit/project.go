@@ -24,119 +24,122 @@ func init() {
 
 var defaultTemplate = `
 {
-	"name": "%s",
-	"items": [
-		{
-			"name": "cmd",
-			"type": 0,
-			"subItems": [
-				{
-					"name": "%s",
-					"type": 0,
-					"subItems": [
-						{
-							"name": "main.go",
-							"type": 1,
-							"subItems": []
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "core",
-			"type": 0,
-			"subItems": [
-				{
-					"name": "core.go",
-					"type": 1,
-					"subItems": []
-				},
-				{
-					"name": "route",
-					"type": 0,
-					"subItems": [
-						{
-							"name": "route.go",
-							"type": 1,
-							"subItems": []
-						},
-						{
-							"name": "account.go",
-							"type": 1,
-							"subItems": []
-						},
-						{
-							"name": "private.go",
-							"type": 1,
-							"subItems": []
-						},
-					]
-				},
-				{
-					"name": "handler",
-					"type": 0,
-					"subItems": [
-						{
-							"name": "common.go",
-							"type": 1,
-							"subItems": []
-						}
-					]
-				}								
-			]
-		},
-		{
-			"name": "model",
-			"type": 0,
-			"subItems": [
-				{
-					"name": "helper.go",
-					"type": 1,
-					"subItems": []
-				},
-				{
-					"name": "sysconfig.go",
-					"type": 1,
-					"subItems": []
-				}
-			]
-		},
-		{
-			"name": "config",
-			"type": 0,
-			"subItems": [
-				{
-					"name": "config.go",
-					"type": 1,
-					"subItems": []
-				}
-			]
-		},
-		{
-			"name": "docker",
-			"type": 0,
-			"subItems": [
-				{
-					"name": "bootstrap.sh",
-					"type": 1,
-					"subItems": []
-				},{
-					"name": "build.sh",
-					"type": 1,
-					"subItems": []
-				},{
-					"name": "Dockerfile",
-					"type": 1,
-					"subItems": []
-				},{
-					"name": "wait-for-it.sh",
-					"type": 1,
-					"subItems": []
-				}
-			]
-		}
-	]
+    "name": "%s",
+    "items": [
+        {
+            "name": "cmd",
+            "type": 0,
+            "subItems": [
+                {
+                    "name": "%s",
+                    "type": 0,
+                    "subItems": [
+                        {
+                            "name": "main.go",
+                            "type": 1,
+                            "subItems": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "core",
+            "type": 0,
+            "subItems": [
+                {
+                    "name": "core.go",
+                    "type": 1,
+                    "subItems": []
+                },
+                {
+                    "name": "route",
+                    "type": 0,
+                    "subItems": [
+                        {
+                            "name": "route.go",
+                            "type": 1,
+                            "subItems": []
+                        },
+                        {
+                            "name": "account.go",
+                            "type": 1,
+                            "subItems": []
+                        },
+                        {
+                            "name": "private.go",
+                            "type": 1,
+                            "subItems": []
+                        }
+                    ]
+                },
+                {
+                    "name": "handler",
+                    "type": 0,
+                    "subItems": [
+                        {
+                            "name": "common.go",
+                            "type": 1,
+                            "subItems": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "model",
+            "type": 0,
+            "subItems": [
+                {
+                    "name": "helper.go",
+                    "type": 1,
+                    "subItems": []
+                },
+                {
+                    "name": "sysconfig.go",
+                    "type": 1,
+                    "subItems": []
+                }
+            ]
+        },
+        {
+            "name": "config",
+            "type": 0,
+            "subItems": [
+                {
+                    "name": "config.go",
+                    "type": 1,
+                    "subItems": []
+                }
+            ]
+        },
+        {
+            "name": "docker",
+            "type": 0,
+            "subItems": [
+                {
+                    "name": "bootstrap.sh",
+                    "type": 1,
+                    "subItems": []
+                },
+                {
+                    "name": "build.sh",
+                    "type": 1,
+                    "subItems": []
+                },
+                {
+                    "name": "Dockerfile",
+                    "type": 1,
+                    "subItems": []
+                },
+                {
+                    "name": "wait-for-it.sh",
+                    "type": 1,
+                    "subItems": []
+                }
+            ]
+        }
+    ]
 }
 `
 
