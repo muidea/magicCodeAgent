@@ -115,8 +115,8 @@ func (s *Registry) Handle(ctx engine.RequestContext, res http.ResponseWriter, re
 	ctx.Next()
 
 	switch req.URL.Path {
-	case "/account/login/":
-	case "/account/status/":
+	case "/account/login/",
+		"/account/status/":
 		s.updateSessionAccount(sessionInfo, curSession)
 	case "/account/logout/":
 		s.clearSessionAccount(sessionInfo, curSession)
