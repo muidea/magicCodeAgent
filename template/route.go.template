@@ -14,6 +14,7 @@ import (
 	"github.com/muidea/%projectName%/core/handler"
 
 	casClient "github.com/muidea/magicCas/client"
+	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 	casPrivate "github.com/muidea/magicCas/toolkit/private"
 	engine "github.com/muidea/magicEngine"
@@ -49,35 +50,7 @@ func NewRoute(
 	return route
 }
 
-func (s *Registry) updateSessionAccount(sessionInfo *commonCommon.SessionInfo, session session.Session) {
-	casClient := casClient.NewClient(s.casService)
-	defer casClient.Release()
-	casClient.BindSession(sessionInfo)
-
-	var err error
-	defer func() {
-		if err != nil {
-			s.clearSessionAccount(sessionInfo, session)
-		}
-	}()
-
-	accountPtr, accountSession, accountErr := casClient.StatusAccount()
-	if accountErr != nil {
-		err = accountErr
-		log.Printf("get account status failed, err:%s", accountErr.Error())
-		return
-	}
-
-	session.SetOption(commonCommon.AuthAccount, accountPtr)
-	session.SetOption(commonCommon.SessionIdentity, accountSession)
-}
-
-func (s *Registry) clearSessionAccount(sessionInfo *commonCommon.SessionInfo, session session.Session) {
-	session.RemoveOption(commonCommon.AuthAccount)
-	session.RemoveOption(commonCommon.SessionIdentity)
-}
-
-func (s *Registry) writeCreateUserRecord(res http.ResponseWriter, req *http.Request) {
+func (s *Registry) recordCreateAccount(res http.ResponseWriter, req *http.Request) {
 	account := &casModel.AccountView{}
 	err := net.ParseJSONBody(req, account)
 	if err != nil {
@@ -88,15 +61,63 @@ func (s *Registry) writeCreateUserRecord(res http.ResponseWriter, req *http.Requ
 	s.writelog(res, req, memo)
 }
 
-func (s *Registry) writeUpdateUserPasswordRecord(res http.ResponseWriter, req *http.Request) {
-	account := &casModel.AccountView{}
-	err := net.ParseJSONBody(req, account)
-	if err != nil {
+func (s *Registry) recordLoginAccount(res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authPtr, authOK := curSession.GetOption(commonCommon.AuthAccount)
+	if authOK {
+		acountPtr := authPtr.(*casModel.AccountView)
+		memo := fmt.Sprintf("账号%s登录", acountPtr.Account)
+		s.writelog(res, req, memo)
+	}
+}
+
+func (s *Registry) recordLogoutAccount(res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authPtr, authOK := curSession.GetOption(commonCommon.AuthAccount)
+	if authOK {
+		acountPtr := authPtr.(*casModel.AccountView)
+		memo := fmt.Sprintf("账号%s登出", acountPtr.Account)
+		s.writelog(res, req, memo)
+	}
+}
+
+func (s *Registry) updateSessionAccount(res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	sessionInfo := &commonCommon.SessionInfo{}
+	sessionInfo.Decode(req)
+
+	casClient := casClient.NewClient(s.casService)
+	defer casClient.Release()
+	casClient.BindSession(sessionInfo)
+
+	var err error
+	defer func() {
+		if err != nil {
+			curSession.RemoveOption(commonCommon.AuthAccount)
+			curSession.RemoveOption(commonCommon.SessionIdentity)
+		}
+	}()
+
+	accountPtr, accountSession, accountErr := casClient.StatusAccount()
+	if accountErr != nil {
+		err = accountErr
+		log.Printf("get account status failed, err:%s", accountErr.Error())
 		return
 	}
 
-	memo := fmt.Sprintf("修改账号%s密码", account.Account)
-	s.writelog(res, req, memo)
+	curSession.SetOption(commonCommon.AuthAccount, accountPtr)
+	curSession.SetOption(commonCommon.SessionIdentity, accountSession)
+}
+
+func (s *Registry) recordChangePassword(res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authPtr, authOK := curSession.GetOption(commonCommon.AuthAccount)
+	if authOK {
+		acountPtr := authPtr.(*casModel.AccountView)
+		memo := fmt.Sprintf("账号%s修改密码", acountPtr.Account)
+		s.writelog(res, req, memo)
+	}
 }
 
 // Handle middleware handler
@@ -115,33 +136,85 @@ func (s *Registry) Handle(ctx engine.RequestContext, res http.ResponseWriter, re
 	ctx.Next()
 
 	switch req.URL.Path {
-	case "/account/login/",
-		"/account/status/":
-		s.updateSessionAccount(sessionInfo, curSession)
-	case "/account/logout/":
-		s.clearSessionAccount(sessionInfo, curSession)
 	case "/account/create/":
-		s.writeCreateUserRecord(res, req)
+		s.recordCreateAccount(res, req)
+	case "/account/login/":
+		s.recordLoginAccount(res, req)
+	case "/account/logout/":
+		s.recordLogoutAccount(res, req)
+	case "/account/status/":
+		s.updateSessionAccount(res, req)
 	case "/account/change/password/":
-		s.writeUpdateUserPasswordRecord(res, req)
+		s.recordChangePassword(res, req)
 	}
+}
+
+// Login account login
+func (s *Registry) Login(res http.ResponseWriter, req *http.Request) {
+
+	sessionInfo := &commonCommon.SessionInfo{}
+	sessionInfo.Decode(req)
+
+	curSession := s.sessionRegistry.GetSession(res, req)
+	result := &casCommon.LoginResult{}
+	for {
+		param := &casCommon.LoginParam{}
+		err := net.ParseJSONBody(req, param)
+		if err != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数"
+			break
+		}
+
+		if param.Account == "" || param.Password == "" {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数,输入参数为空"
+			break
+		}
+
+		casClient := casClient.NewClient(s.casService)
+		defer casClient.Release()
+		casClient.BindSession(sessionInfo)
+
+		accountPtr, sessionPtr, err := casClient.LoginAccount(param.Account, param.Password)
+		if err != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = err.Error()
+			break
+		}
+
+		curSession.SetOption(commonCommon.AuthAccount, accountPtr)
+		curSession.SetOption(commonCommon.SessionIdentity, sessionPtr)
+
+		result.Account = accountPtr
+		result.SessionInfo = sessionPtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
 }
 
 // RegisterRoute 注册路由
 func (s *Registry) RegisterRoute(router engine.Router) {
 	// account login,logout,status,changepassword
 	//---------------------------------------------------------------------------------------
-	statusURL := net.JoinURL(s.casService, "/access/status/")
-	statusRoute := engine.CreateProxyRoute("/account/status/", "GET", statusURL, true)
-	router.AddRoute(statusRoute, s)
-
-	loginURL := net.JoinURL(s.casService, "/access/login/")
-	loginRoute := engine.CreateProxyRoute("/account/login/", "POST", loginURL, true)
+	loginRoute := engine.CreateRoute("/account/login/", "POST", s.Login)
 	router.AddRoute(loginRoute, s)
 
 	logoutURL := net.JoinURL(s.casService, "/access/logout/")
 	logoutRoute := engine.CreateProxyRoute("/account/logout/", "DELETE", logoutURL, true)
 	router.AddRoute(logoutRoute, s)
+
+	statusURL := net.JoinURL(s.casService, "/access/status/")
+	statusRoute := engine.CreateProxyRoute("/account/status/", "GET", statusURL, true)
+	router.AddRoute(statusRoute, s)
 
 	createAccountURL := net.JoinURL(s.casService, "/account/create/")
 	createAccountRoute := engine.CreateProxyRoute("/account/create/", "POST", createAccountURL, true)
