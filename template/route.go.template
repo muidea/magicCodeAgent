@@ -101,7 +101,7 @@ func (s *Registry) updateSessionAccount(res http.ResponseWriter, req *http.Reque
 		}
 	}()
 
-	accountPtr, accountSession, accountErr := casClient.StatusAccount()
+	accountPtr, accountSession, accountErr := casClient.VerifySession()
 	if accountErr != nil {
 		err = accountErr
 		log.Printf("get account status failed, err:%s", accountErr.Error())
