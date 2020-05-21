@@ -7,25 +7,21 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/muidea/magicCommon/foundation/net"
+
 	casClient "github.com/muidea/magicCas/client"
 	casModel "github.com/muidea/magicCas/model"
 	commonConst "github.com/muidea/magicCommon/common"
 	commonDef "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicCommon/foundation/net"
-	"github.com/muidea/magicCommon/session"
+	commonSession "github.com/muidea/magicCommon/session"
 )
 
-func (s *Registry) queryAllAccount(currentSession session.Session) (ret []*casModel.AccountView, total int64, err error) {
+func (s *Registry) queryAllAccount(currentSession commonSession.Session) (ret []*casModel.AccountView, total int64, err error) {
 	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 
-	sessionVal, ok := currentSession.GetOption(commonConst.SessionIdentity)
-	if !ok {
-		err = fmt.Errorf("无效权限")
-		return
-	}
-
-	clnt.BindSession(sessionVal.(*commonConst.SessionInfo))
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
 	ret, total, err = clnt.QueryAllAccount(nil)
 
 	return
@@ -64,27 +60,12 @@ func (s *Registry) QueryAllAccount(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) deleteAccount(currentSession session.Session, id int) (ret *casModel.AccountView, err error) {
+func (s *Registry) deleteAccount(currentSession commonSession.Session, id int) (ret *casModel.AccountView, err error) {
 	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 
-	sessionVal, ok := currentSession.GetOption(commonConst.SessionIdentity)
-	if !ok {
-		err = fmt.Errorf("删除账号失败，无效权限")
-		return
-	}
-	authVal, ok := currentSession.GetOption(commonConst.AuthAccount)
-	if !ok {
-		err = fmt.Errorf("删除账号失败，无效权限")
-		return
-	}
-	accountView := authVal.(*casModel.AccountView)
-	if accountView.ID == id {
-		err = fmt.Errorf("删除账号失败，禁止删除当前登录账号")
-		return
-	}
-
-	clnt.BindSession(sessionVal.(*commonConst.SessionInfo))
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
 	ret, err = clnt.DestroyAccount(id)
 	return
 }
@@ -100,6 +81,18 @@ func (s *Registry) DeleteAccount(res http.ResponseWriter, req *http.Request) {
 			log.Printf("delete account failed, illegal id, id:%s, err:%s", value, err.Error())
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "非法参数"
+			break
+		}
+
+		authVal, ok := curSession.GetOption(commonConst.AuthAccount)
+		if !ok {
+			err = fmt.Errorf("删除账号失败，无效权限")
+			return
+		}
+		currentEntity := authVal.(*casModel.Entity)
+		if currentEntity.EType == casModel.AccountType && currentEntity.EID == id {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "删除账号失败，禁止删除当前登录账号"
 			break
 		}
 
@@ -126,18 +119,13 @@ func (s *Registry) DeleteAccount(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) queryAccount(currentSession session.Session, id int) (ret *casModel.AccountView, err error) {
+func (s *Registry) queryAccount(currentSession commonSession.Session, id int) (ret *casModel.AccountView, err error) {
 	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 
-	sessionVal, ok := currentSession.GetOption(commonConst.SessionIdentity)
-	if !ok {
-		err = fmt.Errorf("无效权限")
-		return
-	}
-
-	clnt.BindSession(sessionVal.(*commonConst.SessionInfo))
-	ret, _, err = clnt.QueryAccount(id)
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
+	ret, err = clnt.QueryAccount(id)
 	return
 }
 
@@ -180,17 +168,12 @@ func (s *Registry) QueryAccount(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) updateAccount(currentSession session.Session, account *casModel.AccountView) (ret *casModel.AccountView, err error) {
+func (s *Registry) updateAccount(currentSession commonSession.Session, account *casModel.AccountView) (ret *casModel.AccountView, err error) {
 	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 
-	sessionVal, ok := currentSession.GetOption(commonConst.SessionIdentity)
-	if !ok {
-		err = fmt.Errorf("无效权限")
-		return
-	}
-
-	clnt.BindSession(sessionVal.(*commonConst.SessionInfo))
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
 	ret, err = clnt.UpdateAccount(account)
 	return
 }

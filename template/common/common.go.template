@@ -1,0 +1,13 @@
+package common
+
+import (
+	commonDef "github.com/muidea/magicCommon/def"
+	"github.com/muidea/%projectName%/model"
+)
+
+// QueryAllOpertateLogResult query all operate log result
+type QueryAllOpertateLogResult struct {
+	commonDef.Result
+	Total int64          `json:"total"`
+	Logs  []*model.OpLog `json:"logs"`
+}

@@ -1,0 +1,276 @@
+package route
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+
+	"github.com/muidea/magicCommon/foundation/net"
+
+	casClient "github.com/muidea/magicCas/client"
+	casModel "github.com/muidea/magicCas/model"
+	commonDef "github.com/muidea/magicCommon/def"
+	commonSession "github.com/muidea/magicCommon/session"
+)
+
+func (s *Registry) queryAllEndpoint(currentSession commonSession.Session) (ret []*casModel.EndpointView, total int64, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
+	ret, total, err = clnt.QueryAllEndpoint(nil)
+
+	return
+}
+
+// QueryAllEndpoint query member
+func (s *Registry) QueryAllEndpoint(res http.ResponseWriter, req *http.Request) {
+	type queryResult struct {
+		commonDef.Result
+		Total     int64                    `json:"total"`
+		Endpoints []*casModel.EndpointView `json:"endpoints"`
+	}
+
+	result := &queryResult{Endpoints: []*casModel.EndpointView{}}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		endpointList, endpointTotal, endpointErr := s.queryAllEndpoint(curSession)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = endpointErr.Error()
+			break
+		}
+
+		result.Total = endpointTotal
+		result.Endpoints = endpointList
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Registry) createEndpoint(currentSession commonSession.Session, endpoint *casModel.EndpointView) (ret *casModel.EndpointView, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
+	ret, err = clnt.CreateEndpoint(
+		endpoint.Endpoint,
+		endpoint.Description,
+		endpoint.IdentifyID,
+		endpoint.AuthToken, 0)
+
+	return
+}
+
+// CreateEndpoint create endpoint
+func (s *Registry) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
+	param := &casModel.EndpointView{}
+	result := &commonDef.Result{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		err := net.ParseJSONBody(req, param)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "参数非法"
+			break
+		}
+		_, err = s.createEndpoint(curSession, param)
+		if err != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "新建出错,新建终端信息失败"
+			break
+		}
+
+		result.ErrorCode = commonDef.Success
+
+		memo := fmt.Sprintf("新建终端%s", param.Endpoint)
+		s.writelog(res, req, memo)
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Registry) deleteEndpoint(currentSession commonSession.Session, id int) (ret *casModel.EndpointView, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
+	ret, err = clnt.DestroyEndpoint(id)
+	return
+}
+
+// DeleteEndpoint delete endpoint
+func (s *Registry) DeleteEndpoint(res http.ResponseWriter, req *http.Request) {
+	result := &commonDef.Result{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			log.Printf("delete endpoint failed, illegal id, id:%s, err:%s", value, err.Error())
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数"
+			break
+		}
+
+		endpointPtr, endpointErr := s.deleteEndpoint(curSession, id)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = endpointErr.Error()
+			break
+		}
+
+		result.ErrorCode = commonDef.Success
+
+		memo := fmt.Sprintf("删除账号%s", endpointPtr.Endpoint)
+		s.writelog(res, req, memo)
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Registry) queryEndpoint(currentSession commonSession.Session, id int) (ret *casModel.EndpointView, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
+	ret, err = clnt.QueryEndpoint(id)
+	return
+}
+
+// QueryEndpoint query endpoint
+func (s *Registry) QueryEndpoint(res http.ResponseWriter, req *http.Request) {
+	type queryResult struct {
+		commonDef.Result
+		Endpoint *casModel.EndpointView `json:"endpoint"`
+	}
+
+	result := &queryResult{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			log.Printf("update endpoint failed, illegal id, id:%s, err:%s", value, err.Error())
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数"
+			break
+		}
+
+		endpointView, endpointErr := s.queryEndpoint(curSession, id)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "参数非法"
+		}
+
+		result.Endpoint = endpointView
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Registry) updateEndpoint(currentSession commonSession.Session, endpoint *casModel.EndpointView) (ret *casModel.EndpointView, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
+	ret, err = clnt.UpdateEndpoint(endpoint)
+	return
+}
+
+// UpdateEndpoint update endpoint
+func (s *Registry) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
+	param := map[string]int{}
+	result := &commonDef.Result{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			log.Printf("update endpoint failed, illegal id, id:%s, err:%s", value, err.Error())
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数"
+			break
+		}
+
+		endpointView, endpointErr := s.queryEndpoint(curSession, id)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "参数非法"
+			break
+		}
+
+		err = net.ParseJSONBody(req, &param)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "参数非法"
+			break
+		}
+		status, ok := param["status"]
+		if ok {
+			endpointView.Status = casModel.GetStatus(status)
+		}
+		privateGroup, ok := param["privateGroup"]
+		if ok {
+			endpointView.PrivateGroup = &casModel.PrivateGroupLite{ID: privateGroup}
+		}
+
+		_, err = s.updateEndpoint(curSession, endpointView)
+		if err != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "更新信息出错,更新账号信息失败"
+			break
+		}
+
+		result.ErrorCode = commonDef.Success
+
+		memo := fmt.Sprintf("更新账号%s", endpointView.Endpoint)
+		s.writelog(res, req, memo)
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}

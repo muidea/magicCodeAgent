@@ -67,6 +67,11 @@ var defaultTemplate = `
                             "subItems": []
                         },
                         {
+                            "name": "endpoint.go",
+                            "type": 1,
+                            "subItems": []
+                        },
+                        {
                             "name": "private.go",
                             "type": 1,
                             "subItems": []
@@ -156,11 +161,11 @@ func createProject(curPath string) {
 
 	os.Setenv("projectName", projectName)
 
-	core := &project.Core{}
+	core := &project.Core{curPath}
 
 	data := fmt.Sprintf(defaultTemplate, projectName, projectName)
 
-	curErr := core.Create(curPath, []byte(data))
+	curErr := core.Create([]byte(data))
 	if curErr != nil {
 		log.Printf("Create template failed, err:%s", curErr.Error())
 		return

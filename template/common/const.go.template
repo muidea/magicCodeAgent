@@ -1,0 +1,20 @@
+package common
+
+const (
+	// LoginAccountURL login account url
+	LoginAccountURL = "/api/v1/account/login/"
+	// LogoutAccountURL logout account url
+	LogoutAccountURL = "/api/v1/account/logout/"
+	// ConfirmEndpointURL confirm endpoint url
+	ConfirmEndpointURL = "/api/v1/endpoint/confirm/"
+	// RefreshStatusURL refresh status url
+	RefreshStatusURL = "/api/v1/status/refresh/"
+
+	// CreateAccountURL create account url
+	CreateAccountURL = "/api/v1/account/create/"
+	// UpdateAccountPasswordURL update account password url
+	UpdateAccountPasswordURL = "/api/v1/account/password/update/"
+
+	// QueryOperateLogURL query operate log url
+	QueryOperateLogURL = "/api/v1/operate/log/"
+)

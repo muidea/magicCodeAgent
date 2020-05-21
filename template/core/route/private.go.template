@@ -5,25 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/muidea/magicCas/client"
-	casModel "github.com/muidea/magicCas/model"
-	commonConst "github.com/muidea/magicCommon/common"
-	commonDef "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/foundation/net"
-	"github.com/muidea/magicCommon/session"
+
+	casClient "github.com/muidea/magicCas/client"
+	casModel "github.com/muidea/magicCas/model"
+	commonDef "github.com/muidea/magicCommon/def"
+	commonSession "github.com/muidea/magicCommon/session"
 )
 
-func (s *Registry) queryPrivateGroup(currentSession session.Session) (ret []*casModel.PrivateGroupView, total int64, err error) {
-	clnt := client.NewClient(s.casService)
+func (s *Registry) queryPrivateGroup(currentSession commonSession.Session) (ret []*casModel.PrivateGroupView, total int64, err error) {
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 
-	sessionVal, ok := currentSession.GetOption(commonConst.SessionIdentity)
-	if !ok {
-		err = fmt.Errorf("无效权限")
-		return
-	}
-
-	clnt.BindSession(sessionVal.(*commonConst.SessionInfo))
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
 	ret, total, err = clnt.QueryAllPrivate()
 
 	return
@@ -58,17 +53,12 @@ func (s *Registry) QueryPrivateGroup(res http.ResponseWriter, req *http.Request)
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) savePrivateGroup(currentSession session.Session, name, desc string, privateItems []*casModel.PrivateItem) (ret *casModel.PrivateGroupView, err error) {
-	clnt := client.NewClient(s.casService)
+func (s *Registry) savePrivateGroup(currentSession commonSession.Session, name, desc string, privateItems []*casModel.PrivateItem) (ret *casModel.PrivateGroupView, err error) {
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 
-	sessionVal, ok := currentSession.GetOption(commonConst.SessionIdentity)
-	if !ok {
-		err = fmt.Errorf("无效权限")
-		return
-	}
-
-	clnt.BindSession(sessionVal.(*commonConst.SessionInfo))
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
 	ret, err = clnt.SavePrivate(name, desc, privateItems)
 
 	return
@@ -125,17 +115,12 @@ func (s *Registry) SavePrivateGroup(res http.ResponseWriter, req *http.Request) 
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) destoryPrivateGroup(currentSession session.Session, groupName string) (err error) {
-	clnt := client.NewClient(s.casService)
+func (s *Registry) destoryPrivateGroup(currentSession commonSession.Session, groupName string) (err error) {
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 
-	sessionVal, ok := currentSession.GetOption(commonConst.SessionIdentity)
-	if !ok {
-		err = fmt.Errorf("无效权限")
-		return
-	}
-
-	clnt.BindSession(sessionVal.(*commonConst.SessionInfo))
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
 	err = clnt.DestroyPrivate(groupName)
 
 	return

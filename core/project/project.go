@@ -15,6 +15,7 @@ import (
 
 // Core core define
 type Core struct {
+	rootPath string
 }
 
 func (s *Core) getTemplateFile(fileName string) (ret *os.File, err error) {
@@ -88,7 +89,7 @@ func (s *Core) cloneTemplateFile(fullFilePath string) (err error) {
 }
 
 // Create create
-func (s *Core) Create(curPath string, data []byte) (err error) {
+func (s *Core) Create(data []byte) (err error) {
 	template := &model.Template{}
 
 	err = json.Unmarshal(data, template)
@@ -96,6 +97,7 @@ func (s *Core) Create(curPath string, data []byte) (err error) {
 		return
 	}
 
+	curPath = s.rootPath
 	err = s.walkTemplate(curPath, template)
 	return
 }
