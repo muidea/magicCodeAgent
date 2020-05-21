@@ -18,7 +18,12 @@ type Core struct {
 	rootPath string
 }
 
-func (s *Core) getTemplateFile(fileName string) (ret *os.File, err error) {
+// NewCore new core
+func NewCore(rootPath string) *Core {
+	return &Core{rootPath: rootPath}
+}
+
+func (s *Core) getTemplateFile(templateFile string) (ret *os.File, err error) {
 	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
 	if toolKitPath == "" {
 		err = fmt.Errorf("no found toolkitPath")
@@ -32,7 +37,12 @@ func (s *Core) getTemplateFile(fileName string) (ret *os.File, err error) {
 		return
 	}
 
-	templateFile := path.Join(templatePath, fmt.Sprintf("%s.template", fileName))
+	templateFile = path.Join(templatePath, fmt.Sprintf("%s.template", templateFile))
+	_, fileName := path.Split(templateFile)
+	if fileName == "main.go.template" {
+		templateFile = path.Join(templatePath, fileName)
+	}
+
 	existsFlag, existsErr = exists(templateFile)
 	if !existsFlag || existsErr != nil {
 		err = fmt.Errorf("no found toolkit template file")
@@ -58,7 +68,7 @@ func (s *Core) cloneTemplateFile(fullFilePath string) (err error) {
 	}
 	defer filePtr.Close()
 
-	_, fileName := path.Split(fullFilePath)
+	fileName := fullFilePath[len(s.rootPath)+len(projectName)+2:]
 	templateFile, templateErr := s.getTemplateFile(fileName)
 	if templateErr == nil {
 		defer templateFile.Close()
@@ -97,7 +107,7 @@ func (s *Core) Create(data []byte) (err error) {
 		return
 	}
 
-	curPath = s.rootPath
+	curPath := s.rootPath
 	err = s.walkTemplate(curPath, template)
 	return
 }

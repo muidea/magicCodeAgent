@@ -44,6 +44,33 @@ var defaultTemplate = `
             ]
         },
         {
+            "name": "common",
+            "type": 0,
+            "subItems": [
+                {
+                    "name": "common.go",
+                    "type": 1,
+                    "subItems": []
+                },
+                {
+                    "name": "const.go",
+                    "type": 1,
+                    "subItems": []
+                }
+            ]
+        },
+        {
+            "name": "client",
+            "type": 0,
+            "subItems": [
+                {
+                    "name": "client.go",
+                    "type": 1,
+                    "subItems": []
+                }
+            ]
+        },
+        {
             "name": "core",
             "type": 0,
             "subItems": [
@@ -161,7 +188,7 @@ func createProject(curPath string) {
 
 	os.Setenv("projectName", projectName)
 
-	core := &project.Core{curPath}
+	core := project.NewCore(curPath)
 
 	data := fmt.Sprintf(defaultTemplate, projectName, projectName)
 
