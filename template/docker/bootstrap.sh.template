@@ -9,16 +9,16 @@ if [ $ENDPOINTNAME ]; then
     EXTRA_ARGS=$EXTRA_ARGS' -EndpointName='$ENDPOINTNAME
 fi
 
-if [ $CASSERVER ]; then
-    EXTRA_ARGS=$EXTRA_ARGS' -CasService='$CASSERVER
+if [ $CASSERVICE ]; then
+    EXTRA_ARGS=$EXTRA_ARGS' -CasService='$CASSERVICE
 fi
 
-if [ $USERSERVER ]; then
-    EXTRA_ARGS=$EXTRA_ARGS' -UserService='$USERSERVER
+if [ $USERSERVICE ]; then
+    EXTRA_ARGS=$EXTRA_ARGS' -UserService='$USERSERVICE
 fi
 
-if [ $FILESERVER ]; then
-    EXTRA_ARGS=$EXTRA_ARGS' -FileService='$FILESERVER
+if [ $FILESERVICE ]; then
+    EXTRA_ARGS=$EXTRA_ARGS' -FileService='$FILESERVICE
 fi
 
 if [ $BATISSERVICE ]; then
