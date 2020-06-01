@@ -9,23 +9,10 @@ import (
 
 	"github.com/muidea/magicCommon/foundation/net"
 
-	casClient "github.com/muidea/magicCas/client"
 	casModel "github.com/muidea/magicCas/model"
 	commonConst "github.com/muidea/magicCommon/common"
 	commonDef "github.com/muidea/magicCommon/def"
-	commonSession "github.com/muidea/magicCommon/session"
 )
-
-func (s *Registry) queryAllAccount(currentSession commonSession.Session) (ret []*casModel.AccountView, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, total, err = clnt.QueryAllAccount(nil)
-
-	return
-}
 
 // QueryAllAccount query member
 func (s *Registry) QueryAllAccount(res http.ResponseWriter, req *http.Request) {
@@ -38,7 +25,7 @@ func (s *Registry) QueryAllAccount(res http.ResponseWriter, req *http.Request) {
 	result := &queryResult{Accounts: []*casModel.AccountView{}}
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
-		accountList, accountTotal, accountErr := s.queryAllAccount(curSession)
+		accountList, accountTotal, accountErr := s.casService.QueryAllAccount(curSession)
 		if accountErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = accountErr.Error()
@@ -58,16 +45,6 @@ func (s *Registry) QueryAllAccount(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusExpectationFailed)
-}
-
-func (s *Registry) deleteAccount(currentSession commonSession.Session, id int) (ret *casModel.AccountView, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, err = clnt.DestroyAccount(id)
-	return
 }
 
 // DeleteAccount delete account
@@ -96,7 +73,7 @@ func (s *Registry) DeleteAccount(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		accountPtr, accountErr := s.deleteAccount(curSession, id)
+		accountPtr, accountErr := s.casService.DeleteAccount(curSession, id)
 		if accountErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = accountErr.Error()
@@ -106,7 +83,7 @@ func (s *Registry) DeleteAccount(res http.ResponseWriter, req *http.Request) {
 		result.ErrorCode = commonDef.Success
 
 		memo := fmt.Sprintf("删除账号%s", accountPtr.Account)
-		s.writelog(res, req, memo)
+		s.writeLog(res, req, memo)
 		break
 	}
 
@@ -117,16 +94,6 @@ func (s *Registry) DeleteAccount(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusExpectationFailed)
-}
-
-func (s *Registry) queryAccount(currentSession commonSession.Session, id int) (ret *casModel.AccountView, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, err = clnt.QueryAccount(id)
-	return
 }
 
 // QueryAccount query account
@@ -148,7 +115,7 @@ func (s *Registry) QueryAccount(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		accountView, accountErr := s.queryAccount(curSession, id)
+		accountView, accountErr := s.casService.QueryAccount(curSession, id)
 		if accountErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "参数非法"
@@ -168,16 +135,6 @@ func (s *Registry) QueryAccount(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) updateAccount(currentSession commonSession.Session, account *casModel.AccountView) (ret *casModel.AccountView, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, err = clnt.UpdateAccount(account)
-	return
-}
-
 // UpdateAccount update account
 func (s *Registry) UpdateAccount(res http.ResponseWriter, req *http.Request) {
 	param := map[string]int{}
@@ -193,7 +150,7 @@ func (s *Registry) UpdateAccount(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		accountView, accountErr := s.queryAccount(curSession, id)
+		accountView, accountErr := s.casService.QueryAccount(curSession, id)
 		if accountErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "参数非法"
@@ -215,7 +172,7 @@ func (s *Registry) UpdateAccount(res http.ResponseWriter, req *http.Request) {
 			accountView.PrivateGroup = &casModel.PrivateGroupLite{ID: privateGroup}
 		}
 
-		_, err = s.updateAccount(curSession, accountView)
+		_, err = s.casService.UpdateAccount(curSession, accountView)
 		if err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "更新信息出错,更新账号信息失败"
@@ -225,7 +182,7 @@ func (s *Registry) UpdateAccount(res http.ResponseWriter, req *http.Request) {
 		result.ErrorCode = commonDef.Success
 
 		memo := fmt.Sprintf("更新账号%s", accountView.Account)
-		s.writelog(res, req, memo)
+		s.writeLog(res, req, memo)
 		break
 	}
 

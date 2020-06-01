@@ -7,22 +7,9 @@ import (
 
 	"github.com/muidea/magicCommon/foundation/net"
 
-	casClient "github.com/muidea/magicCas/client"
 	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
-	commonSession "github.com/muidea/magicCommon/session"
 )
-
-func (s *Registry) queryPrivateGroup(currentSession commonSession.Session) (ret []*casModel.PrivateGroupView, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, total, err = clnt.QueryAllPrivate()
-
-	return
-}
 
 // QueryPrivateGroup query privateGroup
 func (s *Registry) QueryPrivateGroup(res http.ResponseWriter, req *http.Request) {
@@ -34,7 +21,7 @@ func (s *Registry) QueryPrivateGroup(res http.ResponseWriter, req *http.Request)
 	result := &queryResult{}
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
-		privateViewList, _, privateErr := s.queryPrivateGroup(curSession)
+		privateViewList, _, privateErr := s.casService.QueryPrivateGroup(curSession)
 		if privateErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = fmt.Sprintf("查询权限组失败, %s", privateErr.Error())
@@ -51,17 +38,6 @@ func (s *Registry) QueryPrivateGroup(res http.ResponseWriter, req *http.Request)
 	}
 
 	res.WriteHeader(http.StatusExpectationFailed)
-}
-
-func (s *Registry) savePrivateGroup(currentSession commonSession.Session, name, desc string, privateItems []*casModel.PrivateItem) (ret *casModel.PrivateGroupView, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, err = clnt.SavePrivate(name, desc, privateItems)
-
-	return
 }
 
 // SavePrivateGroup save privateGroup
@@ -93,7 +69,7 @@ func (s *Registry) SavePrivateGroup(res http.ResponseWriter, req *http.Request) 
 			break
 		}
 
-		privateView, privateErr := s.savePrivateGroup(curSession, param.Name, param.Description, param.Privates)
+		privateView, privateErr := s.casService.SavePrivateGroup(curSession, param.Name, param.Description, param.Privates)
 		if privateErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = fmt.Sprintf("保存权限组失败, %s", privateErr.Error())
@@ -103,7 +79,7 @@ func (s *Registry) SavePrivateGroup(res http.ResponseWriter, req *http.Request) 
 		result.PrivateGroup = privateView
 
 		memo := fmt.Sprintf("保存权限组%s", privateView.Name)
-		s.writelog(res, req, memo)
+		s.writeLog(res, req, memo)
 		break
 	}
 	block, err := json.Marshal(result)
@@ -115,19 +91,8 @@ func (s *Registry) SavePrivateGroup(res http.ResponseWriter, req *http.Request) 
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) destoryPrivateGroup(currentSession commonSession.Session, groupName string) (err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	err = clnt.DestroyPrivate(groupName)
-
-	return
-}
-
-// DestoryPrivateGroup destory privateGroup
-func (s *Registry) DestoryPrivateGroup(res http.ResponseWriter, req *http.Request) {
+// DestroyPrivateGroup destroy privateGroup
+func (s *Registry) DestroyPrivateGroup(res http.ResponseWriter, req *http.Request) {
 	result := &commonDef.Result{}
 
 	curSession := s.sessionRegistry.GetSession(res, req)
@@ -139,7 +104,7 @@ func (s *Registry) DestoryPrivateGroup(res http.ResponseWriter, req *http.Reques
 			break
 		}
 
-		err := s.destoryPrivateGroup(curSession, groupName)
+		err := s.casService.DestoryPrivateGroup(curSession, groupName)
 		if err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = fmt.Sprintf("删除权限组失败, %s", err.Error())
@@ -147,7 +112,7 @@ func (s *Registry) DestoryPrivateGroup(res http.ResponseWriter, req *http.Reques
 		}
 
 		memo := fmt.Sprintf("删除权限组, Name:%s", groupName)
-		s.writelog(res, req, memo)
+		s.writeLog(res, req, memo)
 		break
 	}
 

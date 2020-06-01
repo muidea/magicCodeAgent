@@ -9,22 +9,9 @@ import (
 
 	"github.com/muidea/magicCommon/foundation/net"
 
-	casClient "github.com/muidea/magicCas/client"
 	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
-	commonSession "github.com/muidea/magicCommon/session"
 )
-
-func (s *Registry) queryAllEndpoint(currentSession commonSession.Session) (ret []*casModel.EndpointView, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, total, err = clnt.QueryAllEndpoint(nil)
-
-	return
-}
 
 // QueryAllEndpoint query member
 func (s *Registry) QueryAllEndpoint(res http.ResponseWriter, req *http.Request) {
@@ -37,7 +24,7 @@ func (s *Registry) QueryAllEndpoint(res http.ResponseWriter, req *http.Request) 
 	result := &queryResult{Endpoints: []*casModel.EndpointView{}}
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
-		endpointList, endpointTotal, endpointErr := s.queryAllEndpoint(curSession)
+		endpointList, endpointTotal, endpointErr := s.casService.QueryAllEndpoint(curSession)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = endpointErr.Error()
@@ -59,21 +46,6 @@ func (s *Registry) QueryAllEndpoint(res http.ResponseWriter, req *http.Request) 
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) createEndpoint(currentSession commonSession.Session, endpoint *casModel.EndpointView) (ret *casModel.EndpointView, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, err = clnt.CreateEndpoint(
-		endpoint.Endpoint,
-		endpoint.Description,
-		endpoint.IdentifyID,
-		endpoint.AuthToken, 0)
-
-	return
-}
-
 // CreateEndpoint create endpoint
 func (s *Registry) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
 	param := &casModel.EndpointView{}
@@ -86,7 +58,7 @@ func (s *Registry) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
 			result.Reason = "参数非法"
 			break
 		}
-		_, err = s.createEndpoint(curSession, param)
+		_, err = s.casService.CreateEndpoint(curSession, param)
 		if err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "新建出错,新建终端信息失败"
@@ -96,7 +68,7 @@ func (s *Registry) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
 		result.ErrorCode = commonDef.Success
 
 		memo := fmt.Sprintf("新建终端%s", param.Endpoint)
-		s.writelog(res, req, memo)
+		s.writeLog(res, req, memo)
 		break
 	}
 
@@ -107,16 +79,6 @@ func (s *Registry) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusExpectationFailed)
-}
-
-func (s *Registry) deleteEndpoint(currentSession commonSession.Session, id int) (ret *casModel.EndpointView, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, err = clnt.DestroyEndpoint(id)
-	return
 }
 
 // DeleteEndpoint delete endpoint
@@ -133,7 +95,7 @@ func (s *Registry) DeleteEndpoint(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		endpointPtr, endpointErr := s.deleteEndpoint(curSession, id)
+		endpointPtr, endpointErr := s.casService.DeleteEndpoint(curSession, id)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = endpointErr.Error()
@@ -143,7 +105,7 @@ func (s *Registry) DeleteEndpoint(res http.ResponseWriter, req *http.Request) {
 		result.ErrorCode = commonDef.Success
 
 		memo := fmt.Sprintf("删除账号%s", endpointPtr.Endpoint)
-		s.writelog(res, req, memo)
+		s.writeLog(res, req, memo)
 		break
 	}
 
@@ -154,16 +116,6 @@ func (s *Registry) DeleteEndpoint(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusExpectationFailed)
-}
-
-func (s *Registry) queryEndpoint(currentSession commonSession.Session, id int) (ret *casModel.EndpointView, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, err = clnt.QueryEndpoint(id)
-	return
 }
 
 // QueryEndpoint query endpoint
@@ -185,7 +137,7 @@ func (s *Registry) QueryEndpoint(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		endpointView, endpointErr := s.queryEndpoint(curSession, id)
+		endpointView, endpointErr := s.casService.QueryEndpoint(curSession, id)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "参数非法"
@@ -205,16 +157,6 @@ func (s *Registry) QueryEndpoint(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) updateEndpoint(currentSession commonSession.Session, endpoint *casModel.EndpointView) (ret *casModel.EndpointView, err error) {
-	clnt := casClient.NewClient(s.casService)
-	defer clnt.Release()
-
-	sessionInfo := currentSession.GetSessionInfo()
-	clnt.BindSession(sessionInfo)
-	ret, err = clnt.UpdateEndpoint(endpoint)
-	return
-}
-
 // UpdateEndpoint update endpoint
 func (s *Registry) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
 	param := map[string]int{}
@@ -230,7 +172,7 @@ func (s *Registry) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		endpointView, endpointErr := s.queryEndpoint(curSession, id)
+		endpointView, endpointErr := s.casService.QueryEndpoint(curSession, id)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "参数非法"
@@ -252,7 +194,7 @@ func (s *Registry) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
 			endpointView.PrivateGroup = &casModel.PrivateGroupLite{ID: privateGroup}
 		}
 
-		_, err = s.updateEndpoint(curSession, endpointView)
+		_, err = s.casService.UpdateEndpoint(curSession, endpointView)
 		if err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "更新信息出错,更新账号信息失败"
@@ -262,7 +204,7 @@ func (s *Registry) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
 		result.ErrorCode = commonDef.Success
 
 		memo := fmt.Sprintf("更新账号%s", endpointView.Endpoint)
-		s.writelog(res, req, memo)
+		s.writeLog(res, req, memo)
 		break
 	}
 

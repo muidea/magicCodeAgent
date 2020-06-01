@@ -13,13 +13,15 @@ import (
 	commonDef "github.com/muidea/magicCommon/def"
 	commonSession "github.com/muidea/magicCommon/session"
 
-	casClient "github.com/muidea/magicCas/client"
+	fileCommon "github.com/muidea/magicFile/common"
+
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 	routeToolkit "github.com/muidea/magicCas/toolkit/route"
 	engine "github.com/muidea/magicEngine"
 	"github.com/muidea/%projectName%/common"
 	"github.com/muidea/%projectName%/config"
+	"github.com/muidea/%projectName%/core/service"
 	"github.com/muidea/%projectName%/core/handler"
 )
 
@@ -30,22 +32,19 @@ type Registry struct {
 	privateRouteRegistry routeToolkit.PrivateRegistry
 	casRouteRegistry     routeToolkit.CasRegistry
 
-	userService string
-	casService  string
-	fileService string
+	casService *service.Cas
 }
 
 // NewRoute create route
 func NewRoute(
 	sessionRegistry commonSession.Registry,
 	commonHandler handler.CommonHandler,
+	casService *service.Cas,
 ) *Registry {
 	route := &Registry{
 		sessionRegistry: sessionRegistry,
 		commonHandler:   commonHandler,
-		casService:      config.CasService(),
-		userService:     config.UserService(),
-		fileService:     config.FileService(),
+		casService:      casService,
 	}
 
 	route.privateRouteRegistry = routeToolkit.NewPrivateRegistry(route)
@@ -57,10 +56,6 @@ func NewRoute(
 // Login login account
 func (s *Registry) Login(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
-
-	ctx := commonCommon.NewSessionContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxSession := ctx.GetSessionInfo()
 
 	result := &casCommon.LoginResult{}
 	for {
@@ -78,32 +73,15 @@ func (s *Registry) Login(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		casClient := casClient.NewClient(s.casService)
-		defer casClient.Release()
-		if ctxSession == nil {
-			sessionInfo := curSession.GetSessionInfo()
-			casClient.BindSession(sessionInfo)
-			entityPtr, sessionInfo, loginErr := casClient.LoginAccount(param.Account, param.Password)
-			if loginErr != nil {
-				log.Printf("login account failed, err:%s", loginErr.Error())
-				return
-			}
-
-			result.Entity = entityPtr
-			result.SessionInfo = sessionInfo
-			curSession.SetSessionInfo(sessionInfo)
-			curSession.SetOption(commonCommon.AuthAccount, entityPtr)
-		} else {
-			casClient.BindSession(ctxSession)
-			entityPtr, verifyErr := casClient.VerifyAccount(param.Account, param.Password)
-			if verifyErr != nil {
-				log.Printf("verify account failed, err:%s", verifyErr.Error())
-				return
-			}
-
-			result.Entity = entityPtr
-			result.SessionInfo = ctxSession
+		loginEntity, loginSession, loginErr := s.casService.Login(curSession, param.Account, param.Password)
+		if loginErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = loginErr.Error()
+			break
 		}
+
+		result.Entity = loginEntity
+		result.SessionInfo = loginSession
 		break
 	}
 
@@ -121,33 +99,16 @@ func (s *Registry) Login(res http.ResponseWriter, req *http.Request) {
 func (s *Registry) Logout(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
-	ctx := commonCommon.NewSessionContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxSession := ctx.GetSessionInfo()
-
 	result := &casCommon.LogoutResult{}
 	for {
-		sessionInfo := curSession.GetSessionInfo()
-		if ctxSession == nil {
-			casClient := casClient.NewClient(s.casService)
-			defer casClient.Release()
-			casClient.BindSession(sessionInfo)
-
-			logoutSession, logoutErr := casClient.LogoutAccount()
-			if logoutErr != nil {
-				log.Printf("logout account failed, err:%s", logoutErr.Error())
-				result.ErrorCode = commonDef.Failed
-				result.Reason = "登出失败"
-				break
-			}
-
-			sessionInfo = logoutSession
-			curSession.SetSessionInfo(sessionInfo)
-			curSession.RemoveOption(commonCommon.AuthAccount)
+		logoutSession, logoutErr := s.casService.Logout(curSession)
+		if logoutErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = logoutErr.Error()
+			break
 		}
 
-		sessionInfo.Token = ""
-		result.SessionInfo = sessionInfo
+		result.SessionInfo = logoutSession
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -166,43 +127,25 @@ func (s *Registry) Logout(res http.ResponseWriter, req *http.Request) {
 func (s *Registry) ConfirmEndpoint(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
-	ctx := commonCommon.NewSessionContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxSession := ctx.GetSessionInfo()
-
 	result := &casCommon.ConfirmResult{}
 	for {
 		authToken := req.URL.Query().Get("authToken")
 		identifyID := req.URL.Query().Get("identifyID")
-
-		casClient := casClient.NewClient(s.casService)
-		defer casClient.Release()
-
-		if ctxSession == nil {
-			sessionInfo := curSession.GetSessionInfo()
-			casClient.BindSession(sessionInfo)
-			entityPtr, sessionInfo, confirmErr := casClient.ConfirmEndpoint(identifyID, authToken)
-			if confirmErr != nil {
-				log.Printf("confirm endpoint failed, err:%s", confirmErr.Error())
-				return
-			}
-
-			result.Entity = entityPtr
-			result.SessionInfo = sessionInfo
-			curSession.SetSessionInfo(sessionInfo)
-			curSession.SetOption(commonCommon.AuthAccount, entityPtr)
-		} else {
-			casClient.BindSession(ctxSession)
-			entityPtr, confirmErr := casClient.VerifyEndpoint(identifyID, authToken)
-			if confirmErr != nil {
-				log.Printf("verify endpoint failed, err:%s", confirmErr.Error())
-				return
-			}
-
-			result.Entity = entityPtr
-			result.SessionInfo = ctxSession
+		if authToken == "" || identifyID == "" {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "无效参数"
+			break
 		}
 
+		confirmEntity, confirmSession, confirmErr := s.casService.ConfirmEndpoint(curSession, authToken, identifyID)
+		if confirmErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = confirmErr.Error()
+			break
+		}
+
+		result.Entity = confirmEntity
+		result.SessionInfo = confirmSession
 		break
 	}
 
@@ -220,58 +163,17 @@ func (s *Registry) ConfirmEndpoint(res http.ResponseWriter, req *http.Request) {
 func (s *Registry) RefreshStatus(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
-	ctx := casCommon.NewEntityContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxEntity := ctx.GetEntity()
-
-	sessionInfo := curSession.GetSessionInfo()
 	result := &casCommon.RefreshResult{}
 	for {
-		casClient := casClient.NewClient(s.casService)
-		defer casClient.Release()
-		casClient.BindSession(sessionInfo)
-
-		if ctxEntity == nil {
-			sessionEntity, sessionInfo, sessionErr := casClient.RefreshSession()
-			if sessionErr != nil {
-				result.ErrorCode = commonDef.Failed
-				result.Reason = "刷新会话失败，非法权限"
-				break
-			}
-			curSession.SetSessionInfo(sessionInfo)
-			curSession.SetOption(commonCommon.AuthAccount, sessionEntity)
-			result.Entity = sessionEntity
-			result.SessionInfo = sessionInfo
-		} else {
-			if ctxEntity.EType == casModel.AccountType {
-				accountPtr, accountErr := casClient.QueryAccount(ctxEntity.EID)
-				if accountErr != nil {
-					result.ErrorCode = commonDef.Failed
-					result.Reason = "刷新会话失败，非法权限"
-					break
-				}
-
-				result.Entity = accountPtr.Entity()
-				result.SessionInfo = sessionInfo
-				break
-			}
-			if ctxEntity.EType == casModel.EndpointType {
-				endpointPtr, endpointErr := casClient.QueryEndpoint(ctxEntity.EID)
-				if endpointErr != nil {
-					result.ErrorCode = commonDef.Failed
-					result.Reason = "刷新会话失败，非法权限"
-					break
-				}
-
-				result.Entity = endpointPtr.Entity()
-				result.SessionInfo = sessionInfo
-				break
-			}
-
+		refreshEntity, refreshSession, refreshErr := s.casService.RefreshStatus(curSession)
+		if refreshErr != nil {
 			result.ErrorCode = commonDef.Failed
-			result.Reason = "刷新会话失败，非法认证"
+			result.Reason = refreshErr.Error()
+			break
 		}
 
+		result.Entity = refreshEntity
+		result.SessionInfo = refreshSession
 		break
 	}
 
@@ -289,13 +191,7 @@ func (s *Registry) RefreshStatus(res http.ResponseWriter, req *http.Request) {
 func (s *Registry) Verify(res http.ResponseWriter, req *http.Request) (err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
-	sessionInfo := curSession.GetSessionInfo()
-
-	casClient := casClient.NewClient(s.casService)
-	defer casClient.Release()
-	casClient.BindSession(sessionInfo)
-
-	sessionEntity, sessionInfo, sessionErr := casClient.RefreshSession()
+	sessionEntity, sessionInfo, sessionErr := s.casService.RefreshStatus(curSession)
 	if sessionErr != nil {
 		err = sessionErr
 		log.Printf("verify current commonSession failed, err:%s", sessionErr.Error())
@@ -311,38 +207,8 @@ func (s *Registry) Verify(res http.ResponseWriter, req *http.Request) (err error
 // VerifyPrivate verify private
 func (s *Registry) VerifyPrivate(res http.ResponseWriter, req *http.Request) (ret *casModel.PrivateGroupLite, err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
+	ret, err = s.casService.VerifyPrivate(curSession)
 
-	sessionInfo := curSession.GetSessionInfo()
-
-	ctx := casCommon.NewEntityContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxEntity := ctx.GetEntity()
-
-	casClient := casClient.NewClient(s.casService)
-	defer casClient.Release()
-	casClient.BindSession(sessionInfo)
-
-	var entityPtr *casModel.Entity
-	if ctxEntity == nil {
-		authPtr, authOK := curSession.GetOption(commonCommon.AuthAccount)
-		if !authOK {
-			err = fmt.Errorf("illegal authority")
-			return
-		}
-
-		entityPtr = authPtr.(*casModel.Entity)
-	} else {
-		entityPtr = ctxEntity
-	}
-
-	privatePtr, verifyErr := casClient.VerifyPrivate(entityPtr)
-	if verifyErr != nil {
-		err = verifyErr
-		log.Printf("verify privateGroup failed, err:%s", verifyErr.Error())
-		return
-	}
-
-	ret = privatePtr
 	return
 }
 
@@ -365,7 +231,7 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 
 	s.casRouteRegistry.AddHandler(common.QueryOperateLogURL, "GET", s.QueryOperateLog)
 
-	// account login,logout,verify,changepassword
+	// account login,logout,verify,change password
 	//---------------------------------------------------------------------------------------
 	loginRoute := engine.CreateRoute(common.LoginAccountURL, "POST", s.Login)
 	router.AddRoute(loginRoute, s)
@@ -378,43 +244,43 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 
 	s.casRouteRegistry.AddHandler(common.RefreshStatusURL, "GET", s.RefreshStatus)
 
-	createAccountURL := net.JoinURL(s.casService, casCommon.CreateAccountURL)
+	createAccountURL := net.JoinURL(config.CasService(), casCommon.CreateAccountURL)
 	createAccountRoute := engine.CreateProxyRoute(common.CreateAccountURL, "POST", createAccountURL, true)
 	s.casRouteRegistry.AddRoute(createAccountRoute, s)
 
-	changePasswordURL := net.JoinURL(s.casService, casCommon.ChangePasswordURL)
+	changePasswordURL := net.JoinURL(config.CasService(), casCommon.ChangePasswordURL)
 	changePasswordRoute := engine.CreateProxyRoute(common.UpdateAccountPasswordURL, "PUT", changePasswordURL, true)
 	s.casRouteRegistry.AddRoute(changePasswordRoute, s)
 
 	// update account,query account,delete account
 	//---------------------------------------------------------------------------------------
-	s.privateRouteRegistry.AddHandler("/api/v1/account/query/all/", "GET", casModel.ReadPrivate, s.QueryAllAccount)
-	s.privateRouteRegistry.AddHandler("/api/v1/account/query/:id", "GET", casModel.ReadPrivate, s.QueryAccount)
-	s.privateRouteRegistry.AddHandler("/api/v1/account/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteAccount)
-	s.privateRouteRegistry.AddHandler("/api/v1/account/update/:id", "PUT", casModel.WritePrivate, s.UpdateAccount)
+	s.privateRouteRegistry.AddHandler(common.QueryAllAccountURL, "GET", casModel.ReadPrivate, s.QueryAllAccount)
+	s.privateRouteRegistry.AddHandler(common.QueryAccountURL, "GET", casModel.ReadPrivate, s.QueryAccount)
+	s.privateRouteRegistry.AddHandler(common.DeleteAccountURL, "DELETE", casModel.DeletePrivate, s.DeleteAccount)
+	s.privateRouteRegistry.AddHandler(common.UpdateAccountURL, "PUT", casModel.WritePrivate, s.UpdateAccount)
 
 	// update endpoint,query endpoint,delete endpoint
 	//---------------------------------------------------------------------------------------
-	s.privateRouteRegistry.AddHandler("/api/v1/endpoint/query/all/", "GET", casModel.ReadPrivate, s.QueryAllEndpoint)
-	s.privateRouteRegistry.AddHandler("/api/v1/endpoint/query/:id", "GET", casModel.ReadPrivate, s.QueryEndpoint)
-	s.privateRouteRegistry.AddHandler("/api/v1/endpoint/create/", "POST", casModel.WritePrivate, s.CreateEndpoint)
-	s.privateRouteRegistry.AddHandler("/api/v1/endpoint/delete/:id", "DELETE", casModel.DeletePrivate, s.DeleteEndpoint)
-	s.privateRouteRegistry.AddHandler("/api/v1/endpoint/update/:id", "PUT", casModel.WritePrivate, s.UpdateEndpoint)
+	s.privateRouteRegistry.AddHandler(common.QueryAllEndpointURL, "GET", casModel.ReadPrivate, s.QueryAllEndpoint)
+	s.privateRouteRegistry.AddHandler(common.QueryEndpointURL, "GET", casModel.ReadPrivate, s.QueryEndpoint)
+	s.privateRouteRegistry.AddHandler(common.CreateEndpointURL, "POST", casModel.WritePrivate, s.CreateEndpoint)
+	s.privateRouteRegistry.AddHandler(common.DeleteEndpointURL, "DELETE", casModel.DeletePrivate, s.DeleteEndpoint)
+	s.privateRouteRegistry.AddHandler(common.UpdateEndpointURL, "PUT", casModel.WritePrivate, s.UpdateEndpoint)
 
 	// private
 	//---------------------------------------------------------------------------------------
-	s.privateRouteRegistry.AddHandler("/api/v1/private/query/", "GET", casModel.ReadPrivate, s.QueryPrivateGroup)
-	s.privateRouteRegistry.AddHandler("/api/v1/private/save/", "POST", casModel.WritePrivate, s.SavePrivateGroup)
-	s.privateRouteRegistry.AddHandler("/api/v1/private/destory/", "GET", casModel.DeletePrivate, s.DestoryPrivateGroup)
+	s.privateRouteRegistry.AddHandler(common.QueryPrivateURL, "GET", casModel.ReadPrivate, s.QueryPrivateGroup)
+	s.privateRouteRegistry.AddHandler(common.SavePrivateURL, "POST", casModel.WritePrivate, s.SavePrivateGroup)
+	s.privateRouteRegistry.AddHandler(common.DestroyPrivateURL, "GET", casModel.DeletePrivate, s.DestroyPrivateGroup)
 
 	// upload file
 	//---------------------------------------------------------------------------------------
-	uploadFileURL := net.JoinURL(s.fileService, "/file/upload/")
-	uploadFileRoute := engine.CreateProxyRoute("/api/v1/file/upload/", "POST", uploadFileURL, true)
+	uploadFileURL := net.JoinURL(config.FileService(), fileCommon.UploadFileURL)
+	uploadFileRoute := engine.CreateProxyRoute(common.UploadFileURL, "POST", uploadFileURL, true)
 	router.AddRoute(uploadFileRoute, s)
 
-	viewFileURL := net.JoinURL(s.fileService, "/file/download/")
-	viewFileRoute := engine.CreateProxyRoute("/api/v1/file/view/", "GET", viewFileURL, true)
+	viewFileURL := net.JoinURL(config.FileService(), fileCommon.DownloadFileURL)
+	viewFileRoute := engine.CreateProxyRoute(common.ViewFileURL, "GET", viewFileURL, true)
 	router.AddRoute(viewFileRoute, s)
 
 	s.privateRouteRegistry.RegisterRoute(router)
@@ -453,7 +319,7 @@ func (s *Registry) QueryOperateLog(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *Registry) writelog(res http.ResponseWriter, req *http.Request, memo string) {
+func (s *Registry) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
 	address := net.GetHTTPRemoteAddress(req)
 	account := ""
 	curEntity, curErr := s.getCurrentEntity(res, req)
