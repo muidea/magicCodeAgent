@@ -16,8 +16,7 @@ func init() {
 
 var usage = `
   -action string
-	createProject: create new project,and initialze
-	updateDep: update project dependence
+	createProject: create new project,and initialize
 `
 
 func printUsage(curPath string) {
