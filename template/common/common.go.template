@@ -2,7 +2,7 @@ package common
 
 import (
 	commonDef "github.com/muidea/magicCommon/def"
-	"github.com/muidea/%projectName%/model"
+	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 // QueryAllOpertateLogResult query all operate log result

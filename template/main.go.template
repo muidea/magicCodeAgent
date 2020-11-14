@@ -5,14 +5,14 @@ import (
 	"log"
 
 	engine "github.com/muidea/magicEngine"
-	_ "github.com/muidea/%projectName%/config"
-	core "github.com/muidea/%projectName%/core"
+	_ "github.com/muidea/{{.ProjectName}}/config"
+	core "github.com/muidea/{{.ProjectName}}/core"
 )
 
 var listenPort = "8880"
 
 func main() {
-	flag.StringVar(&listenPort, "ListenPort", listenPort, "%projectName% listen address")
+	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
 	flag.Parse()
 
 	router := engine.NewRouter()
@@ -26,7 +26,7 @@ func main() {
 
 		svr.Run()
 	} else {
-		log.Printf("start %projectName% failed.")
+		log.Printf("start {{.ProjectName}} failed.")
 	}
 
 	core.Teardown()

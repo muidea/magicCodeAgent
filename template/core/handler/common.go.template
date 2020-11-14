@@ -7,7 +7,7 @@ import (
 	"github.com/muidea/magicBatis/client"
 	"github.com/muidea/magicBatis/def"
 	"github.com/muidea/magicCommon/foundation/util"
-	"github.com/muidea/%projectName%/model"	
+	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 // CommonHandler common handler

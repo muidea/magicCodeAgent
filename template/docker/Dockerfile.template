@@ -1,17 +1,17 @@
 FROM centos
 
 LABEL Author="rangh"
-LABEL Application="%projectName%"
+LABEL Application="{{.ProjectName}}"
 
 RUN mkdir -p /var/app
 
 WORKDIR /var/app
 
-ADD %projectName% /var/app/%projectName%
+ADD {{.ProjectName}} /var/app/{{.ProjectName}}
 ADD bootstrap.sh /var/app/bootstrap.sh
 ADD wait-for-it.sh /var/app/wait-for-it.sh
 
-RUN chmod +x /var/app/%projectName%
+RUN chmod +x /var/app/{{.ProjectName}}
 RUN chmod +x /var/app/bootstrap.sh
 RUN chmod +x /var/app/wait-for-it.sh
 

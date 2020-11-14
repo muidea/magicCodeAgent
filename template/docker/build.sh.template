@@ -1,7 +1,7 @@
 #!/bin/bash
 
 rootPath=$GOPATH
-projectName=%projectName%
+projectName={{.ProjectName}}
 projectPath=$rootPath/src/github.com/muidea/$projectName
 binPath=$rootPath/bin/$projectName
 imageID=""
@@ -28,7 +28,7 @@ function cleanUp()
 function buildBin()
 {
     echo "buildBin..."
-    GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags netgo  -o $binPath github.com/muidea/%projectName%/cmd/%projectName%
+    GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags netgo  -o $binPath github.com/muidea/{{.ProjectName}}/cmd/{{.ProjectName}}
     if [ $? -ne 0 ]; then
         echo "buildBin failed."
         exit 1
@@ -106,7 +106,7 @@ function rmiImage()
 
 function all()
 {
-    echo "build %projectName% docker image"
+    echo "build {{.ProjectName}} docker image"
 
     curPath=$(pwd)
 

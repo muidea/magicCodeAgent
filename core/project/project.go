@@ -3,6 +3,7 @@ package project
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"text/template"
@@ -50,18 +51,21 @@ func (s *Core) getTemplatePath() (ret string, err error) {
 }
 
 func (s *Core) cloneTemplate(filePath string) (err error) {
+	log.Print(filePath)
 	templatePath := path.Join(s.templatePath, filePath)
 	fullPath := path.Join(s.rootPath, filePath)
 	curPath, curName := path.Split(fullPath)
 	existsFlag, existsErr := exists(curPath)
-	if existsFlag || existsErr != nil {
+	if existsErr != nil {
 		err = fmt.Errorf("unexpect, fileName:%s", filePath)
 		return
 	}
 
-	err = os.MkdirAll(curPath, os.ModePerm)
-	if err != nil {
-		return
+	if !existsFlag {
+		err = os.MkdirAll(curPath, os.ModePerm)
+		if err != nil {
+			return
+		}
 	}
 
 	curName = curName[:len(curName)-len(".template")]
@@ -85,7 +89,6 @@ func (s *Core) cloneTemplate(filePath string) (err error) {
 
 // Create create
 func (s *Core) Create(projectName string) (err error) {
-	curPath := s.rootPath
 	s.projectName = projectName
 
 	templatePath, templateErr := s.getTemplatePath()
@@ -95,7 +98,7 @@ func (s *Core) Create(projectName string) (err error) {
 	}
 	s.templatePath = templatePath
 
-	err = s.walkTemplate(curPath)
+	err = s.walkTemplate("")
 	return
 }
 
@@ -103,7 +106,7 @@ func (s *Core) walkTemplate(projectPath string) (err error) {
 	fullPath := path.Join(s.templatePath, projectPath)
 	existFlag, existErr := exists(fullPath)
 	if !existFlag || existErr != nil {
-		err = fmt.Errorf("template file does not exist")
+		err = fmt.Errorf("template file does not exist, projectPath:%s", projectPath)
 		return
 	}
 

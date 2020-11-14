@@ -19,10 +19,10 @@ import (
 	casModel "github.com/muidea/magicCas/model"
 	routeToolkit "github.com/muidea/magicCas/toolkit/route"
 	engine "github.com/muidea/magicEngine"
-	"github.com/muidea/%projectName%/common"
-	"github.com/muidea/%projectName%/config"
-	"github.com/muidea/%projectName%/core/service"
-	"github.com/muidea/%projectName%/core/handler"
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/config"
+	"github.com/muidea/{{.ProjectName}}/core/service"
+	"github.com/muidea/{{.ProjectName}}/core/handler"
 )
 
 // Registry 路由信息

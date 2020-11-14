@@ -27,4 +27,4 @@ fi
 
 echo $EXTRA_ARGS
 
-/var/app/%projectName% $EXTRA_ARGS "$@"
+/var/app/{{.ProjectName}} $EXTRA_ARGS "$@"

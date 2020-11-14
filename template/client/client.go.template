@@ -14,8 +14,8 @@ import (
 	commonCommon "github.com/muidea/magicCommon/common"
 	commonDef "github.com/muidea/magicCommon/def"
 
-	"github.com/muidea/%projectName%/common"
-	"github.com/muidea/%projectName%/model"
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 // Client client interface
