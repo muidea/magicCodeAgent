@@ -27,8 +27,8 @@ func createProject(curPath string) {
 		return
 	}
 
-	core := project.NewCore(curPath)
-	curErr := core.Create(projectName)
+	project := project.New(curPath)
+	curErr := project.Create(projectName)
 	if curErr != nil {
 		log.Printf("Create template failed, err:%s", curErr.Error())
 		return

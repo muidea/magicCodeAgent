@@ -9,19 +9,19 @@ import (
 	"text/template"
 )
 
-// Core core define
-type Core struct {
+// Project core define
+type Project struct {
 	projectName  string
 	rootPath     string
 	templatePath string
 }
 
-// NewCore new core
-func NewCore(rootPath string) *Core {
-	return &Core{rootPath: rootPath}
+// New new core
+func New(rootPath string) *Project {
+	return &Project{rootPath: rootPath}
 }
 
-func (s *Core) getFile(filePath string) (ret *os.File, err error) {
+func (s *Project) getFile(filePath string) (ret *os.File, err error) {
 	existsFlag, existsErr := exists(filePath)
 	if !existsFlag || existsErr != nil {
 		err = fmt.Errorf("file does not exist")
@@ -32,7 +32,7 @@ func (s *Core) getFile(filePath string) (ret *os.File, err error) {
 	return
 }
 
-func (s *Core) getTemplatePath() (ret string, err error) {
+func (s *Project) getTemplatePath() (ret string, err error) {
 	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
 	if toolKitPath == "" {
 		err = fmt.Errorf("no found toolkitPath")
@@ -50,7 +50,7 @@ func (s *Core) getTemplatePath() (ret string, err error) {
 	return
 }
 
-func (s *Core) cloneTemplate(filePath string) (err error) {
+func (s *Project) cloneTemplate(filePath string) (err error) {
 	log.Print(filePath)
 	templatePath := path.Join(s.templatePath, filePath)
 	fullPath := path.Join(s.rootPath, filePath)
@@ -91,7 +91,7 @@ func (s *Core) cloneTemplate(filePath string) (err error) {
 }
 
 // Create create
-func (s *Core) Create(projectName string) (err error) {
+func (s *Project) Create(projectName string) (err error) {
 	s.projectName = projectName
 
 	templatePath, templateErr := s.getTemplatePath()
@@ -105,7 +105,7 @@ func (s *Core) Create(projectName string) (err error) {
 	return
 }
 
-func (s *Core) walkTemplate(projectPath string) (err error) {
+func (s *Project) walkTemplate(projectPath string) (err error) {
 	fullPath := path.Join(s.templatePath, projectPath)
 	existFlag, existErr := exists(fullPath)
 	if !existFlag || existErr != nil {

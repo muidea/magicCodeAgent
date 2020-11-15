@@ -17,6 +17,7 @@ func init() {
 var usage = `
   -action string
 	createProject: create new project,and initialize
+	createContent: create project content
 `
 
 func printUsage(curPath string) {
