@@ -5,8 +5,8 @@ import (
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
-// QueryAllOpertateLogResult query all operate log result
-type QueryAllOpertateLogResult struct {
+// QueryAllOpLogResult query all operate log result
+type QueryAllOpLogResult struct {
 	commonDef.Result
 	Total int64          `json:"total"`
 	Logs  []*model.OpLog `json:"logs"`

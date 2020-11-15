@@ -1,0 +1,5 @@
+package model
+
+// View cms view
+type View struct {
+}

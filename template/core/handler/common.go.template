@@ -16,14 +16,14 @@ type CommonHandler interface {
 	GetSysConfig() (*model.SysConfig, error)
 
 	QueryOpLog(pageFilter *util.PageFilter) ([]*model.OpLog, int64, error)
-	WriteOpLog(account, address, memo string) (*model.OpLog, error)	
+	WriteOpLog(account, address, memo string) (*model.OpLog, error)
 }
 
 // NewCommonHandler 新建CommonHandler
-func NewCommonHandler(clnt client.Client) (CommonHandler, error) {
+func NewCommonHandler(clnt client.Client) CommonHandler {
 	handler := &commonHandler{batisClnt: clnt}
 
-	return handler, nil
+	return handler
 }
 
 type commonHandler struct {
@@ -49,14 +49,13 @@ func (s *commonHandler) GetSysConfig() (ret *model.SysConfig, err error) {
 	return
 }
 
-
 func (s *commonHandler) QueryOpLog(pageFilter *util.PageFilter) (ret []*model.OpLog, total int64, err error) {
 	ret = []*model.OpLog{}
 	queryfilter := &def.QueryFilter{}
 	if pageFilter != nil {
 		queryfilter.Page(pageFilter)
 	}
-	queryfilter.SortFilter = &util.SortFilter{AscSort: false, FieldName: "CreateTime"}
+	queryfilter.SortFilter = &util.SortFilter{AscSort: false, FieldName: "UpdateTime"}
 
 	total, err = s.batisClnt.BatchQueryEntity(&ret, queryfilter)
 

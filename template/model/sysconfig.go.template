@@ -1,10 +1,20 @@
 package model
 
+import casModel "github.com/muidea/magicCas/model"
+
 // SysConfig sysConfig
+// @Name 配置组名称
+// @Items 配置项
+// @Creater 创建人
+// @UpdateTime 更新时间
+// @Namespace 所属空间
 type SysConfig struct {
-	ID    int          `json:"id" orm:"id key auto"`
-	Name  string       `json:"name" orm:"name"`
-	Items []ConfigItem `json:"item" orm:"item"`
+	ID         int              `json:"id" orm:"id key auto"`
+	Name       string           `json:"name" orm:"name"`
+	Items      []ConfigItem     `json:"item" orm:"item"`
+	Creater    *casModel.Entity `json:"creater" orm:"creater"`
+	UpdateTime int64            `json:"updateTime" orm:"updateTime"`
+	Namespace  string           `json:"namespace" orm:"namespace"`
 }
 
 // ConfigItem config item

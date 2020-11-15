@@ -1,9 +1,8 @@
-package service
+package biz
 
 import (
 	"fmt"
 	casClient "github.com/muidea/magicCas/client"
-	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 	commonCommon "github.com/muidea/magicCommon/common"
 	commonSession "github.com/muidea/magicCommon/session"
@@ -22,26 +21,69 @@ func (s *Cas) Login(curSession commonSession.Session, account, password string) 
 	casClient := casClient.NewClient(s.casService)
 	defer casClient.Release()
 
-	ctx := commonCommon.NewSessionContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxSession := ctx.GetSessionInfo()
-	if ctxSession == nil {
-		casClient.BindSession(curSession.GetSessionInfo())
-		loginEntity, loginSession, loginErr := casClient.LoginAccount(account, password)
-		if loginErr != nil {
-			err = loginErr
-			log.Printf("login account failed, err:%s", err.Error())
-			return
-		}
-
-		curSession.SetSessionInfo(loginSession)
-		curSession.SetOption(commonCommon.AuthAccount, loginEntity)
-		entityPtr = loginEntity
-		sessionInfo = loginSession
+	ctxInfo := curSession.GetSessionInfo()
+	casClient.BindSession(ctxInfo)
+	loginEntity, loginSession, loginErr := casClient.LoginAccount(account, password)
+	if loginErr != nil {
+		err = loginErr
+		log.Printf("login account failed, err:%s", err.Error())
 		return
 	}
 
-	casClient.BindSession(ctxSession)
+	entityPtr = loginEntity
+	sessionInfo = loginSession
+	return
+}
+
+func (s *Cas) Logout(curSession commonSession.Session) (sessionInfo *commonCommon.SessionInfo, err error) {
+	sessionInfo = curSession.GetSessionInfo()
+	if sessionInfo == nil {
+		err = fmt.Errorf("must login first")
+		return
+	}
+
+	casClient := casClient.NewClient(s.casService)
+	defer casClient.Release()
+
+	casClient.BindSession(sessionInfo)
+	logoutSession, logoutErr := casClient.LogoutAccount()
+	if logoutErr != nil {
+		err = logoutErr
+		log.Printf("logout account failed, err:%s", err.Error())
+		return
+	}
+
+	sessionInfo = logoutSession
+
+	return
+}
+
+func (s *Cas) ConfirmEndpoint(curSession commonSession.Session, identifyID, authToken string) (entityPtr *casModel.Entity, sessionInfo *commonCommon.SessionInfo, err error) {
+	casClient := casClient.NewClient(s.casService)
+	defer casClient.Release()
+
+	ctxInfo := curSession.GetSessionInfo()
+	casClient.BindSession(ctxInfo)
+
+	confirmEntity, confirmSession, confirmErr := casClient.ConfirmEndpoint(identifyID, authToken)
+	if confirmErr != nil {
+		err = confirmErr
+		log.Printf("confirm endpoint failed, err:%s", err.Error())
+		return
+	}
+
+	entityPtr = confirmEntity
+	sessionInfo = confirmSession
+
+	return
+}
+
+func (s *Cas) VerifyAccount(curSession commonSession.Session, account, password string) (entityPtr *casModel.Entity, sessionInfo *commonCommon.SessionInfo, err error) {
+	casClient := casClient.NewClient(s.casService)
+	defer casClient.Release()
+
+	ctxInfo := curSession.GetSessionInfo()
+	casClient.BindSession(ctxInfo)
 	verifyEntity, verifyErr := casClient.VerifyAccount(account, password)
 	if verifyErr != nil {
 		err = verifyErr
@@ -50,150 +92,58 @@ func (s *Cas) Login(curSession commonSession.Session, account, password string) 
 	}
 
 	entityPtr = verifyEntity
-	sessionInfo = ctxSession
-
+	sessionInfo = ctxInfo
 	return
 }
 
-func (s *Cas) Logout(curSession commonSession.Session) (sessionInfo *commonCommon.SessionInfo, err error) {
-	ctx := commonCommon.NewSessionContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxSession := ctx.GetSessionInfo()
-
-	sessionInfo = curSession.GetSessionInfo()
-	if ctxSession == nil {
-		casClient := casClient.NewClient(s.casService)
-		defer casClient.Release()
-		casClient.BindSession(sessionInfo)
-
-		logoutSession, logoutErr := casClient.LogoutAccount()
-		if logoutErr != nil {
-			err = logoutErr
-			log.Printf("logout account failed, err:%s", err.Error())
-			return
-		}
-
-		sessionInfo = logoutSession
-		curSession.SetSessionInfo(sessionInfo)
-		curSession.RemoveOption(commonCommon.AuthAccount)
-	} else {
-		sessionInfo.Token = ""
-	}
-
-	return
-}
-
-func (s *Cas) ConfirmEndpoint(curSession commonSession.Session, authToken, identifyID string) (entityPtr *casModel.Entity, sessionInfo *commonCommon.SessionInfo, err error) {
+func (s *Cas) VerifyEndpoint(curSession commonSession.Session, identifyID, authToken string) (entityPtr *casModel.Entity, sessionInfo *commonCommon.SessionInfo, err error) {
 	casClient := casClient.NewClient(s.casService)
 	defer casClient.Release()
 
-	ctx := commonCommon.NewSessionContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxSession := ctx.GetSessionInfo()
-	if ctxSession == nil {
-		casClient.BindSession(curSession.GetSessionInfo())
-		confirmEntity, confirmSession, confirmErr := casClient.ConfirmEndpoint(identifyID, authToken)
-		if confirmErr != nil {
-			err = confirmErr
-			log.Printf("confirm endpoint failed, err:%s", err.Error())
-			return
-		}
-
-		curSession.SetSessionInfo(confirmSession)
-		curSession.SetOption(commonCommon.AuthAccount, confirmEntity)
-		entityPtr = confirmEntity
-		sessionInfo = confirmSession
-	} else {
-		casClient.BindSession(ctxSession)
-		verifyEntity, verifyErr := casClient.VerifyEndpoint(identifyID, authToken)
-		if verifyErr != nil {
-			err = verifyErr
-			log.Printf("verify endpoint failed, err:%s", err.Error())
-			return
-		}
-
-		entityPtr = verifyEntity
-		sessionInfo = ctxSession
+	ctxInfo := curSession.GetSessionInfo()
+	casClient.BindSession(ctxInfo)
+	verifyEntity, verifyErr := casClient.VerifyEndpoint(identifyID, authToken)
+	if verifyErr != nil {
+		err = verifyErr
+		log.Printf("verify endpoint failed, err:%s", err.Error())
+		return
 	}
 
+	entityPtr = verifyEntity
+	sessionInfo = ctxInfo
 	return
 }
 
-func (s *Cas) RefreshStatus(curSession commonSession.Session) (
-	entityPtr *casModel.Entity,
-	sessionInfo *commonCommon.SessionInfo,
-	err error) {
-	ctx := casCommon.NewEntityContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxEntity := ctx.GetEntity()
-
+func (s *Cas) RefreshStatus(curSession commonSession.Session) (entityPtr *casModel.Entity, sessionInfo *commonCommon.SessionInfo, err error) {
 	sessionInfo = curSession.GetSessionInfo()
 	casClient := casClient.NewClient(s.casService)
 	defer casClient.Release()
 	casClient.BindSession(sessionInfo)
-	if ctxEntity == nil {
-		refreshEntity, refreshSession, refreshErr := casClient.RefreshSession()
-		if refreshErr != nil {
-			err = refreshErr
-			return
-		}
-		curSession.SetSessionInfo(refreshSession)
-		curSession.SetOption(commonCommon.AuthAccount, refreshEntity)
-		entityPtr = refreshEntity
-		sessionInfo = refreshSession
+	refreshEntity, refreshSession, refreshErr := casClient.RefreshSession()
+	if refreshErr != nil {
+		err = refreshErr
 		return
 	}
 
-	if ctxEntity.EType == casModel.AccountType {
-		accountPtr, accountErr := casClient.QueryAccount(ctxEntity.EID)
-		if accountErr != nil {
-			err = accountErr
-			return
-		}
-
-		entityPtr = accountPtr.Entity()
-		return
-	}
-
-	if ctxEntity.EType == casModel.EndpointType {
-		endpointPtr, endpointErr := casClient.QueryEndpoint(ctxEntity.EID)
-		if endpointErr != nil {
-			err = endpointErr
-			return
-		}
-
-		entityPtr = endpointPtr.Entity()
-		return
-	}
-
-	err = fmt.Errorf("illegal session")
+	entityPtr = refreshEntity
+	sessionInfo = refreshSession
 	return
 }
 
 func (s *Cas) VerifyPrivate(curSession commonSession.Session) (ret *casModel.PrivateGroupLite, err error) {
 	sessionInfo := curSession.GetSessionInfo()
 
-	ctx := casCommon.NewEntityContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxEntity := ctx.GetEntity()
+	authPtr, authOK := curSession.GetOption(commonCommon.AuthAccount)
+	if !authOK {
+		err = fmt.Errorf("illegal authority")
+		return
+	}
+	entityPtr := authPtr.(*casModel.Entity)
 
 	casClient := casClient.NewClient(s.casService)
 	defer casClient.Release()
+
 	casClient.BindSession(sessionInfo)
-
-	var entityPtr *casModel.Entity
-	if ctxEntity == nil {
-		authPtr, authOK := curSession.GetOption(commonCommon.AuthAccount)
-		if !authOK {
-			err = fmt.Errorf("illegal authority")
-			return
-		}
-
-		entityPtr = authPtr.(*casModel.Entity)
-	} else {
-		entityPtr = ctxEntity
-	}
-
 	privatePtr, verifyErr := casClient.VerifyPrivate(entityPtr)
 	if verifyErr != nil {
 		err = verifyErr
@@ -324,7 +274,7 @@ func (s *Cas) SavePrivateGroup(currentSession commonSession.Session, name, desc 
 	return
 }
 
-func (s *Cas) DestoryPrivateGroup(currentSession commonSession.Session, groupName string) (err error) {
+func (s *Cas) DestroyPrivateGroup(currentSession commonSession.Session, groupName string) (err error) {
 	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 

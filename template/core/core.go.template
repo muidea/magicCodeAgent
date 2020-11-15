@@ -1,20 +1,22 @@
 package core
 
 import (
-	"fmt"
 	"log"
 
+	engine "github.com/muidea/magicEngine"
+
 	batisClient "github.com/muidea/magicBatis/client"
+	casToolkit "github.com/muidea/magicCas/toolkit"
 	"github.com/muidea/magicCommon/session"
+
 	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core/handler"
-	"github.com/muidea/{{.ProjectName}}/core/route"
+	"github.com/muidea/{{.ProjectName}}/core/service/base"
+	"github.com/muidea/{{.ProjectName}}/core/service/system"
 	"github.com/muidea/{{.ProjectName}}/model"
-
-	engine "github.com/muidea/magicEngine"
 )
 
-// New 新建Protal
+// New 新建Core
 func New() (*Core, error) {
 	var err error
 	clnt := batisClient.NewClient(config.BatisService(), config.EndpointName())
@@ -23,39 +25,51 @@ func New() (*Core, error) {
 			clnt.Release()
 		}
 	}()
+
 	err = model.InitializeModel(clnt)
 	if err != nil {
 		log.Printf("initializeModel failed, err:%s", err.Error())
 		return nil, err
 	}
 
-	commonHandler, commonErr := handler.NewCommonHandler(clnt)
-	if commonErr != nil {
-		err = commonErr
-		return nil, err
+	commonHandler := handler.NewCommonHandler(clnt)
+
+	baseService := base.New(
+		commonHandler,
+		config.CasService(),
+		config.FileService(),
+	)
+
+	systemService := system.New(commonHandler)
+
+	core := &Core{
+		baseService:    baseService,
+		systemService:  systemService,
 	}
-
-	sessionRegistry := session.CreateRegistry(nil)
-
-	routeRegister := route.NewRoute(sessionRegistry, commonHandler)
-	if routeRegister == nil {
-		return nil, fmt.Errorf("NewRoute failed")
-	}
-
-	core := &Core{}
-	core.routeRegister = routeRegister
 
 	return core, nil
 }
 
-// Core Protal对象
+// Core Core对象
 type Core struct {
-	routeRegister *route.Registry
+	systemService  *system.System
+	baseService    *base.Base
 }
 
 // Startup 启动
 func (s *Core) Startup(router engine.Router) {
-	s.routeRegister.RegisterRoute(router)
+	sessionRegistry := session.CreateRegistry(nil)
+	casRouteRegistry := casToolkit.NewCasRegistry(s.baseService, router)
+	privateRouteRegistry := casToolkit.NewPrivateRegistry(s.baseService, router)
+
+	s.baseService.BindRegistry(sessionRegistry, casRouteRegistry, privateRouteRegistry)
+	s.systemService.BindRegistry(sessionRegistry, casRouteRegistry, privateRouteRegistry)
+
+	s.baseService.RegisterHandler(router)
+	s.systemService.RegisterHandler(router)
+
+	casRouteRegistry.RegisterHandler(router)
+	privateRouteRegistry.RegisterHandler(router)
 }
 
 // Teardown 销毁

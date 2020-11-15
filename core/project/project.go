@@ -55,12 +55,16 @@ func (s *Core) cloneTemplate(filePath string) (err error) {
 	templatePath := path.Join(s.templatePath, filePath)
 	fullPath := path.Join(s.rootPath, filePath)
 	curPath, curName := path.Split(fullPath)
+	curName = curName[:len(curName)-len(".template")]
+	if curName == "main.go" {
+		curPath = path.Join("cmd", s.projectName)
+	}
+
 	existsFlag, existsErr := exists(curPath)
 	if existsErr != nil {
 		err = fmt.Errorf("unexpect, fileName:%s", filePath)
 		return
 	}
-
 	if !existsFlag {
 		err = os.MkdirAll(curPath, os.ModePerm)
 		if err != nil {
@@ -68,7 +72,6 @@ func (s *Core) cloneTemplate(filePath string) (err error) {
 		}
 	}
 
-	curName = curName[:len(curName)-len(".template")]
 	fileHandle, fileErr := os.Create(path.Join(curPath, curName))
 	if fileErr != nil {
 		err = fileErr

@@ -8,4 +8,5 @@ type OpLog struct {
 	Address    string `json:"address" orm:"address"`
 	Memo       string `json:"memo" orm:"memo"`
 	CreateTime string `json:"createTime" orm:"createTime"`
+	Namespace  string `json:"namespace" orm:"namespace"`
 }

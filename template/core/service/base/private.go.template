@@ -1,4 +1,4 @@
-package route
+package base
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 )
 
 // QueryPrivateGroup query privateGroup
-func (s *Registry) QueryPrivateGroup(res http.ResponseWriter, req *http.Request) {
+func (s *Base) QueryPrivateGroup(res http.ResponseWriter, req *http.Request) {
 	type queryResult struct {
 		commonDef.Result
 		PrivateGroups []*casModel.PrivateGroupView `json:"privates"`
@@ -21,7 +21,7 @@ func (s *Registry) QueryPrivateGroup(res http.ResponseWriter, req *http.Request)
 	result := &queryResult{}
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
-		privateViewList, _, privateErr := s.casService.QueryPrivateGroup(curSession)
+		privateViewList, _, privateErr := s.casBiz.QueryPrivateGroup(curSession)
 		if privateErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = fmt.Sprintf("查询权限组失败, %s", privateErr.Error())
@@ -41,7 +41,7 @@ func (s *Registry) QueryPrivateGroup(res http.ResponseWriter, req *http.Request)
 }
 
 // SavePrivateGroup save privateGroup
-func (s *Registry) SavePrivateGroup(res http.ResponseWriter, req *http.Request) {
+func (s *Base) SavePrivateGroup(res http.ResponseWriter, req *http.Request) {
 	type saveParam struct {
 		Name        string                  `json:"name"`
 		Description string                  `json:"description"`
@@ -69,7 +69,7 @@ func (s *Registry) SavePrivateGroup(res http.ResponseWriter, req *http.Request) 
 			break
 		}
 
-		privateView, privateErr := s.casService.SavePrivateGroup(curSession, param.Name, param.Description, param.Privates)
+		privateView, privateErr := s.casBiz.SavePrivateGroup(curSession, param.Name, param.Description, param.Privates)
 		if privateErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = fmt.Sprintf("保存权限组失败, %s", privateErr.Error())
@@ -92,7 +92,7 @@ func (s *Registry) SavePrivateGroup(res http.ResponseWriter, req *http.Request) 
 }
 
 // DestroyPrivateGroup destroy privateGroup
-func (s *Registry) DestroyPrivateGroup(res http.ResponseWriter, req *http.Request) {
+func (s *Base) DestroyPrivateGroup(res http.ResponseWriter, req *http.Request) {
 	result := &commonDef.Result{}
 
 	curSession := s.sessionRegistry.GetSession(res, req)
@@ -104,7 +104,7 @@ func (s *Registry) DestroyPrivateGroup(res http.ResponseWriter, req *http.Reques
 			break
 		}
 
-		err := s.casService.DestoryPrivateGroup(curSession, groupName)
+		err := s.casBiz.DestroyPrivateGroup(curSession, groupName)
 		if err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = fmt.Sprintf("删除权限组失败, %s", err.Error())

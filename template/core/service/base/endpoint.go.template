@@ -1,4 +1,4 @@
-package route
+package base
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 )
 
 // QueryAllEndpoint query member
-func (s *Registry) QueryAllEndpoint(res http.ResponseWriter, req *http.Request) {
+func (s *Base) QueryAllEndpoint(res http.ResponseWriter, req *http.Request) {
 	type queryResult struct {
 		commonDef.Result
 		Total     int64                    `json:"total"`
@@ -24,7 +24,7 @@ func (s *Registry) QueryAllEndpoint(res http.ResponseWriter, req *http.Request) 
 	result := &queryResult{Endpoints: []*casModel.EndpointView{}}
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
-		endpointList, endpointTotal, endpointErr := s.casService.QueryAllEndpoint(curSession)
+		endpointList, endpointTotal, endpointErr := s.casBiz.QueryAllEndpoint(curSession)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = endpointErr.Error()
@@ -47,7 +47,7 @@ func (s *Registry) QueryAllEndpoint(res http.ResponseWriter, req *http.Request) 
 }
 
 // CreateEndpoint create endpoint
-func (s *Registry) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
+func (s *Base) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
 	param := &casModel.EndpointView{}
 	result := &commonDef.Result{}
 	curSession := s.sessionRegistry.GetSession(res, req)
@@ -58,7 +58,7 @@ func (s *Registry) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
 			result.Reason = "参数非法"
 			break
 		}
-		_, err = s.casService.CreateEndpoint(curSession, param)
+		_, err = s.casBiz.CreateEndpoint(curSession, param)
 		if err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "新建出错,新建终端信息失败"
@@ -82,7 +82,7 @@ func (s *Registry) CreateEndpoint(res http.ResponseWriter, req *http.Request) {
 }
 
 // DeleteEndpoint delete endpoint
-func (s *Registry) DeleteEndpoint(res http.ResponseWriter, req *http.Request) {
+func (s *Base) DeleteEndpoint(res http.ResponseWriter, req *http.Request) {
 	result := &commonDef.Result{}
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
@@ -95,7 +95,7 @@ func (s *Registry) DeleteEndpoint(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		endpointPtr, endpointErr := s.casService.DeleteEndpoint(curSession, id)
+		endpointPtr, endpointErr := s.casBiz.DeleteEndpoint(curSession, id)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = endpointErr.Error()
@@ -119,7 +119,7 @@ func (s *Registry) DeleteEndpoint(res http.ResponseWriter, req *http.Request) {
 }
 
 // QueryEndpoint query endpoint
-func (s *Registry) QueryEndpoint(res http.ResponseWriter, req *http.Request) {
+func (s *Base) QueryEndpoint(res http.ResponseWriter, req *http.Request) {
 	type queryResult struct {
 		commonDef.Result
 		Endpoint *casModel.EndpointView `json:"endpoint"`
@@ -137,7 +137,7 @@ func (s *Registry) QueryEndpoint(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		endpointView, endpointErr := s.casService.QueryEndpoint(curSession, id)
+		endpointView, endpointErr := s.casBiz.QueryEndpoint(curSession, id)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "参数非法"
@@ -158,7 +158,7 @@ func (s *Registry) QueryEndpoint(res http.ResponseWriter, req *http.Request) {
 }
 
 // UpdateEndpoint update endpoint
-func (s *Registry) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
+func (s *Base) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
 	param := map[string]int{}
 	result := &commonDef.Result{}
 	curSession := s.sessionRegistry.GetSession(res, req)
@@ -172,7 +172,7 @@ func (s *Registry) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		endpointView, endpointErr := s.casService.QueryEndpoint(curSession, id)
+		endpointView, endpointErr := s.casBiz.QueryEndpoint(curSession, id)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "参数非法"
@@ -194,7 +194,7 @@ func (s *Registry) UpdateEndpoint(res http.ResponseWriter, req *http.Request) {
 			endpointView.PrivateGroup = &casModel.PrivateGroupLite{ID: privateGroup}
 		}
 
-		_, err = s.casService.UpdateEndpoint(curSession, endpointView)
+		_, err = s.casBiz.UpdateEndpoint(curSession, endpointView)
 		if err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "更新信息出错,更新账号信息失败"

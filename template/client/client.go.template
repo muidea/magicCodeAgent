@@ -28,7 +28,7 @@ type Client interface {
 	CreateAccount(account, password string) (*casModel.AccountView, error)
 	UpdateAccountPassword(account, curPassword, newPassword string) (*casModel.AccountView, error)
 
-	QueryOpertateLog(filter *util.PageFilter) ([]*model.OpLog, int64, error)
+	QueryOpLog(filter *util.PageFilter) ([]*model.OpLog, int64, error)
 
 	AttachContext(ctx commonCommon.ContextInfo)
 	DetachContext()
@@ -195,8 +195,8 @@ func (s *impl) UpdateAccountPassword(account, curPassword, newPassword string) (
 	return result.Account, err
 }
 
-func (s *impl) QueryOpertateLog(filter *util.PageFilter) ([]*model.OpLog, int64, error) {
-	result := &common.QueryAllOpertateLogResult{}
+func (s *impl) QueryOpLog(filter *util.PageFilter) ([]*model.OpLog, int64, error) {
+	result := &common.QueryAllOpLogResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {

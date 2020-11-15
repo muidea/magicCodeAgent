@@ -1,0 +1,34 @@
+package system
+
+import (
+	"encoding/json"
+	"net/http"
+
+	commonDef "github.com/muidea/magicCommon/def"
+	"github.com/muidea/{{.ProjectName}}/model"
+)
+
+// QueryView query view
+func (s *System) QueryView(res http.ResponseWriter, req *http.Request) {
+	type queryResult struct {
+		commonDef.Result
+		View []*model.View `json:"view"`
+	}
+
+	filter := commonDef.NewFilter([]string{})
+	filter.Decode(req)
+
+	result := &queryResult{View: []*model.View{}}
+	for {
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}

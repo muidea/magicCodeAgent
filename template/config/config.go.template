@@ -10,10 +10,10 @@ var batisService = "http://127.0.0.1:8080"
 
 func init() {
 	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")
-	flag.StringVar(&casService, "CasService", casService, "magicCas service address")
-	flag.StringVar(&userService, "UserService", userService, "magicUser service address")
-	flag.StringVar(&fileService, "FileService", fileService, "magicFile service address")
-	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis service address")
+	flag.StringVar(&casService, "CasService", casService, "magicCas partner address")
+	flag.StringVar(&userService, "UserService", userService, "magicUser partner address")
+	flag.StringVar(&fileService, "FileService", fileService, "magicFile partner address")
+	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis partner address")
 }
 
 //EndpointName endpointName
@@ -21,22 +21,22 @@ func EndpointName() string {
 	return endpointName
 }
 
-//CasService cas service addr
+//CasService cas partner addr
 func CasService() string {
 	return casService
 }
 
-//UserService user service addr
+//UserService user partner addr
 func UserService() string {
 	return userService
 }
 
-//FileService file service addr
+//FileService file partner addr
 func FileService() string {
 	return fileService
 }
 
-//BatisService batis service addr
+//BatisService batis partner addr
 func BatisService() string {
 	return batisService
 }

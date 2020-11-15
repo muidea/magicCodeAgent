@@ -7,7 +7,7 @@ var modelList = []interface{}{
 	&OpLog{},
 }
 
-// InitializeModel initialze model
+// InitializeModel initialize model
 func InitializeModel(clnt client.Client) (err error) {
 	for _, val := range modelList {
 		err = clnt.RegisterModel(val)
@@ -19,14 +19,9 @@ func InitializeModel(clnt client.Client) (err error) {
 		return
 	}
 
-	for _, val := range modelList {
-		err = clnt.CreateSchema(val)
-		if err != nil {
-			break
-		}
-	}
+	err = CreateModel(clnt)
 	if err != nil {
-		return
+		return err
 	}
 
 	return
@@ -58,6 +53,11 @@ func DropModel(clnt client.Client) (err error) {
 
 // UninitializeModel uninitialize model
 func UninitializeModel(clnt client.Client) (err error) {
+	err = DropModel(clnt)
+	if err != nil {
+		return
+	}
+
 	for _, val := range modelList {
 		err = clnt.UnregisterModel(val)
 		if err != nil {

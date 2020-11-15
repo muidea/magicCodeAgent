@@ -1,4 +1,4 @@
-package route
+package base
 
 import (
 	"encoding/json"
@@ -6,55 +6,61 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/muidea/magicCommon/foundation/net"
-	"github.com/muidea/magicCommon/foundation/util"
+	engine "github.com/muidea/magicEngine"
 
 	commonCommon "github.com/muidea/magicCommon/common"
 	commonDef "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/net"
 	commonSession "github.com/muidea/magicCommon/session"
 
 	fileCommon "github.com/muidea/magicFile/common"
 
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
-	routeToolkit "github.com/muidea/magicCas/toolkit/route"
-	engine "github.com/muidea/magicEngine"
+	casToolkit "github.com/muidea/magicCas/toolkit"
+
 	"github.com/muidea/{{.ProjectName}}/common"
-	"github.com/muidea/{{.ProjectName}}/config"
-	"github.com/muidea/{{.ProjectName}}/core/service"
 	"github.com/muidea/{{.ProjectName}}/core/handler"
+	"github.com/muidea/{{.ProjectName}}/core/service/base/biz"
 )
 
-// Registry 路由信息
-type Registry struct {
-	commonHandler        handler.CommonHandler
-	sessionRegistry      commonSession.Registry
-	privateRouteRegistry routeToolkit.PrivateRegistry
-	casRouteRegistry     routeToolkit.CasRegistry
+// Base BaseService
+type Base struct {
+	casService  string
+	fileService string
 
-	casService *service.Cas
+	sessionRegistry      commonSession.Registry
+	privateRouteRegistry casToolkit.PrivateRegistry
+	casRouteRegistry     casToolkit.CasRegistry
+
+	commonHandler handler.CommonHandler
+	casBiz        *biz.Cas
 }
 
-// NewRoute create route
-func NewRoute(
-	sessionRegistry commonSession.Registry,
-	commonHandler handler.CommonHandler,
-	casService *service.Cas,
-) *Registry {
-	route := &Registry{
-		sessionRegistry: sessionRegistry,
-		commonHandler:   commonHandler,
-		casService:      casService,
+// New create base
+func New(commonHandler handler.CommonHandler, casService, fileService string) *Base {
+	ptr := &Base{
+		commonHandler: commonHandler,
+		casService:    casService,
+		fileService:   fileService,
+		casBiz:        biz.NewCas(casService),
 	}
 
-	route.privateRouteRegistry = routeToolkit.NewPrivateRegistry(route)
-	route.casRouteRegistry = routeToolkit.NewCasRegistry(route)
+	return ptr
+}
 
-	return route
+func (s *Base) BindRegistry(
+	sessionRegistry commonSession.Registry,
+	casRouteRegistry casToolkit.CasRegistry,
+	privateRouteRegistry casToolkit.PrivateRegistry) {
+
+	s.sessionRegistry = sessionRegistry
+	s.casRouteRegistry = casRouteRegistry
+	s.privateRouteRegistry = privateRouteRegistry
 }
 
 // Login login account
-func (s *Registry) Login(res http.ResponseWriter, req *http.Request) {
+func (s *Base) Login(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
 	result := &casCommon.LoginResult{}
@@ -73,12 +79,16 @@ func (s *Registry) Login(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		loginEntity, loginSession, loginErr := s.casService.Login(curSession, param.Account, param.Password)
+		loginEntity, loginSession, loginErr := s.casBiz.Login(curSession, param.Account, param.Password)
 		if loginErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = loginErr.Error()
 			break
 		}
+
+		curSession.SetSessionInfo(loginSession)
+		curSession.SetOption(commonCommon.AuthAccount, loginEntity)
+		curSession.Flush(res, req)
 
 		result.Entity = loginEntity
 		result.SessionInfo = loginSession
@@ -96,17 +106,21 @@ func (s *Registry) Login(res http.ResponseWriter, req *http.Request) {
 }
 
 // Logout logout account
-func (s *Registry) Logout(res http.ResponseWriter, req *http.Request) {
+func (s *Base) Logout(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
 	result := &casCommon.LogoutResult{}
 	for {
-		logoutSession, logoutErr := s.casService.Logout(curSession)
+		logoutSession, logoutErr := s.casBiz.Logout(curSession)
 		if logoutErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = logoutErr.Error()
 			break
 		}
+
+		curSession.SetSessionInfo(logoutSession)
+		curSession.RemoveOption(commonCommon.AuthAccount)
+		curSession.Flush(res, req)
 
 		result.SessionInfo = logoutSession
 		result.ErrorCode = commonDef.Success
@@ -124,7 +138,7 @@ func (s *Registry) Logout(res http.ResponseWriter, req *http.Request) {
 }
 
 // ConfirmEndpoint verify endpoint
-func (s *Registry) ConfirmEndpoint(res http.ResponseWriter, req *http.Request) {
+func (s *Base) ConfirmEndpoint(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
 	result := &casCommon.ConfirmResult{}
@@ -137,12 +151,16 @@ func (s *Registry) ConfirmEndpoint(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		confirmEntity, confirmSession, confirmErr := s.casService.ConfirmEndpoint(curSession, authToken, identifyID)
+		confirmEntity, confirmSession, confirmErr := s.casBiz.ConfirmEndpoint(curSession, identifyID, authToken)
 		if confirmErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = confirmErr.Error()
 			break
 		}
+
+		curSession.SetSessionInfo(confirmSession)
+		curSession.SetOption(commonCommon.AuthAccount, confirmEntity)
+		curSession.Flush(res, req)
 
 		result.Entity = confirmEntity
 		result.SessionInfo = confirmSession
@@ -160,17 +178,21 @@ func (s *Registry) ConfirmEndpoint(res http.ResponseWriter, req *http.Request) {
 }
 
 // RefreshStatus refresh commonSession status
-func (s *Registry) RefreshStatus(res http.ResponseWriter, req *http.Request) {
+func (s *Base) RefreshStatus(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
 	result := &casCommon.RefreshResult{}
 	for {
-		refreshEntity, refreshSession, refreshErr := s.casService.RefreshStatus(curSession)
+		refreshEntity, refreshSession, refreshErr := s.casBiz.RefreshStatus(curSession)
 		if refreshErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = refreshErr.Error()
 			break
 		}
+
+		curSession.SetSessionInfo(refreshSession)
+		curSession.SetOption(commonCommon.AuthAccount, refreshEntity)
+		curSession.Flush(res, req)
 
 		result.Entity = refreshEntity
 		result.SessionInfo = refreshSession
@@ -188,10 +210,10 @@ func (s *Registry) RefreshStatus(res http.ResponseWriter, req *http.Request) {
 }
 
 // Verify verify current commonSession
-func (s *Registry) Verify(res http.ResponseWriter, req *http.Request) (err error) {
+func (s *Base) Verify(res http.ResponseWriter, req *http.Request) (err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
-	sessionEntity, sessionInfo, sessionErr := s.casService.RefreshStatus(curSession)
+	sessionEntity, sessionInfo, sessionErr := s.casBiz.RefreshStatus(curSession)
 	if sessionErr != nil {
 		err = sessionErr
 		log.Printf("verify current commonSession failed, err:%s", sessionErr.Error())
@@ -200,20 +222,21 @@ func (s *Registry) Verify(res http.ResponseWriter, req *http.Request) (err error
 
 	curSession.SetSessionInfo(sessionInfo)
 	curSession.SetOption(commonCommon.AuthAccount, sessionEntity)
+	curSession.Flush(res, req)
 
 	return
 }
 
 // VerifyPrivate verify private
-func (s *Registry) VerifyPrivate(res http.ResponseWriter, req *http.Request) (ret *casModel.PrivateGroupLite, err error) {
+func (s *Base) VerifyPrivate(res http.ResponseWriter, req *http.Request) (ret *casModel.PrivateGroupLite, err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
-	ret, err = s.casService.VerifyPrivate(curSession)
 
+	ret, err = s.casBiz.VerifyPrivate(curSession)
 	return
 }
 
 // Handle middleware handler
-func (s *Registry) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
+func (s *Base) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
 	sessionInfo := curSession.GetSessionInfo()
@@ -226,11 +249,8 @@ func (s *Registry) Handle(ctx engine.RequestContext, res http.ResponseWriter, re
 	ctx.Next()
 }
 
-// RegisterRoute 注册路由
-func (s *Registry) RegisterRoute(router engine.Router) {
-
-	s.casRouteRegistry.AddHandler(common.QueryOperateLogURL, "GET", s.QueryOperateLog)
-
+// RegisterHandler 注册路由
+func (s *Base) RegisterHandler(router engine.Router) {
 	// account login,logout,verify,change password
 	//---------------------------------------------------------------------------------------
 	loginRoute := engine.CreateRoute(common.LoginAccountURL, "POST", s.Login)
@@ -244,11 +264,11 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 
 	s.casRouteRegistry.AddHandler(common.RefreshStatusURL, "GET", s.RefreshStatus)
 
-	createAccountURL := net.JoinURL(config.CasService(), casCommon.CreateAccountURL)
+	createAccountURL := net.JoinURL(s.casService, casCommon.CreateAccountURL)
 	createAccountRoute := engine.CreateProxyRoute(common.CreateAccountURL, "POST", createAccountURL, true)
 	s.casRouteRegistry.AddRoute(createAccountRoute, s)
 
-	changePasswordURL := net.JoinURL(config.CasService(), casCommon.ChangePasswordURL)
+	changePasswordURL := net.JoinURL(s.casService, casCommon.ChangePasswordURL)
 	changePasswordRoute := engine.CreateProxyRoute(common.UpdateAccountPasswordURL, "PUT", changePasswordURL, true)
 	s.casRouteRegistry.AddRoute(changePasswordRoute, s)
 
@@ -275,51 +295,16 @@ func (s *Registry) RegisterRoute(router engine.Router) {
 
 	// upload file
 	//---------------------------------------------------------------------------------------
-	uploadFileURL := net.JoinURL(config.FileService(), fileCommon.UploadFileURL)
+	uploadFileURL := net.JoinURL(s.fileService, fileCommon.UploadFileURL)
 	uploadFileRoute := engine.CreateProxyRoute(common.UploadFileURL, "POST", uploadFileURL, true)
 	router.AddRoute(uploadFileRoute, s)
 
-	viewFileURL := net.JoinURL(config.FileService(), fileCommon.DownloadFileURL)
+	viewFileURL := net.JoinURL(s.fileService, fileCommon.DownloadFileURL)
 	viewFileRoute := engine.CreateProxyRoute(common.ViewFileURL, "GET", viewFileURL, true)
 	router.AddRoute(viewFileRoute, s)
-
-	s.privateRouteRegistry.RegisterRoute(router)
-
-	s.casRouteRegistry.RegisterRoute(router)
 }
 
-// QueryOperateLog query operate log
-func (s *Registry) QueryOperateLog(res http.ResponseWriter, req *http.Request) {
-	result := &common.QueryAllOpertateLogResult{}
-	for {
-		pageFilter := &util.PageFilter{}
-		if !pageFilter.Decode(req) {
-			pageFilter = nil
-		}
-
-		logs, logTotal, logsErr := s.commonHandler.QueryOpLog(pageFilter)
-		if logsErr != nil {
-			result.ErrorCode = commonDef.Failed
-			result.Reason = logsErr.Error()
-			break
-		}
-
-		result.Logs = logs
-		result.Total = logTotal
-		result.ErrorCode = commonDef.Success
-		break
-	}
-
-	block, err := json.Marshal(result)
-	if err == nil {
-		res.Write(block)
-		return
-	}
-
-	res.WriteHeader(http.StatusExpectationFailed)
-}
-
-func (s *Registry) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
+func (s *Base) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
 	address := net.GetHTTPRemoteAddress(req)
 	account := ""
 	curEntity, curErr := s.getCurrentEntity(res, req)
@@ -333,20 +318,20 @@ func (s *Registry) writeLog(res http.ResponseWriter, req *http.Request, memo str
 	}
 }
 
-func (s *Registry) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
+func (s *Base) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
+	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
+	if !ok {
+		err = fmt.Errorf("无效权限,未通过验证")
+		return
+	}
+	ret = authVal.(*casModel.Entity)
 
 	ctx := casCommon.NewEntityContext(nil)
-	curSession.GetContextInfo(ctx)
-	ctxEntity := ctx.GetEntity()
+	ctx.Decode(req)
 
+	ctxEntity := ctx.GetEntity()
 	if ctxEntity == nil {
-		authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
-		if !ok {
-			err = fmt.Errorf("无效权限,未通过验证")
-			return
-		}
-		ret = authVal.(*casModel.Entity)
 		return
 	}
 
