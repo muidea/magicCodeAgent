@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 	"text/template"
+
+	"github.com/muidea/magicToolkit/core/util"
 )
 
 // Project core define
@@ -22,7 +24,7 @@ func New(rootPath string) *Project {
 }
 
 func (s *Project) getFile(filePath string) (ret *os.File, err error) {
-	existsFlag, existsErr := exists(filePath)
+	existsFlag, existsErr := util.Exists(filePath)
 	if !existsFlag || existsErr != nil {
 		err = fmt.Errorf("file does not exist")
 		return
@@ -40,7 +42,7 @@ func (s *Project) getTemplatePath() (ret string, err error) {
 	}
 
 	templatePath := path.Join(toolKitPath, "template")
-	existsFlag, existsErr := exists(templatePath)
+	existsFlag, existsErr := util.Exists(templatePath)
 	if !existsFlag || existsErr != nil {
 		err = fmt.Errorf("toolkit template does not exist")
 		return
@@ -60,7 +62,7 @@ func (s *Project) cloneTemplate(filePath string) (err error) {
 		curPath = path.Join("cmd", s.projectName)
 	}
 
-	existsFlag, existsErr := exists(curPath)
+	existsFlag, existsErr := util.Exists(curPath)
 	if existsErr != nil {
 		err = fmt.Errorf("unexpect, fileName:%s", filePath)
 		return
@@ -107,7 +109,7 @@ func (s *Project) Create(projectName string) (err error) {
 
 func (s *Project) walkTemplate(projectPath string) (err error) {
 	fullPath := path.Join(s.templatePath, projectPath)
-	existFlag, existErr := exists(fullPath)
+	existFlag, existErr := util.Exists(fullPath)
 	if !existFlag || existErr != nil {
 		err = fmt.Errorf("template file does not exist, projectPath:%s", projectPath)
 		return
@@ -136,17 +138,4 @@ func (s *Project) walkTemplate(projectPath string) (err error) {
 	}
 
 	return
-}
-
-func exists(itemPath string) (bool, error) {
-	_, err := os.Stat(itemPath)
-	if err == nil {
-		return true, nil
-	}
-
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-
-	return true, err
 }

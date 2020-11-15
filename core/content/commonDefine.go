@@ -2,10 +2,13 @@ package content
 
 import (
 	"fmt"
-	"github.com/muidea/magicToolkit/model"
 	"os"
+	"os/exec"
 	"strings"
 	"text/template"
+
+	"github.com/muidea/magicToolkit/core/util"
+	"github.com/muidea/magicToolkit/model"
 )
 
 type commonDefine struct {
@@ -51,7 +54,7 @@ func getTemplate() (ret string) {
 
 		type {{$moduleName}}Result struct {
 			commonDef.Result
-			{{$moduleName}} *model.{{$moduleName}}View
+			{{$moduleName}} *model.{{$moduleName}}View 
 		}
 
 		type {{$moduleName}}ListResult struct {
@@ -64,21 +67,46 @@ func getTemplate() (ret string) {
 }
 
 func (s *commonDefine) Create(module *model.Module) (err error) {
-	fileHandle, fileErr := os.Create(fmt.Sprintf("%s.go", module.Name))
-	if fileErr != nil {
-		err = fileErr
-		return
-	}
-	defer fileHandle.Close()
-
-	funcMap := template.FuncMap{"FormatUrl": FormatUrl}
-	templateHandle, templateErr := template.New(module.Name).Funcs(funcMap).Parse(getTemplate())
-	if templateErr != nil {
-		err = templateErr
+	if len(module.Action) == 0 {
 		return
 	}
 
-	data := map[string]interface{}{"ProjectName": "Test", "Module": module}
-	err = templateHandle.Execute(fileHandle, data)
+	existFlag, existErr := util.Exists("./common")
+	if existErr != nil {
+		err = existErr
+		return
+	}
+	if !existFlag {
+		err = os.Mkdir("./common", os.ModePerm)
+		if err != nil {
+			return
+		}
+	}
+
+	fileName := fmt.Sprintf("./common/%s.go", strings.ToLower(module.Name))
+	func() {
+		fileHandle, fileErr := os.Create(fileName)
+		if fileErr != nil {
+			err = fileErr
+			return
+		}
+		defer fileHandle.Close()
+
+		funcMap := template.FuncMap{"FormatUrl": FormatUrl}
+		templateHandle, templateErr := template.New(module.Name).Funcs(funcMap).Parse(getTemplate())
+		if templateErr != nil {
+			err = templateErr
+			return
+		}
+
+		data := map[string]interface{}{"ProjectName": "Test", "Module": module}
+		err = templateHandle.Execute(fileHandle, data)
+	}()
+	if err != nil {
+		return
+	}
+
+	cmd := exec.Command("gofmt", "-w", fileName)
+	err = cmd.Run()
 	return
 }
