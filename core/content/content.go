@@ -19,7 +19,7 @@ func New(rootPath string) *Content {
 }
 
 // Create create
-func (s *Content) Create() (err error) {
+func (s *Content) Create(projectName string) (err error) {
 	definePath := path.Join(s.rootPath, "doc", "define.json")
 	defineFile, defineErr := os.Open(definePath)
 	if defineErr != nil {
@@ -45,7 +45,7 @@ func (s *Content) Create() (err error) {
 	}
 
 	for _, val := range contentDefine.Module {
-		commonDefine := commonDefine{}
+		commonDefine := commonDefine{projectName: projectName}
 		err = commonDefine.Create(val)
 		if err != nil {
 			return

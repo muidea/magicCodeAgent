@@ -16,12 +16,14 @@ type action struct {
 
 var actionList = []*action{}
 var help = false
+var projectName = ""
 
 func main() {
 	for idx := range actionList {
 		val := actionList[idx]
 		flag.BoolVar(&val.value, val.name, val.defaultValue, val.description)
 	}
+	flag.StringVar(&projectName, "name", projectName, "project name")
 
 	flag.Parse()
 	curPath, curErr := os.Getwd()

@@ -12,6 +12,7 @@ import (
 )
 
 type commonDefine struct {
+	projectName string
 }
 
 func FormatUrl(name, url string) (ret string) {
@@ -33,6 +34,10 @@ func FormatUrl(name, url string) (ret string) {
 	return
 }
 
+func FormatJsonName(name string) string {
+	return strings.ToLower(name)
+}
+
 func getTemplate() (ret string) {
 	ret = `
 		{{$projectName := .ProjectName}}
@@ -52,15 +57,16 @@ func getTemplate() (ret string) {
 			{{end}}
 		)
 
+		{{$jsonName := FormatJsonName $moduleName}}
 		type {{$moduleName}}Result struct {
 			commonDef.Result
-			{{$moduleName}} *model.{{$moduleName}}View 
+			{{$moduleName}} *model.{{$moduleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + `
 		}
 
 		type {{$moduleName}}ListResult struct {
 			commonDef.Result
-			Total    int64                
-			{{$moduleName}}s []*model.{{$moduleName}}View 
+			Total    int64                 ` + "`" + "json:\"total\"" + "`" + `
+			{{$moduleName}}s []*model.{{$moduleName}}View ` + "`" + "json:\"{{$jsonName}}s\"" + "`" + ` 
 		}
 	`
 	return
@@ -92,14 +98,14 @@ func (s *commonDefine) Create(module *model.Module) (err error) {
 		}
 		defer fileHandle.Close()
 
-		funcMap := template.FuncMap{"FormatUrl": FormatUrl}
+		funcMap := template.FuncMap{"FormatUrl": FormatUrl, "FormatJsonName": FormatJsonName}
 		templateHandle, templateErr := template.New(module.Name).Funcs(funcMap).Parse(getTemplate())
 		if templateErr != nil {
 			err = templateErr
 			return
 		}
 
-		data := map[string]interface{}{"ProjectName": "Test", "Module": module}
+		data := map[string]interface{}{"ProjectName": s.projectName, "Module": module}
 		err = templateHandle.Execute(fileHandle, data)
 	}()
 	if err != nil {
