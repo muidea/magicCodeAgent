@@ -2,6 +2,8 @@ package content
 
 import (
 	"encoding/json"
+	"github.com/muidea/magicToolkit/core/content/common"
+	"github.com/muidea/magicToolkit/core/content/service"
 	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
 	"os"
@@ -45,8 +47,14 @@ func (s *Content) Create(projectName string) (err error) {
 	}
 
 	for _, val := range contentDefine.Module {
-		commonDefine := commonDefine{projectName: projectName}
-		err = commonDefine.Create(val)
+		common := common.New(projectName)
+		err = common.Create(val)
+		if err != nil {
+			return
+		}
+
+		service := service.New(projectName)
+		err = service.Create(val)
 		if err != nil {
 			return
 		}

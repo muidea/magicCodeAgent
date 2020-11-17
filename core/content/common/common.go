@@ -1,4 +1,4 @@
-package content
+package common
 
 import (
 	"fmt"
@@ -11,11 +11,15 @@ import (
 	"github.com/muidea/magicToolkit/model"
 )
 
-type commonDefine struct {
+type Define struct {
 	projectName string
 }
 
-func (s *commonDefine) FormatUrl(name, url string) (ret string) {
+func New(projectName string) *Define {
+	return &Define{projectName: projectName}
+}
+
+func (s *Define) FormatUrl(name, url string) (ret string) {
 	switch url {
 	case "query/all/":
 		ret = fmt.Sprintf("QueryAll%sURL = \"/api/v1/%s/query/all/\"", strings.Title(name), strings.ToLower(name))
@@ -34,11 +38,11 @@ func (s *commonDefine) FormatUrl(name, url string) (ret string) {
 	return
 }
 
-func (s *commonDefine) FormatJsonName(name string) string {
+func (s *Define) FormatJsonName(name string) string {
 	return strings.ToLower(name)
 }
 
-func (s *commonDefine) getTemplate() (ret string) {
+func (s *Define) getTemplate() (ret string) {
 	ret = `
 		{{$projectName := .ProjectName}}
 		{{$moduleName := .Module.Name}}
@@ -76,13 +80,28 @@ func (s *commonDefine) getTemplate() (ret string) {
 		type {{$moduleName}}ListResult struct {
 			commonDef.Result
 			Total    int64                 ` + "`" + "json:\"total\"" + "`" + `
-			{{$moduleName}}s []*model.{{$moduleName}}View ` + "`" + "json:\"{{$jsonName}}s\"" + "`" + ` 
+			{{$moduleName}} []*model.{{$moduleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + ` 
 		}
+
+		{{range $mk, $mv := $childList}}
+		{{$subModuleName := $mv.Name}}
+		{{$jsonName := FormatJsonName $subModuleName}}
+		type {{$subModuleName}}Result struct {
+			commonDef.Result
+			{{$subModuleName}} *model.{{$subModuleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + `
+		}
+
+		type {{$subModuleName}}ListResult struct {
+			commonDef.Result
+			Total    int64                 ` + "`" + "json:\"total\"" + "`" + `
+			{{$subModuleName}} []*model.{{$subModuleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + ` 
+		}
+		{{end}}
 	`
 	return
 }
 
-func (s *commonDefine) Create(module *model.Module) (err error) {
+func (s *Define) Create(module *model.Module) (err error) {
 	if len(module.Action) == 0 && len(module.Child) == 0 {
 		return
 	}
