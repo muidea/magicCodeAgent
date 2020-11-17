@@ -15,7 +15,7 @@ type commonDefine struct {
 	projectName string
 }
 
-func FormatUrl(name, url string) (ret string) {
+func (s *commonDefine) FormatUrl(name, url string) (ret string) {
 	switch url {
 	case "query/all/":
 		ret = fmt.Sprintf("QueryAll%sURL = \"/api/v1/%s/query/all/\"", strings.Title(name), strings.ToLower(name))
@@ -34,15 +34,16 @@ func FormatUrl(name, url string) (ret string) {
 	return
 }
 
-func FormatJsonName(name string) string {
+func (s *commonDefine) FormatJsonName(name string) string {
 	return strings.ToLower(name)
 }
 
-func getTemplate() (ret string) {
+func (s *commonDefine) getTemplate() (ret string) {
 	ret = `
 		{{$projectName := .ProjectName}}
 		{{$moduleName := .Module.Name}}
 		{{$actionList := .Module.Action}}
+		{{$childList := .Module.Child}}
 		package common
 		
 		import (
@@ -54,6 +55,15 @@ func getTemplate() (ret string) {
 			{{range $k, $v := $actionList}}
 			{{$url := FormatUrl $moduleName $v }}
 			{{$url}}
+			{{end}}
+
+			{{range $mk, $mv := $childList}}
+			{{$subModuleName := $mv.Name}}
+			{{$subModuleAction := $mv.Action}}
+			{{range $ak, $av := $subModuleAction}}
+			{{$url := FormatUrl $subModuleName $av }}
+			{{$url}}
+			{{end}}
 			{{end}}
 		)
 
@@ -73,7 +83,7 @@ func getTemplate() (ret string) {
 }
 
 func (s *commonDefine) Create(module *model.Module) (err error) {
-	if len(module.Action) == 0 {
+	if len(module.Action) == 0 && len(module.Child) == 0 {
 		return
 	}
 
@@ -98,8 +108,8 @@ func (s *commonDefine) Create(module *model.Module) (err error) {
 		}
 		defer fileHandle.Close()
 
-		funcMap := template.FuncMap{"FormatUrl": FormatUrl, "FormatJsonName": FormatJsonName}
-		templateHandle, templateErr := template.New(module.Name).Funcs(funcMap).Parse(getTemplate())
+		funcMap := template.FuncMap{"FormatUrl": s.FormatUrl, "FormatJsonName": s.FormatJsonName}
+		templateHandle, templateErr := template.New(module.Name).Funcs(funcMap).Parse(s.getTemplate())
 		if templateErr != nil {
 			err = templateErr
 			return
