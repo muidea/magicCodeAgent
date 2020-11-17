@@ -19,35 +19,13 @@ func New(projectName string) *Define {
 	return &Define{projectName: projectName}
 }
 
-func (s *Define) FormatUrl(name, url string) (ret string) {
-	switch url {
-	case "query/all/":
-		ret = fmt.Sprintf("QueryAll%sURL = \"/api/v1/%s/query/all/\"", strings.Title(name), strings.ToLower(name))
-	case "query/":
-		ret = fmt.Sprintf("Filter%sURL = \"/api/v1/%s/query/\"", strings.Title(name), strings.ToLower(name))
-	case "query/:id":
-		ret = fmt.Sprintf("Query%sURL = \"/api/v1/%s/query/:id\"", strings.Title(name), strings.ToLower(name))
-	case "create/":
-		ret = fmt.Sprintf("Create%sURL = \"/api/v1/%s/create/\"", strings.Title(name), strings.ToLower(name))
-	case "update/:id":
-		ret = fmt.Sprintf("Update%sURL = \"/api/v1/%s/update/:id\"", strings.Title(name), strings.ToLower(name))
-	case "delete/:id":
-		ret = fmt.Sprintf("Delete%sURL = \"/api/v1/%s/delete/:id\"", strings.Title(name), strings.ToLower(name))
-	}
-
-	return
-}
-
-func (s *Define) FormatJsonName(name string) string {
-	return strings.ToLower(name)
-}
-
 func (s *Define) getTemplate() (ret string) {
 	ret = `
 		{{$projectName := .ProjectName}}
-		{{$moduleName := .Module.Name}}
-		{{$actionList := .Module.Action}}
-		{{$childList := .Module.Child}}
+		{{$module := .Module}}
+		{{$moduleName := $module.Name}}
+		{{$actionList := $module.Action}}
+		{{$childList := $module.Child}}
 		package common
 		
 		import (
@@ -57,7 +35,7 @@ func (s *Define) getTemplate() (ret string) {
 
 		const (
 			{{range $k, $v := $actionList}}
-			{{$url := FormatUrl $moduleName $v }}
+			{{$url := $module.FormatUrl $v }}
 			{{$url}}
 			{{end}}
 
@@ -65,13 +43,13 @@ func (s *Define) getTemplate() (ret string) {
 			{{$subModuleName := $mv.Name}}
 			{{$subModuleAction := $mv.Action}}
 			{{range $ak, $av := $subModuleAction}}
-			{{$url := FormatUrl $subModuleName $av }}
+			{{$url := $mv.FormatUrl $av }}
 			{{$url}}
 			{{end}}
 			{{end}}
 		)
 
-		{{$jsonName := FormatJsonName $moduleName}}
+		{{$jsonName := .Module.LowerName}}
 		type {{$moduleName}}Result struct {
 			commonDef.Result
 			{{$moduleName}} *model.{{$moduleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + `
@@ -85,7 +63,7 @@ func (s *Define) getTemplate() (ret string) {
 
 		{{range $mk, $mv := $childList}}
 		{{$subModuleName := $mv.Name}}
-		{{$jsonName := FormatJsonName $subModuleName}}
+		{{$jsonName := $mv.LowerName}}
 		type {{$subModuleName}}Result struct {
 			commonDef.Result
 			{{$subModuleName}} *model.{{$subModuleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + `
@@ -127,8 +105,7 @@ func (s *Define) Create(module *model.Module) (err error) {
 		}
 		defer fileHandle.Close()
 
-		funcMap := template.FuncMap{"FormatUrl": s.FormatUrl, "FormatJsonName": s.FormatJsonName}
-		templateHandle, templateErr := template.New(module.Name).Funcs(funcMap).Parse(s.getTemplate())
+		templateHandle, templateErr := template.New(module.Name).Parse(s.getTemplate())
 		if templateErr != nil {
 			err = templateErr
 			return

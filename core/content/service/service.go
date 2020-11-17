@@ -19,17 +19,14 @@ func New(projectName string) *Define {
 	return &Define{projectName: projectName}
 }
 
-func (s *Define) FormatPackageName(name string) string {
-	return strings.ToLower(name)
-}
-
 func (s *Define) getTemplate() (ret string) {
 	ret = `
 	{{$projectName := .ProjectName}}
-	{{$moduleName := .Module.Name}}
-	{{$actionList := .Module.Action}}
-	{{$childList := .Module.Child}}
-	{{$packageName := FormatPackageName $moduleName }}
+	{{$module := .Module}}
+	{{$moduleName := $module.Name}}
+	{{$actionList := $module.Action}}
+	{{$childList := $module.Child}}
+	{{$packageName := $module.LowerName }}
 	package {{$packageName}}
 	
 	import (
@@ -140,8 +137,7 @@ func (s *Define) Create(module *model.Module) (err error) {
 		}
 		defer fileHandle.Close()
 
-		funcMap := template.FuncMap{"FormatPackageName": s.FormatPackageName}
-		templateHandle, templateErr := template.New(module.Name).Funcs(funcMap).Parse(s.getTemplate())
+		templateHandle, templateErr := template.New(module.Name).Parse(s.getTemplate())
 		if templateErr != nil {
 			err = templateErr
 			return
