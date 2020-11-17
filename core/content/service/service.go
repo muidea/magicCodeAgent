@@ -152,5 +152,12 @@ func (s *Define) Create(module *model.Module) (err error) {
 
 	cmd := exec.Command("gofmt", "-w", fileName)
 	err = cmd.Run()
+	if err != nil {
+		return
+	}
+
+	instance := &Instance{projectName: s.projectName}
+	err = instance.Create(module)
+
 	return
 }
