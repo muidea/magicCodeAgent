@@ -15,8 +15,8 @@ type Module struct {
 	Child  []*Module `json:"child"`
 }
 
-func (s *Module) LowerName() string {
-	return strings.ToLower(s.Name)
+func (s *Module) Lower(val string) string {
+	return strings.ToLower(val)
 }
 
 func (s *Module) FormatUrl(url string) (ret string) {
@@ -36,19 +36,19 @@ func (s *Module) FormatUrl(url string) (ret string) {
 	return
 }
 
-func (s *Module) UrlHandle(url string) (ret string) {
+func (s *Module) UrlHandle(serviceName, url string) (ret string) {
 	var err error
 	switch url {
 	case "query/":
-		ret, err = s.FilterHandle()
+		ret, err = s.FilterHandle(serviceName)
 	case "query/:id":
-		ret, err = s.QueryHandle()
+		ret, err = s.QueryHandle(serviceName)
 	case "create/":
-		ret, err = s.CreateHandle()
+		ret, err = s.CreateHandle(serviceName)
 	case "update/:id":
-		ret, err = s.UpdateHandle()
+		ret, err = s.UpdateHandle(serviceName)
 	case "delete/:id":
-		ret, err = s.DeleteHandle()
+		ret, err = s.DeleteHandle(serviceName)
 	}
 
 	if err != nil {
@@ -58,44 +58,45 @@ func (s *Module) UrlHandle(url string) (ret string) {
 	return
 }
 
-func (s *Module) FilterHandle() (ret string, err error) {
+func (s *Module) FilterHandle(serviceName string) (ret string, err error) {
 	templateVal := `
-		{{$module := .Module}}
-		{{$moduleName := $module.Name}}
-		{{$lowName := $module.LowerName}}
-		func (s *{{$moduleName}}) Filter{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
-			filter := commonDef.NewFilter()
-			filter.Decode(req)
-		
-			result := &common.{{$moduleName}}ListResult{ {{$moduleName}}: []*model.{{$moduleName}}View{} }
-			for {
-				{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Filter(filter)
-				if {{$lowName}}Err != nil {
-					result.ErrorCode = commonDef.Failed
-					result.Reason = {{$lowName}}Err.Error()
-					break
-				}
-		
-				for _, val := range {{$lowName}}List {
-					view := &model.{{$moduleName}}View{}
-					view.From{{$moduleName}}(val)
-		
-					result.{{$moduleName}} = append(result.{{$moduleName}}, view)
-				}
-		
-				result.Total = {{$lowName}}Total
-				result.ErrorCode = commonDef.Success
-				break
-			}
-		
-			block, err := json.Marshal(result)
-			if err == nil {
-				res.Write(block)
-				return
-			}
-		
-			res.WriteHeader(http.StatusExpectationFailed)
+{{$serviceName := .ServiceName}}
+{{$module := .Module}}
+{{$moduleName := $module.Name}}
+{{$lowName := $module.Lower $serviceName}}
+func (s *{{$serviceName}}) Filter{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
+	filter := commonDef.NewFilter()
+	filter.Decode(req)
+
+	result := &common.{{$moduleName}}ListResult{ {{$moduleName}}: []*model.{{$moduleName}}View{} }
+	for {
+		{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Filter(filter)
+		if {{$lowName}}Err != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = {{$lowName}}Err.Error()
+			break
 		}
+
+		for _, val := range {{$lowName}}List {
+			view := &model.{{$moduleName}}View{}
+			view.From{{$moduleName}}(val)
+
+			result.{{$moduleName}} = append(result.{{$moduleName}}, view)
+		}
+
+		result.Total = {{$lowName}}Total
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
 `
 	templateHandle, templateErr := template.New("FilterHandle").Parse(templateVal)
 	if templateErr != nil {
@@ -104,7 +105,7 @@ func (s *Module) FilterHandle() (ret string, err error) {
 	}
 
 	dataBuffer := &bytes.Buffer{}
-	data := map[string]interface{}{"Module": s}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
 	err = templateHandle.Execute(dataBuffer, data)
 	if err != nil {
 		return
@@ -114,12 +115,13 @@ func (s *Module) FilterHandle() (ret string, err error) {
 	return
 }
 
-func (s *Module) QueryHandle() (ret string, err error) {
+func (s *Module) QueryHandle(serviceName string) (ret string, err error) {
 	templateVal := `
+{{$serviceName := .ServiceName}}
 {{$module := .Module}}	
 {{$moduleName := $module.Name}}
-{{$lowName := $module.LowerName}}
-func (s *{{$moduleName}}) Query{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
+{{$lowName := $module.Lower $serviceName}}
+func (s *{{$serviceName}}) Query{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
 		_, value := net.SplitRESTAPI(req.URL.Path)
@@ -161,7 +163,7 @@ func (s *{{$moduleName}}) Query{{$moduleName}}(res http.ResponseWriter, req *htt
 	}
 
 	dataBuffer := &bytes.Buffer{}
-	data := map[string]interface{}{"Module": s}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
 	err = templateHandle.Execute(dataBuffer, data)
 	if err != nil {
 		return
@@ -171,12 +173,13 @@ func (s *{{$moduleName}}) Query{{$moduleName}}(res http.ResponseWriter, req *htt
 	return
 }
 
-func (s *Module) CreateHandle() (ret string, err error) {
+func (s *Module) CreateHandle(serviceName string) (ret string, err error) {
 	templateVal := `
+{{$serviceName := .ServiceName}}
 {{$module := .Module}}	
 {{$moduleName := $module.Name}}
-{{$lowName := $module.LowerName}}
-func (s *{{$moduleName}}) Create{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
+{{$lowName := $module.Lower $serviceName}}
+func (s *{{$serviceName}}) Create{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
 		{{$lowName}}Ptr := &model.{{$moduleName}}{}
@@ -231,7 +234,7 @@ func (s *{{$moduleName}}) Create{{$moduleName}}(res http.ResponseWriter, req *ht
 	}
 
 	dataBuffer := &bytes.Buffer{}
-	data := map[string]interface{}{"Module": s}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
 	err = templateHandle.Execute(dataBuffer, data)
 	if err != nil {
 		return
@@ -241,12 +244,13 @@ func (s *{{$moduleName}}) Create{{$moduleName}}(res http.ResponseWriter, req *ht
 	return
 }
 
-func (s *Module) UpdateHandle() (ret string, err error) {
+func (s *Module) UpdateHandle(serviceName string) (ret string, err error) {
 	templateVal := `
+{{$serviceName := .ServiceName}}
 {{$module := .Module}}	
 {{$moduleName := $module.Name}}
-{{$lowName := $module.LowerName}}
-func (s *{{$moduleName}}) Update{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
+{{$lowName := $module.Lower $serviceName}}
+func (s *{{$serviceName}}) Update{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
 		_, value := net.SplitRESTAPI(req.URL.Path)
@@ -297,7 +301,7 @@ func (s *{{$moduleName}}) Update{{$moduleName}}(res http.ResponseWriter, req *ht
 	}
 
 	dataBuffer := &bytes.Buffer{}
-	data := map[string]interface{}{"Module": s}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
 	err = templateHandle.Execute(dataBuffer, data)
 	if err != nil {
 		return
@@ -307,12 +311,13 @@ func (s *{{$moduleName}}) Update{{$moduleName}}(res http.ResponseWriter, req *ht
 	return
 }
 
-func (s *Module) DeleteHandle() (ret string, err error) {
+func (s *Module) DeleteHandle(serviceName string) (ret string, err error) {
 	templateVal := `
-{{$module := .Module}}	
+{{$serviceName := .ServiceName}}
+{{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.LowerName}}
-func (s *{{$moduleName}}) Delete{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
+{{$lowName := $module.Lower $serviceName}}
+func (s *{{$serviceName}}) Delete{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
 		_, value := net.SplitRESTAPI(req.URL.Path)
@@ -355,7 +360,7 @@ func (s *{{$moduleName}}) Delete{{$moduleName}}(res http.ResponseWriter, req *ht
 	}
 
 	dataBuffer := &bytes.Buffer{}
-	data := map[string]interface{}{"Module": s}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
 	err = templateHandle.Execute(dataBuffer, data)
 	if err != nil {
 		return

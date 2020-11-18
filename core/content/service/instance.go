@@ -13,12 +13,14 @@ import (
 
 type Instance struct {
 	packageName string
+	serviceName string
 	projectName string
 }
 
 func (s *Instance) getTemplate() (ret string) {
 	ret = `
 	{{$projectName := .ProjectName}}
+	{{$serviceName := .ServiceName}}
 	{{$packageName := .PackageName }}
 	{{$module := .Module}}
 	{{$moduleName := $module.Name}}
@@ -40,7 +42,7 @@ func (s *Instance) getTemplate() (ret string) {
 	)
 	
 	{{range $k, $v := $actionList}}
-	{{$url := $module.UrlHandle $v }}
+	{{$url := $module.UrlHandle $serviceName $v }}
 	{{$url}}
 	{{end}}
 	`
@@ -90,7 +92,7 @@ func (s *Instance) Create(module *model.Module) (err error) {
 			return
 		}
 
-		data := map[string]interface{}{"ProjectName": s.projectName, "PackageName": module.LowerName(), "Module": module}
+		data := map[string]interface{}{"ProjectName": s.projectName, "ServiceName": s.serviceName, "PackageName": s.packageName, "Module": module}
 		err = templateHandle.Execute(fileHandle, data)
 	}()
 	if err != nil {

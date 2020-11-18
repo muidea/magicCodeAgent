@@ -21,95 +21,96 @@ func New(projectName string) *Define {
 
 func (s *Define) getTemplate() (ret string) {
 	ret = `
-	{{$projectName := .ProjectName}}
-	{{$packageName := .PackageName }}
-	{{$module := .Module}}
-	{{$moduleName := $module.Name}}
-	{{$actionList := $module.Action}}
-	{{$childList := $module.Child}}
-	package {{$packageName}}
-	
-	import (
-		"fmt"
-		"net/http"
-	
-		commonCommon "github.com/muidea/magicCommon/common"
-		commonSession "github.com/muidea/magicCommon/session"
-	
-		"github.com/muidea/{{$projectName}}/common"
-		"github.com/muidea/{{$projectName}}/core/handler"
-		"github.com/muidea/{{$projectName}}/core/service/{{$packageName}}/biz"
-	
-		casModel "github.com/muidea/magicCas/model"
-		casToolkit "github.com/muidea/magicCas/toolkit"
-	
-		engine "github.com/muidea/magicEngine"
-	)
-	
-	// {{$moduleName}} 路由信息
-	type {{$moduleName}} struct {
-		sessionRegistry      commonSession.Registry
-		privateRouteRegistry casToolkit.PrivateRegistry
-		casRouteRegistry     casToolkit.CasRegistry
-		
-		commonHandler handler.CommonHandler
-	}
-	
-	// New create route
-	func New(
-		commonHandler handler.CommonHandler,
-	) *{{$moduleName}} {
-		route := &{{$moduleName}}{
-			commonHandler: commonHandler,
-		}
-	
-		return route
-	}
-	
-	func (s *{{$moduleName}}) BindRegistry(
-		sessionRegistry commonSession.Registry,
-		casRouteRegistry casToolkit.CasRegistry,
-		privateRouteRegistry casToolkit.PrivateRegistry) {
-	
-		s.sessionRegistry = sessionRegistry
-		s.casRouteRegistry = casRouteRegistry
-		s.privateRouteRegistry = privateRouteRegistry
-	}
-	
-	// Handle middleware handler
-	func (s *{{$moduleName}}) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
-		curSession := s.sessionRegistry.GetSession(res, req)
-	
-		sessionInfo := curSession.GetSessionInfo()
-		sessionInfo.Scope = commonCommon.ShareSession
-	
-		values := req.URL.Query()
-		values = sessionInfo.Encode(values)
-		req.URL.RawQuery = values.Encode()
-	
-		ctx.Next()
-	}
-	
-	// RegisterHandler 注册路由
-	func (s *{{$moduleName}}) RegisterHandler(router engine.Router) {
+{{$projectName := .ProjectName}}
+{{$serviceName := .ServiceName}}
+{{$packageName := .PackageName }}
+{{$module := .Module}}
+{{$moduleName := $module.Name}}
+{{$actionList := $module.Action}}
+{{$childList := $module.Child}}
+package {{$packageName}}
 
-	}
+import (
+	"fmt"
+	"net/http"
+
+	commonCommon "github.com/muidea/magicCommon/common"
+	commonSession "github.com/muidea/magicCommon/session"
+
+	"github.com/muidea/{{$projectName}}/common"
+	"github.com/muidea/{{$projectName}}/core/handler"
+	"github.com/muidea/{{$projectName}}/core/service/{{$packageName}}/biz"
+
+	casModel "github.com/muidea/magicCas/model"
+	casToolkit "github.com/muidea/magicCas/toolkit"
+
+	engine "github.com/muidea/magicEngine"
+)
+
+// {{$serviceName}} 路由信息
+type {{$serviceName}} struct {
+	sessionRegistry      commonSession.Registry
+	privateRouteRegistry casToolkit.PrivateRegistry
+	casRouteRegistry     casToolkit.CasRegistry
 	
-	func (s *{{$moduleName}}) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
-		curSession := s.sessionRegistry.GetSession(res, req)
-		authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
-		if !ok {
-			err = fmt.Errorf("无效权限,未通过验证")
-			return
-		}
-		ret = authVal.(*casModel.Entity)
-		return
+	commonHandler handler.CommonHandler
+}
+
+// New create route
+func New(
+	commonHandler handler.CommonHandler,
+) *{{$serviceName}} {
+	route := &{{$moduleName}}{
+		commonHandler: commonHandler,
 	}
 
-	func (s *Bill) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string, err error) {
+	return route
+}
+
+func (s *{{$serviceName}}) BindRegistry(
+	sessionRegistry commonSession.Registry,
+	casRouteRegistry casToolkit.CasRegistry,
+	privateRouteRegistry casToolkit.PrivateRegistry) {
+
+	s.sessionRegistry = sessionRegistry
+	s.casRouteRegistry = casRouteRegistry
+	s.privateRouteRegistry = privateRouteRegistry
+}
+
+// Handle middleware handler
+func (s *{{$serviceName}}) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	sessionInfo := curSession.GetSessionInfo()
+	sessionInfo.Scope = commonCommon.ShareSession
+
+	values := req.URL.Query()
+	values = sessionInfo.Encode(values)
+	req.URL.RawQuery = values.Encode()
+
+	ctx.Next()
+}
+
+// RegisterHandler 注册路由
+func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
+
+}
+
+func (s *{{$serviceName}}) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
+	if !ok {
+		err = fmt.Errorf("无效权限,未通过验证")
 		return
 	}
-	`
+	ret = authVal.(*casModel.Entity)
+	return
+}
+
+func (s *$serviceName) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string, err error) {
+	return
+}
+`
 
 	return
 }
@@ -153,7 +154,7 @@ func (s *Define) Create(module *model.Module) (err error) {
 				return
 			}
 
-			data := map[string]interface{}{"ProjectName": s.projectName, "PackageName": module.LowerName(), "Module": module}
+			data := map[string]interface{}{"ProjectName": s.projectName, "ServiceName": module.Name, "PackageName": module.Lower(module.Name), "Module": module}
 			err = templateHandle.Execute(fileHandle, data)
 		}()
 		if err != nil {
@@ -167,13 +168,13 @@ func (s *Define) Create(module *model.Module) (err error) {
 		}
 	}
 
-	instance := &Instance{projectName: s.projectName, packageName: module.LowerName()}
+	instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
 	err = instance.Create(module)
 	if err != nil {
 		return
 	}
 	for _, val := range module.Child {
-		instance := &Instance{projectName: s.projectName, packageName: module.LowerName()}
+		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
 		err = instance.Create(val)
 		if err != nil {
 			return
