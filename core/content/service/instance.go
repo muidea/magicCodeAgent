@@ -19,33 +19,33 @@ type Instance struct {
 
 func (s *Instance) getTemplate() (ret string) {
 	ret = `
-	{{$projectName := .ProjectName}}
-	{{$serviceName := .ServiceName}}
-	{{$packageName := .PackageName }}
-	{{$module := .Module}}
-	{{$moduleName := $module.Name}}
-	{{$actionList := $module.Action}}
-	{{$childList := $module.Child}}
-	package {{$packageName}}
-	
-	import (
-		"encoding/json"
-		"log"
-		"net/http"
-		"strconv"
-	
-		commonDef "github.com/muidea/magicCommon/def"
-		"github.com/muidea/magicCommon/foundation/net"
-	
-		"github.com/muidea/{{$projectName}}/common"
-		"github.com/muidea/{{$projectName}}/model"
-	)
-	
-	{{range $k, $v := $actionList}}
-	{{$url := $module.UrlHandle $serviceName $v }}
-	{{$url}}
-	{{end}}
-	`
+{{$projectName := .ProjectName}}
+{{$serviceName := .ServiceName}}
+{{$packageName := .PackageName }}
+{{$module := .Module}}
+{{$moduleName := $module.Name}}
+{{$actionList := $module.Action}}
+{{$childList := $module.Child}}
+package {{$packageName}}
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+	"strconv"
+
+	commonDef "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/net"
+
+	"github.com/muidea/{{$projectName}}/common"
+	"github.com/muidea/{{$projectName}}/model"
+)
+
+{{range $k, $v := $actionList}}
+{{$url := $module.UrlHandle $serviceName $v }}
+{{$url}}
+{{end}}
+`
 
 	return
 }
