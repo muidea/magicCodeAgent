@@ -70,7 +70,7 @@ func (s *{{$serviceName}}) Filter{{$moduleName}}(res http.ResponseWriter, req *h
 
 	result := &common.{{$moduleName}}ListResult{ {{$moduleName}}: []*model.{{$moduleName}}View{} }
 	for {
-		{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Filter(filter)
+		{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Filter{{$moduleName}}(filter)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
@@ -133,7 +133,7 @@ func (s *{{$serviceName}}) Query{{$moduleName}}(res http.ResponseWriter, req *ht
 			break
 		}
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.QueryByID(id)
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Query{{$moduleName}}ByID(id)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
@@ -204,7 +204,7 @@ func (s *{{$serviceName}}) Create{{$moduleName}}(res http.ResponseWriter, req *h
 			break
 		}
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Create({{$lowName}}Ptr,curEntity,curNamespace)
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Create{{$moduleName}}({{$lowName}}Ptr,curEntity,curNamespace)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
@@ -271,7 +271,7 @@ func (s *{{$serviceName}}) Update{{$moduleName}}(res http.ResponseWriter, req *h
 		}
 		{{$lowName}}Ptr.ID = id
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Update({{$lowName}}Ptr)
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Update{{$moduleName}}({{$lowName}}Ptr)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
@@ -329,7 +329,7 @@ func (s *{{$serviceName}}) Delete{{$moduleName}}(res http.ResponseWriter, req *h
 			break
 		}
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Delete(id)
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Delete{{$moduleName}}(id)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
