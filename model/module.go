@@ -179,8 +179,8 @@ func (s *Module) CreateHandle() (ret string, err error) {
 func (s *{{$moduleName}}) Create{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
-		{{$lowName}} := &model.{{$moduleName}}{}
-		err := net.ParseJSONBody(req, {{$lowName}})
+		{{$lowName}}Ptr := &model.{{$moduleName}}{}
+		err := net.ParseJSONBody(req, {{$lowName}}Ptr)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "invalid param"
@@ -201,7 +201,7 @@ func (s *{{$moduleName}}) Create{{$moduleName}}(res http.ResponseWriter, req *ht
 			break
 		}
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Create({{$lowName}},curEntity,curNamespace)
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Create({{$lowName}}Ptr,curEntity,curNamespace)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
@@ -249,7 +249,25 @@ func (s *Module) UpdateHandle() (ret string, err error) {
 func (s *{{$moduleName}}) Update{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Query()
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			log.Printf("update {{$lowName}} failed, illegal id, id:%s", value)
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "invalid param"
+			break
+		}
+
+		{{$lowName}}Ptr := &model.{{$moduleName}}{}
+		err = net.ParseJSONBody(req, {{$lowName}}Ptr)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "invalid param"
+			break
+		}
+		{{$lowName}}Ptr.ID = id
+
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Update({{$lowName}}Ptr)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
