@@ -105,6 +105,10 @@ func (s *Define) getTemplate() (ret string) {
 		ret = authVal.(*casModel.Entity)
 		return
 	}
+
+	func (s *Bill) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string, err error) {
+		return
+	}
 	`
 
 	return
