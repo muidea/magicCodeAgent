@@ -23,7 +23,7 @@ func (s *Biz) getTemplate() (ret string) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowName := $module.Lower $moduleName}}
 package biz
 
 import (
@@ -38,6 +38,7 @@ import (
 	commonDef "github.com/muidea/magicCommon/def"
 )
 
+{{if eq $serviceName $moduleName}}
 type {{$serviceName}} struct {
 	{{$lowName}}Handler handler.{{$serviceName}}Handler
 }
@@ -45,6 +46,7 @@ type {{$serviceName}} struct {
 func New{{$serviceName}}({{$lowName}}Handler handler.{{$serviceName}}Handler) *{{$serviceName}} {
 	return &{{$serviceName}}{ {{$lowName}}Handler: {{$lowName}}Handler }
 }
+{{end}}
 
 func (s *{{$serviceName}}) Filter{{$moduleName}}(filter *commonDef.Filter) (ret []*model.{{$moduleName}}, total int64, err error) {
 	return
