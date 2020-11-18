@@ -69,7 +69,7 @@ func (s *Module) FilterHandle() (ret string, err error) {
 		
 			result := &common.{{$moduleName}}ListResult{ {{$moduleName}}: []*model.{{$moduleName}}View{} }
 			for {
-				{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Query(filter)
+				{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Filter(filter)
 				if {{$lowName}}Err != nil {
 					result.ErrorCode = commonDef.Failed
 					result.Reason = {{$lowName}}Err.Error()
@@ -122,6 +122,16 @@ func (s *Module) QueryHandle() (ret string, err error) {
 func (s *{{$moduleName}}) Query{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			log.Printf("query {{$lowName}} failed, illegal id, id:%s, err:%s", value, err.Error())
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "invalid param"
+			break
+		}
+
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.QueryByID(id)
 		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Query()
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
@@ -170,7 +180,29 @@ func (s *Module) CreateHandle() (ret string, err error) {
 func (s *{{$moduleName}}) Create{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Query()
+		{{$lowName}} := &model.{{$moduleName}}{}
+		err := net.ParseJSONBody(req, {{$lowName}})
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "invalid param"
+			break
+		}
+
+		curEntity,curErr := s.getCurrentEntity(res, req)
+		if curErr != nil{
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = curErr.Error()
+			break
+		}
+
+		curNamespace, curErr := s.getCurrentNamespace(res, req)
+		if curErr != nil{
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = curErr.Error()
+			break
+		}
+
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Create({{$lowName}},curEntity,curNamespace)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
