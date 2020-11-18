@@ -12,17 +12,18 @@ import (
 )
 
 type Instance struct {
+	packageName string
 	projectName string
 }
 
 func (s *Instance) getTemplate() (ret string) {
 	ret = `
 	{{$projectName := .ProjectName}}
+	{{$packageName := .PackageName }}
 	{{$module := .Module}}
 	{{$moduleName := $module.Name}}
 	{{$actionList := $module.Action}}
 	{{$childList := $module.Child}}
-	{{$packageName := $module.LowerName }}
 	package {{$packageName}}
 	
 	import (
@@ -52,7 +53,7 @@ func (s *Instance) Create(module *model.Module) (err error) {
 		return
 	}
 
-	filePath := fmt.Sprintf("./core/service/%s", strings.ToLower(module.Name))
+	filePath := fmt.Sprintf("./core/service/%s", s.packageName)
 	existFlag, existErr := util.Exists(filePath)
 	if existErr != nil {
 		err = existErr
@@ -89,7 +90,7 @@ func (s *Instance) Create(module *model.Module) (err error) {
 			return
 		}
 
-		data := map[string]interface{}{"ProjectName": s.projectName, "Module": module}
+		data := map[string]interface{}{"ProjectName": s.projectName, "PackageName": module.LowerName(), "Module": module}
 		err = templateHandle.Execute(fileHandle, data)
 	}()
 	if err != nil {

@@ -22,11 +22,11 @@ func New(projectName string) *Define {
 func (s *Define) getTemplate() (ret string) {
 	ret = `
 	{{$projectName := .ProjectName}}
+	{{$packageName := .PackageName }}
 	{{$module := .Module}}
 	{{$moduleName := $module.Name}}
 	{{$actionList := $module.Action}}
 	{{$childList := $module.Child}}
-	{{$packageName := $module.LowerName }}
 	package {{$packageName}}
 	
 	import (
@@ -153,7 +153,7 @@ func (s *Define) Create(module *model.Module) (err error) {
 				return
 			}
 
-			data := map[string]interface{}{"ProjectName": s.projectName, "Module": module}
+			data := map[string]interface{}{"ProjectName": s.projectName, "PackageName": module.LowerName(), "Module": module}
 			err = templateHandle.Execute(fileHandle, data)
 		}()
 		if err != nil {
@@ -167,8 +167,18 @@ func (s *Define) Create(module *model.Module) (err error) {
 		}
 	}
 
-	instance := &Instance{projectName: s.projectName}
+	instance := &Instance{projectName: s.projectName, packageName: module.LowerName()}
 	err = instance.Create(module)
+	if err != nil {
+		return
+	}
+	for _, val := range module.Child {
+		instance := &Instance{projectName: s.projectName, packageName: module.LowerName()}
+		err = instance.Create(val)
+		if err != nil {
+			return
+		}
+	}
 
 	return
 }
