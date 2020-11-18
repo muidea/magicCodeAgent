@@ -43,14 +43,14 @@ type {{$serviceName}} struct {
 }
 
 func New{{$serviceName}}({{$lowName}}Handler handler.{{$serviceName}}Handler) *{{$serviceName}} {
-	return &{{$serviceName}}{{{$lowName}}Handler: {{$lowName}}Handler}
+	return &{{$serviceName}}{ {{$lowName}}Handler: {{$lowName}}Handler }
 }
 
 func (s *{{$serviceName}}) Filter{{$moduleName}}(filter *commonDef.Filter) (ret []*model.{{$moduleName}}, total int64, err error) {
 	return
 }
 
-func (s *{{$serviceName}}) Query{{$moduleName}}ByID(id int) (ret *model.{{{{$moduleName}}}}, err error) {
+func (s *{{$serviceName}}) Query{{$moduleName}}ByID(id int) (ret *model.{{$moduleName}}, err error) {
 	return
 }
 

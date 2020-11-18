@@ -185,11 +185,11 @@ func (s *Define) Create(module *model.Module) (err error) {
 			return
 		}
 
-		//biz := &Biz{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-		//err = biz.Create(val)
-		//if err != nil {
-		//	return
-		//}
+		biz := &Biz{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
+		err = biz.Create(val)
+		if err != nil {
+			return
+		}
 	}
 
 	return
