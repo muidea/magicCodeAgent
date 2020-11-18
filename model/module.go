@@ -132,7 +132,6 @@ func (s *{{$moduleName}}) Query{{$moduleName}}(res http.ResponseWriter, req *htt
 		}
 
 		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.QueryByID(id)
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Query()
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
