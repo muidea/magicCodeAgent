@@ -73,7 +73,7 @@ func (s *Module) QueryAllHandle() (ret string, err error) {
 		
 			result := &common.{{$moduleName}}ListResult{ {{$moduleName}}: []*model.{{$moduleName}}View{} }
 			for {
-				{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Query(filter.PageFilter)
+				{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Query(filter)
 				if {{$lowName}}Err != nil {
 					result.ErrorCode = commonDef.Failed
 					result.Reason = {{$lowName}}Err.Error()
