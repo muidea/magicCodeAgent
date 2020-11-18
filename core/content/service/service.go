@@ -128,32 +128,39 @@ func (s *Define) Create(module *model.Module) (err error) {
 		}
 	}
 
-	fileName := fmt.Sprintf("%s/%s.go", filePath, "service")
-	func() {
-		fileHandle, fileErr := os.Create(fileName)
-		if fileErr != nil {
-			err = fileErr
-			return
-		}
-		defer fileHandle.Close()
-
-		templateHandle, templateErr := template.New(module.Name).Parse(s.getTemplate())
-		if templateErr != nil {
-			err = templateErr
-			return
-		}
-
-		data := map[string]interface{}{"ProjectName": s.projectName, "Module": module}
-		err = templateHandle.Execute(fileHandle, data)
-	}()
-	if err != nil {
+	filePath = fmt.Sprintf("%s/%s.go", filePath, "service")
+	existsFlag, existsErr := util.Exists(filePath)
+	if existsErr != nil {
+		err = fmt.Errorf("unexpect, fileName:%s", filePath)
 		return
 	}
+	if !existsFlag {
+		func() {
+			fileHandle, fileErr := os.Create(filePath)
+			if fileErr != nil {
+				err = fileErr
+				return
+			}
+			defer fileHandle.Close()
 
-	cmd := exec.Command("gofmt", "-w", fileName)
-	err = cmd.Run()
-	if err != nil {
-		return
+			templateHandle, templateErr := template.New(module.Name).Parse(s.getTemplate())
+			if templateErr != nil {
+				err = templateErr
+				return
+			}
+
+			data := map[string]interface{}{"ProjectName": s.projectName, "Module": module}
+			err = templateHandle.Execute(fileHandle, data)
+		}()
+		if err != nil {
+			return
+		}
+
+		cmd := exec.Command("gofmt", "-w", filePath)
+		err = cmd.Run()
+		if err != nil {
+			return
+		}
 	}
 
 	instance := &Instance{projectName: s.projectName}

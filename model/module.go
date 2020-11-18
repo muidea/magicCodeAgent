@@ -21,8 +21,6 @@ func (s *Module) LowerName() string {
 
 func (s *Module) FormatUrl(url string) (ret string) {
 	switch url {
-	case "query/all/":
-		ret = fmt.Sprintf("QueryAll%sURL = \"/api/v1/%s/query/all/\"", strings.Title(s.Name), strings.ToLower(s.Name))
 	case "query/":
 		ret = fmt.Sprintf("Filter%sURL = \"/api/v1/%s/query/\"", strings.Title(s.Name), strings.ToLower(s.Name))
 	case "query/:id":
@@ -41,8 +39,6 @@ func (s *Module) FormatUrl(url string) (ret string) {
 func (s *Module) UrlHandle(url string) (ret string) {
 	var err error
 	switch url {
-	case "query/all/":
-		ret, err = s.QueryAllHandle()
 	case "query/":
 		ret, err = s.FilterHandle()
 	case "query/:id":
@@ -62,13 +58,13 @@ func (s *Module) UrlHandle(url string) (ret string) {
 	return
 }
 
-func (s *Module) QueryAllHandle() (ret string, err error) {
+func (s *Module) FilterHandle() (ret string, err error) {
 	templateVal := `
 		{{$module := .Module}}
 		{{$moduleName := $module.Name}}
 		{{$lowName := $module.LowerName}}
-		func (s *{{$moduleName}}) QueryAll{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
-			filter := commonDef.NewFilter([]string{})
+		func (s *{{$moduleName}}) Filter{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
+			filter := commonDef.NewFilter()
 			filter.Decode(req)
 		
 			result := &common.{{$moduleName}}ListResult{ {{$moduleName}}: []*model.{{$moduleName}}View{} }
@@ -100,54 +96,6 @@ func (s *Module) QueryAllHandle() (ret string, err error) {
 		
 			res.WriteHeader(http.StatusExpectationFailed)
 		}
-`
-	templateHandle, templateErr := template.New("QueryAllHandle").Parse(templateVal)
-	if templateErr != nil {
-		err = templateErr
-		return
-	}
-
-	dataBuffer := &bytes.Buffer{}
-	data := map[string]interface{}{"Module": s}
-	err = templateHandle.Execute(dataBuffer, data)
-	if err != nil {
-		return
-	}
-	ret = dataBuffer.String()
-
-	return
-}
-
-func (s *Module) FilterHandle() (ret string, err error) {
-	templateVal := `
-{{$module := .Module}}	
-{{$moduleName := $module.Name}}
-{{$lowName := $module.LowerName}}
-func (s * {{$moduleName}}) Filter{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
-	result := &common.{{$moduleName}}Result{}
-	for {
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Query()
-		if {{$lowName}}Err != nil {
-			result.ErrorCode = commonDef.Failed
-			result.Reason = {{$lowName}}Err.Error()
-			break
-		}
-
-		view := &model.{{$moduleName}}View{}
-		view.From{{$moduleName}}({{$lowName}}Ptr)
-		result.{{$moduleName}} = view
-		result.ErrorCode = commonDef.Success
-		break
-	}
-
-	block, err := json.Marshal(result)
-	if err == nil {
-		res.Write(block)
-		return
-	}
-
-	res.WriteHeader(http.StatusExpectationFailed)
-}
 `
 	templateHandle, templateErr := template.New("FilterHandle").Parse(templateVal)
 	if templateErr != nil {

@@ -65,9 +65,18 @@ func (s *Instance) Create(module *model.Module) (err error) {
 		}
 	}
 
-	fileName := fmt.Sprintf("%s/%s.go", filePath, strings.ToLower(module.Name))
+	filePath = fmt.Sprintf("%s/%s.go", filePath, strings.ToLower(module.Name))
+	existsFlag, existsErr := util.Exists(filePath)
+	if existsErr != nil {
+		err = fmt.Errorf("unexpect, fileName:%s", filePath)
+		return
+	}
+	if existsFlag {
+		return
+	}
+
 	func() {
-		fileHandle, fileErr := os.Create(fileName)
+		fileHandle, fileErr := os.Create(filePath)
 		if fileErr != nil {
 			err = fileErr
 			return
@@ -87,7 +96,7 @@ func (s *Instance) Create(module *model.Module) (err error) {
 		return
 	}
 
-	cmd := exec.Command("gofmt", "-w", fileName)
+	cmd := exec.Command("gofmt", "-w", filePath)
 	err = cmd.Run()
 	return
 }

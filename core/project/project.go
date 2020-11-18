@@ -64,7 +64,7 @@ func (s *Project) cloneTemplate(filePath string) (err error) {
 
 	existsFlag, existsErr := util.Exists(curPath)
 	if existsErr != nil {
-		err = fmt.Errorf("unexpect, fileName:%s", filePath)
+		err = fmt.Errorf("unexpect, fileName:%s", curPath)
 		return
 	}
 	if !existsFlag {
@@ -74,7 +74,17 @@ func (s *Project) cloneTemplate(filePath string) (err error) {
 		}
 	}
 
-	fileHandle, fileErr := os.Create(path.Join(curPath, curName))
+	filePath = path.Join(curPath, curName)
+	existsFlag, existsErr = util.Exists(filePath)
+	if existsErr != nil {
+		err = fmt.Errorf("unexpect, fileName:%s", filePath)
+		return
+	}
+	if existsFlag {
+		return
+	}
+
+	fileHandle, fileErr := os.Create(filePath)
 	if fileErr != nil {
 		err = fileErr
 		return
