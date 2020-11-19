@@ -28,6 +28,7 @@ func (s *Define) getTemplate() (ret string) {
 {{$moduleName := $module.Name}}
 {{$actionList := $module.Action}}
 {{$childList := $module.Child}}
+{{$lowName := $module.Lower $moduleName}}
 package {{$packageName}}
 
 import (
@@ -37,12 +38,11 @@ import (
 	commonCommon "github.com/muidea/magicCommon/common"
 	commonSession "github.com/muidea/magicCommon/session"
 
-	"github.com/muidea/{{$projectName}}/common"
-	"github.com/muidea/{{$projectName}}/core/handler"
-	"github.com/muidea/{{$projectName}}/core/service/{{$packageName}}/biz"
-
 	casModel "github.com/muidea/magicCas/model"
 	casToolkit "github.com/muidea/magicCas/toolkit"
+
+	"github.com/muidea/{{$projectName}}/core/handler"
+	"github.com/muidea/{{$projectName}}/core/service/{{$lowName}}/biz"
 
 	engine "github.com/muidea/magicEngine"
 )
@@ -52,16 +52,16 @@ type {{$serviceName}} struct {
 	sessionRegistry      commonSession.Registry
 	privateRouteRegistry casToolkit.PrivateRegistry
 	casRouteRegistry     casToolkit.CasRegistry
-	
-	commonHandler handler.CommonHandler
+
+	{{$lowName}}Biz *biz.{{$serviceName}}
 }
 
 // New create route
 func New(
-	commonHandler handler.CommonHandler,
+	{{$lowName}}Handler handler.{{$serviceName}}Handler,
 ) *{{$serviceName}} {
-	route := &{{$moduleName}}{
-		commonHandler: commonHandler,
+	route := &{{$serviceName}}{
+		{{$lowName}}Biz: biz.New{{$serviceName}}({{$lowName}}Handler),
 	}
 
 	return route
@@ -107,7 +107,7 @@ func (s *{{$serviceName}}) getCurrentEntity(res http.ResponseWriter, req *http.R
 	return
 }
 
-func (s *$serviceName) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string, err error) {
+func (s *{{$serviceName}}) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string, err error) {
 	return
 }
 `
