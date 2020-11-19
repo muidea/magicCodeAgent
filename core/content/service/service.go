@@ -43,7 +43,7 @@ import (
 
 	"github.com/muidea/{{$projectName}}/common"
 	"github.com/muidea/{{$projectName}}/core/handler"
-	"github.com/muidea/{{$projectName}}/core/service/warehouse/biz"
+	"github.com/muidea/{{$projectName}}/core/service/{{$lowName}}/biz"
 
 	engine "github.com/muidea/magicEngine"
 )
@@ -97,6 +97,14 @@ func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
 {{range $k, $v := $actionList}}
 {{$url := $module.RouteHandle $serviceName $v }}
 {{$url}}
+{{end}}
+{{range $mk, $mv := $childList}}
+{{$subModuleName := $mv.Name}}
+{{$subModuleAction := $mv.Action}}
+{{range $ak, $av := $subModuleAction}}
+{{$url := $mv.RouteHandle $serviceName $av }}
+{{$url}}
+{{end}}
 {{end}}
 }
 
