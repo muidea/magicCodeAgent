@@ -271,7 +271,21 @@ func (s *{{$serviceName}}) Update{{$moduleName}}(res http.ResponseWriter, req *h
 		}
 		{{$lowName}}Ptr.ID = id
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Update{{$moduleName}}({{$lowName}}Ptr)
+		curEntity,curErr := s.getCurrentEntity(res, req)
+		if curErr != nil{
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = curErr.Error()
+			break
+		}
+
+		curNamespace, curErr := s.getCurrentNamespace(res, req)
+		if curErr != nil{
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = curErr.Error()
+			break
+		}
+
+		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Update{{$moduleName}}({{$lowName}}Ptr,curEntity,curNamespace)
 		if {{$lowName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = {{$lowName}}Err.Error()
