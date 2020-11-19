@@ -383,3 +383,150 @@ func (s *{{$serviceName}}) Delete{{$moduleName}}(res http.ResponseWriter, req *h
 
 	return
 }
+
+func (s *Module) RouteHandle(serviceName, url string) (ret string) {
+	var err error
+	switch url {
+	case "query/":
+		ret, err = s.FilterRouteHandle(serviceName)
+	case "query/:id":
+		ret, err = s.QueryRouteHandle(serviceName)
+	case "create/":
+		ret, err = s.CreateRouteHandle(serviceName)
+	case "update/:id":
+		ret, err = s.UpdateRouteHandle(serviceName)
+	case "delete/:id":
+		ret, err = s.DeleteRouteHandle(serviceName)
+	}
+
+	if err != nil {
+		log.Panicf("%s,err:%s", url, err.Error())
+	}
+
+	return
+}
+
+func (s *Module) FilterRouteHandle(serviceName string) (ret string, err error) {
+	templateVal := `
+{{$serviceName := .ServiceName}}
+{{$module := .Module}}
+{{$moduleName := $module.Name}}
+{{$lowName := $module.Lower $serviceName}}
+s.privateRouteRegistry.AddHandler(common.Filter{{$moduleName}}URL, "GET", casModel.ReadPrivate, s.Filter{{$moduleName}})
+`
+	templateHandle, templateErr := template.New("FilterRouteHandle").Parse(templateVal)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	dataBuffer := &bytes.Buffer{}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
+	err = templateHandle.Execute(dataBuffer, data)
+	if err != nil {
+		return
+	}
+	ret = dataBuffer.String()
+
+	return
+}
+
+func (s *Module) QueryRouteHandle(serviceName string) (ret string, err error) {
+	templateVal := `
+{{$serviceName := .ServiceName}}
+{{$module := .Module}}
+{{$moduleName := $module.Name}}
+{{$lowName := $module.Lower $serviceName}}
+s.privateRouteRegistry.AddHandler(common.Query{{$moduleName}}URL, "GET", casModel.ReadPrivate, s.Query{{$moduleName}})
+`
+	templateHandle, templateErr := template.New("QueryRouteHandle").Parse(templateVal)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	dataBuffer := &bytes.Buffer{}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
+	err = templateHandle.Execute(dataBuffer, data)
+	if err != nil {
+		return
+	}
+	ret = dataBuffer.String()
+
+	return
+}
+
+func (s *Module) CreateRouteHandle(serviceName string) (ret string, err error) {
+	templateVal := `
+{{$serviceName := .ServiceName}}
+{{$module := .Module}}
+{{$moduleName := $module.Name}}
+{{$lowName := $module.Lower $serviceName}}
+s.privateRouteRegistry.AddHandler(common.Create{{$moduleName}}URL, "POST", casModel.WritePrivate, s.Create{{$moduleName}})
+`
+	templateHandle, templateErr := template.New("CreateRouteHandle").Parse(templateVal)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	dataBuffer := &bytes.Buffer{}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
+	err = templateHandle.Execute(dataBuffer, data)
+	if err != nil {
+		return
+	}
+	ret = dataBuffer.String()
+
+	return
+}
+
+func (s *Module) UpdateRouteHandle(serviceName string) (ret string, err error) {
+	templateVal := `
+{{$serviceName := .ServiceName}}
+{{$module := .Module}}
+{{$moduleName := $module.Name}}
+{{$lowName := $module.Lower $serviceName}}
+s.privateRouteRegistry.AddHandler(common.Update{{$moduleName}}URL, "POST", casModel.WritePrivate, s.Update{{$moduleName}})
+`
+	templateHandle, templateErr := template.New("UpdateRouteHandle").Parse(templateVal)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	dataBuffer := &bytes.Buffer{}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
+	err = templateHandle.Execute(dataBuffer, data)
+	if err != nil {
+		return
+	}
+	ret = dataBuffer.String()
+
+	return
+}
+
+func (s *Module) DeleteRouteHandle(serviceName string) (ret string, err error) {
+	templateVal := `
+{{$serviceName := .ServiceName}}
+{{$module := .Module}}
+{{$moduleName := $module.Name}}
+{{$lowName := $module.Lower $serviceName}}
+s.privateRouteRegistry.AddHandler(common.Delete{{$moduleName}}URL, "DELETE", casModel.DeletePrivate, s.Delete{{$moduleName}})
+`
+	templateHandle, templateErr := template.New("DeleteRouteHandle").Parse(templateVal)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	dataBuffer := &bytes.Buffer{}
+	data := map[string]interface{}{"Module": s, "ServiceName": serviceName}
+	err = templateHandle.Execute(dataBuffer, data)
+	if err != nil {
+		return
+	}
+	ret = dataBuffer.String()
+
+	return
+}

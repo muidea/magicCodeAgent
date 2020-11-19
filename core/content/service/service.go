@@ -41,8 +41,9 @@ import (
 	casModel "github.com/muidea/magicCas/model"
 	casToolkit "github.com/muidea/magicCas/toolkit"
 
+	"github.com/muidea/{{$projectName}}/common"
 	"github.com/muidea/{{$projectName}}/core/handler"
-	"github.com/muidea/{{$projectName}}/core/service/{{$lowName}}/biz"
+	"github.com/muidea/{{$projectName}}/core/service/warehouse/biz"
 
 	engine "github.com/muidea/magicEngine"
 )
@@ -94,7 +95,7 @@ func (s *{{$serviceName}}) Handle(ctx engine.RequestContext, res http.ResponseWr
 // RegisterHandler 注册路由
 func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
 {{range $k, $v := $actionList}}
-{{$url := $module.UrlHandle $serviceName $v }}
+{{$url := $module.RouteHandle $serviceName $v }}
 {{$url}}
 {{end}}
 }
