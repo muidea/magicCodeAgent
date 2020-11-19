@@ -49,7 +49,7 @@ func (s *Define) getTemplate() (ret string) {
 			{{end}}
 		)
 
-		{{$jsonName := .Module.LowerName}}
+		{{$jsonName := $module.Lower $moduleName}}
 		type {{$moduleName}}Result struct {
 			commonDef.Result
 			{{$moduleName}} *model.{{$moduleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + `
@@ -63,7 +63,7 @@ func (s *Define) getTemplate() (ret string) {
 
 		{{range $mk, $mv := $childList}}
 		{{$subModuleName := $mv.Name}}
-		{{$jsonName := $mv.LowerName}}
+		{{$jsonName := $mv.Lower $subModuleName}}
 		type {{$subModuleName}}Result struct {
 			commonDef.Result
 			{{$subModuleName}} *model.{{$subModuleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + `
