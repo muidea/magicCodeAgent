@@ -40,15 +40,15 @@ func (s *Module) UrlHandle(serviceName, url string) (ret string) {
 	var err error
 	switch url {
 	case "query/":
-		ret, err = s.FilterHandle(serviceName)
+		ret, err = s.FilterUrlHandle(serviceName)
 	case "query/:id":
-		ret, err = s.QueryHandle(serviceName)
+		ret, err = s.QueryUrlHandle(serviceName)
 	case "create/":
-		ret, err = s.CreateHandle(serviceName)
+		ret, err = s.CreateUrlHandle(serviceName)
 	case "update/:id":
-		ret, err = s.UpdateHandle(serviceName)
+		ret, err = s.UpdateUrlHandle(serviceName)
 	case "delete/:id":
-		ret, err = s.DeleteHandle(serviceName)
+		ret, err = s.DeleteUrlHandle(serviceName)
 	}
 
 	if err != nil {
@@ -58,7 +58,7 @@ func (s *Module) UrlHandle(serviceName, url string) (ret string) {
 	return
 }
 
-func (s *Module) FilterHandle(serviceName string) (ret string, err error) {
+func (s *Module) FilterUrlHandle(serviceName string) (ret string, err error) {
 	templateVal := `
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
@@ -98,7 +98,7 @@ func (s *{{$serviceName}}) Filter{{$moduleName}}(res http.ResponseWriter, req *h
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 `
-	templateHandle, templateErr := template.New("FilterHandle").Parse(templateVal)
+	templateHandle, templateErr := template.New("FilterUrlHandle").Parse(templateVal)
 	if templateErr != nil {
 		err = templateErr
 		return
@@ -115,7 +115,7 @@ func (s *{{$serviceName}}) Filter{{$moduleName}}(res http.ResponseWriter, req *h
 	return
 }
 
-func (s *Module) QueryHandle(serviceName string) (ret string, err error) {
+func (s *Module) QueryUrlHandle(serviceName string) (ret string, err error) {
 	templateVal := `
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}	
@@ -156,7 +156,7 @@ func (s *{{$serviceName}}) Query{{$moduleName}}(res http.ResponseWriter, req *ht
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 `
-	templateHandle, templateErr := template.New("QueryHandle").Parse(templateVal)
+	templateHandle, templateErr := template.New("QueryUrlHandle").Parse(templateVal)
 	if templateErr != nil {
 		err = templateErr
 		return
@@ -173,7 +173,7 @@ func (s *{{$serviceName}}) Query{{$moduleName}}(res http.ResponseWriter, req *ht
 	return
 }
 
-func (s *Module) CreateHandle(serviceName string) (ret string, err error) {
+func (s *Module) CreateUrlHandle(serviceName string) (ret string, err error) {
 	templateVal := `
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}	
@@ -227,7 +227,7 @@ func (s *{{$serviceName}}) Create{{$moduleName}}(res http.ResponseWriter, req *h
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 `
-	templateHandle, templateErr := template.New("CreateHandle").Parse(templateVal)
+	templateHandle, templateErr := template.New("CreateUrlHandle").Parse(templateVal)
 	if templateErr != nil {
 		err = templateErr
 		return
@@ -244,7 +244,7 @@ func (s *{{$serviceName}}) Create{{$moduleName}}(res http.ResponseWriter, req *h
 	return
 }
 
-func (s *Module) UpdateHandle(serviceName string) (ret string, err error) {
+func (s *Module) UpdateUrlHandle(serviceName string) (ret string, err error) {
 	templateVal := `
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}	
@@ -308,7 +308,7 @@ func (s *{{$serviceName}}) Update{{$moduleName}}(res http.ResponseWriter, req *h
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 `
-	templateHandle, templateErr := template.New("UpdateHandle").Parse(templateVal)
+	templateHandle, templateErr := template.New("UpdateUrlHandle").Parse(templateVal)
 	if templateErr != nil {
 		err = templateErr
 		return
@@ -325,7 +325,7 @@ func (s *{{$serviceName}}) Update{{$moduleName}}(res http.ResponseWriter, req *h
 	return
 }
 
-func (s *Module) DeleteHandle(serviceName string) (ret string, err error) {
+func (s *Module) DeleteUrlHandle(serviceName string) (ret string, err error) {
 	templateVal := `
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
@@ -367,7 +367,7 @@ func (s *{{$serviceName}}) Delete{{$moduleName}}(res http.ResponseWriter, req *h
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 `
-	templateHandle, templateErr := template.New("DeleteHandle").Parse(templateVal)
+	templateHandle, templateErr := template.New("DeleteUrlHandle").Parse(templateVal)
 	if templateErr != nil {
 		err = templateErr
 		return

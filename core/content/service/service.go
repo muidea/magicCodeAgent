@@ -93,7 +93,10 @@ func (s *{{$serviceName}}) Handle(ctx engine.RequestContext, res http.ResponseWr
 
 // RegisterHandler 注册路由
 func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
-
+{{range $k, $v := $actionList}}
+{{$url := $module.UrlHandle $serviceName $v }}
+{{$url}}
+{{end}}
 }
 
 func (s *{{$serviceName}}) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
