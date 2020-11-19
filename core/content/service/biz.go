@@ -27,13 +27,11 @@ func (s *Biz) getTemplate() (ret string) {
 package biz
 
 import (
-	"fmt"
-	"github.com/muidea/magicBatis/def"
 	casModel "github.com/muidea/magicCas/model"
-	"github.com/muidea/magicCommon/foundation/util"
+{{if eq $serviceName $moduleName}}
 	"github.com/muidea/{{$projectName}}/core/handler"
+{{end}}
 	"github.com/muidea/{{$projectName}}/model"
-	"time"
 
 	commonDef "github.com/muidea/magicCommon/def"
 )
