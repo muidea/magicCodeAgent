@@ -62,14 +62,8 @@ func (s *System) Handle(ctx engine.RequestContext, res http.ResponseWriter, req 
 
 // RegisterHandler 注册路由
 func (s *System) RegisterHandler(router engine.Router) {
-	// system info, system dashboard
-	//---------------------------------------------------------------------------------------
-	getSystemInfoRoute := engine.CreateRoute("/api/v1/system/info/", "GET", s.GetSystemInfo)
+	getSystemInfoRoute := engine.CreateRoute(common.QuerySystemInfoURL, "GET", s.GetSystemInfo)
 	router.AddRoute(getSystemInfoRoute)
-
-	s.casRouteRegistry.AddHandler("/api/v1/view/", "GET", s.QueryView)
-
-	s.casRouteRegistry.AddHandler("/api/v1/system/dashboard/", "GET", s.GetDashBoard)
 
 	s.casRouteRegistry.AddHandler(common.QueryOperateLogURL, "GET", s.QueryOperateLog)
 }

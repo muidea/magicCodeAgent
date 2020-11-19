@@ -42,6 +42,9 @@ const (
 	UploadFileURL = "/api/v1/file/upload/"
 	ViewFileURL   = "/api/v1/file/view/"
 
+	// QuerySystemInfoURL query system info url
+	QuerySystemInfoURL = "/api/v1/system/info/"
+
 	// QueryOperateLogURL query operate log url
 	QueryOperateLogURL = "/api/v1/operate/log/"
 )
