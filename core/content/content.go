@@ -15,6 +15,10 @@ type Content struct {
 	rootPath string
 }
 
+type Define struct {
+	Module []*model.Module `json:"module"`
+}
+
 // New new core
 func New(rootPath string) *Content {
 	return &Content{rootPath: rootPath}
@@ -36,10 +40,6 @@ func (s *Content) Create(projectName string) (err error) {
 		return
 	}
 
-	type Define struct {
-		Module []*model.Module `json:"module"`
-	}
-
 	contentDefine := &Define{}
 	err = json.Unmarshal(byteContent, contentDefine)
 	if err != nil {
@@ -58,6 +58,12 @@ func (s *Content) Create(projectName string) (err error) {
 		if err != nil {
 			return
 		}
+	}
+
+	core := &Core{projectName: projectName}
+	err = core.Create(contentDefine)
+	if err != nil {
+		return
 	}
 
 	return
