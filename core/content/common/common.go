@@ -49,6 +49,7 @@ func (s *Define) getTemplate() (ret string) {
 			{{end}}
 		)
 
+		{{if not $module.IsPackage }}
 		{{$jsonName := $module.Lower $moduleName}}
 		type {{$moduleName}}Result struct {
 			commonDef.Result
@@ -60,8 +61,10 @@ func (s *Define) getTemplate() (ret string) {
 			Total    int64                 ` + "`" + "json:\"total\"" + "`" + `
 			{{$moduleName}} []*model.{{$moduleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + ` 
 		}
+		{{end}}
 
 		{{range $mk, $mv := $childList}}
+		{{if not $mv.IsPackage}}
 		{{$subModuleName := $mv.Name}}
 		{{$jsonName := $mv.Lower $subModuleName}}
 		type {{$subModuleName}}Result struct {
@@ -74,6 +77,7 @@ func (s *Define) getTemplate() (ret string) {
 			Total    int64                 ` + "`" + "json:\"total\"" + "`" + `
 			{{$subModuleName}} []*model.{{$subModuleName}}View ` + "`" + "json:\"{{$jsonName}}\"" + "`" + ` 
 		}
+		{{end}}
 		{{end}}
 	`
 	return

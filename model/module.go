@@ -19,6 +19,10 @@ func (s *Module) Lower(val string) string {
 	return strings.ToLower(val)
 }
 
+func (s *Module) IsPackage() bool {
+	return len(s.Action) == 0
+}
+
 func (s *Module) FormatUrl(url string) (ret string) {
 	switch url {
 	case "query/":
