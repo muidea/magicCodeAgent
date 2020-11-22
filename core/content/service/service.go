@@ -180,17 +180,23 @@ func (s *Define) Create(module *model.Module) (err error) {
 		}
 	}
 
-	instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-	err = instance.Create(module)
-	if err != nil {
-		return
+	if !module.IsPackage() {
+		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
+		err = instance.Create(module)
+		if err != nil {
+			return
+		}
+		biz := &Biz{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
+		err = biz.Create(module)
 	}
-	biz := &Biz{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-	err = biz.Create(module)
 	if err != nil {
 		return
 	}
 	for _, val := range module.Child {
+		if val.IsPackage() {
+			continue
+		}
+
 		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
 		err = instance.Create(val)
 		if err != nil {
