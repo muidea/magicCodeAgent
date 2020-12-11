@@ -263,6 +263,17 @@ func (s *Cas) QueryPrivateGroup(currentSession commonSession.Session) (ret []*ca
 	return
 }
 
+func (s *Cas) QueryPrivateGroupByID(currentSession commonSession.Session, id int) (ret *casModel.PrivateGroupView, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	sessionInfo := currentSession.GetSessionInfo()
+	clnt.BindSession(sessionInfo)
+	ret, err = clnt.QueryPrivateByID(id)
+
+	return
+}
+
 func (s *Cas) SavePrivateGroup(currentSession commonSession.Session, name, desc string, privateItems []*casModel.PrivateItem) (ret *casModel.PrivateGroupView, err error) {
 	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()

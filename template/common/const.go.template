@@ -35,9 +35,10 @@ const (
 	// UpdateEndpointURL update endpoint
 	UpdateEndpointURL = "/api/v1/endpoint/update/:id"
 
-	QueryPrivateURL   = "/api/v1/private/query/"
-	SavePrivateURL    = "/api/v1/private/save/"
-	DestroyPrivateURL = "/api/v1/private/destroy/"
+	QueryAllPrivateURL = "/api/v1/private/query/all/"
+	QueryPrivateURL    = "/api/v1/private/query/:id"
+	SavePrivateURL     = "/api/v1/private/save/"
+	DestroyPrivateURL  = "/api/v1/private/destroy/"
 
 	UploadFileURL = "/api/v1/file/upload/"
 	ViewFileURL   = "/api/v1/file/view/"

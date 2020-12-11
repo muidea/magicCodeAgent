@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/muidea/magicCommon/foundation/net"
 
@@ -29,6 +30,43 @@ func (s *Base) QueryPrivateGroup(res http.ResponseWriter, req *http.Request) {
 		}
 
 		result.PrivateGroups = privateViewList
+		break
+	}
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+// QueryPrivateGroupByID query privateGroup by id
+func (s *Base) QueryPrivateGroupByID(res http.ResponseWriter, req *http.Request) {
+	type queryResult struct {
+		commonDef.Result
+		PrivateGroup *casModel.PrivateGroupView `json:"private"`
+	}
+
+	result := &queryResult{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数"
+			break
+		}
+
+		privateView, privateErr := s.casBiz.QueryPrivateGroupByID(curSession, id)
+		if privateErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = fmt.Sprintf("查询权限组失败, %s", privateErr.Error())
+			break
+		}
+
+		result.PrivateGroup = privateView
 		break
 	}
 	block, err := json.Marshal(result)
