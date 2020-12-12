@@ -491,7 +491,7 @@ func (s *Module) UpdateRouteHandle(serviceName string) (ret string, err error) {
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$lowName := $module.Lower $serviceName}}
-s.privateRouteRegistry.AddHandler(common.Update{{$moduleName}}URL, "POST", casModel.WritePrivate, s.Update{{$moduleName}})
+s.privateRouteRegistry.AddHandler(common.Update{{$moduleName}}URL, "PUT", casModel.WritePrivate, s.Update{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("UpdateRouteHandle").Parse(templateVal)
 	if templateErr != nil {
