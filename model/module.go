@@ -23,18 +23,23 @@ func (s *Module) IsPackage() bool {
 	return len(s.Action) == 0
 }
 
-func (s *Module) FormatUrl(url string) (ret string) {
+func (s *Module) FormatUrl(url, parent string) (ret string) {
+	path := s.Name
+	if parent != "" && parent != path {
+		path = fmt.Sprintf("%s/%s", parent, path)
+	}
+
 	switch url {
 	case "query/":
-		ret = fmt.Sprintf("Filter%sURL = \"/api/v1/%s/query/\"", strings.Title(s.Name), strings.ToLower(s.Name))
+		ret = fmt.Sprintf("Filter%sURL = \"/api/v1/%s/query/\"", strings.Title(s.Name), strings.ToLower(path))
 	case "query/:id":
-		ret = fmt.Sprintf("Query%sURL = \"/api/v1/%s/query/:id\"", strings.Title(s.Name), strings.ToLower(s.Name))
+		ret = fmt.Sprintf("Query%sURL = \"/api/v1/%s/query/:id\"", strings.Title(s.Name), strings.ToLower(path))
 	case "create/":
-		ret = fmt.Sprintf("Create%sURL = \"/api/v1/%s/create/\"", strings.Title(s.Name), strings.ToLower(s.Name))
+		ret = fmt.Sprintf("Create%sURL = \"/api/v1/%s/create/\"", strings.Title(s.Name), strings.ToLower(path))
 	case "update/:id":
-		ret = fmt.Sprintf("Update%sURL = \"/api/v1/%s/update/:id\"", strings.Title(s.Name), strings.ToLower(s.Name))
+		ret = fmt.Sprintf("Update%sURL = \"/api/v1/%s/update/:id\"", strings.Title(s.Name), strings.ToLower(path))
 	case "delete/:id":
-		ret = fmt.Sprintf("Delete%sURL = \"/api/v1/%s/delete/:id\"", strings.Title(s.Name), strings.ToLower(s.Name))
+		ret = fmt.Sprintf("Delete%sURL = \"/api/v1/%s/delete/:id\"", strings.Title(s.Name), strings.ToLower(path))
 	}
 
 	return

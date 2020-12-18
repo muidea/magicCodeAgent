@@ -35,7 +35,7 @@ func (s *Define) getTemplate() (ret string) {
 
 		const (
 			{{range $k, $v := $actionList}}
-			{{$url := $module.FormatUrl $v }}
+			{{$url := $module.FormatUrl $v "" }}
 			{{$url}}
 			{{end}}
 
@@ -43,7 +43,7 @@ func (s *Define) getTemplate() (ret string) {
 			{{$subModuleName := $mv.Name}}
 			{{$subModuleAction := $mv.Action}}
 			{{range $ak, $av := $subModuleAction}}
-			{{$url := $mv.FormatUrl $av }}
+			{{$url := $mv.FormatUrl $av $moduleName }}
 			{{$url}}
 			{{end}}
 			{{end}}
