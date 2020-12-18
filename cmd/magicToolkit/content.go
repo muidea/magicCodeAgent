@@ -16,7 +16,7 @@ func init() {
 
 func createContent(curPath string) {
 	content := content.New(curPath)
-	curErr := content.Create(projectName)
+	curErr := content.Create(projectName, forceFlag)
 	if curErr != nil {
 		log.Printf("Create project content failed, err:%s", curErr.Error())
 		return

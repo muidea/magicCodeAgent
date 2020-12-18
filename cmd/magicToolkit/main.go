@@ -17,6 +17,7 @@ type action struct {
 var actionList = []*action{}
 var help = false
 var projectName = ""
+var forceFlag = false
 
 func main() {
 	for idx := range actionList {
@@ -24,6 +25,7 @@ func main() {
 		flag.BoolVar(&val.value, val.name, val.defaultValue, val.description)
 	}
 	flag.StringVar(&projectName, "name", projectName, "project name")
+	flag.BoolVar(&forceFlag, "force", forceFlag, "force update")
 
 	flag.Parse()
 	curPath, curErr := os.Getwd()

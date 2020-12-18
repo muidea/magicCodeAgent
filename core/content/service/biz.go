@@ -76,7 +76,7 @@ func (s *{{$serviceName}}) Delete{{$moduleName}}(id int) (ret *model.{{$moduleNa
 	return
 }
 
-func (s *Biz) Create(module *model.Module) (err error) {
+func (s *Biz) Create(module *model.Module, forceFlag bool) (err error) {
 	if len(module.Action) == 0 && len(module.Child) == 0 {
 		return
 	}
@@ -95,13 +95,15 @@ func (s *Biz) Create(module *model.Module) (err error) {
 	}
 
 	filePath = fmt.Sprintf("%s/%s.go", filePath, strings.ToLower(module.Name))
-	existsFlag, existsErr := util.Exists(filePath)
-	if existsErr != nil {
-		err = fmt.Errorf("unexpect, fileName:%s", filePath)
-		return
-	}
-	if existsFlag {
-		return
+	if !forceFlag {
+		existsFlag, existsErr := util.Exists(filePath)
+		if existsErr != nil {
+			err = fmt.Errorf("unexpect, fileName:%s", filePath)
+			return
+		}
+		if existsFlag {
+			return
+		}
 	}
 
 	func() {

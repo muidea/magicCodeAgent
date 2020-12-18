@@ -127,7 +127,7 @@ func (s *{{$serviceName}}) getCurrentNamespace(res http.ResponseWriter, req *htt
 	return
 }
 
-func (s *Define) Create(module *model.Module) (err error) {
+func (s *Define) Create(module *model.Module, forceFlag bool) (err error) {
 	if len(module.Action) == 0 && len(module.Child) == 0 {
 		return
 	}
@@ -151,7 +151,7 @@ func (s *Define) Create(module *model.Module) (err error) {
 		err = fmt.Errorf("unexpect, fileName:%s", filePath)
 		return
 	}
-	if !existsFlag {
+	if !existsFlag || forceFlag {
 		func() {
 			fileHandle, fileErr := os.Create(filePath)
 			if fileErr != nil {
@@ -182,12 +182,12 @@ func (s *Define) Create(module *model.Module) (err error) {
 
 	if !module.IsPackage() {
 		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-		err = instance.Create(module)
+		err = instance.Create(module, forceFlag)
 		if err != nil {
 			return
 		}
 		biz := &Biz{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-		err = biz.Create(module)
+		err = biz.Create(module, forceFlag)
 	}
 	if err != nil {
 		return
@@ -198,13 +198,13 @@ func (s *Define) Create(module *model.Module) (err error) {
 		}
 
 		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-		err = instance.Create(val)
+		err = instance.Create(val, forceFlag)
 		if err != nil {
 			return
 		}
 
 		biz := &Biz{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-		err = biz.Create(val)
+		err = biz.Create(val, forceFlag)
 		if err != nil {
 			return
 		}

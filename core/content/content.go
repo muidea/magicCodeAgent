@@ -25,7 +25,7 @@ func New(rootPath string) *Content {
 }
 
 // Create create
-func (s *Content) Create(projectName string) (err error) {
+func (s *Content) Create(projectName string, forceFlag bool) (err error) {
 	definePath := path.Join(s.rootPath, "doc", "define.json")
 	defineFile, defineErr := os.Open(definePath)
 	if defineErr != nil {
@@ -48,13 +48,13 @@ func (s *Content) Create(projectName string) (err error) {
 
 	for _, val := range contentDefine.Module {
 		common := common.New(projectName)
-		err = common.Create(val)
+		err = common.Create(val, forceFlag)
 		if err != nil {
 			return
 		}
 
 		service := service.New(projectName)
-		err = service.Create(val)
+		err = service.Create(val, forceFlag)
 		if err != nil {
 			return
 		}
