@@ -67,28 +67,29 @@ func (s *Module) FilterUrlHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowServiceName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $moduleName}}
 func (s *{{$serviceName}}) Filter{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	filter := commonDef.NewFilter()
 	filter.Decode(req)
 
 	result := &common.{{$moduleName}}ListResult{ {{$moduleName}}: []*model.{{$moduleName}}View{} }
 	for {
-		{{$lowName}}List, {{$lowName}}Total, {{$lowName}}Err := s.{{$lowName}}Biz.Filter{{$moduleName}}(filter)
-		if {{$lowName}}Err != nil {
+		{{$lowModuleName}}List, {{$lowModuleName}}Total, {{$lowModuleName}}Err := s.{{$lowServiceName}}Biz.Filter{{$moduleName}}(filter)
+		if {{$lowModuleName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
-			result.Reason = {{$lowName}}Err.Error()
+			result.Reason = {{$lowModuleName}}Err.Error()
 			break
 		}
 
-		for _, val := range {{$lowName}}List {
+		for _, val := range {{$lowModuleName}}List {
 			view := &model.{{$moduleName}}View{}
 			view.From{{$moduleName}}(val)
 
 			result.{{$moduleName}} = append(result.{{$moduleName}}, view)
 		}
 
-		result.Total = {{$lowName}}Total
+		result.Total = {{$lowModuleName}}Total
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -124,28 +125,29 @@ func (s *Module) QueryUrlHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}	
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowServiceName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $moduleName}}
 func (s *{{$serviceName}}) Query{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
 		_, value := net.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
 		if err != nil || id == 0 {
-			log.Printf("query {{$lowName}} failed, illegal id, id:%s, err:%s", value, err.Error())
+			log.Printf("query {{$lowModuleName}} failed, illegal id, id:%s, err:%s", value, err.Error())
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "invalid param"
 			break
 		}
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Query{{$moduleName}}ByID(id)
-		if {{$lowName}}Err != nil {
+		{{$lowModuleName}}Ptr, {{$lowModuleName}}Err := s.{{$lowServiceName}}Biz.Query{{$moduleName}}ByID(id)
+		if {{$lowModuleName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
-			result.Reason = {{$lowName}}Err.Error()
+			result.Reason = {{$lowModuleName}}Err.Error()
 			break
 		}
 
 		view := &model.{{$moduleName}}View{}
-		view.From{{$moduleName}}({{$lowName}}Ptr)
+		view.From{{$moduleName}}({{$lowModuleName}}Ptr)
 		result.{{$moduleName}} = view
 		result.ErrorCode = commonDef.Success
 		break
@@ -182,12 +184,13 @@ func (s *Module) CreateUrlHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}	
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowServiceName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $moduleName}}
 func (s *{{$serviceName}}) Create{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
-		{{$lowName}}Ptr := &model.{{$moduleName}}{}
-		err := net.ParseJSONBody(req, {{$lowName}}Ptr)
+		{{$lowModuleName}}Ptr := &model.{{$moduleName}}{}
+		err := net.ParseJSONBody(req, {{$lowModuleName}}Ptr)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "invalid param"
@@ -208,15 +211,15 @@ func (s *{{$serviceName}}) Create{{$moduleName}}(res http.ResponseWriter, req *h
 			break
 		}
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Create{{$moduleName}}({{$lowName}}Ptr,curEntity,curNamespace)
-		if {{$lowName}}Err != nil {
+		{{$lowModuleName}}Ptr, {{$lowModuleName}}Err := s.{{$lowServiceName}}Biz.Create{{$moduleName}}({{$lowModuleName}}Ptr,curEntity,curNamespace)
+		if {{$lowModuleName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
-			result.Reason = {{$lowName}}Err.Error()
+			result.Reason = {{$lowModuleName}}Err.Error()
 			break
 		}
 
 		view := &model.{{$moduleName}}View{}
-		view.From{{$moduleName}}({{$lowName}}Ptr)
+		view.From{{$moduleName}}({{$lowModuleName}}Ptr)
 		result.{{$moduleName}} = view
 		result.ErrorCode = commonDef.Success
 		break
@@ -253,27 +256,28 @@ func (s *Module) UpdateUrlHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}	
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowServiceName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $moduleName}}
 func (s *{{$serviceName}}) Update{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
 		_, value := net.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
 		if err != nil || id == 0 {
-			log.Printf("update {{$lowName}} failed, illegal id, id:%s", value)
+			log.Printf("update {{$lowModuleName}} failed, illegal id, id:%s", value)
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "invalid param"
 			break
 		}
 
-		{{$lowName}}Ptr := &model.{{$moduleName}}{}
-		err = net.ParseJSONBody(req, {{$lowName}}Ptr)
+		{{$lowModuleName}}Ptr := &model.{{$moduleName}}{}
+		err = net.ParseJSONBody(req, {{$lowModuleName}}Ptr)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "invalid param"
 			break
 		}
-		{{$lowName}}Ptr.ID = id
+		{{$lowModuleName}}Ptr.ID = id
 
 		curEntity,curErr := s.getCurrentEntity(res, req)
 		if curErr != nil{
@@ -289,15 +293,15 @@ func (s *{{$serviceName}}) Update{{$moduleName}}(res http.ResponseWriter, req *h
 			break
 		}
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Update{{$moduleName}}({{$lowName}}Ptr,curEntity,curNamespace)
-		if {{$lowName}}Err != nil {
+		{{$lowModuleName}}Ptr, {{$lowModuleName}}Err := s.{{$lowServiceName}}Biz.Update{{$moduleName}}({{$lowModuleName}}Ptr,curEntity,curNamespace)
+		if {{$lowModuleName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
-			result.Reason = {{$lowName}}Err.Error()
+			result.Reason = {{$lowModuleName}}Err.Error()
 			break
 		}
 
 		view := &model.{{$moduleName}}View{}
-		view.From{{$moduleName}}({{$lowName}}Ptr)
+		view.From{{$moduleName}}({{$lowModuleName}}Ptr)
 		result.{{$moduleName}} = view
 		result.ErrorCode = commonDef.Success
 		break
@@ -334,28 +338,29 @@ func (s *Module) DeleteUrlHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowServiceName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $moduleName}}
 func (s *{{$serviceName}}) Delete{{$moduleName}}(res http.ResponseWriter, req *http.Request) {
 	result := &common.{{$moduleName}}Result{}
 	for {
 		_, value := net.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
 		if err != nil || id == 0 {
-			log.Printf("delete {{$lowName}} failed, illegal id, id:%s, err:%s", value, err.Error())
+			log.Printf("delete {{$lowModuleName}} failed, illegal id, id:%s, err:%s", value, err.Error())
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "非法参数"
 			break
 		}
 
-		{{$lowName}}Ptr, {{$lowName}}Err := s.{{$lowName}}Biz.Delete{{$moduleName}}(id)
-		if {{$lowName}}Err != nil {
+		{{$lowModuleName}}Ptr, {{$lowModuleName}}Err := s.{{$lowServiceName}}Biz.Delete{{$moduleName}}(id)
+		if {{$lowModuleName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
-			result.Reason = {{$lowName}}Err.Error()
+			result.Reason = {{$lowModuleName}}Err.Error()
 			break
 		}
 
 		view := &model.{{$moduleName}}View{}
-		view.From{{$moduleName}}({{$lowName}}Ptr)
+		view.From{{$moduleName}}({{$lowModuleName}}Ptr)
 
 		result.{{$moduleName}} = view
 		result.ErrorCode = commonDef.Success
@@ -415,7 +420,7 @@ func (s *Module) FilterRouteHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $serviceName}}
 s.privateRouteRegistry.AddHandler(common.Filter{{$moduleName}}URL, "GET", casModel.ReadPrivate, s.Filter{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("FilterRouteHandle").Parse(templateVal)
@@ -440,7 +445,7 @@ func (s *Module) QueryRouteHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $serviceName}}
 s.privateRouteRegistry.AddHandler(common.Query{{$moduleName}}URL, "GET", casModel.ReadPrivate, s.Query{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("QueryRouteHandle").Parse(templateVal)
@@ -465,7 +470,7 @@ func (s *Module) CreateRouteHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $serviceName}}
 s.privateRouteRegistry.AddHandler(common.Create{{$moduleName}}URL, "POST", casModel.WritePrivate, s.Create{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("CreateRouteHandle").Parse(templateVal)
@@ -490,7 +495,7 @@ func (s *Module) UpdateRouteHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $serviceName}}
 s.privateRouteRegistry.AddHandler(common.Update{{$moduleName}}URL, "PUT", casModel.WritePrivate, s.Update{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("UpdateRouteHandle").Parse(templateVal)
@@ -515,7 +520,7 @@ func (s *Module) DeleteRouteHandle(serviceName string) (ret string, err error) {
 {{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
-{{$lowName := $module.Lower $serviceName}}
+{{$lowModuleName := $module.Lower $serviceName}}
 s.privateRouteRegistry.AddHandler(common.Delete{{$moduleName}}URL, "DELETE", casModel.DeletePrivate, s.Delete{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("DeleteRouteHandle").Parse(templateVal)
