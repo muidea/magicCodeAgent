@@ -54,7 +54,7 @@ func New() (*Core, error) {
 		return nil, err
 	}
 
-	commonHandler := handler.NewCommonHandler(clnt)
+	commonHandler := handler.NewCommonHandler(clnt, config.CasService())
 	{{range $k, $v := $moduleList}}
 	{{$lowName := $v.Lower $v.Name}}
 	{{$lowName}}Handler := handler.New{{$v.Name}}Handler(clnt)
@@ -68,7 +68,7 @@ func New() (*Core, error) {
 
 	{{range $k, $v := $moduleList}}
 	{{$lowName := $v.Lower $v.Name}}
-	{{$lowName}}Service := {{$lowName}}.New({{$lowName}}Handler)
+	{{$lowName}}Service := {{$lowName}}.New(commonHandler,{{$lowName}}Handler)
 	{{end}}
 
 	systemService := system.New(commonHandler)

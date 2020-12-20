@@ -55,13 +55,16 @@ type {{$serviceName}} struct {
 	casRouteRegistry     casToolkit.CasRegistry
 
 	{{$lowName}}Biz *biz.{{$serviceName}}
+	commonHandler handler.CommonHandler
 }
 
 // New create route
 func New(
+	commonHandler handler.CommonHandler,
 	{{$lowName}}Handler handler.{{$serviceName}}Handler,
 ) *{{$serviceName}} {
 	route := &{{$serviceName}}{
+		commonHandler: commonHandler,
 		{{$lowName}}Biz: biz.New{{$serviceName}}({{$lowName}}Handler),
 	}
 
@@ -116,6 +119,17 @@ func (s *{{$serviceName}}) getCurrentEntity(res http.ResponseWriter, req *http.R
 		return
 	}
 	ret = authVal.(*casModel.Entity)
+	return
+}
+
+func (s *{{$serviceName}}) queryEntity(id int, sessionInfo *commonCommon.SessionInfo) (ret *casModel.Entity) {
+	entityPtr, entityErr := s.commonHandler.QueryEntity(id, sessionInfo)
+	if entityErr != nil {
+		ret = casModel.UnknownEntity()
+		return
+	}
+
+	ret = entityPtr
 	return
 }
 
