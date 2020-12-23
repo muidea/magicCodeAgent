@@ -1,4 +1,4 @@
-package service
+package biz
 
 import (
 	"fmt"
@@ -11,20 +11,21 @@ import (
 	"github.com/muidea/magicToolkit/model"
 )
 
-type Biz struct {
+type Instance struct {
 	packageName string
 	serviceName string
 	projectName string
 }
 
-func (s *Biz) getTemplate() (ret string) {
+func (s *Instance) getTemplate() (ret string) {
 	ret = `
 {{$projectName := .ProjectName}}
 {{$serviceName := .ServiceName}}
+{{$packageName := .PackageName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$lowName := $module.Lower $moduleName}}
-package biz
+package {{$packageName}}
 
 import (
 	casModel "github.com/muidea/magicCas/model"
@@ -76,12 +77,12 @@ func (s *{{$serviceName}}) Delete{{$moduleName}}(id int) (ret *model.{{$moduleNa
 	return
 }
 
-func (s *Biz) Create(module *model.Module, forceFlag bool) (err error) {
+func (s *Instance) Create(module *model.Module, forceFlag bool) (err error) {
 	if len(module.Action) == 0 && len(module.Child) == 0 {
 		return
 	}
 
-	filePath := fmt.Sprintf("./core/service/%s/biz", s.packageName)
+	filePath := fmt.Sprintf("./core/biz/%s", s.packageName)
 	existFlag, existErr := util.Exists(filePath)
 	if existErr != nil {
 		err = existErr
@@ -120,7 +121,7 @@ func (s *Biz) Create(module *model.Module, forceFlag bool) (err error) {
 			return
 		}
 
-		data := map[string]interface{}{"ProjectName": s.projectName, "ServiceName": s.serviceName, "Module": module}
+		data := map[string]interface{}{"ProjectName": s.projectName, "PackageName": s.packageName, "ServiceName": s.serviceName, "Module": module}
 		err = templateHandle.Execute(fileHandle, data)
 	}()
 	if err != nil {

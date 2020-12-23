@@ -11,15 +11,15 @@ import (
 	"github.com/muidea/magicToolkit/model"
 )
 
-type Define struct {
+type Service struct {
 	projectName string
 }
 
-func New(projectName string) *Define {
-	return &Define{projectName: projectName}
+func New(projectName string) *Service {
+	return &Service{projectName: projectName}
 }
 
-func (s *Define) getTemplate() (ret string) {
+func (s *Service) getTemplate() (ret string) {
 	ret = `
 {{$projectName := .ProjectName}}
 {{$serviceName := .ServiceName}}
@@ -41,11 +41,11 @@ import (
 	casModel "github.com/muidea/magicCas/model"
 	casToolkit "github.com/muidea/magicCas/toolkit"
 
+	engine "github.com/muidea/magicEngine"
+
 	"github.com/muidea/{{$projectName}}/common"
 	"github.com/muidea/{{$projectName}}/core/handler"
-	"github.com/muidea/{{$projectName}}/core/service/{{$lowName}}/biz"
-
-	engine "github.com/muidea/magicEngine"
+	"github.com/muidea/{{$projectName}}/core/biz/{{$lowName}}"
 )
 
 // {{$serviceName}} 路由信息
@@ -54,18 +54,18 @@ type {{$serviceName}} struct {
 	privateRouteRegistry casToolkit.PrivateRegistry
 	casRouteRegistry     casToolkit.CasRegistry
 
-	{{$lowName}}Biz *biz.{{$serviceName}}
+	{{$lowName}}Biz *{{$lowName}}.{{$serviceName}}
 	commonHandler handler.CommonHandler
 }
 
 // New create route
 func New(
 	commonHandler handler.CommonHandler,
-	{{$lowName}}Handler handler.{{$serviceName}}Handler,
+	{{$lowName}}Biz *{{$lowName}}.{{$serviceName}},
 ) *{{$serviceName}} {
 	route := &{{$serviceName}}{
 		commonHandler: commonHandler,
-		{{$lowName}}Biz: biz.New{{$serviceName}}({{$lowName}}Handler),
+		{{$lowName}}Biz: {{$lowName}}Biz,
 	}
 
 	return route
@@ -141,7 +141,7 @@ func (s *{{$serviceName}}) getCurrentNamespace(res http.ResponseWriter, req *htt
 	return
 }
 
-func (s *Define) Create(module *model.Module, forceFlag bool) (err error) {
+func (s *Service) Create(module *model.Module, forceFlag bool) (err error) {
 	if len(module.Action) == 0 && len(module.Child) == 0 {
 		return
 	}
@@ -200,8 +200,6 @@ func (s *Define) Create(module *model.Module, forceFlag bool) (err error) {
 		if err != nil {
 			return
 		}
-		biz := &Biz{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-		err = biz.Create(module, forceFlag)
 	}
 	if err != nil {
 		return
@@ -213,12 +211,6 @@ func (s *Define) Create(module *model.Module, forceFlag bool) (err error) {
 
 		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
 		err = instance.Create(val, forceFlag)
-		if err != nil {
-			return
-		}
-
-		biz := &Biz{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
-		err = biz.Create(val, forceFlag)
 		if err != nil {
 			return
 		}

@@ -2,6 +2,7 @@ package content
 
 import (
 	"encoding/json"
+	"github.com/muidea/magicToolkit/core/content/biz"
 	"github.com/muidea/magicToolkit/core/content/common"
 	"github.com/muidea/magicToolkit/core/content/service"
 	"github.com/muidea/magicToolkit/model"
@@ -53,6 +54,12 @@ func (s *Content) Create(projectName string, forceFlag bool) (err error) {
 			return
 		}
 
+		biz := biz.New(projectName)
+		err = biz.Create(val, forceFlag)
+		if err != nil {
+			return
+		}
+
 		service := service.New(projectName)
 		err = service.Create(val, forceFlag)
 		if err != nil {
@@ -61,7 +68,13 @@ func (s *Content) Create(projectName string, forceFlag bool) (err error) {
 	}
 
 	core := &Core{projectName: projectName}
-	err = core.Create(contentDefine)
+	err = core.Create(contentDefine, forceFlag)
+	if err != nil {
+		return
+	}
+
+	biz := &Biz{projectName: projectName}
+	err = biz.Create(contentDefine, forceFlag)
 	if err != nil {
 		return
 	}

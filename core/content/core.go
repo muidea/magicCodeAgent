@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"github.com/muidea/magicToolkit/core/util"
 	"os"
 	"os/exec"
 	"text/template"
@@ -28,13 +29,16 @@ import (
 
 	"github.com/muidea/{{$projectName}}/config"
 	"github.com/muidea/{{$projectName}}/core/handler"
-	"github.com/muidea/{{$projectName}}/core/service/base"
-	"github.com/muidea/{{$projectName}}/core/service/system"
-
 	"github.com/muidea/{{$projectName}}/model"
+
+	"github.com/muidea/{{$projectName}}/core/biz"
+
+	baseService "github.com/muidea/{{$projectName}}/core/service/base"
+	systemService "github.com/muidea/{{$projectName}}/core/service/system"
+
 	{{range $k, $v := $moduleList}}
 	{{$lowName := $v.Lower $v.Name}}
-	"github.com/muidea/{{$projectName}}/core/service/{{$lowName}}"
+	{{$lowName}}Service "github.com/muidea/{{$projectName}}/core/service/{{$lowName}}"
 	{{end}}
 )
 
@@ -60,7 +64,12 @@ func New() (*Core, error) {
 	{{$lowName}}Handler := handler.New{{$v.Name}}Handler(clnt)
 	{{end}}
 
-	baseService := base.New(
+	{{range $k, $v := $moduleList}}
+	{{$lowName := $v.Lower $v.Name}}
+	{{$lowName}}Biz := biz.New{{$v.Name}}( {{$lowName}}Handler )
+	{{end}}
+
+	baseService := baseService.New(
 		commonHandler,
 		config.CasService(),
 		config.FileService(),
@@ -68,10 +77,10 @@ func New() (*Core, error) {
 
 	{{range $k, $v := $moduleList}}
 	{{$lowName := $v.Lower $v.Name}}
-	{{$lowName}}Service := {{$lowName}}.New(commonHandler,{{$lowName}}Handler)
+	{{$lowName}}Service := {{$lowName}}Service.New(commonHandler,{{$lowName}}Biz)
 	{{end}}
 
-	systemService := system.New(commonHandler)
+	systemService := systemService.New(commonHandler)
 
 	core := &Core{
 		baseService:      baseService,
@@ -87,12 +96,12 @@ func New() (*Core, error) {
 
 // Core Core对象
 type Core struct {
-	baseService      *base.Base
+	baseService      *baseService.Base
 	{{range $k, $v := $moduleList}}
 	{{$lowName := $v.Lower $v.Name}}
-	{{$lowName}}Service *{{$lowName}}.{{$v.Name}}
+	{{$lowName}}Service *{{$lowName}}Service.{{$v.Name}}
 	{{end}}
-	systemService    *system.System
+	systemService    *systemService.System
 }
 
 // Startup 启动
@@ -127,30 +136,51 @@ func (s *Core) Teardown() {
 	return
 }
 
-func (s *Core) Create(define *Define) (err error) {
-	filePath := fmt.Sprintf("./core/%s.go", "core")
-	func() {
-		fileHandle, fileErr := os.Create(filePath)
-		if fileErr != nil {
-			err = fileErr
+func (s *Core) Create(define *Define, forceFlag bool) (err error) {
+	filePath := fmt.Sprintf("./core")
+	existFlag, existErr := util.Exists(filePath)
+	if existErr != nil {
+		err = existErr
+		return
+	}
+	if !existFlag {
+		err = os.MkdirAll(filePath, os.ModePerm)
+		if err != nil {
 			return
 		}
-		defer fileHandle.Close()
+	}
 
-		templateHandle, templateErr := template.New("core").Parse(s.getTemplate())
-		if templateErr != nil {
-			err = templateErr
-			return
-		}
-
-		data := map[string]interface{}{"ProjectName": s.projectName, "Define": define}
-		err = templateHandle.Execute(fileHandle, data)
-	}()
-	if err != nil {
+	filePath = fmt.Sprintf("%s/%s.go", filePath, "core")
+	existFlag, existErr = util.Exists(filePath)
+	if existErr != nil {
+		err = fmt.Errorf("unexpect, fileName:%s", filePath)
 		return
 	}
 
-	cmd := exec.Command("gofmt", "-w", filePath)
-	err = cmd.Run()
+	if !existFlag || forceFlag {
+		func() {
+			fileHandle, fileErr := os.Create(filePath)
+			if fileErr != nil {
+				err = fileErr
+				return
+			}
+			defer fileHandle.Close()
+
+			templateHandle, templateErr := template.New("core").Parse(s.getTemplate())
+			if templateErr != nil {
+				err = templateErr
+				return
+			}
+
+			data := map[string]interface{}{"ProjectName": s.projectName, "Define": define}
+			err = templateHandle.Execute(fileHandle, data)
+		}()
+		if err != nil {
+			return
+		}
+
+		cmd := exec.Command("gofmt", "-w", filePath)
+		err = cmd.Run()
+	}
 	return
 }
