@@ -2,10 +2,11 @@ package content
 
 import (
 	"fmt"
-	"github.com/muidea/magicToolkit/core/util"
 	"os"
 	"os/exec"
 	"text/template"
+
+	"github.com/muidea/magicToolkit/core/util"
 )
 
 type Core struct {
