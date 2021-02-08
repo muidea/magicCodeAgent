@@ -16,7 +16,9 @@ type Module struct {
 }
 
 func (s *Module) Lower(val string) string {
-	return strings.ToLower(val)
+	firstLetter := val[0:1]
+	otherStr := val[1:]
+	return fmt.Sprintf("%s%s", strings.ToLower(firstLetter), otherStr)
 }
 
 func (s *Module) IsPackage() bool {

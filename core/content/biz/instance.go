@@ -64,7 +64,7 @@ func (s *{{$serviceName}}) Create{{$moduleName}}(
 
 func (s *{{$serviceName}}) Update{{$moduleName}}(
 	{{$lowName}}Ptr *model.{{$moduleName}},
-	creater *casModel.Entity,
+	updater *casModel.Entity,
 	namespace string) (ret *model.{{$moduleName}}, err error) {
 	return
 }
