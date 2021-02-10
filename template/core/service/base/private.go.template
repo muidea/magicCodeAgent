@@ -78,23 +78,23 @@ func (s *Base) QueryPrivateGroupByID(res http.ResponseWriter, req *http.Request)
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-// SavePrivateGroup save privateGroup
-func (s *Base) SavePrivateGroup(res http.ResponseWriter, req *http.Request) {
-	type saveParam struct {
+// CreatePrivateGroup create privateGroup
+func (s *Base) CreatePrivateGroup(res http.ResponseWriter, req *http.Request) {
+	type createParam struct {
 		Name        string                  `json:"name"`
 		Description string                  `json:"description"`
 		Privates    []*casModel.PrivateItem `json:"privates"`
 	}
 
-	type saveResult struct {
+	type createResult struct {
 		commonDef.Result
 		PrivateGroup *casModel.PrivateGroupView `json:"private"`
 	}
 
-	result := &saveResult{}
+	result := &createResult{}
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
-		param := &saveParam{}
+		param := &createParam{}
 		err := net.ParseJSONBody(req, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -107,7 +107,7 @@ func (s *Base) SavePrivateGroup(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		privateView, privateErr := s.casBiz.SavePrivateGroup(curSession, param.Name, param.Description, param.Privates)
+		privateView, privateErr := s.casBiz.CreatePrivateGroup(curSession, param.Name, param.Description, param.Privates)
 		if privateErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = fmt.Sprintf("保存权限组失败, %s", privateErr.Error())
@@ -129,27 +129,35 @@ func (s *Base) SavePrivateGroup(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-// DestroyPrivateGroup destroy privateGroup
-func (s *Base) DestroyPrivateGroup(res http.ResponseWriter, req *http.Request) {
-	result := &commonDef.Result{}
+// DeletePrivateGroup delete privateGroup
+func (s *Base) DeletePrivateGroup(res http.ResponseWriter, req *http.Request) {
+	type deleteResult struct {
+		commonDef.Result
+		PrivateGroup *casModel.PrivateGroupView `json:"private"`
+	}
+	result := &deleteResult{}
 
 	curSession := s.sessionRegistry.GetSession(res, req)
 	for {
-		groupName := req.URL.Query().Get("groupName")
-		if groupName == "" {
-			result.ErrorCode = commonDef.IllegalParam
-			result.Reason = "删除权限组失败, 参数非法"
-			break
-		}
-
-		err := s.casBiz.DestroyPrivateGroup(curSession, groupName)
-		if err != nil {
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
 			result.ErrorCode = commonDef.Failed
-			result.Reason = fmt.Sprintf("删除权限组失败, %s", err.Error())
+			result.Reason = "非法参数"
 			break
 		}
 
-		memo := fmt.Sprintf("删除权限组, Name:%s", groupName)
+		privateGroupPtr, privateGroupErr := s.casBiz.DeletePrivateGroup(curSession, id)
+		if privateGroupErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = fmt.Sprintf("删除权限组失败, %s", privateGroupErr.Error())
+			break
+		}
+
+		result.PrivateGroup = privateGroupPtr
+		result.ErrorCode = commonDef.Success
+
+		memo := fmt.Sprintf("删除权限组, Name:%s", privateGroupPtr.Name)
 		s.writeLog(res, req, memo)
 		break
 	}

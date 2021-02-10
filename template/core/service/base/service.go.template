@@ -291,8 +291,8 @@ func (s *Base) RegisterHandler(router engine.Router) {
 	//---------------------------------------------------------------------------------------
 	s.privateRouteRegistry.AddHandler(common.QueryAllPrivateURL, "GET", casModel.ReadPrivate, s.QueryPrivateGroup)
 	s.privateRouteRegistry.AddHandler(common.QueryPrivateURL, "GET", casModel.ReadPrivate, s.QueryPrivateGroupByID)
-	s.privateRouteRegistry.AddHandler(common.SavePrivateURL, "POST", casModel.WritePrivate, s.SavePrivateGroup)
-	s.privateRouteRegistry.AddHandler(common.DestroyPrivateURL, "GET", casModel.DeletePrivate, s.DestroyPrivateGroup)
+	s.privateRouteRegistry.AddHandler(common.CreatePrivateURL, "POST", casModel.WritePrivate, s.CreatePrivateGroup)
+	s.privateRouteRegistry.AddHandler(common.DeletePrivateURL, "DELETE", casModel.DeletePrivate, s.DeletePrivateGroup)
 
 	// upload file
 	//---------------------------------------------------------------------------------------
