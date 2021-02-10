@@ -16,7 +16,7 @@ const (
 	UpdateAccountPasswordURL = "/api/v1/account/password/update/"
 
 	// QueryAllAccountURL query all account
-	QueryAllAccountURL = "/api/v1/account/query/all/"
+	QueryAllAccountURL = "/api/v1/account/query/"
 	// QueryAccountURL query account
 	QueryAccountURL = "/api/v1/account/query/:id"
 	// DeleteAccountURL delete account
@@ -25,7 +25,7 @@ const (
 	UpdateAccountURL = "/api/v1/account/update/:id"
 
 	// QueryAllEndpointURL query all endpoint
-	QueryAllEndpointURL = "/api/v1/endpoint/query/all/"
+	QueryAllEndpointURL = "/api/v1/endpoint/query/"
 	// QueryEndpointURL query Endpoint
 	QueryEndpointURL = "/api/v1/endpoint/query/:id"
 	// CreateEndpointURL create endpoint
@@ -35,7 +35,7 @@ const (
 	// UpdateEndpointURL update endpoint
 	UpdateEndpointURL = "/api/v1/endpoint/update/:id"
 
-	QueryAllPrivateURL = "/api/v1/private/query/all/"
+	QueryAllPrivateURL = "/api/v1/private/query/"
 	QueryPrivateURL    = "/api/v1/private/query/:id"
 	CreatePrivateURL   = "/api/v1/private/create/"
 	DeletePrivateURL   = "/api/v1/private/delete/:id"
