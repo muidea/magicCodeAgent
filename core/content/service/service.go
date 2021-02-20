@@ -122,8 +122,8 @@ func (s *{{$serviceName}}) getCurrentEntity(res http.ResponseWriter, req *http.R
 	return
 }
 
-func (s *{{$serviceName}}) queryEntity(id int, sessionInfo *commonCommon.SessionInfo) (ret *casModel.Entity) {
-	entityPtr, entityErr := s.commonHandler.QueryEntity(id, sessionInfo)
+func (s *{{$serviceName}}) queryEntity(id int, sessionInfo *commonCommon.SessionInfo, namespace string) (ret *casModel.Entity) {
+	entityPtr, entityErr := s.commonHandler.QueryEntity(id, sessionInfo, namespace)
 	if entityErr != nil {
 		ret = casModel.UnknownEntity()
 		return
@@ -133,11 +133,29 @@ func (s *{{$serviceName}}) queryEntity(id int, sessionInfo *commonCommon.Session
 	return
 }
 
-func (s *{{$serviceName}}) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string, err error) {
+func (s *{{$serviceName}}) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string) {
+	namespace := req.Header.Get(casCommon.NamespaceID)
+	if namespace != "" {
+		ret = namespace
+		return
+	}
+
+	items := strings.Split(req.Host, ":")
+	if nil != cn.ParseIP(items[0]) {
+		ret = "default"
+		return
+	}
+
+	items = strings.Split(items[0], ".")
+	if len(items) <= 1 {
+		ret = "default"
+		return
+	}
+
+	ret = items[0]
 	return
 }
 `
-
 	return
 }
 
