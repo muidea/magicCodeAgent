@@ -78,8 +78,8 @@ func (s *Base) Login(res http.ResponseWriter, req *http.Request) {
 			result.Reason = "非法参数,输入参数为空"
 			break
 		}
-
-		loginEntity, loginSession, loginErr := s.casBiz.Login(curSession, param.Account, param.Password)
+		namespace := s.getCurrentNamespace(res, req)
+		loginEntity, loginSession, loginErr := s.casBiz.Login(curSession, param.Account, param.Password, namespace)
 		if loginErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = loginErr.Error()
@@ -111,7 +111,8 @@ func (s *Base) Logout(res http.ResponseWriter, req *http.Request) {
 
 	result := &casCommon.LogoutResult{}
 	for {
-		logoutSession, logoutErr := s.casBiz.Logout(curSession)
+		namespace := s.getCurrentNamespace(res, req)
+		logoutSession, logoutErr := s.casBiz.Logout(curSession, namespace)
 		if logoutErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = logoutErr.Error()
@@ -151,7 +152,8 @@ func (s *Base) ConfirmEndpoint(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		confirmEntity, confirmSession, confirmErr := s.casBiz.ConfirmEndpoint(curSession, identifyID, authToken)
+		namespace := s.getCurrentNamespace(res, req)
+		confirmEntity, confirmSession, confirmErr := s.casBiz.ConfirmEndpoint(curSession, identifyID, authToken, namespace)
 		if confirmErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = confirmErr.Error()
@@ -183,7 +185,8 @@ func (s *Base) RefreshStatus(res http.ResponseWriter, req *http.Request) {
 
 	result := &casCommon.RefreshResult{}
 	for {
-		refreshEntity, refreshSession, refreshErr := s.casBiz.RefreshStatus(curSession)
+		namespace := s.getCurrentNamespace(res, req)
+		refreshEntity, refreshSession, refreshErr := s.casBiz.RefreshStatus(curSession, namespace)
 		if refreshErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = refreshErr.Error()
@@ -213,7 +216,8 @@ func (s *Base) RefreshStatus(res http.ResponseWriter, req *http.Request) {
 func (s *Base) Verify(res http.ResponseWriter, req *http.Request) (err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
-	sessionEntity, sessionInfo, sessionErr := s.casBiz.RefreshStatus(curSession)
+	namespace := s.getCurrentNamespace(res, req)
+	sessionEntity, sessionInfo, sessionErr := s.casBiz.RefreshStatus(curSession, namespace)
 	if sessionErr != nil {
 		err = sessionErr
 		log.Printf("verify current commonSession failed, err:%s", sessionErr.Error())
@@ -231,7 +235,8 @@ func (s *Base) Verify(res http.ResponseWriter, req *http.Request) (err error) {
 func (s *Base) VerifyPrivate(res http.ResponseWriter, req *http.Request) (ret *casModel.PrivateGroupLite, err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
 
-	ret, err = s.casBiz.VerifyPrivate(curSession)
+	namespace := s.getCurrentNamespace(res, req)
+	ret, err = s.casBiz.VerifyPrivate(curSession, namespace)
 	return
 }
 
@@ -294,6 +299,14 @@ func (s *Base) RegisterHandler(router engine.Router) {
 	s.privateRouteRegistry.AddHandler(common.CreatePrivateURL, "POST", casModel.WritePrivate, s.CreatePrivateGroup)
 	s.privateRouteRegistry.AddHandler(common.DeletePrivateURL, "DELETE", casModel.DeletePrivate, s.DeletePrivateGroup)
 
+	// namespace
+	//---------------------------------------------------------------------------------------
+	s.privateRouteRegistry.AddHandler(common.QueryAllNamespaceURL, "GET", casModel.ReadPrivate, s.QueryNamespace)
+	s.privateRouteRegistry.AddHandler(common.QueryNamespaceURL, "GET", casModel.ReadPrivate, s.QueryNamespaceByID)
+	s.privateRouteRegistry.AddHandler(common.CreateNamespaceURL, "POST", casModel.WritePrivate, s.CreateNamespace)
+	s.privateRouteRegistry.AddHandler(common.UpdateNamespaceURL, "PUT", casModel.WritePrivate, s.UpdateNamespace)
+	s.privateRouteRegistry.AddHandler(common.DeleteNamespaceURL, "DELETE", casModel.DeletePrivate, s.DeleteNamespace)
+
 	// upload file
 	//---------------------------------------------------------------------------------------
 	uploadFileURL := net.JoinURL(s.fileService, fileCommon.UploadFileURL)
@@ -313,7 +326,8 @@ func (s *Base) writeLog(res http.ResponseWriter, req *http.Request, memo string)
 		account = curEntity.String()
 	}
 
-	_, logErr := s.commonHandler.WriteOpLog(account, address, memo)
+	curNamespace := s.getCurrentNamespace(res, req)
+	_, logErr := s.commonHandler.WriteOpLog(account, address, memo, curNamespace)
 	if logErr != nil {
 		log.Printf("WriteOpLog failed, err:%s", logErr.Error())
 	}
@@ -337,5 +351,28 @@ func (s *Base) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret
 	}
 
 	ret = ctxEntity
+	return
+}
+
+func (s *Base) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string) {
+	namespace := req.Header.Get(casCommon.NamespaceID)
+	if namespace != "" {
+		ret = namespace
+		return
+	}
+
+	items := strings.Split(req.Host, ":")
+	if nil != cn.ParseIP(items[0]) {
+		ret = "default"
+		return
+	}
+
+	items = strings.Split(items[0], ".")
+	if len(items) <= 1 {
+		ret = "default"
+		return
+	}
+
+	ret = items[0]
 	return
 }

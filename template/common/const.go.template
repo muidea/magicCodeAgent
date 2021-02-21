@@ -40,6 +40,12 @@ const (
 	CreatePrivateURL   = "/api/v1/private/create/"
 	DeletePrivateURL   = "/api/v1/private/delete/:id"
 
+	QueryAllNamespaceURL = "/api/v1/namespace/query/"
+	QueryNamespaceURL    = "/api/v1/namespace/query/:id"
+	CreateNamespaceURL   = "/api/v1/namespace/create/"
+	UpdateNamespaceURL   = "/api/v1/namespace/update/:id"
+	DeleteNamespaceURL   = "/api/v1/namespace/delete/:id"
+
 	UploadFileURL = "/api/v1/file/upload/"
 	ViewFileURL   = "/api/v1/file/view/"
 

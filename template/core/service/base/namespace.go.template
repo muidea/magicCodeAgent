@@ -1,0 +1,222 @@
+package base
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/muidea/magicCommon/foundation/net"
+
+	casModel "github.com/muidea/magicCas/model"
+	commonDef "github.com/muidea/magicCommon/def"
+)
+
+// QueryNamespace query namespace
+func (s *Base) QueryNamespace(res http.ResponseWriter, req *http.Request) {
+	type queryResult struct {
+		commonDef.Result
+		Namespace []*casModel.NamespaceView `json:"namespace"`
+	}
+
+	result := &queryResult{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		namespace := s.getCurrentNamespace(res, req)
+		viewList, _, viewErr := s.casBiz.QueryNamespace(curSession, namespace)
+		if viewErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = fmt.Sprintf("查询Namespace失败, %s", viewErr.Error())
+			break
+		}
+
+		result.Namespace = viewList
+		break
+	}
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+// QueryNamespaceByID query namespace by id
+func (s *Base) QueryNamespaceByID(res http.ResponseWriter, req *http.Request) {
+	type queryResult struct {
+		commonDef.Result
+		Namespace *casModel.NamespaceView `json:"namespace"`
+	}
+
+	result := &queryResult{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数"
+			break
+		}
+
+		namespace := s.getCurrentNamespace(res, req)
+		namespaceView, namespaceErr := s.casBiz.QueryNamespaceByID(curSession, id, namespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = fmt.Sprintf("查询Namespace失败, %s", namespaceErr.Error())
+			break
+		}
+
+		result.Namespace = namespaceView
+		break
+	}
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+// CreateNamespace create namespace
+func (s *Base) CreateNamespace(res http.ResponseWriter, req *http.Request) {
+	type createParam struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Validity    int    `json:"validity"`
+	}
+
+	type createResult struct {
+		commonDef.Result
+		Namespace *casModel.NamespaceView `json:"namespace"`
+	}
+
+	result := &createResult{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		param := &createParam{}
+		err := net.ParseJSONBody(req, param)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "保存Namespace失败, 非法参数"
+			break
+		}
+		if param.Name == "" {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "保存Namespace失败, 无效参数"
+			break
+		}
+
+		namespace := s.getCurrentNamespace(res, req)
+		namespaceView, namespaceErr := s.casBiz.CreateNamespace(curSession, param.Name, param.Description, param.Validity, namespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = fmt.Sprintf("保存Namespace失败, %s", namespaceErr.Error())
+			break
+		}
+
+		result.Namespace = namespaceView
+
+		memo := fmt.Sprintf("保存Namespace%s", namespaceView.Name)
+		s.writeLog(res, req, memo)
+		break
+	}
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+// UpdateNamespace update namespace
+func (s *Base) UpdateNamespace(res http.ResponseWriter, req *http.Request) {
+	type updateResult struct {
+		commonDef.Result
+		Namespace *casModel.NamespaceView `json:"namespace"`
+	}
+
+	result := &updateResult{}
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		param := &casModel.NamespaceView{}
+		err := net.ParseJSONBody(req, param)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "保存Namespace失败, 非法参数"
+			break
+		}
+		if param.Name == "" {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "保存Namespace失败, 无效参数"
+			break
+		}
+
+		namespace := s.getCurrentNamespace(res, req)
+		namespaceView, namespaceErr := s.casBiz.UpdateNamespace(curSession,param,namespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = fmt.Sprintf("保存Namespace失败, %s", namespaceErr.Error())
+			break
+		}
+
+		result.Namespace = namespaceView
+
+		memo := fmt.Sprintf("保存Namespace%s", namespaceView.Name)
+		s.writeLog(res, req, memo)
+		break
+	}
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+// DeleteNamespace delete namespace
+func (s *Base) DeleteNamespace(res http.ResponseWriter, req *http.Request) {
+	type deleteResult struct {
+		commonDef.Result
+		Namespace *casModel.NamespaceView `json:"namespace"`
+	}
+	result := &deleteResult{}
+
+	curSession := s.sessionRegistry.GetSession(res, req)
+	for {
+		_, value := net.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "非法参数"
+			break
+		}
+
+		namespace := s.getCurrentNamespace(res, req)
+		namespacePtr, namespaceErr := s.casBiz.DeleteNamespace(curSession, id, namespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = fmt.Sprintf("删除Namespace失败, %s", namespaceErr.Error())
+			break
+		}
+
+		result.Namespace = namespacePtr
+		result.ErrorCode = commonDef.Success
+
+		memo := fmt.Sprintf("删除Namespace, Name:%s", namespacePtr.Name)
+		s.writeLog(res, req, memo)
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
