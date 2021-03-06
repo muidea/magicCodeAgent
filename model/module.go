@@ -211,13 +211,7 @@ func (s *{{$serviceName}}) Create{{$moduleName}}(res http.ResponseWriter, req *h
 			break
 		}
 
-		curNamespace, curErr := s.getCurrentNamespace(res, req)
-		if curErr != nil{
-			result.ErrorCode = commonDef.IllegalParam
-			result.Reason = curErr.Error()
-			break
-		}
-
+		curNamespace := s.getCurrentNamespace(res, req)
 		{{$lowModuleName}}Ptr, {{$lowModuleName}}Err := s.{{$lowServiceName}}Biz.Create{{$moduleName}}({{$lowModuleName}}Ptr,curEntity,curNamespace)
 		if {{$lowModuleName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
@@ -293,13 +287,7 @@ func (s *{{$serviceName}}) Update{{$moduleName}}(res http.ResponseWriter, req *h
 			break
 		}
 
-		curNamespace, curErr := s.getCurrentNamespace(res, req)
-		if curErr != nil{
-			result.ErrorCode = commonDef.IllegalParam
-			result.Reason = curErr.Error()
-			break
-		}
-
+		curNamespace := s.getCurrentNamespace(res, req)
 		{{$lowModuleName}}Ptr, {{$lowModuleName}}Err := s.{{$lowServiceName}}Biz.Update{{$moduleName}}({{$lowModuleName}}Ptr,curEntity,curNamespace)
 		if {{$lowModuleName}}Err != nil {
 			result.ErrorCode = commonDef.Failed
