@@ -1,4 +1,4 @@
-FROM centos
+FROM alpine:3.13.4
 
 LABEL Author="rangh"
 LABEL Application="{{.ProjectName}}"

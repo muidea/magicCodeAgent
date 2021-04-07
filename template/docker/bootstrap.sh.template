@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 EXTRA_ARGS=$EXTRA_ARGS
 if [ $LISTENPORT ]; then
