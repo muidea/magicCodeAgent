@@ -2,9 +2,11 @@ package content
 
 import (
 	"encoding/json"
+	"github.com/muidea/magicOrm/provider/remote"
 	"github.com/muidea/magicToolkit/core/content/biz"
 	"github.com/muidea/magicToolkit/core/content/common"
 	"github.com/muidea/magicToolkit/core/content/service"
+	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
 	"os"
@@ -13,7 +15,8 @@ import (
 
 // Content core define
 type Content struct {
-	rootPath string
+	rootPath   string
+	name2model map[string]*remote.Object
 }
 
 type Define struct {
@@ -21,8 +24,14 @@ type Define struct {
 }
 
 // New new core
-func New(rootPath string) *Content {
-	return &Content{rootPath: rootPath}
+func New(rootPath string, modelList []*remote.Object) *Content {
+	name2model := map[string]*remote.Object{}
+	for _, val := range modelList {
+		name := util.GetModelName(val)
+		name2model[name] = val
+	}
+
+	return &Content{rootPath: rootPath, name2model: name2model}
 }
 
 // Create create

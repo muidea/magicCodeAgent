@@ -35,18 +35,13 @@ func (s *Define) getTemplate() (ret string) {
 
 		const (
 			{{range $k, $v := $actionList}}
-			{{$url := $module.FormatUrl $v "" }}
-			{{$url}}
-			{{end}}
+			{{$url := $module.FormatUrl $v "" }}{{$url}}{{end}}
 
 			{{range $mk, $mv := $childList}}
 			{{$subModuleName := $mv.Name}}
 			{{$subModuleAction := $mv.Action}}
 			{{range $ak, $av := $subModuleAction}}
-			{{$url := $mv.FormatUrl $av $moduleName }}
-			{{$url}}
-			{{end}}
-			{{end}}
+			{{$url := $mv.FormatUrl $av $moduleName }}{{$url}}{{end}}{{end}}
 		)
 
 		{{if not $module.IsPackage }}
