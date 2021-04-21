@@ -8,6 +8,11 @@ import (
 	"text/template"
 )
 
+type Define struct {
+	ApiVersion string    `json:"apiVersion"`
+	Module     []*Module `json:"module"`
+}
+
 type Module struct {
 	Name   string    `json:"name"`
 	Desc   string    `json:"desc"`
