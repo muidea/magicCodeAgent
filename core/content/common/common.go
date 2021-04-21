@@ -21,6 +21,12 @@ func New(apiVersion, projectName string) *Define {
 }
 
 func (s *Define) getTemplate() (ret string) {
+	contentVal, contentErr := util.GetTemplateFileContent("common")
+	if contentErr == nil {
+		ret = contentVal
+		return
+	}
+
 	ret = `
 		{{$apiVersion := .ApiVersion}}
 		{{$projectName := .ProjectName}}
@@ -116,7 +122,6 @@ func (s *Define) Create(module *model.Module, forceFlag bool) (err error) {
 			return
 		}
 		defer fileHandle.Close()
-
 		templateHandle, templateErr := template.New(module.Name).Parse(s.getTemplate())
 		if templateErr != nil {
 			err = templateErr

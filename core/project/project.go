@@ -34,24 +34,6 @@ func (s *Project) getFile(filePath string) (ret *os.File, err error) {
 	return
 }
 
-func (s *Project) getTemplatePath() (ret string, err error) {
-	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
-	if toolKitPath == "" {
-		err = fmt.Errorf("no found toolkitPath")
-		return
-	}
-
-	templatePath := path.Join(toolKitPath, "template")
-	existsFlag, existsErr := util.Exists(templatePath)
-	if !existsFlag || existsErr != nil {
-		err = fmt.Errorf("toolkit template does not exist")
-		return
-	}
-
-	ret = templatePath
-	return
-}
-
 func (s *Project) cloneTemplate(filePath string) (err error) {
 	log.Print(filePath)
 	templatePath := path.Join(s.templatePath, filePath)
@@ -106,7 +88,7 @@ func (s *Project) cloneTemplate(filePath string) (err error) {
 func (s *Project) Create(projectName string) (err error) {
 	s.projectName = projectName
 
-	templatePath, templateErr := s.getTemplatePath()
+	templatePath, templateErr := util.GetTemplatePath()
 	if templateErr != nil {
 		err = templateErr
 		return
