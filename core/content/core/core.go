@@ -1,17 +1,21 @@
-package content
+package core
 
 import (
 	"fmt"
-	"github.com/muidea/magicToolkit/model"
 	"os"
 	"os/exec"
 	"text/template"
 
 	"github.com/muidea/magicToolkit/core/util"
+	"github.com/muidea/magicToolkit/model"
 )
 
 type Core struct {
 	projectName string
+}
+
+func New(projectName string) *Core {
+	return &Core{projectName: projectName}
 }
 
 func (s *Core) getTemplate() (ret string) {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/muidea/magicOrm/provider/remote"
 	"github.com/muidea/magicToolkit/core/content/common"
+	"github.com/muidea/magicToolkit/core/content/core"
 	"github.com/muidea/magicToolkit/core/content/core/biz"
 	"github.com/muidea/magicToolkit/core/content/core/service"
 	"github.com/muidea/magicToolkit/core/util"
@@ -72,7 +73,7 @@ func (s *Content) Create(projectName string, forceFlag bool) (err error) {
 		}
 	}
 
-	core := &Core{projectName: projectName}
+	core := core.New(projectName)
 	err = core.Create(contentDefine, forceFlag)
 	if err != nil {
 		return
