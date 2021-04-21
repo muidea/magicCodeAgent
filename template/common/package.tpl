@@ -7,8 +7,8 @@
 package common
 
 import (
-commonDef "github.com/muidea/magicCommon/def"
-"github.com/muidea/{{$projectName}}/model"
+    commonDef "github.com/muidea/magicCommon/def"
+    "github.com/muidea/{{$projectName}}/model"
 )
 
 const (

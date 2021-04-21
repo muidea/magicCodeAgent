@@ -3,9 +3,9 @@ package content
 import (
 	"encoding/json"
 	"github.com/muidea/magicOrm/provider/remote"
-	"github.com/muidea/magicToolkit/core/content/biz"
 	"github.com/muidea/magicToolkit/core/content/common"
-	"github.com/muidea/magicToolkit/core/content/service"
+	"github.com/muidea/magicToolkit/core/content/core/biz"
+	"github.com/muidea/magicToolkit/core/content/core/service"
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
