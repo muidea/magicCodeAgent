@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"github.com/muidea/magicToolkit/model"
 	"os"
 	"os/exec"
 	"text/template"
@@ -137,7 +138,7 @@ func (s *Core) Teardown() {
 	return
 }
 
-func (s *Core) Create(define *Define, forceFlag bool) (err error) {
+func (s *Core) Create(define *model.Define, forceFlag bool) (err error) {
 	filePath := fmt.Sprintf("./core")
 	existFlag, existErr := util.Exists(filePath)
 	if existErr != nil {

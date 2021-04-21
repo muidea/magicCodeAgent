@@ -19,11 +19,6 @@ type Content struct {
 	name2model map[string]*remote.Object
 }
 
-type Define struct {
-	ApiVersion string          `json:"apiVersion"`
-	Module     []*model.Module `json:"module"`
-}
-
 // New new core
 func New(rootPath string, modelList []*remote.Object) *Content {
 	name2model := map[string]*remote.Object{}
@@ -51,7 +46,7 @@ func (s *Content) Create(projectName string, forceFlag bool) (err error) {
 		return
 	}
 
-	contentDefine := &Define{}
+	contentDefine := &model.Define{}
 	err = json.Unmarshal(byteContent, contentDefine)
 	if err != nil {
 		return
@@ -79,12 +74,6 @@ func (s *Content) Create(projectName string, forceFlag bool) (err error) {
 
 	core := &Core{projectName: projectName}
 	err = core.Create(contentDefine, forceFlag)
-	if err != nil {
-		return
-	}
-
-	biz := &Biz{projectName: projectName}
-	err = biz.Create(contentDefine, forceFlag)
 	if err != nil {
 		return
 	}
