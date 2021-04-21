@@ -12,15 +12,17 @@ import (
 )
 
 type Define struct {
+	apiVersion  string
 	projectName string
 }
 
-func New(projectName string) *Define {
-	return &Define{projectName: projectName}
+func New(apiVersion, projectName string) *Define {
+	return &Define{apiVersion: apiVersion, projectName: projectName}
 }
 
 func (s *Define) getTemplate() (ret string) {
 	ret = `
+		{{$apiVersion := .ApiVersion}}
 		{{$projectName := .ProjectName}}
 		{{$module := .Module}}
 		{{$moduleName := $module.Name}}
@@ -35,13 +37,13 @@ func (s *Define) getTemplate() (ret string) {
 
 		const (
 			{{range $k, $v := $actionList}}
-			{{$url := $module.FormatUrl $v "" }}{{$url}}{{end}}
+			{{$url := $module.FormatUrl $apiVersion $v "" }}{{$url}}{{end}}
 
 			{{range $mk, $mv := $childList}}
 			{{$subModuleName := $mv.Name}}
 			{{$subModuleAction := $mv.Action}}
 			{{range $ak, $av := $subModuleAction}}
-			{{$url := $mv.FormatUrl $av $moduleName }}{{$url}}{{end}}{{end}}
+			{{$url := $mv.FormatUrl $apiVersion $av $moduleName }}{{$url}}{{end}}{{end}}
 		)
 
 		{{if not $module.IsPackage }}
@@ -121,7 +123,7 @@ func (s *Define) Create(module *model.Module, forceFlag bool) (err error) {
 			return
 		}
 
-		data := map[string]interface{}{"ProjectName": s.projectName, "Module": module}
+		data := map[string]interface{}{"ApiVersion": s.apiVersion, "ProjectName": s.projectName, "Module": module}
 		err = templateHandle.Execute(fileHandle, data)
 	}()
 	if err != nil {

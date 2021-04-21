@@ -21,11 +21,25 @@ func (s *Module) Lower(val string) string {
 	return fmt.Sprintf("%s%s", strings.ToLower(firstLetter), otherStr)
 }
 
+func (s *Module) getUrl(name, url string) (ret string) {
+	value := fmt.Sprintf("%s/%s", name, url)
+	items := []string{}
+	for _, val := range strings.Split(value, "/") {
+		if val == "" || val == ":id" {
+			continue
+		}
+
+		items = append(items, strings.Title(val))
+	}
+
+	return strings.Join(items, "")
+}
+
 func (s *Module) IsPackage() bool {
 	return len(s.Action) == 0
 }
 
-func (s *Module) FormatUrl(url, parent string) (ret string) {
+func (s *Module) FormatUrl(apiVersion, url, parent string) (ret string) {
 	path := s.Name
 	if parent != "" && parent != path {
 		path = fmt.Sprintf("%s/%s", parent, path)
@@ -33,15 +47,17 @@ func (s *Module) FormatUrl(url, parent string) (ret string) {
 
 	switch url {
 	case "query/":
-		ret = fmt.Sprintf("Filter%sURL = \"/api/v1/%s/query/\"", strings.Title(s.Name), strings.ToLower(path))
+		ret = fmt.Sprintf("%sFilterURL = \"/%s/%s/query/\"", strings.Title(s.Name), apiVersion, strings.ToLower(path))
 	case "query/:id":
-		ret = fmt.Sprintf("Query%sURL = \"/api/v1/%s/query/:id\"", strings.Title(s.Name), strings.ToLower(path))
+		ret = fmt.Sprintf("%sQueryURL = \"/%s/%s/query/:id\"", strings.Title(s.Name), apiVersion, strings.ToLower(path))
 	case "create/":
-		ret = fmt.Sprintf("Create%sURL = \"/api/v1/%s/create/\"", strings.Title(s.Name), strings.ToLower(path))
+		ret = fmt.Sprintf("%sCreateURL = \"/%s/%s/create/\"", strings.Title(s.Name), apiVersion, strings.ToLower(path))
 	case "update/:id":
-		ret = fmt.Sprintf("Update%sURL = \"/api/v1/%s/update/:id\"", strings.Title(s.Name), strings.ToLower(path))
+		ret = fmt.Sprintf("%sUpdateURL = \"/%s/%s/update/:id\"", strings.Title(s.Name), apiVersion, strings.ToLower(path))
 	case "delete/:id":
-		ret = fmt.Sprintf("Delete%sURL = \"/api/v1/%s/delete/:id\"", strings.Title(s.Name), strings.ToLower(path))
+		ret = fmt.Sprintf("%sDeleteURL = \"/%s/%s/delete/:id\"", strings.Title(s.Name), apiVersion, strings.ToLower(path))
+	default:
+		ret = fmt.Sprintf("%sURL = \"/%s/%s/%s\"", s.getUrl(s.Name, url), apiVersion, strings.ToLower(path), strings.ToLower(url))
 	}
 
 	return

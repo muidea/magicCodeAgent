@@ -20,7 +20,8 @@ type Content struct {
 }
 
 type Define struct {
-	Module []*model.Module `json:"module"`
+	ApiVersion string          `json:"apiVersion"`
+	Module     []*model.Module `json:"module"`
 }
 
 // New new core
@@ -57,7 +58,7 @@ func (s *Content) Create(projectName string, forceFlag bool) (err error) {
 	}
 
 	for _, val := range contentDefine.Module {
-		common := common.New(projectName)
+		common := common.New(contentDefine.ApiVersion, projectName)
 		err = common.Create(val, forceFlag)
 		if err != nil {
 			return
