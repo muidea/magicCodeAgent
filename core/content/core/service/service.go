@@ -98,14 +98,14 @@ func (s *{{$serviceName}}) Handle(ctx engine.RequestContext, res http.ResponseWr
 // RegisterHandler 注册路由
 func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
 {{range $k, $v := $actionList}}
-{{$url := $module.RouteHandle $serviceName $v }}
+{{$url := $module.UrlRoute $serviceName $v }}
 {{$url}}
 {{end}}
 {{range $mk, $mv := $childList}}
 {{$subModuleName := $mv.Name}}
 {{$subModuleAction := $mv.Action}}
 {{range $ak, $av := $subModuleAction}}
-{{$url := $mv.RouteHandle $serviceName $av }}
+{{$url := $mv.UrlRoute $serviceName $av }}
 {{$url}}
 {{end}}
 {{end}}
