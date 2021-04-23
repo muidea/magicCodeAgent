@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"text/template"
-
-	"github.com/muidea/magicToolkit/model"
 )
 
 const (
@@ -16,12 +13,12 @@ const (
 )
 
 type Factory struct {
-	projectName  string
 	templateName string
+	contentData  map[string]interface{}
 }
 
-func NewFactory(projectName, templateName string) *Factory {
-	return &Factory{projectName: projectName, templateName: templateName}
+func NewFactory(templateName string, contentData map[string]interface{}) *Factory {
+	return &Factory{templateName: templateName, contentData: contentData}
 }
 
 func (s *Factory) getTemplateContent(relativePath, templateName string) (ret string, err error) {
@@ -35,12 +32,7 @@ func (s *Factory) getTemplateContent(relativePath, templateName string) (ret str
 	return
 }
 
-func (s *Factory) getPackageName(relativePath string) string {
-	items := strings.Split(relativePath, "/")
-	return items[len(items)-1]
-}
-
-func (s *Factory) Create(define *model.Define, relativePath, fileName string, forceFlag bool) (err error) {
+func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err error) {
 	filePath := relativePath
 	existFlag, existErr := Exists(filePath)
 	if existErr != nil {
@@ -82,8 +74,7 @@ func (s *Factory) Create(define *model.Define, relativePath, fileName string, fo
 				return
 			}
 
-			data := map[string]interface{}{"ProjectName": s.projectName, "PackageName": s.getPackageName(relativePath), "Define": define}
-			err = templateHandle.Execute(fileHandle, data)
+			err = templateHandle.Execute(fileHandle, s.contentData)
 		}()
 		if err != nil {
 			return
@@ -92,5 +83,6 @@ func (s *Factory) Create(define *model.Define, relativePath, fileName string, fo
 		cmd := exec.Command("gofmt", "-w", filePath)
 		err = cmd.Run()
 	}
+
 	return
 }

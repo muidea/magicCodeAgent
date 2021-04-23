@@ -47,13 +47,37 @@ func GetTemplatePath(typeVal string) (ret string, err error) {
 }
 
 func GetTemplateFileContent(filePath string) (ret string, err error) {
-	templatePath, templateErr := GetTemplatePath("project")
+	templatePath, templateErr := GetTemplatePath(ProjectTemplate)
 	if templateErr != nil {
 		err = templateErr
 		return
 	}
 
 	fullFilePath := fmt.Sprintf("%s/%s/model.tpl", templatePath, filePath)
+	existsFlag, existsErr := Exists(fullFilePath)
+	if !existsFlag || existsErr != nil {
+		err = fmt.Errorf("template file not exist")
+		return
+	}
+
+	contentVal, contentErr := ioutil.ReadFile(fullFilePath)
+	if contentErr != nil {
+		err = contentErr
+		return
+	}
+
+	ret = string(contentVal)
+	return
+}
+
+func GetTemplateUnitContent(filePath, unitName string) (ret string, err error) {
+	templatePath, templateErr := GetTemplatePath(UnitTemplate)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	fullFilePath := fmt.Sprintf("%s/%s/%s.tpl", templatePath, filePath, unitName)
 	existsFlag, existsErr := Exists(fullFilePath)
 	if !existsFlag || existsErr != nil {
 		err = fmt.Errorf("template file not exist")
