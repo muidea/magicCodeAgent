@@ -2,32 +2,39 @@ package content
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
-	"strings"
 )
 
 type Model struct {
 	rootPath    string
-	modelDefine *model.Define
+	projectName string
+	serviceName string
+	modelDefine *model.Module
 }
 
-func NewModel(rootPath string, modelDefine *model.Define) *Model {
-	return &Model{rootPath: rootPath, modelDefine: modelDefine}
+func NewModel(rootPath, projectName, serviceName string, modelDefine *model.Module) *Model {
+	return &Model{rootPath: rootPath, projectName: projectName, serviceName: serviceName, modelDefine: modelDefine}
 }
 
-func (s *Model) getModelName(relativePath string) string {
+func (s *Model) getPackageName(relativePath string) string {
 	items := strings.Split(relativePath, "/")
 	return items[len(items)-1]
 }
 
 func (s *Model) Create(relativePath, templateFile string) (err error) {
-	packageName := s.getModelName(relativePath)
+	packageName := s.getPackageName(relativePath)
 
-	fileName := fmt.Sprintf("%s.go", packageName)
-	packageVal := map[string]interface{}{"ApiVersion": s.modelDefine.ApiVersion, "ProjectName": s.modelDefine.ProjectName, "ModelName": packageName}
-	packageFactory := util.NewFactory(s.rootPath, templateFile, packageVal)
-	packageFactory.Create(relativePath, fileName, true)
+	modelVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "ServiceName": s.serviceName, "Model": s.modelDefine}
+	factoryPtr := util.NewFactory(s.rootPath, templateFile, modelVal)
+
+	fileName := fmt.Sprintf("%s.go", strings.ToLower(s.modelDefine.Name))
+	err = factoryPtr.Create(relativePath, fileName, true)
+	if err != nil {
+		return
+	}
 
 	return
 }

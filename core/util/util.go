@@ -76,7 +76,7 @@ func getTemplateContent(templatePath, filePath, fileName string) (ret string, er
 }
 
 func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
-	templatePath, templateErr := GetTemplatePath(ProjectTemplate)
+	templatePath, templateErr := GetTemplatePath(ProjectTemplatePath)
 	if templateErr != nil {
 		err = templateErr
 		return
@@ -87,7 +87,7 @@ func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
 }
 
 func GetTemplateUnitContent(filePath, unitName string) (ret string, err error) {
-	templatePath, templateErr := GetTemplatePath(UnitTemplate)
+	templatePath, templateErr := GetTemplatePath(UnitTemplatePath)
 	if templateErr != nil {
 		err = templateErr
 		return

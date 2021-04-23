@@ -2,18 +2,20 @@ package content
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
-	"strings"
 )
 
 type Service struct {
-	rootPath    string
-	modelDefine *model.Define
+	rootPath      string
+	projectName   string
+	serviceDefine *model.Module
 }
 
-func NewService(rootPath string, modelDefine *model.Define) *Service {
-	return &Service{rootPath: rootPath, modelDefine: modelDefine}
+func NewService(rootPath, projectName string, serviceDefine *model.Module) *Service {
+	return &Service{rootPath: rootPath, projectName: projectName, serviceDefine: serviceDefine}
 }
 
 func (s *Service) getPackageName(relativePath string) string {
@@ -24,15 +26,13 @@ func (s *Service) getPackageName(relativePath string) string {
 func (s *Service) Create(relativePath, templateFile string) (err error) {
 	packageName := s.getPackageName(relativePath)
 
-	for _, val := range s.modelDefine.Module {
-		serviceVal := map[string]interface{}{"ApiVersion": s.modelDefine.ApiVersion, "ProjectName": s.modelDefine.ProjectName, "PackageName": packageName, "Module": val}
-		factoryPtr := util.NewFactory(s.rootPath, templateFile, serviceVal)
+	serviceVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "Service": s.serviceDefine}
+	factoryPtr := util.NewFactory(s.rootPath, templateFile, serviceVal)
 
-		fileName := fmt.Sprintf("%s.go", strings.ToLower(val.Name))
-		err = factoryPtr.Create(relativePath, fileName, true)
-		if err != nil {
-			return
-		}
+	fileName := fmt.Sprintf("%s.go", strings.ToLower(s.serviceDefine.Name))
+	err = factoryPtr.Create(relativePath, fileName, true)
+	if err != nil {
+		return
 	}
 
 	return

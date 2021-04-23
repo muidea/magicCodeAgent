@@ -11,8 +11,14 @@ import (
 )
 
 const (
-	ProjectTemplate = "project"
-	UnitTemplate    = "unit"
+	ProjectTemplatePath = "project"
+	UnitTemplatePath    = "unit"
+)
+
+const (
+	PackageTemplateFile = "package.tpl"
+	ServiceTemplateFile = "service.tpl"
+	ModelTemplateFile   = "model.tpl"
 )
 
 var functionMap template.FuncMap

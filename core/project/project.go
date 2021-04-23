@@ -63,7 +63,7 @@ func (s *Project) Create(projectName string) (err error) {
 }
 
 func (s *Project) walkTemplate(relativePath string) (err error) {
-	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(util.ProjectTemplate)
+	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(util.ProjectTemplatePath)
 	if baseTemplateErr != nil {
 		err = baseTemplateErr
 		return
@@ -104,20 +104,8 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 			continue
 		}
 
-		if fileName == "service.tpl" {
-			servicePtr := content.NewService(s.rootPath, s.modelDefine)
-			servicePtr.Create(relativePath, fd.Name())
-			continue
-		}
-
-		if fileName == "model.tpl" {
-			modelPtr := content.NewPackage(s.rootPath, s.modelDefine)
-			modelPtr.Create(relativePath, fd.Name())
-			continue
-		}
-
 		if fileName == "package.tpl" {
-			packagePtr := content.NewPackage(s.rootPath, s.modelDefine)
+			packagePtr := content.NewPackage(s.rootPath, s.projectName, s.modelDefine.Module)
 			packagePtr.Create(relativePath, fd.Name())
 			continue
 		}
