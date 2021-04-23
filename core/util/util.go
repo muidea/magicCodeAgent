@@ -46,17 +46,22 @@ func GetTemplatePath(typeVal string) (ret string, err error) {
 	return
 }
 
-func GetTemplateFileContent(filePath string) (ret string, err error) {
+func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
 	templatePath, templateErr := GetTemplatePath(ProjectTemplate)
 	if templateErr != nil {
 		err = templateErr
 		return
 	}
 
-	fullFilePath := fmt.Sprintf("%s/%s/model.tpl", templatePath, filePath)
+	var fullFilePath string
+	if filePath == "" {
+		fullFilePath = fmt.Sprintf("%s/%s", templatePath, fileName)
+	} else {
+		fullFilePath = fmt.Sprintf("%s/%s/%s", templatePath, filePath, fileName)
+	}
 	existsFlag, existsErr := Exists(fullFilePath)
 	if !existsFlag || existsErr != nil {
-		err = fmt.Errorf("template file not exist")
+		err = fmt.Errorf("template file not exist, file:%s", fullFilePath)
 		return
 	}
 

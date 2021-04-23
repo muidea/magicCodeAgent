@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"text/template"
 )
 
@@ -13,16 +14,17 @@ const (
 )
 
 type Factory struct {
+	rootPath     string
 	templateName string
 	contentData  map[string]interface{}
 }
 
-func NewFactory(templateName string, contentData map[string]interface{}) *Factory {
-	return &Factory{templateName: templateName, contentData: contentData}
+func NewFactory(rootPath, templateName string, contentData map[string]interface{}) *Factory {
+	return &Factory{rootPath: rootPath, templateName: templateName, contentData: contentData}
 }
 
-func (s *Factory) getTemplateContent(relativePath, templateName string) (ret string, err error) {
-	contentVal, contentErr := GetTemplateFileContent(fmt.Sprintf("%s/%s", relativePath, templateName))
+func (s *Factory) getTemplateContent(relativePath string) (ret string, err error) {
+	contentVal, contentErr := GetTemplateFileContent(relativePath, s.templateName)
 	if contentErr != nil {
 		err = contentErr
 		return
@@ -33,7 +35,8 @@ func (s *Factory) getTemplateContent(relativePath, templateName string) (ret str
 }
 
 func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err error) {
-	filePath := relativePath
+	filePath := path.Join(s.rootPath, relativePath, fileName)
+	filePath, fileName = path.Split(filePath)
 	existFlag, existErr := Exists(filePath)
 	if existErr != nil {
 		err = existErr
@@ -46,23 +49,23 @@ func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err err
 		}
 	}
 
-	filePath = fmt.Sprintf("%s/%s.go", filePath, fileName)
-	existFlag, existErr = Exists(filePath)
+	fullFilePath := path.Join(filePath, fileName)
+	existFlag, existErr = Exists(fullFilePath)
 	if existErr != nil {
-		err = fmt.Errorf("unexpect, fileName:%s", filePath)
+		err = fmt.Errorf("unexpect, fileName:%s", fullFilePath)
 		return
 	}
 
 	if !existFlag || forceFlag {
 		func() {
-			fileHandle, fileErr := os.Create(filePath)
+			fileHandle, fileErr := os.Create(fullFilePath)
 			if fileErr != nil {
 				err = fileErr
 				return
 			}
 			defer fileHandle.Close()
 
-			contentVal, contentErr := s.getTemplateContent(relativePath, s.templateName)
+			contentVal, contentErr := s.getTemplateContent(relativePath)
 			if contentErr != nil {
 				err = contentErr
 				return

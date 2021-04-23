@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"text/template"
 
 	"github.com/muidea/magicToolkit/core/util"
 )
@@ -34,59 +33,19 @@ func (s *Project) getFile(filePath string) (ret *os.File, err error) {
 	return
 }
 
-func (s *Project) cloneTemplate(filePath string) (err error) {
-	log.Print(filePath)
-	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(util.ProjectTemplate)
-	if baseTemplateErr != nil {
-		err = baseTemplateErr
-		return
+func (s *Project) cloneTemplate(filePath, fileName string) (err error) {
+	log.Print(fileName)
+
+	contentVal := map[string]interface{}{"ProjectName": s.projectName}
+	factoryPtr := util.NewFactory(s.rootPath, fileName, contentVal)
+
+	items := strings.Split(fileName, ".")
+	fileName = strings.Join(items[:len(items)-1], ".")
+	if fileName == "main.go" {
+		fileName = path.Join("cmd", s.projectName, fileName)
 	}
 
-	templatePath := path.Join(baseTemplatePath, filePath)
-	fullPath := path.Join(s.rootPath, filePath)
-	curPath, curName := path.Split(fullPath)
-	curName = curName[:len(curName)-len(".template")]
-	if curName == "main.go" {
-		curPath = path.Join("cmd", s.projectName)
-	}
-
-	existsFlag, existsErr := util.Exists(curPath)
-	if existsErr != nil {
-		err = fmt.Errorf("unexpect, fileName:%s", curPath)
-		return
-	}
-	if !existsFlag {
-		err = os.MkdirAll(curPath, os.ModePerm)
-		if err != nil {
-			return
-		}
-	}
-
-	filePath = path.Join(curPath, curName)
-	existsFlag, existsErr = util.Exists(filePath)
-	if existsErr != nil {
-		err = fmt.Errorf("unexpect, fileName:%s", filePath)
-		return
-	}
-	if existsFlag {
-		return
-	}
-
-	fileHandle, fileErr := os.Create(filePath)
-	if fileErr != nil {
-		err = fileErr
-		return
-	}
-	defer fileHandle.Close()
-
-	templateHandle, templateErr := template.ParseFiles(templatePath)
-	if templateErr != nil {
-		err = templateErr
-		return
-	}
-
-	data := map[string]string{"ProjectName": s.projectName}
-	err = templateHandle.Execute(fileHandle, data)
+	err = factoryPtr.Create(filePath, fileName, true)
 	return
 }
 
@@ -130,13 +89,13 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 
 		items := strings.Split(fd.Name(), ".")
 		extName := items[len(items)-1]
-		if extName != "template" {
-			continue
-		}
+		if extName == "template" {
+			err = s.cloneTemplate(relativePath, fd.Name())
+			if err != nil {
+				return
+			}
 
-		err = s.cloneTemplate(path.Join(relativePath, fd.Name()))
-		if err != nil {
-			return
+			continue
 		}
 	}
 

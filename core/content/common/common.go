@@ -21,7 +21,7 @@ func New(apiVersion, projectName string) *Define {
 }
 
 func (s *Define) getTemplate() (ret string) {
-	contentVal, contentErr := util.GetTemplateFileContent("common")
+	contentVal, contentErr := util.GetTemplateFileContent("common", "model.tpl")
 	if contentErr == nil {
 		ret = contentVal
 		return
