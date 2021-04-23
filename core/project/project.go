@@ -111,10 +111,14 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 		}
 
 		if fileName == "model.tpl" {
+			modelPtr := content.NewPackage(s.rootPath, s.modelDefine)
+			modelPtr.Create(relativePath, fd.Name())
 			continue
 		}
 
 		if fileName == "package.tpl" {
+			packagePtr := content.NewPackage(s.rootPath, s.modelDefine)
+			packagePtr.Create(relativePath, fd.Name())
 			continue
 		}
 	}

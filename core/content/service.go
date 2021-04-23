@@ -25,8 +25,8 @@ func (s *Service) Create(relativePath, templateFile string) (err error) {
 	packageName := s.getPackageName(relativePath)
 
 	for _, val := range s.modelDefine.Module {
-		contentVal := map[string]interface{}{"ApiVersion": s.modelDefine.ApiVersion, "ProjectName": s.modelDefine.ProjectName, "PackageName": packageName, "Module": val}
-		factoryPtr := util.NewFactory(s.rootPath, templateFile, contentVal)
+		serviceVal := map[string]interface{}{"ApiVersion": s.modelDefine.ApiVersion, "ProjectName": s.modelDefine.ProjectName, "PackageName": packageName, "Module": val}
+		factoryPtr := util.NewFactory(s.rootPath, templateFile, serviceVal)
 
 		fileName := fmt.Sprintf("%s.go", strings.ToLower(val.Name))
 		err = factoryPtr.Create(relativePath, fileName, true)
