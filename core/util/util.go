@@ -28,14 +28,14 @@ func GetModelName(modelPtr *remote.Object) string {
 	return items[1]
 }
 
-func GetTemplatePath() (ret string, err error) {
+func GetTemplatePath(typeVal string) (ret string, err error) {
 	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
 	if toolKitPath == "" {
 		err = fmt.Errorf("no found toolkitPath")
 		return
 	}
 
-	templatePath := path.Join(toolKitPath, "template")
+	templatePath := path.Join(toolKitPath, "template", typeVal)
 	existsFlag, existsErr := Exists(templatePath)
 	if !existsFlag || existsErr != nil {
 		err = fmt.Errorf("toolkit template does not exist")
@@ -47,7 +47,7 @@ func GetTemplatePath() (ret string, err error) {
 }
 
 func GetTemplateFileContent(filePath string) (ret string, err error) {
-	templatePath, templateErr := GetTemplatePath()
+	templatePath, templateErr := GetTemplatePath("project")
 	if templateErr != nil {
 		err = templateErr
 		return

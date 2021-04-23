@@ -14,9 +14,8 @@ import (
 
 // Project core define
 type Project struct {
-	projectName  string
-	rootPath     string
-	templatePath string
+	projectName string
+	rootPath    string
 }
 
 // New new core
@@ -37,7 +36,13 @@ func (s *Project) getFile(filePath string) (ret *os.File, err error) {
 
 func (s *Project) cloneTemplate(filePath string) (err error) {
 	log.Print(filePath)
-	templatePath := path.Join(s.templatePath, "project", filePath)
+	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(util.ProjectTemplate)
+	if baseTemplateErr != nil {
+		err = baseTemplateErr
+		return
+	}
+
+	templatePath := path.Join(baseTemplatePath, filePath)
 	fullPath := path.Join(s.rootPath, filePath)
 	curPath, curName := path.Split(fullPath)
 	curName = curName[:len(curName)-len(".template")]
@@ -89,22 +94,21 @@ func (s *Project) cloneTemplate(filePath string) (err error) {
 func (s *Project) Create(projectName string) (err error) {
 	s.projectName = projectName
 
-	templatePath, templateErr := util.GetTemplatePath()
-	if templateErr != nil {
-		err = templateErr
-		return
-	}
-	s.templatePath = templatePath
-
 	err = s.walkTemplate("")
 	return
 }
 
-func (s *Project) walkTemplate(projectPath string) (err error) {
-	fullPath := path.Join(s.templatePath, "project", projectPath)
+func (s *Project) walkTemplate(relativePath string) (err error) {
+	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(util.ProjectTemplate)
+	if baseTemplateErr != nil {
+		err = baseTemplateErr
+		return
+	}
+
+	fullPath := path.Join(baseTemplatePath, relativePath)
 	existFlag, existErr := util.Exists(fullPath)
 	if !existFlag || existErr != nil {
-		err = fmt.Errorf("template file does not exist, projectPath:%s", projectPath)
+		err = fmt.Errorf("template file does not exist, fileName:%s", fullPath)
 		return
 	}
 
@@ -116,7 +120,7 @@ func (s *Project) walkTemplate(projectPath string) (err error) {
 
 	for _, fd := range fdList {
 		if fd.IsDir() {
-			err = s.walkTemplate(path.Join(projectPath, fd.Name()))
+			err = s.walkTemplate(path.Join(relativePath, fd.Name()))
 			if err != nil {
 				return
 			}
@@ -130,7 +134,7 @@ func (s *Project) walkTemplate(projectPath string) (err error) {
 			continue
 		}
 
-		err = s.cloneTemplate(path.Join(projectPath, fd.Name()))
+		err = s.cloneTemplate(path.Join(relativePath, fd.Name()))
 		if err != nil {
 			return
 		}

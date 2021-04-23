@@ -10,6 +10,11 @@ import (
 	"github.com/muidea/magicToolkit/model"
 )
 
+const (
+	ProjectTemplate = "project"
+	UnitTemplate    = "unit"
+)
+
 type Factory struct {
 	projectName  string
 	templateName string
