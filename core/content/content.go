@@ -1,3 +1,15 @@
+/**
+
+Package -> Service -> Model -> Action
+
+InterfaceFunc
+
+DeclareFunc
+
+ImplementFunc
+
+*/
+
 package content
 
 import (
