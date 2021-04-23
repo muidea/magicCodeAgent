@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/muidea/magicToolkit/core/util"
@@ -36,7 +37,7 @@ func (s *Project) getFile(filePath string) (ret *os.File, err error) {
 
 func (s *Project) cloneTemplate(filePath string) (err error) {
 	log.Print(filePath)
-	templatePath := path.Join(s.templatePath, filePath)
+	templatePath := path.Join(s.templatePath, "project", filePath)
 	fullPath := path.Join(s.rootPath, filePath)
 	curPath, curName := path.Split(fullPath)
 	curName = curName[:len(curName)-len(".template")]
@@ -100,7 +101,7 @@ func (s *Project) Create(projectName string) (err error) {
 }
 
 func (s *Project) walkTemplate(projectPath string) (err error) {
-	fullPath := path.Join(s.templatePath, projectPath)
+	fullPath := path.Join(s.templatePath, "project", projectPath)
 	existFlag, existErr := util.Exists(fullPath)
 	if !existFlag || existErr != nil {
 		err = fmt.Errorf("template file does not exist, projectPath:%s", projectPath)
@@ -120,6 +121,12 @@ func (s *Project) walkTemplate(projectPath string) (err error) {
 				return
 			}
 
+			continue
+		}
+
+		items := strings.Split(fd.Name(), ".")
+		extName := items[len(items)-1]
+		if extName != "template" {
 			continue
 		}
 
