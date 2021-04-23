@@ -46,13 +46,7 @@ func GetTemplatePath(typeVal string) (ret string, err error) {
 	return
 }
 
-func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
-	templatePath, templateErr := GetTemplatePath(ProjectTemplate)
-	if templateErr != nil {
-		err = templateErr
-		return
-	}
-
+func getTemplateContent(templatePath, filePath, fileName string) (ret string, err error) {
 	var fullFilePath string
 	if filePath == "" {
 		fullFilePath = fmt.Sprintf("%s/%s", templatePath, fileName)
@@ -75,6 +69,17 @@ func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
 	return
 }
 
+func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
+	templatePath, templateErr := GetTemplatePath(ProjectTemplate)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	ret, err = getTemplateContent(templatePath, filePath, fileName)
+	return
+}
+
 func GetTemplateUnitContent(filePath, unitName string) (ret string, err error) {
 	templatePath, templateErr := GetTemplatePath(UnitTemplate)
 	if templateErr != nil {
@@ -82,19 +87,6 @@ func GetTemplateUnitContent(filePath, unitName string) (ret string, err error) {
 		return
 	}
 
-	fullFilePath := fmt.Sprintf("%s/%s/%s.tpl", templatePath, filePath, unitName)
-	existsFlag, existsErr := Exists(fullFilePath)
-	if !existsFlag || existsErr != nil {
-		err = fmt.Errorf("template file not exist")
-		return
-	}
-
-	contentVal, contentErr := ioutil.ReadFile(fullFilePath)
-	if contentErr != nil {
-		err = contentErr
-		return
-	}
-
-	ret = string(contentVal)
+	ret, err = getTemplateContent(templatePath, filePath, unitName)
 	return
 }

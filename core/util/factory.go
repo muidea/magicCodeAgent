@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"path"
 	"text/template"
+
+	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 const (
@@ -13,10 +15,22 @@ const (
 	UnitTemplate    = "unit"
 )
 
+var functionMap template.FuncMap
+
+func init() {
+	functionMap = template.FuncMap{}
+}
+
 type Factory struct {
 	rootPath     string
 	templateName string
 	contentData  map[string]interface{}
+}
+
+func RegisterFunc(name string, funcPtr interface{}) {
+	fu.ValidateFunc(funcPtr)
+
+	functionMap[name] = funcPtr
 }
 
 func NewFactory(rootPath, templateName string, contentData map[string]interface{}) *Factory {
@@ -71,7 +85,7 @@ func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err err
 				return
 			}
 
-			templateHandle, templateErr := template.New(fileName).Parse(contentVal)
+			templateHandle, templateErr := template.New(fileName).Funcs(functionMap).Parse(contentVal)
 			if templateErr != nil {
 				err = templateErr
 				return
