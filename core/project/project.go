@@ -2,12 +2,15 @@ package project
 
 import (
 	"fmt"
+	"github.com/muidea/magicToolkit/core/content"
+	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"strings"
 
+	"github.com/muidea/magicOrm/provider/remote"
 	"github.com/muidea/magicToolkit/core/util"
 )
 
@@ -15,11 +18,13 @@ import (
 type Project struct {
 	projectName string
 	rootPath    string
+	modelDefine *model.Define
+	objectList  []*remote.Object
 }
 
 // New new core
-func New(rootPath string) *Project {
-	return &Project{rootPath: rootPath}
+func New(rootPath string, modelDefine *model.Define, objectList []*remote.Object) *Project {
+	return &Project{rootPath: rootPath, modelDefine: modelDefine, objectList: objectList}
 }
 
 func (s *Project) getFile(filePath string) (ret *os.File, err error) {
@@ -33,7 +38,7 @@ func (s *Project) getFile(filePath string) (ret *os.File, err error) {
 	return
 }
 
-func (s *Project) cloneTemplate(filePath, fileName string) (err error) {
+func (s *Project) cloneContent(filePath, fileName string) (err error) {
 	log.Print(fileName)
 
 	contentVal := map[string]interface{}{"ProjectName": s.projectName}
@@ -78,8 +83,9 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 	}
 
 	for _, fd := range fdList {
+		fileName := fd.Name()
 		if fd.IsDir() {
-			err = s.walkTemplate(path.Join(relativePath, fd.Name()))
+			err = s.walkTemplate(path.Join(relativePath, fileName))
 			if err != nil {
 				return
 			}
@@ -87,14 +93,28 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 			continue
 		}
 
-		items := strings.Split(fd.Name(), ".")
+		items := strings.Split(fileName, ".")
 		extName := items[len(items)-1]
 		if extName == "template" {
-			err = s.cloneTemplate(relativePath, fd.Name())
+			err = s.cloneContent(relativePath, fd.Name())
 			if err != nil {
 				return
 			}
 
+			continue
+		}
+
+		if fileName == "service.tpl" {
+			servicePtr := content.NewService(s.rootPath, s.modelDefine)
+			servicePtr.Create(relativePath, fd.Name())
+			continue
+		}
+
+		if fileName == "model.tpl" {
+			continue
+		}
+
+		if fileName == "package.tpl" {
 			continue
 		}
 	}

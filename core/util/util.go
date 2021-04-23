@@ -1,8 +1,14 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/muidea/magicBatis/def"
+	commonDef "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/net"
+	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -88,5 +94,50 @@ func GetTemplateUnitContent(filePath, unitName string) (ret string, err error) {
 	}
 
 	ret, err = getTemplateContent(templatePath, filePath, unitName)
+	return
+}
+
+func GetModelDefine(projectName, definePath string) (ret *model.Define, err error) {
+	defineFile, defineErr := os.Open(definePath)
+	if defineErr != nil {
+		return
+	}
+	defer defineFile.Close()
+
+	byteContent, byteErr := ioutil.ReadAll(defineFile)
+	if byteErr != nil {
+		err = byteErr
+		return
+	}
+
+	contentDefine := &model.Define{}
+	err = json.Unmarshal(byteContent, contentDefine)
+	if err != nil {
+		return
+	}
+
+	contentDefine.ProjectName = projectName
+
+	ret = contentDefine
+	return
+}
+
+func QueryObject(projectName, batisService string) (ret []*remote.Object, err error) {
+	result := &def.QueryModelResult{}
+	url := strings.Join([]string{batisService, "/model/query/"}, "")
+	url = fmt.Sprintf("%s?source=%s", url, projectName)
+
+	httpClient := &http.Client{}
+	_, err = net.HTTPGet(httpClient, url, result)
+	if err != nil {
+		return
+	}
+
+	if result.ErrorCode != commonDef.Success {
+		err = fmt.Errorf("query project objects failed, reason:%s", result.Reason)
+		return
+	}
+
+	ret = result.Model
 	return
 }

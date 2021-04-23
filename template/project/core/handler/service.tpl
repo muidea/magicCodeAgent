@@ -1,10 +1,11 @@
 {{$apiVersion := .ApiVersion}}
 {{$projectName := .ProjectName}}
+{{$packageName := .PackageName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$actionList := $module.Action}}
 {{$childList := $module.Child}}
-package common
+package {{$packageName}}
 
 import (
 commonDef "github.com/muidea/magicCommon/def"

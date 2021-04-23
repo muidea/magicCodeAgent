@@ -1,6 +1,7 @@
 {{$projectName := .ProjectName}}
+{{$packageName := .PackageName }}
 {{$moduleList := .Define.Module}}
-package core
+package {{$packageName}}
 
 import (
 "log"

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/muidea/magicBatis/def"
 	commonDef "github.com/muidea/magicCommon/def"
@@ -13,8 +12,6 @@ import (
 	"strings"
 )
 
-var batisService = "http://localhost:8080"
-
 func init() {
 	actionList = append(actionList, &action{
 		name:         "createContent",
@@ -22,12 +19,15 @@ func init() {
 		description:  "create project content",
 		funcPtr:      createContent,
 	})
-
-	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis service address.")
 }
 
 func createContent(curPath string) {
-	modelList, modelErr := queryModel(projectName, batisService)
+	if projectName == "" {
+		fmt.Printf("must be input project name")
+		return
+	}
+
+	modelList, modelErr := queryObject(projectName, batisService)
 	if modelErr != nil {
 		log.Printf("query project model failed, err:%s", modelErr.Error())
 		return
@@ -41,7 +41,7 @@ func createContent(curPath string) {
 	}
 }
 
-func queryModel(projectName, batisService string) (ret []*remote.Object, err error) {
+func queryObject(projectName, batisService string) (ret []*remote.Object, err error) {
 	result := &def.QueryModelResult{}
 	url := strings.Join([]string{batisService, "/model/query/"}, "")
 	url = fmt.Sprintf("%s?source=%s", url, projectName)

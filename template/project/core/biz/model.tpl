@@ -1,6 +1,6 @@
 {{$projectName := .ProjectName}}
-{{$serviceName := .ServiceName}}
 {{$packageName := .PackageName}}
+{{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$lowName := $module.Lower $moduleName}}

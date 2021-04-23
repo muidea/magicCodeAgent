@@ -1,12 +1,12 @@
 {{$projectName := .ProjectName}}
-{{$serviceName := .ServiceName}}
 {{$packageName := .PackageName }}
+{{$serviceName := .ServiceName}}
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$actionList := $module.Action}}
 {{$childList := $module.Child}}
 {{$lowName := $module.Lower $moduleName}}
-package biz
+package {{$packageName}}
 
 import (
 "github.com/muidea/{{$projectName}}/core/handler"
