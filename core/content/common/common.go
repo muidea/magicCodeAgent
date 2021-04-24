@@ -11,6 +11,21 @@ import (
 	"github.com/muidea/magicToolkit/model"
 )
 
+func init() {
+	util.RegisterFunc("commonServiceFuncCreate", ServiceFuncCreate)
+}
+
+func ServiceFuncCreate(servicePtr *model.Module) string {
+	serviceVal := map[string]interface{}{"Service": servicePtr}
+	factoryPtr := util.NewValueFactory("serviceFuncCreate.tpl", serviceVal)
+	valStr, valErr := factoryPtr.Create("common")
+	if valErr == nil {
+		return valStr
+	}
+
+	return ""
+}
+
 type Define struct {
 	apiVersion  string
 	projectName string

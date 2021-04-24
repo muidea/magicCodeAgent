@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	_ "github.com/muidea/magicToolkit/core/content/client"
+	_ "github.com/muidea/magicToolkit/core/content/common"
 
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"

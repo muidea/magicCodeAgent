@@ -1,9 +1,7 @@
-{{$projectName := .ProjectName}}
 {{$packageName := .PackageName}}
-{{$module := .Module}}
-{{$apiVersion := .ApiVersion}}
-{{$moduleName := $module.Name}}
-{{$childList := $module.Child}}
+{{$projectName := .ProjectName}}
+{{$serviceName := .Service.Name}}
+{{$childList := .Service.Child}}
 package {{$packageName}}
 
 import (
@@ -12,11 +10,6 @@ import (
 )
 
 const (
-{{range $mk, $mv := $childList}}
-    {{$subModuleName := $mv.Name}}
-    {{$subModuleAction := $mv.Action}}
-    {{range $ak, $av := $subModuleAction}}
-        {{$url := $mv.FormatUrl $apiVersion $av $moduleName }}{{$url}}{{end}}{{end}}
 )
 
 {{range $mk, $mv := $childList}}
