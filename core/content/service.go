@@ -5,6 +5,8 @@ import (
 	"path"
 	"strings"
 
+	_ "github.com/muidea/magicToolkit/core/content/client"
+
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
 )

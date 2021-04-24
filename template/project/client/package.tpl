@@ -25,6 +25,7 @@ type Client interface {
     DetachContext()
 
     {{range $mk, $mv := $serviceList}}
+        {{$serviceContent := serviceDeclare $mk}}
     {{end}}
 
     BindSession(sessionInfo *commonCommon.SessionInfo)
@@ -47,6 +48,8 @@ type impl struct {
     httpClient  *http.Client
 }
 
+{{range $mk, $mv := $serviceList}}
+{{end}}
 
 func (s *impl) AttachContext(ctx commonCommon.ContextInfo) {
     s.contextInfo = ctx
