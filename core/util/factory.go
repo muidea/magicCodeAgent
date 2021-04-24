@@ -120,7 +120,7 @@ func (s *ValueFactory) getTemplateName(relativePath string) string {
 }
 
 func (s *ValueFactory) getTemplateContent(relativePath string) (ret string, err error) {
-	contentVal, contentErr := GetTemplateFileContent(relativePath, s.templateName)
+	contentVal, contentErr := GetTemplateUnitContent(relativePath, s.templateName)
 	if contentErr != nil {
 		err = contentErr
 		return

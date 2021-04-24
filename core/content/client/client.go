@@ -11,11 +11,23 @@ func init() {
 }
 
 func ServiceFuncDeclare(servicePtr *model.Module) string {
-	return "hello world"
-	//return fmt.Sprintf("service:%s", servicePtr.Name)
+	serviceVal := map[string]interface{}{"Service": servicePtr}
+	factoryPtr := util.NewValueFactory("serviceFuncDeclare.tpl", serviceVal)
+	valStr, valErr := factoryPtr.Create("client")
+	if valErr == nil {
+		return valStr
+	}
+
+	return ""
 }
 
 func ServiceFuncDefine(servicePtr *model.Module) string {
-	return "hello world"
-	//return fmt.Sprintf("service:%s", servicePtr.Name)
+	serviceVal := map[string]interface{}{"Service": servicePtr}
+	factoryPtr := util.NewValueFactory("serviceFuncDefine.tpl", serviceVal)
+	valStr, valErr := factoryPtr.Create("client")
+	if valErr == nil {
+		return valStr
+	}
+
+	return ""
 }

@@ -25,8 +25,7 @@ type Client interface {
     DetachContext()
 
     {{range $mk, $mv := $serviceList}}
-        {{clientServiceFuncDeclare $mv}}
-    {{end}}
+        {{clientServiceFuncDeclare $mv}}{{end}}
 
     BindSession(sessionInfo *commonCommon.SessionInfo)
     UnBindSession()
@@ -49,7 +48,7 @@ type impl struct {
 }
 
 {{range $mk, $mv := $serviceList}}
-{{end}}
+    {{clientServiceFuncDefine $mv}}{{end}}
 
 func (s *impl) AttachContext(ctx commonCommon.ContextInfo) {
     s.contextInfo = ctx

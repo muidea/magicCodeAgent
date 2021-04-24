@@ -104,7 +104,7 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 			continue
 		}
 
-		if fileName == "package.tpl" {
+		if fileName == util.PackageTemplateFile {
 			packagePtr := content.NewPackage(baseTemplatePath, s.rootPath, s.projectName, s.modelDefine.Module)
 			packagePtr.Create(relativePath, fd.Name())
 			continue
