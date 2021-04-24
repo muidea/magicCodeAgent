@@ -16,17 +16,17 @@ import (
 	"github.com/muidea/magicOrm/provider/remote"
 )
 
-func Exists(itemPath string) (bool, error) {
+func Exists(itemPath string) bool {
 	_, err := os.Stat(itemPath)
 	if err == nil {
-		return true, nil
+		return true
 	}
 
 	if os.IsNotExist(err) {
-		return false, nil
+		return false
 	}
 
-	return true, err
+	return true
 }
 
 func GetModelName(modelPtr *remote.Object) string {
@@ -42,8 +42,8 @@ func GetTemplatePath(typeVal string) (ret string, err error) {
 	}
 
 	templatePath := path.Join(toolKitPath, "template", typeVal)
-	existsFlag, existsErr := Exists(templatePath)
-	if !existsFlag || existsErr != nil {
+	existsFlag := Exists(templatePath)
+	if !existsFlag {
 		err = fmt.Errorf("toolkit template does not exist")
 		return
 	}
@@ -59,8 +59,8 @@ func getTemplateContent(templatePath, filePath, fileName string) (ret string, er
 	} else {
 		fullFilePath = fmt.Sprintf("%s/%s/%s", templatePath, filePath, fileName)
 	}
-	existsFlag, existsErr := Exists(fullFilePath)
-	if !existsFlag || existsErr != nil {
+	existsFlag := Exists(fullFilePath)
+	if !existsFlag {
 		err = fmt.Errorf("template file not exist, file:%s", fullFilePath)
 		return
 	}

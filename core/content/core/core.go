@@ -144,11 +144,7 @@ func (s *Core) Teardown() {
 
 func (s *Core) Create(define *model.Define, forceFlag bool) (err error) {
 	filePath := fmt.Sprintf("./core")
-	existFlag, existErr := util.Exists(filePath)
-	if existErr != nil {
-		err = existErr
-		return
-	}
+	existFlag := util.Exists(filePath)
 	if !existFlag {
 		err = os.MkdirAll(filePath, os.ModePerm)
 		if err != nil {
@@ -157,12 +153,7 @@ func (s *Core) Create(define *model.Define, forceFlag bool) (err error) {
 	}
 
 	filePath = fmt.Sprintf("%s/%s.go", filePath, "core")
-	existFlag, existErr = util.Exists(filePath)
-	if existErr != nil {
-		err = fmt.Errorf("unexpect, fileName:%s", filePath)
-		return
-	}
-
+	existFlag = util.Exists(filePath)
 	if !existFlag || forceFlag {
 		func() {
 			fileHandle, fileErr := os.Create(filePath)

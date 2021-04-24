@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -57,11 +56,7 @@ func (s *Factory) getTemplateContent(relativePath string) (ret string, err error
 func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err error) {
 	filePath := path.Join(s.rootPath, relativePath, fileName)
 	filePath, fileName = path.Split(filePath)
-	existFlag, existErr := Exists(filePath)
-	if existErr != nil {
-		err = existErr
-		return
-	}
+	existFlag := Exists(filePath)
 	if !existFlag {
 		err = os.MkdirAll(filePath, os.ModePerm)
 		if err != nil {
@@ -70,12 +65,7 @@ func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err err
 	}
 
 	fullFilePath := path.Join(filePath, fileName)
-	existFlag, existErr = Exists(fullFilePath)
-	if existErr != nil {
-		err = fmt.Errorf("unexpect, fileName:%s", fullFilePath)
-		return
-	}
-
+	existFlag = Exists(fullFilePath)
 	if !existFlag || forceFlag {
 		func() {
 			fileHandle, fileErr := os.Create(fullFilePath)

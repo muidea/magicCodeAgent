@@ -91,11 +91,7 @@ func (s *Define) Create(module *model.Module, forceFlag bool) (err error) {
 		return
 	}
 
-	existFlag, existErr := util.Exists("./common")
-	if existErr != nil {
-		err = existErr
-		return
-	}
+	existFlag := util.Exists("./common")
 	if !existFlag {
 		err = os.Mkdir("./common", os.ModePerm)
 		if err != nil {
@@ -105,11 +101,7 @@ func (s *Define) Create(module *model.Module, forceFlag bool) (err error) {
 
 	filePath := fmt.Sprintf("./common/%s.go", strings.ToLower(module.Name))
 	if !forceFlag {
-		existsFlag, existsErr := util.Exists(filePath)
-		if existsErr != nil {
-			err = fmt.Errorf("unexpect, fileName:%s", filePath)
-			return
-		}
+		existsFlag := util.Exists(filePath)
 		if existsFlag {
 			return
 		}

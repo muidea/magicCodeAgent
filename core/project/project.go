@@ -28,8 +28,8 @@ func New(rootPath string, modelDefine *model.Define, objectList []*remote.Object
 }
 
 func (s *Project) getFile(filePath string) (ret *os.File, err error) {
-	existsFlag, existsErr := util.Exists(filePath)
-	if !existsFlag || existsErr != nil {
+	existsFlag := util.Exists(filePath)
+	if !existsFlag {
 		err = fmt.Errorf("file does not exist")
 		return
 	}
@@ -70,8 +70,8 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 	}
 
 	fullPath := path.Join(baseTemplatePath, relativePath)
-	existFlag, existErr := util.Exists(fullPath)
-	if !existFlag || existErr != nil {
+	existFlag := util.Exists(fullPath)
+	if !existFlag {
 		err = fmt.Errorf("template file does not exist, fileName:%s", fullPath)
 		return
 	}
@@ -105,7 +105,7 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 		}
 
 		if fileName == "package.tpl" {
-			packagePtr := content.NewPackage(s.rootPath, s.projectName, s.modelDefine.Module)
+			packagePtr := content.NewPackage(baseTemplatePath, s.rootPath, s.projectName, s.modelDefine.Module)
 			packagePtr.Create(relativePath, fd.Name())
 			continue
 		}

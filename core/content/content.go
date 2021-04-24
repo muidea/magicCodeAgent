@@ -28,24 +28,24 @@ import (
 
 // Content core define
 type Content struct {
-	rootPath   string
-	name2model map[string]*remote.Object
+	projectPath string
+	name2model  map[string]*remote.Object
 }
 
 // New new core
-func New(rootPath string, modelList []*remote.Object) *Content {
+func New(projectPath string, modelList []*remote.Object) *Content {
 	name2model := map[string]*remote.Object{}
 	for _, val := range modelList {
 		name := util.GetModelName(val)
 		name2model[name] = val
 	}
 
-	return &Content{rootPath: rootPath, name2model: name2model}
+	return &Content{projectPath: projectPath, name2model: name2model}
 }
 
 // Create create
 func (s *Content) Create(projectName string, forceFlag bool) (err error) {
-	definePath := path.Join(s.rootPath, "doc", "define.json")
+	definePath := path.Join(s.projectPath, "doc", "define.json")
 	defineFile, defineErr := os.Open(definePath)
 	if defineErr != nil {
 		err = defineErr

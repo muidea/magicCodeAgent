@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/muidea/magicToolkit/core/util"
@@ -9,13 +10,14 @@ import (
 )
 
 type Package struct {
-	rootPath    string
-	projectName string
-	serviceList []*model.Module
+	templatePath string
+	projectPath  string
+	projectName  string
+	serviceList  []*model.Module
 }
 
-func NewPackage(rootPath, projectName string, serviceList []*model.Module) *Package {
-	return &Package{rootPath: rootPath, projectName: projectName, serviceList: serviceList}
+func NewPackage(templatePath, projectPath, projectName string, serviceList []*model.Module) *Package {
+	return &Package{templatePath: templatePath, projectPath: projectPath, projectName: projectName, serviceList: serviceList}
 }
 
 func (s *Package) getPackageName(relativePath string) string {
@@ -26,10 +28,25 @@ func (s *Package) getPackageName(relativePath string) string {
 func (s *Package) Create(relativePath, templateFile string) (err error) {
 	packageName := s.getPackageName(relativePath)
 
-	fileName := fmt.Sprintf("%s.go", packageName)
+	packageFileName := fmt.Sprintf("%s.go", packageName)
 	packageVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "ServiceList": s.serviceList}
-	packageFactory := util.NewFactory(s.rootPath, templateFile, packageVal)
-	packageFactory.Create(relativePath, fileName, true)
+	packageFactory := util.NewFactory(s.projectPath, templateFile, packageVal)
+	err = packageFactory.Create(relativePath, packageFileName, true)
+	if err != nil {
+		return
+	}
 
+	serviceTemplate := path.Join(s.templatePath, relativePath, util.ServiceTemplateFile)
+	if !util.Exists(serviceTemplate) {
+		return
+	}
+
+	for _, val := range s.serviceList {
+		servicePtr := NewService(s.templatePath, s.projectPath, s.projectName, val)
+		err = servicePtr.Create(relativePath, serviceTemplate)
+		if err != nil {
+			return
+		}
+	}
 	return
 }

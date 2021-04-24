@@ -57,11 +57,7 @@ func (s *Biz) Create(module *model.Module, forceFlag bool) (err error) {
 	}
 
 	filePath := fmt.Sprintf("./core/biz")
-	existFlag, existErr := util.Exists(filePath)
-	if existErr != nil {
-		err = existErr
-		return
-	}
+	existFlag := util.Exists(filePath)
 	if !existFlag {
 		err = os.MkdirAll(filePath, os.ModePerm)
 		if err != nil {
@@ -70,11 +66,7 @@ func (s *Biz) Create(module *model.Module, forceFlag bool) (err error) {
 	}
 
 	filePath = fmt.Sprintf("%s/%s.go", filePath, "biz")
-	existsFlag, existsErr := util.Exists(filePath)
-	if existsErr != nil {
-		err = fmt.Errorf("unexpect, fileName:%s", filePath)
-		return
-	}
+	existsFlag := util.Exists(filePath)
 	if !existsFlag || forceFlag {
 		func() {
 			fileHandle, fileErr := os.Create(filePath)

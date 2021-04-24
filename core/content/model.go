@@ -9,14 +9,15 @@ import (
 )
 
 type Model struct {
-	rootPath    string
-	projectName string
-	serviceName string
-	modelDefine *model.Module
+	templatePath string
+	projectPath  string
+	projectName  string
+	serviceName  string
+	modelDefine  *model.Module
 }
 
-func NewModel(rootPath, projectName, serviceName string, modelDefine *model.Module) *Model {
-	return &Model{rootPath: rootPath, projectName: projectName, serviceName: serviceName, modelDefine: modelDefine}
+func NewModel(templatePath, projectPath, projectName, serviceName string, modelDefine *model.Module) *Model {
+	return &Model{templatePath: templatePath, projectPath: projectPath, projectName: projectName, serviceName: serviceName, modelDefine: modelDefine}
 }
 
 func (s *Model) getPackageName(relativePath string) string {
@@ -28,7 +29,7 @@ func (s *Model) Create(relativePath, templateFile string) (err error) {
 	packageName := s.getPackageName(relativePath)
 
 	modelVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "ServiceName": s.serviceName, "Model": s.modelDefine}
-	factoryPtr := util.NewFactory(s.rootPath, templateFile, modelVal)
+	factoryPtr := util.NewFactory(s.projectPath, templateFile, modelVal)
 
 	fileName := fmt.Sprintf("%s.go", strings.ToLower(s.modelDefine.Name))
 	err = factoryPtr.Create(relativePath, fileName, true)
