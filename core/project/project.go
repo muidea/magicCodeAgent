@@ -38,11 +38,11 @@ func (s *Project) getFile(filePath string) (ret *os.File, err error) {
 	return
 }
 
-func (s *Project) cloneContent(filePath, fileName string) (err error) {
+func (s *Project) cloneContent(templatePath, filePath, fileName string) (err error) {
 	log.Print(fileName)
 
 	contentVal := map[string]interface{}{"ProjectName": s.projectName}
-	factoryPtr := util.NewFileFactory(s.rootPath, fileName, contentVal)
+	factoryPtr := util.NewFileFactory(templatePath, s.rootPath, fileName, contentVal)
 
 	items := strings.Split(fileName, ".")
 	fileName = strings.Join(items[:len(items)-1], ".")
@@ -96,7 +96,7 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 		items := strings.Split(fileName, ".")
 		extName := items[len(items)-1]
 		if extName == "template" {
-			err = s.cloneContent(relativePath, fd.Name())
+			err = s.cloneContent(baseTemplatePath, relativePath, fd.Name())
 			if err != nil {
 				return
 			}
@@ -106,7 +106,7 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 
 		if fileName == util.PackageTemplateFile {
 			packagePtr := content.NewPackage(baseTemplatePath, s.rootPath, s.projectName, s.modelDefine.Module)
-			packagePtr.Create(relativePath, fd.Name())
+			packagePtr.Create(relativePath, util.PackageTemplateFile)
 			continue
 		}
 	}

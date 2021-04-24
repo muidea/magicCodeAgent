@@ -29,7 +29,7 @@ func (s *Model) Create(relativePath, templateFile string) (err error) {
 	packageName := s.getPackageName(relativePath)
 
 	modelVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "ServiceName": s.serviceName, "Model": s.modelDefine}
-	factoryPtr := util.NewFileFactory(s.projectPath, templateFile, modelVal)
+	factoryPtr := util.NewFileFactory(s.templatePath, s.projectPath, templateFile, modelVal)
 
 	fileName := fmt.Sprintf("%s.go", strings.ToLower(s.modelDefine.Name))
 	err = factoryPtr.Create(relativePath, fileName, true)

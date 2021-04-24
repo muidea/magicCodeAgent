@@ -29,6 +29,7 @@ func init() {
 }
 
 type FileFactory struct {
+	templatePath string
 	rootPath     string
 	templateName string
 	contentData  map[string]interface{}
@@ -40,8 +41,8 @@ func RegisterFunc(name string, funcPtr interface{}) {
 	functionMap[name] = funcPtr
 }
 
-func NewFileFactory(rootPath, templateName string, contentData map[string]interface{}) *FileFactory {
-	return &FileFactory{rootPath: rootPath, templateName: templateName, contentData: contentData}
+func NewFileFactory(templatePath, rootPath, templateName string, contentData map[string]interface{}) *FileFactory {
+	return &FileFactory{templatePath: templatePath, rootPath: rootPath, templateName: templateName, contentData: contentData}
 }
 
 func (s *FileFactory) getTemplateName(relativePath string) string {
@@ -49,7 +50,7 @@ func (s *FileFactory) getTemplateName(relativePath string) string {
 }
 
 func (s *FileFactory) getTemplateContent(relativePath string) (ret string, err error) {
-	contentVal, contentErr := GetTemplateFileContent(relativePath, s.templateName)
+	contentVal, contentErr := getTemplateContent(s.templatePath, relativePath, s.templateName)
 	if contentErr != nil {
 		err = contentErr
 		return

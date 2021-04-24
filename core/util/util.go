@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -53,7 +52,7 @@ func validAction(actionUrl string) ([]string, string) {
 	if actionVal == "query" && idVal == "" {
 		actionVal = "Filter"
 	}
-	log.Printf("%v,%v,%v", actionUrl, others, actionVal)
+
 	return others, actionVal
 }
 
@@ -96,6 +95,7 @@ func getTemplateContent(templatePath, filePath, fileName string) (ret string, er
 	} else {
 		fullFilePath = fmt.Sprintf("%s/%s/%s", templatePath, filePath, fileName)
 	}
+
 	existsFlag := Exists(fullFilePath)
 	if !existsFlag {
 		err = fmt.Errorf("template file not exist, file:%s", fullFilePath)
