@@ -31,7 +31,7 @@ func (s *Service) Create(relativePath, templateFile string) (err error) {
 	packageName := s.getPackageName(relativePath)
 
 	serviceVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "Service": s.serviceDefine}
-	factoryPtr := util.NewFactory(s.projectPath, templateFile, serviceVal)
+	factoryPtr := util.NewFileFactory(s.projectPath, templateFile, serviceVal)
 
 	fileName := fmt.Sprintf("%s.go", strings.ToLower(s.serviceDefine.Name))
 	err = factoryPtr.Create(relativePath, fileName, true)

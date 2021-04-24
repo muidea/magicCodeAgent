@@ -1,6 +1,6 @@
-{{$packageName := .PackageName }}
+{{$packageName := .PackageName}}
 {{$projectName := .ProjectName}}
-{{$serviceList := .ServiceList }}
+{{$serviceList := .ServiceList}}
 package {{$packageName}}
 
 import (
@@ -25,7 +25,7 @@ type Client interface {
     DetachContext()
 
     {{range $mk, $mv := $serviceList}}
-        {{$serviceContent := serviceDeclare $mk}}
+        {{clientServiceFuncDeclare $mv}}
     {{end}}
 
     BindSession(sessionInfo *commonCommon.SessionInfo)

@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -26,7 +28,7 @@ func init() {
 	functionMap = template.FuncMap{}
 }
 
-type Factory struct {
+type FileFactory struct {
 	rootPath     string
 	templateName string
 	contentData  map[string]interface{}
@@ -38,11 +40,15 @@ func RegisterFunc(name string, funcPtr interface{}) {
 	functionMap[name] = funcPtr
 }
 
-func NewFactory(rootPath, templateName string, contentData map[string]interface{}) *Factory {
-	return &Factory{rootPath: rootPath, templateName: templateName, contentData: contentData}
+func NewFileFactory(rootPath, templateName string, contentData map[string]interface{}) *FileFactory {
+	return &FileFactory{rootPath: rootPath, templateName: templateName, contentData: contentData}
 }
 
-func (s *Factory) getTemplateContent(relativePath string) (ret string, err error) {
+func (s *FileFactory) getTemplateName(relativePath string) string {
+	return fmt.Sprintf("%s/%s", relativePath, s.templateName)
+}
+
+func (s *FileFactory) getTemplateContent(relativePath string) (ret string, err error) {
 	contentVal, contentErr := GetTemplateFileContent(relativePath, s.templateName)
 	if contentErr != nil {
 		err = contentErr
@@ -53,7 +59,7 @@ func (s *Factory) getTemplateContent(relativePath string) (ret string, err error
 	return
 }
 
-func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err error) {
+func (s *FileFactory) Create(relativePath, fileName string, forceFlag bool) (err error) {
 	filePath := path.Join(s.rootPath, relativePath, fileName)
 	filePath, fileName = path.Split(filePath)
 	existFlag := Exists(filePath)
@@ -81,7 +87,7 @@ func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err err
 				return
 			}
 
-			templateHandle, templateErr := template.New(fileName).Funcs(functionMap).Parse(contentVal)
+			templateHandle, templateErr := template.New(s.getTemplateName(relativePath)).Funcs(functionMap).Parse(contentVal)
 			if templateErr != nil {
 				err = templateErr
 				return
@@ -97,5 +103,52 @@ func (s *Factory) Create(relativePath, fileName string, forceFlag bool) (err err
 		err = cmd.Run()
 	}
 
+	return
+}
+
+type ValueFactory struct {
+	templateName string
+	contentData  map[string]interface{}
+}
+
+func NewValueFactory(templateName string, contentData map[string]interface{}) *ValueFactory {
+	return &ValueFactory{templateName: templateName, contentData: contentData}
+}
+
+func (s *ValueFactory) getTemplateName(relativePath string) string {
+	return fmt.Sprintf("%s/%s", relativePath, s.templateName)
+}
+
+func (s *ValueFactory) getTemplateContent(relativePath string) (ret string, err error) {
+	contentVal, contentErr := GetTemplateFileContent(relativePath, s.templateName)
+	if contentErr != nil {
+		err = contentErr
+		return
+	}
+
+	ret = contentVal
+	return
+}
+
+func (s *ValueFactory) Create(relativePath string) (ret string, err error) {
+	byteBuffer := bytes.NewBufferString("")
+	contentVal, contentErr := s.getTemplateContent(relativePath)
+	if contentErr != nil {
+		err = contentErr
+		return
+	}
+
+	templateHandle, templateErr := template.New(s.getTemplateName(relativePath)).Funcs(functionMap).Parse(contentVal)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	err = templateHandle.Execute(byteBuffer, s.contentData)
+	if err != nil {
+		return
+	}
+
+	ret = byteBuffer.String()
 	return
 }

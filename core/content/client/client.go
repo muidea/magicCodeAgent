@@ -6,10 +6,16 @@ import (
 )
 
 func init() {
-	util.RegisterFunc("serviceDeclare", ServiceDeclare)
+	util.RegisterFunc("clientServiceFuncDeclare", ServiceFuncDeclare)
+	util.RegisterFunc("clientServiceFuncDefine", ServiceFuncDefine)
 }
 
-func ServiceDeclare(servicePtr *model.Module) string {
+func ServiceFuncDeclare(servicePtr *model.Module) string {
+	return "hello world"
+	//return fmt.Sprintf("service:%s", servicePtr.Name)
+}
+
+func ServiceFuncDefine(servicePtr *model.Module) string {
 	return "hello world"
 	//return fmt.Sprintf("service:%s", servicePtr.Name)
 }

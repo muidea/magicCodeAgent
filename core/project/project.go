@@ -42,7 +42,7 @@ func (s *Project) cloneContent(filePath, fileName string) (err error) {
 	log.Print(fileName)
 
 	contentVal := map[string]interface{}{"ProjectName": s.projectName}
-	factoryPtr := util.NewFactory(s.rootPath, fileName, contentVal)
+	factoryPtr := util.NewFileFactory(s.rootPath, fileName, contentVal)
 
 	items := strings.Split(fileName, ".")
 	fileName = strings.Join(items[:len(items)-1], ".")

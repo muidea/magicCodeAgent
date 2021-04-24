@@ -30,7 +30,7 @@ func (s *Package) Create(relativePath, templateFile string) (err error) {
 
 	packageFileName := fmt.Sprintf("%s.go", packageName)
 	packageVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "ServiceList": s.serviceList}
-	packageFactory := util.NewFactory(s.projectPath, templateFile, packageVal)
+	packageFactory := util.NewFileFactory(s.projectPath, templateFile, packageVal)
 	err = packageFactory.Create(relativePath, packageFileName, true)
 	if err != nil {
 		return
