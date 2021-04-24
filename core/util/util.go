@@ -3,18 +3,24 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/muidea/magicBatis/def"
-	commonDef "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicCommon/foundation/net"
-	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
 	"strings"
 
+	"github.com/muidea/magicBatis/def"
+	commonDef "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/net"
+	"github.com/muidea/magicToolkit/model"
+
 	"github.com/muidea/magicOrm/provider/remote"
 )
+
+func init() {
+	RegisterFunc("formatAction", FormatAction)
+}
 
 func Exists(itemPath string) bool {
 	_, err := os.Stat(itemPath)
@@ -32,6 +38,37 @@ func Exists(itemPath string) bool {
 func GetModelName(modelPtr *remote.Object) string {
 	items := strings.Split(modelPtr.GetName(), ".")
 	return items[1]
+}
+
+func validAction(actionUrl string) ([]string, string) {
+	items := strings.Split(actionUrl, "/")
+	len := len(items)
+	idVal := items[len-1]
+	actionVal := items[len-2]
+	others := []string{}
+	if len >= 3 {
+		others = items[:len-2]
+	}
+
+	if actionVal == "query" && idVal == "" {
+		actionVal = "Filter"
+	}
+	log.Printf("%v,%v,%v", actionUrl, others, actionVal)
+	return others, actionVal
+}
+
+func FormatAction(serviceName, modelName, actionUrl string) string {
+	others, action := validAction(actionUrl)
+	items := []string{strings.Title(action)}
+	items = append(items, strings.Title(serviceName))
+	if serviceName != modelName {
+		items = append(items, strings.Title(modelName))
+	}
+	for _, val := range others {
+		items = append(items, strings.Title(val))
+	}
+
+	return strings.Join(items, "")
 }
 
 func GetTemplatePath(typeVal string) (ret string, err error) {
