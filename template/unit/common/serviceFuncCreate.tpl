@@ -2,16 +2,15 @@
 {{$childList := .Service.Child}}
 {{range $mk, $mv := $childList}}
     {{$moduleName := $mv.Name}}
-    {{$subModuleName := $mv.Name}}
-    {{$jsonName := $mv.Lower $subModuleName}}
-    type {{$subModuleName}}Result struct {
-    commonDef.Result
-    {{$subModuleName}} *model.{{$subModuleName}}View `json:"{{$jsonName}}"`
+    func New{{$moduleName}}Param() *{{$moduleName}}Param {
+        return &{{$moduleName}}Param{}
     }
 
-    type {{$subModuleName}}ListResult struct {
-    commonDef.Result
-    Total    int64                 `json:"total"`
-    {{$subModuleName}} []*model.{{$subModuleName}}View `json:"{{$jsonName}}"`
+    func New{{$moduleName}}Result() *{{$moduleName}}Result {
+        return &{{$moduleName}}Result{}
+    }
+
+    func New{{$moduleName}}ListResult() *{{$moduleName}}ListResult {
+        return &{{$moduleName}}ListResult{}
     }
 {{end}}

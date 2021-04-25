@@ -19,16 +19,30 @@ const (
 )
 
 {{range $mk, $mv := $childList}}
-    {{$subModuleName := $mv.Name}}
-    {{$jsonName := $mv.Lower $subModuleName}}
-    type {{$subModuleName}}Result struct {
-    commonDef.Result
-    {{$subModuleName}} *model.{{$subModuleName}}View `json:"{{$jsonName}}"`
+    {{$modelName := $mv.Name}}
+    type {{$modelName}}Lite struct {
     }
 
-    type {{$subModuleName}}ListResult struct {
+    type {{$modelName}}View struct {
+    }
+
+    type {{$modelName}}Param struct {
+    }
+
+    {{$jsonName := toLower $modelName}}
+    type {{$modelName}}Result struct {
+    commonDef.Result
+    {{$modelName}} *{{$modelName}}View `json:"{{$jsonName}}"`
+    }
+
+    type {{$modelName}}ListResult struct {
+    commonDef.Result
+    {{$modelName}} []*{{$modelName}}Lite `json:"{{$jsonName}}"`
+    }
+
+    type {{$modelName}}StatisticResult struct {
     commonDef.Result
     Total    int64                 `json:"total"`
-    {{$subModuleName}} []*model.{{$subModuleName}}View `json:"{{$jsonName}}"`
+    {{$modelName}} []*{{$modelName}}View `json:"{{$jsonName}}"`
     }
 {{end}}
