@@ -1,5 +1,6 @@
 {{$packageName := .PackageName}}
 {{$projectName := .ProjectName}}
+{{$apiVersion := .Service.ApiVersion}}
 {{$serviceName := .Service.Name}}
 {{$childList := .Service.Child}}
 package {{$packageName}}
@@ -13,7 +14,7 @@ const (
 {{range $mk, $mv := $childList}}
     {{$modelName := $mv.Name}}
     {{range $ak, $av := $mv.Action}}
-        {{formatAction $serviceName $serviceName $av}}URL = "{{toLower $serviceName}}/{{toLower $av}}"{{end}}
+        {{formatAction $serviceName $serviceName $av}}URL = "/{{$apiVersion}}/{{toLower $serviceName}}/{{toLower $av}}"{{end}}
 {{end}}
 )
 

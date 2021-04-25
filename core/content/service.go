@@ -46,6 +46,7 @@ func (s *Service) Create(relativePath, templateFile string) (err error) {
 	}
 
 	for _, val := range s.serviceDefine.Child {
+		val.ApiVersion = s.serviceDefine.ApiVersion
 		modelPtr := NewModel(s.templatePath, s.projectPath, s.projectName, s.serviceDefine.Name, val)
 		err = modelPtr.Create(relativePath, util.ModelTemplateFile)
 		if err != nil {

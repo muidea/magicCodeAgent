@@ -15,10 +15,11 @@ type Define struct {
 }
 
 type Module struct {
-	Name   string    `json:"name"`
-	Desc   string    `json:"desc"`
-	Action []string  `json:"action"`
-	Child  []*Module `json:"child"`
+	ApiVersion string    `json:"apiVersion"`
+	Name       string    `json:"name"`
+	Desc       string    `json:"desc"`
+	Action     []string  `json:"action"`
+	Child      []*Module `json:"child"`
 }
 
 func (s *Module) Lower(val string) string {

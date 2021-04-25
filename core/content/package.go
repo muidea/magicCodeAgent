@@ -13,11 +13,12 @@ type Package struct {
 	templatePath string
 	projectPath  string
 	projectName  string
+	apiVersion   string
 	serviceList  []*model.Module
 }
 
-func NewPackage(templatePath, projectPath, projectName string, serviceList []*model.Module) *Package {
-	return &Package{templatePath: templatePath, projectPath: projectPath, projectName: projectName, serviceList: serviceList}
+func NewPackage(templatePath, projectPath, projectName, apiVersion string, serviceList []*model.Module) *Package {
+	return &Package{templatePath: templatePath, projectPath: projectPath, projectName: projectName, apiVersion: apiVersion, serviceList: serviceList}
 }
 
 func (s *Package) getPackageName(relativePath string) string {
@@ -42,6 +43,7 @@ func (s *Package) Create(relativePath, templateFile string) (err error) {
 	}
 
 	for _, val := range s.serviceList {
+		val.ApiVersion = s.apiVersion
 		servicePtr := NewService(s.templatePath, s.projectPath, s.projectName, val)
 		err = servicePtr.Create(relativePath, util.ServiceTemplateFile)
 		if err != nil {

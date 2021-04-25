@@ -105,8 +105,12 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 		}
 
 		if fileName == util.PackageTemplateFile {
-			packagePtr := content.NewPackage(baseTemplatePath, s.rootPath, s.projectName, s.modelDefine.Module)
-			packagePtr.Create(relativePath, util.PackageTemplateFile)
+			packagePtr := content.NewPackage(baseTemplatePath, s.rootPath, s.projectName, s.modelDefine.ApiVersion, s.modelDefine.Module)
+			err = packagePtr.Create(relativePath, util.PackageTemplateFile)
+			if err != nil {
+				return
+			}
+
 			continue
 		}
 	}
