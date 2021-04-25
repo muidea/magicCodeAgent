@@ -18,6 +18,7 @@ import (
 )
 
 func init() {
+	RegisterFunc("toLower", ToLower)
 	RegisterFunc("formatAction", FormatAction)
 }
 
@@ -32,6 +33,10 @@ func Exists(itemPath string) bool {
 	}
 
 	return true
+}
+
+func ToLower(val string) string {
+	return strings.ToLower(val)
 }
 
 func GetModelName(modelPtr *remote.Object) string {
