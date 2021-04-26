@@ -82,13 +82,13 @@ func (s *FileFactory) Create(relativePath, fileName string, forceFlag bool) (err
 			}
 			defer fileHandle.Close()
 
-			contentVal, contentErr := s.getTemplateContent(relativePath)
-			if contentErr != nil {
-				err = contentErr
+			templateVal, templateErr := s.getTemplateContent(relativePath)
+			if templateErr != nil {
+				err = templateErr
 				return
 			}
 
-			templateHandle, templateErr := template.New(s.getTemplateName(relativePath)).Funcs(functionMap).Parse(contentVal)
+			templateHandle, templateErr := template.New(s.getTemplateName(relativePath)).Funcs(functionMap).Parse(templateVal)
 			if templateErr != nil {
 				err = templateErr
 				return

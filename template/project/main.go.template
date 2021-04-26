@@ -6,7 +6,7 @@ import (
 
 	engine "github.com/muidea/magicEngine"
 	_ "github.com/muidea/{{.ProjectName}}/config"
-	core "github.com/muidea/{{.ProjectName}}/core"
+	"github.com/muidea/{{.ProjectName}}/core"
 )
 
 var listenPort = "8880"
