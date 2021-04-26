@@ -23,7 +23,13 @@ const (
     type {{$modelName}}Lite struct {
     }
 
+    func (s *{{$modelName}}Lite) From{{$modelName}}(ptr *model.{{$modelName}}) {
+    }
+
     type {{$modelName}}View struct {
+    }
+
+    func (s *{{$modelName}}View) From{{$modelName}}(ptr *model.{{$modelName}}) {
     }
 
     type {{$modelName}}Param struct {

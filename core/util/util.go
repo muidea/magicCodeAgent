@@ -17,9 +17,19 @@ import (
 	"github.com/muidea/magicOrm/provider/remote"
 )
 
+const (
+	filterAction = "filter"
+	queryAction  = "query"
+	createAction = "create"
+	updateAction = "update"
+	deleteAction = "delete"
+)
+
 func init() {
 	RegisterFunc("toLower", ToLower)
 	RegisterFunc("formatAction", FormatAction)
+	RegisterFunc("formatParam", FormatParam)
+	RegisterFunc("formatResult", FormatResult)
 }
 
 func Exists(itemPath string) bool {
@@ -55,7 +65,7 @@ func validAction(actionUrl string) ([]string, string) {
 	}
 
 	if actionVal == "query" && idVal == "" {
-		actionVal = "Filter"
+		actionVal = "filter"
 	}
 
 	return others, actionVal
@@ -73,6 +83,44 @@ func FormatAction(serviceName, modelName, actionUrl string) string {
 	}
 
 	return strings.Join(items, "")
+}
+
+func FormatParam(serviceName, modelName, actionUrl string) string {
+	_, action := validAction(actionUrl)
+	switch action {
+	case filterAction:
+		return "filter *def.QueryFilter"
+	case queryAction:
+		return "id int"
+	case createAction:
+		return fmt.Sprintf("ptr *model.%s", modelName)
+	case updateAction:
+		return fmt.Sprintf("ptr *model.%s", modelName)
+	case deleteAction:
+		return "id int"
+	default:
+	}
+
+	return ""
+}
+
+func FormatResult(serviceName, modelName, actionUrl string) string {
+	_, action := validAction(actionUrl)
+	switch action {
+	case filterAction:
+		return fmt.Sprintf("ret []*model.%s,err error", modelName)
+	case queryAction:
+		return fmt.Sprintf("ret *model.%s,err error", modelName)
+	case createAction:
+		return fmt.Sprintf("ret *model.%s,err error", modelName)
+	case updateAction:
+		return fmt.Sprintf("ret *model.%s,err error", modelName)
+	case deleteAction:
+		return fmt.Sprintf("ret *model.%s,err error", modelName)
+	default:
+	}
+
+	return ""
 }
 
 func GetTemplatePath(typeVal string) (ret string, err error) {
