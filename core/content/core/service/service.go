@@ -190,7 +190,7 @@ func (s *Service) Create(module *model.Module, forceFlag bool) (err error) {
 				return
 			}
 
-			data := map[string]interface{}{"ProjectName": s.projectName, "ServiceName": module.Name, "PackageName": module.Lower(module.Name), "Module": module}
+			data := map[string]interface{}{"ProjectName": s.projectName, "ServiceName": module.Name, "PackageName": util.ToLower(module.Name), "Module": module}
 			err = templateHandle.Execute(fileHandle, data)
 		}()
 		if err != nil {
@@ -205,7 +205,7 @@ func (s *Service) Create(module *model.Module, forceFlag bool) (err error) {
 	}
 
 	if !module.IsPackage() {
-		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
+		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: util.ToLower(module.Name)}
 		err = instance.Create(module, forceFlag)
 		if err != nil {
 			return
@@ -219,7 +219,7 @@ func (s *Service) Create(module *model.Module, forceFlag bool) (err error) {
 			continue
 		}
 
-		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: module.Lower(module.Name)}
+		instance := &Instance{projectName: s.projectName, serviceName: module.Name, packageName: util.ToLower(module.Name)}
 		err = instance.Create(val, forceFlag)
 		if err != nil {
 			return

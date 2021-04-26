@@ -22,12 +22,6 @@ type Module struct {
 	Child      []*Module `json:"child"`
 }
 
-func (s *Module) Lower(val string) string {
-	firstLetter := val[0:1]
-	otherStr := val[1:]
-	return fmt.Sprintf("%s%s", strings.ToLower(firstLetter), otherStr)
-}
-
 func (s *Module) getUrl(name, url string) (ret string) {
 	value := fmt.Sprintf("%s/%s", name, url)
 	items := []string{}
