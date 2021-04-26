@@ -1,11 +1,8 @@
-{{$apiVersion := .ApiVersion}}
-{{$projectName := .ProjectName}}
 {{$packageName := .PackageName}}
-{{$module := .Module}}
-{{$moduleName := $module.Name}}
-{{$lowModuleName := $module.Lower $moduleName}}
-{{$actionList := $module.Action}}
-{{$childList := $module.Child}}
+{{$projectName := .ProjectName}}
+{{$apiVersion := .Service.ApiVersion}}
+{{$serviceName := .Service.Name}}
+{{$childList := .Service.Child}}
 package {{$packageName}}
 
 import (
@@ -15,18 +12,24 @@ import (
     "github.com/muidea/{{$projectName}}/model"
 )
 
-type {{$moduleName}}Handler interface {
+type {{$serviceName}}Handler interface {
 
 }
 
-type {{$lowModuleName}}Handler struct {
+type {{toLower $serviceName}}Handler struct {
     commonHandler
 }
 
-func New{{$moduleName}}Handler(clnt client.Client) {{$moduleName}}Handler {
-    handler := &{{$lowModuleName}}Handler{}
+func New{{$serviceName}}Handler(clnt client.Client) {{$serviceName}}Handler {
+    handler := &{{toLower $serviceName}}Handler{}
     handler.batisClnt = clnt
 
     return handler
 }
 
+{{range $mk, $mv := $childList}}
+    {{$modelName := $mv.Name}}
+    {{range $ak, $av := $mv.Action}}
+        func (s *{{toLower $serviceName}}Handler){{formatAction $serviceName $serviceName $av}}
+    {{end}}
+{{end}}

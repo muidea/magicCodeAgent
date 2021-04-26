@@ -27,6 +27,7 @@ const (
 
 func init() {
 	RegisterFunc("toLower", ToLower)
+	RegisterFunc("toTitle", ToTitle)
 	RegisterFunc("formatAction", FormatAction)
 	RegisterFunc("formatParam", FormatParam)
 	RegisterFunc("formatResult", FormatResult)
@@ -49,9 +50,8 @@ func ToLower(val string) string {
 	return strings.ToLower(val)
 }
 
-func GetModelName(modelPtr *remote.Object) string {
-	items := strings.Split(modelPtr.GetName(), ".")
-	return items[1]
+func ToTitle(val string) string {
+	return strings.Title(val)
 }
 
 func validAction(actionUrl string) ([]string, string) {
@@ -121,6 +121,11 @@ func FormatResult(serviceName, modelName, actionUrl string) string {
 	}
 
 	return ""
+}
+
+func GetModelName(modelPtr *remote.Object) string {
+	items := strings.Split(modelPtr.GetName(), ".")
+	return items[1]
 }
 
 func GetTemplatePath(typeVal string) (ret string, err error) {

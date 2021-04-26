@@ -35,12 +35,12 @@ type Client interface {
 
 // NewClient new client
 func NewClient(serverURL string) Client {
-    clnt := &impl{serverURL: serverURL, httpClient: &http.Client{}}
+    clnt := &client{serverURL: serverURL, httpClient: &http.Client{}}
 
     return clnt
 }
 
-type impl struct {
+type client struct {
     serverURL   string
     sessionInfo *commonCommon.SessionInfo
     contextInfo commonCommon.ContextInfo
@@ -50,15 +50,15 @@ type impl struct {
 {{range $mk, $mv := $serviceList}}
     {{clientServiceFuncDefine $mv}}{{end}}
 
-func (s *impl) AttachContext(ctx commonCommon.ContextInfo) {
+func (s *client) AttachContext(ctx commonCommon.ContextInfo) {
     s.contextInfo = ctx
 }
 
-func (s *impl) DetachContext() {
+func (s *client) DetachContext() {
     s.contextInfo = nil
 }
 
-func (s *impl) getContextValues() url.Values {
+func (s *client) getContextValues() url.Values {
     ret := url.Values{}
     if s.contextInfo != nil {
         ret = s.contextInfo.Encode(ret)
@@ -67,15 +67,15 @@ func (s *impl) getContextValues() url.Values {
     return ret
 }
 
-func (s *impl) BindSession(sessionInfo *commonCommon.SessionInfo) {
+func (s *client) BindSession(sessionInfo *commonCommon.SessionInfo) {
     s.sessionInfo = sessionInfo
 }
 
-func (s *impl) UnBindSession() {
+func (s *client) UnBindSession() {
     s.sessionInfo = nil
 }
 
-func (s *impl) Release() {
+func (s *client) Release() {
     if s.httpClient != nil {
         s.httpClient.CloseIdleConnections()
         s.httpClient = nil
