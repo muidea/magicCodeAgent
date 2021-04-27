@@ -84,6 +84,11 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 
 	for _, fd := range fdList {
 		fileName := fd.Name()
+		func() {
+			if err != nil {
+				log.Printf("init project failed, relativePath:%s,file:%s", relativePath, fileName)
+			}
+		}()
 		if fd.IsDir() {
 			err = s.walkTemplate(path.Join(relativePath, fileName))
 			if err != nil {

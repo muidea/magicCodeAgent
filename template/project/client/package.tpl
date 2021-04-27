@@ -1,6 +1,27 @@
 {{$packageName := .PackageName}}
 {{$projectName := .ProjectName}}
 {{$serviceList := .ServiceList}}
+
+{{define "serviceFuncDeclare"}}
+    {{$serviceName := .Name}}
+    {{$modelList := .Child}}
+    {{range $modelList}}
+        {{$modelName := .Name}}
+        {{range $url := .Action}}
+            {{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){{end}}{{end}}
+{{end}}
+
+{{define "serviceFuncDefine"}}
+    {{$serviceName := .Name}}
+    {{$modelList := .Child}}
+    {{range $modelList}}
+        {{$modelName := .Name}}
+        {{range $url := .Action}}
+            func (s *client) {{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){
+            }{{end}}{{end}}
+{{end}}
+
+
 package {{$packageName}}
 
 import (
@@ -24,8 +45,8 @@ type Client interface {
     AttachContext(ctx commonCommon.ContextInfo)
     DetachContext()
 
-    {{range $mk, $mv := $serviceList}}
-        {{clientServiceFuncDeclare $mv}}{{end}}
+    {{range $serviceList}}
+        {{template "serviceFuncDeclare" .}}{{end}}
 
     BindSession(sessionInfo *commonCommon.SessionInfo)
     UnBindSession()
@@ -47,8 +68,8 @@ type client struct {
     httpClient  *http.Client
 }
 
-{{range $mk, $mv := $serviceList}}
-    {{clientServiceFuncDefine $mv}}{{end}}
+{{range $serviceList}}
+    {{template "serviceFuncDefine" .}}{{end}}
 
 func (s *client) AttachContext(ctx commonCommon.ContextInfo) {
     s.contextInfo = ctx

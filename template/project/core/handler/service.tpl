@@ -6,30 +6,26 @@
 package {{$packageName}}
 
 import (
-    "fmt"
-    "github.com/muidea/magicBatis/client"
-    "github.com/muidea/magicBatis/def"
-    "github.com/muidea/{{$projectName}}/model"
+commonDef "github.com/muidea/magicCommon/def"
+"github.com/muidea/{{$projectName}}/model"
 )
 
+// {{$serviceName}}Handler {{toLower $serviceName}} handler
 type {{$serviceName}}Handler interface {
-
+    {{range $mv := $childList}}
+        {{$modelName := $mv.Name}}
+        {{range $url := $mv.Action}}
+            {{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){{end}}
+    {{end}}
 }
 
-type {{toLower $serviceName}}Handler struct {
-    commonHandler
+type {{toLower $serviceName}}Impl struct {
 }
 
-func New{{$serviceName}}Handler(clnt client.Client) {{$serviceName}}Handler {
-    handler := &{{toLower $serviceName}}Handler{}
-    handler.batisClnt = clnt
-
-    return handler
-}
-
-{{range $mk, $mv := $childList}}
+{{range $mv := $childList}}
     {{$modelName := $mv.Name}}
-    {{range $ak, $av := $mv.Action}}
-        func (s *{{toLower $serviceName}}Handler){{formatAction $serviceName $serviceName $av}}
+    {{range $url := $mv.Action}}
+        func (s *{{toLower $serviceName}}Impl){{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){
+        }
     {{end}}
 {{end}}
