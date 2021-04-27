@@ -4,6 +4,8 @@
 package {{$packageName}}
 
 import (
+"github.com/muidea/{{$projectName}}/core/handler"
+
 {{range $sv := $serviceList}}
     {{toLower $sv.Name}}Biz "github.com/muidea/{{$projectName}}/core/biz/{{toLower $sv.Name}}"{{end}}
 
