@@ -38,16 +38,29 @@ func (s *Package) Create(relativePath, templateFile string) (err error) {
 	}
 
 	serviceTemplate := path.Join(s.templatePath, relativePath, util.ServiceTemplateFile)
-	if !util.Exists(serviceTemplate) {
-		return
+	if util.Exists(serviceTemplate) {
+		for _, val := range s.serviceList {
+			val.ApiVersion = s.apiVersion
+			servicePtr := NewService(s.templatePath, s.projectPath, s.projectName, val)
+			err = servicePtr.Create(relativePath, util.ServiceTemplateFile)
+			if err != nil {
+				return
+			}
+		}
 	}
 
-	for _, val := range s.serviceList {
-		val.ApiVersion = s.apiVersion
-		servicePtr := NewService(s.templatePath, s.projectPath, s.projectName, val)
-		err = servicePtr.Create(relativePath, util.ServiceTemplateFile)
-		if err != nil {
-			return
+	modelTemplate := path.Join(s.templatePath, relativePath, util.ModelTemplateFile)
+	if util.Exists(modelTemplate) {
+		for _, val := range s.serviceList {
+			val.ApiVersion = s.apiVersion
+			for _, sv := range val.Child {
+				sv.ApiVersion = s.apiVersion
+				modelPtr := NewModel(s.templatePath, s.projectPath, s.projectName, val.Name, sv)
+				err = modelPtr.Create(relativePath, util.ModelTemplateFile)
+				if err != nil {
+					return
+				}
+			}
 		}
 	}
 	return
