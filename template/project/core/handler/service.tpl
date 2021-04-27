@@ -20,6 +20,7 @@ type {{$serviceName}}Handler interface {
 }
 
 type {{toLower $serviceName}}Handler struct {
+    commonHandler
 }
 
 {{range $mv := $childList}}

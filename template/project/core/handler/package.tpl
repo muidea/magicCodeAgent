@@ -7,7 +7,7 @@ package {{$packageName}}
     {{$serviceName := .Name}}
     // New{{$serviceName}}Handler 新建{{$serviceName}}Handler
     func New{{$serviceName}}Handler(clnt client.Client) {{$serviceName}}Handler {
-    handler := &{{toLower $serviceName}}Handler{ {{toLower $serviceName}}Impl{batisClient: clnt} }
+    handler := &{{toLower $serviceName}}Handler{ commonHandler{batisClient: clnt} }
 
     return handler
     }
