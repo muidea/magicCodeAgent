@@ -5,8 +5,8 @@ package {{$packageName}}
 
 {{define "serviceFuncDeclare"}}
     {{$serviceName := .Name}}
-    // New{{$serviceName}}Handler 新建{{$serviceName}}Handler
-    func New{{$serviceName}}Handler(clnt client.Client) {{$serviceName}}Handler {
+    // New{{$serviceName}} 新建{{$serviceName}}Handler
+    func New{{$serviceName}}(clnt client.Client) {{$serviceName}}Handler {
     handler := &{{toLower $serviceName}}Handler{ commonHandler{batisClient: clnt} }
 
     return handler
