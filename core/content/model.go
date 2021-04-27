@@ -26,12 +26,10 @@ func (s *Model) getPackageName(relativePath string) string {
 }
 
 func (s *Model) Create(relativePath, templateFile string) (err error) {
-	packageName := s.getPackageName(relativePath)
-
-	modelVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "ServiceName": s.serviceName, "Model": s.modelDefine}
+	modelVal := map[string]interface{}{"PackageName": util.ToLower(s.serviceName), "ProjectName": s.projectName, "ServiceName": s.serviceName, "Model": s.modelDefine}
 	factoryPtr := util.NewFileFactory(s.templatePath, s.projectPath, templateFile, modelVal)
 
-	fileName := fmt.Sprintf("%s.go", strings.ToLower(s.modelDefine.Name))
+	fileName := fmt.Sprintf("%s/%s.go", util.ToLower(s.serviceName), strings.ToLower(s.modelDefine.Name))
 	err = factoryPtr.Create(relativePath, fileName, true)
 	if err != nil {
 		return

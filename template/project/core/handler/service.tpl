@@ -19,13 +19,13 @@ type {{$serviceName}}Handler interface {
     {{end}}
 }
 
-type {{toLower $serviceName}}Impl struct {
+type {{toLower $serviceName}}Handler struct {
 }
 
 {{range $mv := $childList}}
     {{$modelName := $mv.Name}}
     {{range $url := $mv.Action}}
-        func (s *{{toLower $serviceName}}Impl){{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){
+        func (s *{{toLower $serviceName}}Handler){{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){
         }
     {{end}}
 {{end}}

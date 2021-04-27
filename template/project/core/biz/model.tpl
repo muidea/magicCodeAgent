@@ -7,9 +7,10 @@ package {{$packageName}}
 
 {{if eq $serviceName $modelName}}
 type {{$serviceName}} struct {
+{{toLower $serviceName}}Handler handler.{{$serviceName}}Handler
 }
 
-func New{{$serviceName}}(
+func New(
 {{toLower $serviceName}}Handler handler.{{$serviceName}}Handler,
 eventHub event.Hub,
 backgroundRoutine *task.BackgroundRoutine,
@@ -23,6 +24,6 @@ backgroundRoutine *task.BackgroundRoutine,
 
 {{range $url := $model.Action}}
     func (s *{{$serviceName}}) {{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}) {
-    return s.{{toLower $serviceName}}Handler.{{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})
+    return s.{{toLower $serviceName}}Handler.{{formatAction $serviceName $modelName $url}}()
     }
 {{end}}

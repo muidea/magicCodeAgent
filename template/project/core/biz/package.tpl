@@ -10,7 +10,7 @@ package {{$packageName}}
     eventHub event.Hub,
     backgroundRoutine *task.BackgroundRoutine,
     ) *{{toLower $serviceName}}.{{$serviceName}} {
-    return {{toLower $serviceName}}.New{{$serviceName}}(handler, eventHub, backgroundRoutine)
+    return {{toLower $serviceName}}.New(handler, eventHub, backgroundRoutine)
     }
 {{end}}
 
