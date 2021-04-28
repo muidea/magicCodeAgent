@@ -54,6 +54,7 @@
 {{- end}}
 {{- define "otherFuncDefine"}}
     func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(){
+        return
     }
 {{- end}}
 
