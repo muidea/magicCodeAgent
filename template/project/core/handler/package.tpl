@@ -3,6 +3,8 @@
 {{$serviceList := .ServiceList}}
 package {{$packageName}}
 
+import "github.com/muidea/magicBatis/client"
+
 {{define "serviceFuncDeclare"}}
     {{$serviceName := .Name}}
     // New{{$serviceName}} 新建{{$serviceName}}Handler

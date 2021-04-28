@@ -6,7 +6,7 @@
 package {{$packageName}}
 
 import (
-commonDef "github.com/muidea/magicCommon/def"
+"github.com/muidea/magicBatis/def"
 "github.com/muidea/{{$projectName}}/model"
 )
 
@@ -27,6 +27,7 @@ type {{toLower $serviceName}}Handler struct {
     {{$modelName := $mv.Name}}
     {{range $url := $mv.Action}}
         func (s *{{toLower $serviceName}}Handler){{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){
+            return
         }
     {{end}}
 {{end}}

@@ -11,11 +11,11 @@ type CommonHandler interface {
 
 // NewCommonHandler 新建CommonHandler
 func NewCommonHandler(clnt client.Client) CommonHandler {
-	handler := &commonHandler{batisClnt: clnt}
+	handler := &commonHandler{batisClient: clnt}
 
 	return handler
 }
 
 type commonHandler struct {
-	batisClnt  client.Client
+	batisClient  client.Client
 }

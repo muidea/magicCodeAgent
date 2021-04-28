@@ -1,11 +1,15 @@
 {{$packageName := .PackageName}}
 {{$projectName := .ProjectName}}
 {{$serviceName := .ServiceName}}
-{{$model := .Model}}
-{{$modelName := $model.Name}}
+{{$modelName := .Model.Name}}
 package {{$packageName}}
 
 import (
+"net/http"
+
+commonSession "github.com/muidea/magicCommon/session"
+engine "github.com/muidea/magicEngine"
+
 "github.com/muidea/{{$projectName}}/core/biz/{{toLower $serviceName}}"
 "github.com/muidea/{{$projectName}}/core/handler"
 )
@@ -29,27 +33,12 @@ import (
     }
 
     func (s *{{$serviceName}}) BindRegistry(
-    sessionRegistry commonSession.Registry,
-    casRouteRegistry casToolkit.CasRegistry,
-    privateRouteRegistry casToolkit.PrivateRegistry) {
-
-    s.sessionRegistry = sessionRegistry
-    s.casRouteRegistry = casRouteRegistry
-    s.privateRouteRegistry = privateRouteRegistry
+    sessionRegistry commonSession.Registry) {
     }
 
 
     // Handle middleware handler
     func (s *{{$serviceName}}) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
-    curSession := s.sessionRegistry.GetSession(res, req)
-
-    sessionInfo := curSession.GetSessionInfo()
-    sessionInfo.Scope = commonCommon.ShareSession
-
-    values := req.URL.Query()
-    values = sessionInfo.Encode(values)
-    req.URL.RawQuery = values.Encode()
-
     ctx.Next()
     }
 
