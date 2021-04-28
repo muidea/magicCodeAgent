@@ -28,6 +28,7 @@ const (
 func init() {
 	RegisterFunc("toLower", ToLower)
 	RegisterFunc("toTitle", ToTitle)
+	RegisterFunc("extractAction", ExtractActionVal)
 	RegisterFunc("formatAction", FormatAction)
 	RegisterFunc("formatParam", FormatParam)
 	RegisterFunc("formatResult", FormatResult)
@@ -69,6 +70,11 @@ func validAction(actionUrl string) ([]string, string) {
 	}
 
 	return others, actionVal
+}
+
+func ExtractActionVal(actionUrl string) string {
+	_, val := validAction(actionUrl)
+	return val
 }
 
 func FormatAction(serviceName, modelName, actionUrl string) string {
