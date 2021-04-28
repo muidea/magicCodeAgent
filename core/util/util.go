@@ -56,8 +56,8 @@ func ToTitle(val string) string {
 	return strings.Title(val)
 }
 
-func MergeArgs(name string, value interface{}) interface{} {
-	return map[string]interface{}{"Name": name, "Value": value}
+func MergeArgs(funcName, serviceName string, modelPtr interface{}) interface{} {
+	return map[string]interface{}{"FuncName": funcName, "ServiceName": serviceName, "Model": modelPtr}
 }
 
 func validAction(actionUrl string) ([]string, string) {

@@ -5,27 +5,56 @@
 {{$childList := .Service.Child}}
 
 {{- define "filterFuncDeclare"}}
-    {{.Name}}(filter *def.QueryFilter) (ret []*model.{{.Value.Name}}, err error)
+    {{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, err error)
+{{- end}}
+{{- define "filterFuncDefine"}}
+    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, err error) {
+        return
+    }
 {{- end}}
 
 {{- define "queryFuncDeclare"}}
-    {{.Name}}(id int) (ret *model.{{.Value.Name}}, err error)
+    {{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error)
+{{- end}}
+{{- define "queryFuncDefine"}}
+    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+        return
+    }
 {{- end}}
 
 {{- define "createFuncDeclare"}}
-    {{.Name}}(ptr *model.{{.Value.Name}}) (ret *model.{{.Value.Name}}, err error)
+    {{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error)
+{{- end}}
+{{- define "createFuncDefine"}}
+    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+        return
+    }
 {{- end}}
 
 {{- define "updateFuncDeclare"}}
-    {{.Name}}(ptr *model.{{.Value.Name}}) (ret *model.{{.Value.Name}}, err error)
+    {{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error)
+{{- end}}
+{{- define "updateFuncDefine"}}
+    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+        return
+    }
 {{- end}}
 
 {{- define "deleteFuncDeclare"}}
-    {{.Name}}(id int) (ret *model.{{.Value.Name}}, err error)
+    {{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error)
+{{- end}}
+{{- define "deleteFuncDefine"}}
+    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+        return
+    }
 {{- end}}
 
 {{- define "otherFuncDeclare"}}
-    {{.Name}}()
+    {{.FuncName}}()
+{{- end}}
+{{- define "otherFuncDefine"}}
+    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(){
+    }
 {{- end}}
 
 package {{$packageName}}
@@ -40,7 +69,7 @@ type {{$serviceName}}Handler interface {
     {{range $mv := $childList}}
         {{range $av := $mv.Action}}
             {{- $funcName := formatAction $serviceName $mv.Name $av -}}
-            {{with mergeArgs $funcName $mv}}
+            {{with mergeArgs $funcName $serviceName $mv}}
                 {{- $action := extractAction $av -}}
                 {{if eq $action "filter"}}
                     {{- template "filterFuncDeclare" . -}}
@@ -65,10 +94,23 @@ type {{toLower $serviceName}}Handler struct {
 }
 
 {{range $mv := $childList}}
-    {{$modelName := $mv.Name}}
-    {{range $url := $mv.Action}}
-        func (s *{{toLower $serviceName}}Handler){{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){
-            return
-        }
-    {{end}}
-{{end}}
+    {{range $av := $mv.Action}}
+        {{- $funcName := formatAction $serviceName $mv.Name $av -}}
+        {{with mergeArgs $funcName $serviceName $mv}}
+            {{- $action := extractAction $av -}}
+            {{if eq $action "filter"}}
+                {{- template "filterFuncDefine" . -}}
+            {{else if eq $action "query"}}
+                {{- template "queryFuncDefine" . -}}
+            {{else if eq $action "create"}}
+                {{- template "createFuncDefine" . -}}
+            {{else if eq $action "update"}}
+                {{- template "updateFuncDefine" . -}}
+            {{else if eq $action "delete"}}
+                {{- template "deleteFuncDefine" . -}}
+            {{else}}
+                {{- template "otherFuncDefine" . -}}
+            {{end}}
+        {{end}}
+    {{- end}}
+{{- end}}
