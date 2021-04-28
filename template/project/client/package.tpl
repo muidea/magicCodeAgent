@@ -18,6 +18,7 @@
         {{$modelName := .Name}}
         {{range $url := .Action}}
             func (s *client) {{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){
+                return
             }{{end}}{{end}}
 {{end}}
 
@@ -25,19 +26,13 @@
 package {{$packageName}}
 
 import (
-    "fmt"
-    "net/http"
-    "net/url"
-    "strings"
+"net/http"
+"net/url"
 
-    "github.com/muidea/magicCommon/foundation/net"
-    "github.com/muidea/magicCommon/foundation/util"
+"github.com/muidea/magicBatis/def"
+commonCommon "github.com/muidea/magicCommon/common"
 
-    commonCommon "github.com/muidea/magicCommon/common"
-    commonDef "github.com/muidea/magicCommon/def"
-
-    "github.com/muidea/{{$projectName}}/common"
-    "github.com/muidea/{{$projectName}}/model"
+"github.com/muidea/{{$projectName}}/model"
 )
 
 // Client client interface
