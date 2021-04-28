@@ -10,6 +10,9 @@ batisClient "github.com/muidea/magicBatis/client"
 "github.com/muidea/magicCommon/event"
 "github.com/muidea/magicCommon/task"
 engine "github.com/muidea/magicEngine"
+
+"github.com/muidea/{{$projectName}}/model"
+
 "github.com/muidea/{{$projectName}}/core/biz"
 "github.com/muidea/{{$projectName}}/core/handler"
 "github.com/muidea/{{$projectName}}/core/service"

@@ -5,6 +5,16 @@
 {{$modelName := $model.Name}}
 package {{$packageName}}
 
+import (
+"github.com/muidea/magicBatis/def"
+"github.com/muidea/magicCommon/event"
+"github.com/muidea/magicCommon/task"
+
+"github.com/muidea/{{$projectName}}/model"
+
+"github.com/muidea/{{$projectName}}/core/handler"
+)
+
 {{if eq $serviceName $modelName}}
 type {{$serviceName}} struct {
 {{toLower $serviceName}}Handler handler.{{$serviceName}}Handler
