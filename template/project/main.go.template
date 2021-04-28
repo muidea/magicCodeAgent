@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
-	"log"
+	log "github.com/cihub/seelog"
+	"github.com/muidea/magicBatis/client"
+	"github.com/muidea/magicBatis/def"
 
 	engine "github.com/muidea/magicEngine"
 	_ "github.com/muidea/{{.ProjectName}}/config"
@@ -10,13 +12,55 @@ import (
 )
 
 var listenPort = "8880"
+var endpointName = "{{.ProjectName}}"
+var databaseServer = ""
+var databaseName = "{{toLower .ProjectName}}_db"
+var databaseUsername = "{{toLower .ProjectName}}"
+var databasePassword = "{{toLower .ProjectName}}"
+var batisService = "http://localhost:8080"
+
+var logConfig = `
+<seelog type="sync">
+	<outputs formatid="main">
+		<console/>
+	</outputs>
+	<formats>
+		<format id="main" format="%Date %Time [%LEV] %Msg%n"/>
+	</formats>
+</seelog>`
 
 func main() {
 	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
+	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")
+	flag.StringVar(&databaseServer, "DBServer", databaseServer, "database server address.")
+	flag.StringVar(&databaseName, "DBName", databaseName, "database name.")
+	flag.StringVar(&databaseUsername, "DBUsername", databaseUsername, "database username.")
+	flag.StringVar(&databasePassword, "DBPassword", databasePassword, "database password.")
+	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis service address.")
 	flag.Parse()
 
+	logger, _ := log.LoggerFromConfigAsBytes([]byte(logConfig))
+	log.ReplaceLogger(logger)
+
+	log.Info("{{.ProjectName}} V1.0")
+
+	var err error
+	clnt := client.NewClient(batisService, endpointName)
+	defer func() {
+		if err != nil {
+			clnt.Release()
+		}
+	}()
+
+	instancePtr := def.NewInstance(databaseServer, databaseName, databaseUsername, databasePassword, 10)
+	err = clnt.RegisterInstance(instancePtr)
+	if err != nil {
+		log.Errorf("register instance failed, err:%s", err.Error())
+		return
+	}
+
 	router := engine.NewRouter()
-	core, err := core.New()
+	core, err := core.New(clnt)
 
 	if err == nil {
 		core.Startup(router)
@@ -26,7 +70,7 @@ func main() {
 
 		svr.Run()
 	} else {
-		log.Printf("start {{.ProjectName}} failed.")
+		log.Critical("start {{.ProjectName}} failed.")
 	}
 
 	core.Teardown()
