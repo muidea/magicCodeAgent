@@ -37,6 +37,8 @@ func New(clnt batisClient.Client) (*Core, error) {
     eventHub := event.NewHub()
     backgroundRoutine := task.NewBackgroundRoutine()
 
+    commonHandler := handler.NewCommonHandler(clnt)
+
     {{range $sv := $serviceList}}
         {{toLower $sv.Name}}Handler := handler.New{{$sv.Name}}(clnt)
     {{end}}
@@ -61,7 +63,7 @@ func New(clnt batisClient.Client) (*Core, error) {
 // Core Core对象
 type Core struct {
     {{range $sv := $serviceList}}
-        {{toLower $sv.Name}}Service  {{$sv.Name}}Service {{end}}
+        {{toLower $sv.Name}}Service  *{{toLower $sv.Name}}.{{$sv.Name}} {{end}}
     eventHub          event.Hub
     backgroundRoutine *task.BackgroundRoutine
 }
