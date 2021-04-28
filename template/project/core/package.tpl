@@ -4,27 +4,19 @@
 
 package {{$packageName}}
 
-type timerCheckTask struct {
-    preTimeStamp *time.Time
-    eventHub     event.Hub
-}
+import (
+log "github.com/cihub/seelog"
+batisClient "github.com/muidea/magicBatis/client"
+"github.com/muidea/magicCommon/event"
+"github.com/muidea/magicCommon/task"
+engine "github.com/muidea/magicEngine"
+"github.com/muidea/{{$projectName}}/core/biz"
+"github.com/muidea/{{$projectName}}/core/handler"
+"github.com/muidea/{{$projectName}}/core/service"
+{{range $sv := $serviceList}}
+"github.com/muidea/{{$projectName}}/core/service/{{toLower $sv.Name}}"{{end}}
+)
 
-func (s *timerCheckTask) Run() {
-    log.Info("timerCheckTask task running..")
-
-    current := time.Now()
-    if s.preTimeStamp == nil {
-    s.preTimeStamp = &current
-    }
-
-    preTime := *s.preTimeStamp
-    s.preTimeStamp = &current
-
-    log.Infof("timer check....., date:%s", current.Format("2006-01-02 15:04:05"))
-    notifyTimer := &ed.TimerNotify{PreTime: preTime, CurTime: current}
-    ev := event.NewEvent(ed.NotifyTimer, "/", "/#", notifyTimer)
-    s.eventHub.Post(ev)
-}
 
 // New 新建Core
 func New(clnt batisClient.Client) (*Core, error) {
@@ -70,13 +62,9 @@ type Core struct {
 
 // Startup 启动
 func (s *Core) Startup(router engine.Router) {
-    sessionRegistry := session.CreateRegistry(nil)
-
     {{range $sv := $serviceList}}
     s.{{toLower $sv.Name}}Service.RegisterHandler(router)
     {{end}}
-
-    s.backgroundRoutine.Timer(&timerCheckTask{eventHub: s.eventHub}, 24*time.Hour, 2*time.Hour)
 }
 
 // Teardown 销毁

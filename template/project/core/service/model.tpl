@@ -20,7 +20,10 @@ import (
     commonHandler handler.CommonHandler,
     {{toLower $serviceName}}Biz *{{toLower $serviceName}}.{{$serviceName}},
     ) *{{$serviceName}} {
-    {{toLower $serviceName}} := &{{$serviceName}}{ commonHandler:commonHandler, {{toLower $serviceName}}Biz:{{toLower $serviceName}}Biz }
+    {{toLower $serviceName}} := &{{$serviceName}}{
+    commonHandler:commonHandler,
+    {{toLower $serviceName}}Biz:{{toLower $serviceName}}Biz,
+    }
 
     return {{toLower $serviceName}}
     }
