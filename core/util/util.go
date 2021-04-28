@@ -28,6 +28,7 @@ const (
 func init() {
 	RegisterFunc("toLower", ToLower)
 	RegisterFunc("toTitle", ToTitle)
+	RegisterFunc("mergeArgs", MergeArgs)
 	RegisterFunc("extractAction", ExtractActionVal)
 	RegisterFunc("formatAction", FormatAction)
 	RegisterFunc("formatParam", FormatParam)
@@ -53,6 +54,10 @@ func ToLower(val string) string {
 
 func ToTitle(val string) string {
 	return strings.Title(val)
+}
+
+func MergeArgs(name string, value interface{}) interface{} {
+	return map[string]interface{}{"Name": name, "Value": value}
 }
 
 func validAction(actionUrl string) ([]string, string) {
