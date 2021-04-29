@@ -16,31 +16,36 @@ import (
 )
 
 {{- define "filterFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, err error) {
+    func (s *{{.ServiceName}}){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error) {
+    ret,total,err = s.{{toLower .ServiceName}}.{{.FuncName}}(filter)
     return
     }
 {{- end}}
 
 {{- define "queryFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id)
     return
     }
 {{- end}}
 
 {{- define "createFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr)
     return
     }
 {{- end}}
 
 {{- define "updateFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr)
     return
     }
 {{- end}}
 
 {{- define "deleteFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id)
     return
     }
 {{- end}}
@@ -54,6 +59,8 @@ import (
 {{if eq $serviceName $modelName}}
 type {{$serviceName}} struct {
 {{toLower $serviceName}} dao.{{$serviceName}}
+eventHub event.Hub
+backgroundRoutine *task.BackgroundRoutine
 }
 
 func New(
@@ -61,7 +68,11 @@ func New(
 eventHub event.Hub,
 backgroundRoutine *task.BackgroundRoutine,
 ) *{{$serviceName}} {
-    ptr := &{{$serviceName}}{}
+    ptr := &{{$serviceName}}{
+        {{toLower $serviceName}}: {{toLower $serviceName}},
+        eventHub: eventHub,
+        backgroundRoutine: backgroundRoutine,
+    }
 
     return ptr
 }
