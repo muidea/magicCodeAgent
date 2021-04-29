@@ -12,7 +12,7 @@ import (
 
 "github.com/muidea/{{$projectName}}/model"
 
-"github.com/muidea/{{$projectName}}/core/handler"
+"github.com/muidea/{{$projectName}}/core/dao"
 )
 
 {{- define "filterFuncDefine"}}
@@ -53,17 +53,17 @@ import (
 
 {{if eq $serviceName $modelName}}
 type {{$serviceName}} struct {
-{{toLower $serviceName}}Handler handler.{{$serviceName}}Handler
+{{toLower $serviceName}} dao.{{$serviceName}}
 }
 
 func New(
-{{toLower $serviceName}}Handler handler.{{$serviceName}}Handler,
+{{toLower $serviceName}} dao.{{$serviceName}},
 eventHub event.Hub,
 backgroundRoutine *task.BackgroundRoutine,
 ) *{{$serviceName}} {
-    {{toLower $serviceName}} := &{{$serviceName}}{}
+    ptr := &{{$serviceName}}{}
 
-    return {{toLower $serviceName}}
+    return ptr
 }
 
 {{end}}
