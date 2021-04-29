@@ -5,13 +5,11 @@ import "flag"
 var casService = "http://127.0.0.1:8081"
 var userService = "http://127.0.0.1:8082"
 var fileService = "http://127.0.0.1:8083"
-var batisService = "http://127.0.0.1:8080"
 
 func init() {
 	flag.StringVar(&casService, "CasService", casService, "magicCas partner address")
 	flag.StringVar(&userService, "UserService", userService, "magicUser partner address")
 	flag.StringVar(&fileService, "FileService", fileService, "magicFile partner address")
-	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis partner address")
 }
 
 //CasService cas partner addr
@@ -27,9 +25,4 @@ func UserService() string {
 //FileService file partner addr
 func FileService() string {
 	return fileService
-}
-
-//BatisService batis partner addr
-func BatisService() string {
-	return batisService
 }
