@@ -8,7 +8,7 @@
     {{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, err error)
 {{- end}}
 {{- define "filterFuncDefine"}}
-    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, err error) {
+    func (s *{{toLower .ServiceName}}){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, err error) {
         return
     }
 {{- end}}
@@ -17,7 +17,7 @@
     {{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error)
 {{- end}}
 {{- define "queryFuncDefine"}}
-    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{toLower .ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
         return
     }
 {{- end}}
@@ -26,7 +26,7 @@
     {{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error)
 {{- end}}
 {{- define "createFuncDefine"}}
-    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{toLower .ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
         return
     }
 {{- end}}
@@ -35,7 +35,7 @@
     {{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error)
 {{- end}}
 {{- define "updateFuncDefine"}}
-    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{toLower .ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
         return
     }
 {{- end}}
@@ -44,7 +44,7 @@
     {{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error)
 {{- end}}
 {{- define "deleteFuncDefine"}}
-    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{toLower .ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
         return
     }
 {{- end}}
@@ -53,7 +53,7 @@
     {{.FuncName}}()
 {{- end}}
 {{- define "otherFuncDefine"}}
-    func (s *{{toLower .ServiceName}}Handler){{.FuncName}}(){
+    func (s *{{toLower .ServiceName}}){{.FuncName}}(){
         return
     }
 {{- end}}
@@ -65,8 +65,8 @@ import (
 "github.com/muidea/{{$projectName}}/model"
 )
 
-// {{$serviceName}}Handler {{toLower $serviceName}} handler
-type {{$serviceName}}Handler interface {
+// {{$serviceName}} {{toLower $serviceName}} handler
+type {{$serviceName}} interface {
     {{range $mv := $childList}}
         {{range $av := $mv.Action}}
             {{- $funcName := formatAction $serviceName $mv.Name $av -}}
@@ -90,8 +90,8 @@ type {{$serviceName}}Handler interface {
     {{- end}}
 }
 
-type {{toLower $serviceName}}Handler struct {
-    commonHandler
+type {{toLower $serviceName}} struct {
+    common
 }
 
 {{range $mv := $childList}}

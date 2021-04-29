@@ -1,0 +1,21 @@
+package dao
+
+import (
+	"github.com/muidea/magicBatis/client"
+	"github.com/muidea/{{.ProjectName}}/model"
+)
+
+// Common common dao
+type Common interface {
+}
+
+// NewCommon 新建Common
+func NewCommon(clnt client.Client) Common {
+	handler := &common{batisClient: clnt}
+
+	return handler
+}
+
+type common struct {
+	batisClient  client.Client
+}

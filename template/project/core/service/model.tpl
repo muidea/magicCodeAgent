@@ -11,21 +11,21 @@ commonSession "github.com/muidea/magicCommon/session"
 engine "github.com/muidea/magicEngine"
 
 "github.com/muidea/{{$projectName}}/core/biz/{{toLower $serviceName}}"
-"github.com/muidea/{{$projectName}}/core/handler"
+"github.com/muidea/{{$projectName}}/core/dao"
 )
 
 {{if eq $serviceName $modelName}}
     type {{$serviceName}} struct {
-    commonHandler handler.CommonHandler
+    common dao.Common
     {{toLower $serviceName}}Biz *{{toLower $serviceName}}.{{$serviceName}}
     }
 
     func New(
-    commonHandler handler.CommonHandler,
+    common dao.Common,
     {{toLower $serviceName}}Biz *{{toLower $serviceName}}.{{$serviceName}},
     ) *{{$serviceName}} {
     {{toLower $serviceName}} := &{{$serviceName}}{
-    commonHandler:commonHandler,
+    common:common,
     {{toLower $serviceName}}Biz:{{toLower $serviceName}}Biz,
     }
 

@@ -14,7 +14,7 @@ engine "github.com/muidea/magicEngine"
 "github.com/muidea/{{$projectName}}/model"
 
 "github.com/muidea/{{$projectName}}/core/biz"
-"github.com/muidea/{{$projectName}}/core/handler"
+"github.com/muidea/{{$projectName}}/core/dao"
 "github.com/muidea/{{$projectName}}/core/service"
 {{range $sv := $serviceList}}
 "github.com/muidea/{{$projectName}}/core/service/{{toLower $sv.Name}}"{{end}}
@@ -32,18 +32,18 @@ func New(clnt batisClient.Client) (*Core, error) {
     eventHub := event.NewHub()
     backgroundRoutine := task.NewBackgroundRoutine()
 
-    commonHandler := handler.NewCommonHandler(clnt)
+    common := dao.NewCommon(clnt)
 
     {{range $sv := $serviceList}}
-        {{toLower $sv.Name}}Handler := handler.New{{$sv.Name}}(clnt)
+        {{toLower $sv.Name}} := dao.New{{$sv.Name}}(clnt)
     {{end}}
 
     {{range $sv := $serviceList}}
-        {{toLower $sv.Name}}Biz := biz.New{{$sv.Name}}({{toLower $sv.Name}}Handler, eventHub, backgroundRoutine)
+        {{toLower $sv.Name}}Biz := biz.New{{$sv.Name}}({{toLower $sv.Name}}, eventHub, backgroundRoutine)
     {{end}}
 
     {{range $sv := $serviceList}}
-        {{toLower $sv.Name}}Service := service.New{{$sv.Name}}(commonHandler, {{toLower $sv.Name}}Biz)
+        {{toLower $sv.Name}}Service := service.New{{$sv.Name}}(common, {{toLower $sv.Name}}Biz)
     {{end}}
 
     core := &Core{ {{range $sv := $serviceList}}
