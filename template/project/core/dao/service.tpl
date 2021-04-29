@@ -5,10 +5,12 @@
 {{$childList := .Service.Child}}
 
 {{- define "filterFuncDeclare"}}
-    {{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, err error)
+    {{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error)
 {{- end}}
 {{- define "filterFuncDefine"}}
-    func (s *{{toLower .ServiceName}}){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, err error) {
+    func (s *{{toLower .ServiceName}}){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error) {
+        ret = []*model.{{.Model.Name}}{}
+        total, err = s.batisClient.BatchQueryEntity(&ret, filter)
         return
     }
 {{- end}}
@@ -18,6 +20,16 @@
 {{- end}}
 {{- define "queryFuncDefine"}}
     func (s *{{toLower .ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+        if id <= 0 {
+            err = fmt.Errorf("illegal id value")
+            return
+        }
+        ptr := &model.{{.Model.Name}}{ID:id}
+        err = s.batisClient.QueryEntity(ptr)
+        if err != nil {
+            return
+        }
+        ret = ptr
         return
     }
 {{- end}}
@@ -27,6 +39,15 @@
 {{- end}}
 {{- define "createFuncDefine"}}
     func (s *{{toLower .ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+        if ptr == nil {
+            err = fmt.Errorf("illegal ptr value")
+            return
+        }
+        err = s.batisClient.InsertEntity(ptr)
+        if err != nil {
+            return
+        }
+        ret = ptr
         return
     }
 {{- end}}
@@ -36,6 +57,11 @@
 {{- end}}
 {{- define "updateFuncDefine"}}
     func (s *{{toLower .ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+        err = s.batisClient.UpdateEntity(ptr)
+        if err != nil {
+            return
+        }
+        ret = ptr
         return
     }
 {{- end}}
@@ -45,6 +71,20 @@
 {{- end}}
 {{- define "deleteFuncDefine"}}
     func (s *{{toLower .ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+        if id <= 0 {
+            err = fmt.Errorf("illegal id value")
+            return
+        }
+        ptr := &model.{{.Model.Name}}{ID:id}
+        err = s.batisClient.QueryEntity(ptr)
+        if err != nil {
+            return
+        }
+        err = s.batisClient.DeleteEntity(ptr)
+        if err != nil {
+            return
+        }
+        ret = ptr
         return
     }
 {{- end}}
@@ -61,8 +101,10 @@
 package {{$packageName}}
 
 import (
-"github.com/muidea/magicBatis/def"
-"github.com/muidea/{{$projectName}}/model"
+    "fmt"
+
+    "github.com/muidea/magicBatis/def"
+    "github.com/muidea/{{$projectName}}/model"
 )
 
 // {{$serviceName}} {{toLower $serviceName}} handler
