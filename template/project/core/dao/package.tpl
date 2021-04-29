@@ -5,15 +5,13 @@ package {{$packageName}}
 
 import "github.com/muidea/magicBatis/client"
 
-{{define "serviceFuncDeclare"}}
+{{define "serviceFuncDefine"}}
     {{$serviceName := .Name}}
     // New{{$serviceName}} 新建{{$serviceName}}
     func New{{$serviceName}}(clnt client.Client) {{$serviceName}} {
-    handler := &{{toLower $serviceName}}{ common{batisClient: clnt} }
-
-    return handler
+    return &{{toLower $serviceName}}{ common{batisClient: clnt} }
     }
 {{end}}
 
 {{range $serviceList}}
-    {{template "serviceFuncDeclare" .}}{{end}}
+    {{template "serviceFuncDefine" .}}{{end}}
