@@ -28,8 +28,10 @@ const (
 func init() {
 	RegisterFunc("toLower", ToLower)
 	RegisterFunc("toTitle", ToTitle)
+	RegisterFunc("toVariable", ToVariable)
 	RegisterFunc("mergeArgs", MergeArgs)
 	RegisterFunc("extractAction", ExtractActionVal)
+	RegisterFunc("getActionMethod", GetActionMethod)
 	RegisterFunc("formatAction", FormatAction)
 	RegisterFunc("formatParam", FormatParam)
 	RegisterFunc("formatResult", FormatResult)
@@ -56,6 +58,14 @@ func ToTitle(val string) string {
 	return strings.Title(val)
 }
 
+func ToVariable(val string) string {
+	if len(val) == 1 {
+		return strings.ToLower(val)
+	}
+
+	return strings.ToLower(val[0:1]) + val[1:]
+}
+
 func MergeArgs(funcName, serviceName string, modelPtr interface{}) interface{} {
 	return map[string]interface{}{"FuncName": funcName, "ServiceName": serviceName, "Model": modelPtr}
 }
@@ -80,6 +90,22 @@ func validAction(actionUrl string) ([]string, string) {
 func ExtractActionVal(actionUrl string) string {
 	_, val := validAction(actionUrl)
 	return val
+}
+
+func GetActionMethod(actionUrl string) string {
+	_, val := validAction(actionUrl)
+	switch val {
+	case filterAction, queryAction:
+		return "GET"
+	case createAction:
+		return "POST"
+	case updateAction:
+		return "PUT"
+	case deleteAction:
+		return "DELETE"
+	default:
+		return "GET"
+	}
 }
 
 func FormatAction(serviceName, modelName, actionUrl string) string {
