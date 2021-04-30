@@ -3,13 +3,14 @@ package factory
 import (
 	"bytes"
 	"fmt"
-	"github.com/muidea/magicToolkit/core/util"
+	"log"
 	"os"
 	"os/exec"
 	"path"
 	"text/template"
 
 	fu "github.com/muidea/magicCommon/foundation/util"
+	"github.com/muidea/magicToolkit/core/util"
 )
 
 const (
@@ -37,6 +38,11 @@ func init() {
 
 func RegisterFunc(name string, funcPtr interface{}) {
 	fu.ValidateFunc(funcPtr)
+
+	_, curOK := functionMap[name]
+	if curOK {
+		log.Panicf("duplicate function,name:%s", name)
+	}
 
 	functionMap[name] = funcPtr
 }
