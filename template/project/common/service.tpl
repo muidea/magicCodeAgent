@@ -26,13 +26,21 @@ const (
     func (s *{{$modelName}}Lite) From{{$modelName}}(ptr *model.{{$modelName}}) {
     }
 
+    type {{$modelName}}Param struct {
+    }
+
+    func (s *{{$modelName}}Param) To{{$modelName}}() *model.{{$modelName}} {
+        return &model.{{$modelName}}{}
+    }
+
     type {{$modelName}}View struct {
     }
 
     func (s *{{$modelName}}View) From{{$modelName}}(ptr *model.{{$modelName}}) {
     }
 
-    type {{$modelName}}Param struct {
+    func (s *{{$modelName}}View) To{{$modelName}}() *model.{{$modelName}} {
+        return &model.{{$modelName}}{}
     }
 
     {{$jsonName := toLower $modelName}}
