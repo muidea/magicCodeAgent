@@ -79,7 +79,6 @@ backgroundRoutine *task.BackgroundRoutine,
 
 {{end}}
 
-
 {{range $av := $model.Action}}
     {{- $funcName := formatAction $serviceName $model.Name $av -}}
     {{with mergeArgs $funcName $serviceName $model}}
