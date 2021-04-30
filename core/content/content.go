@@ -19,7 +19,6 @@ import (
 	"github.com/muidea/magicToolkit/core/content/core"
 	"github.com/muidea/magicToolkit/core/content/core/biz"
 	"github.com/muidea/magicToolkit/core/content/core/service"
-	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
 	"os"
@@ -28,24 +27,20 @@ import (
 
 // Content core define
 type Content struct {
-	projectPath string
-	name2model  map[string]*remote.Object
+	projectName string
+	rootPath    string
+	modelDefine *model.Define
+	objectList  []*remote.Object
 }
 
 // New new core
-func New(projectPath string, modelList []*remote.Object) *Content {
-	name2model := map[string]*remote.Object{}
-	for _, val := range modelList {
-		name := util.GetModelName(val)
-		name2model[name] = val
-	}
-
-	return &Content{projectPath: projectPath, name2model: name2model}
+func New(rootPath string, modelDefine *model.Define, objectList []*remote.Object) *Content {
+	return &Content{rootPath: rootPath, modelDefine: modelDefine, objectList: objectList}
 }
 
 // Create create
 func (s *Content) Create(projectName string, forceFlag bool) (err error) {
-	definePath := path.Join(s.projectPath, "doc", "define.json")
+	definePath := path.Join(s.rootPath, "doc", "define.json")
 	defineFile, defineErr := os.Open(definePath)
 	if defineErr != nil {
 		err = defineErr

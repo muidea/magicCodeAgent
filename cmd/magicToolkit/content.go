@@ -7,8 +7,10 @@ import (
 	"github.com/muidea/magicCommon/foundation/net"
 	"github.com/muidea/magicOrm/provider/remote"
 	"github.com/muidea/magicToolkit/core/content"
+	"github.com/muidea/magicToolkit/core/util"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 )
 
@@ -27,13 +29,20 @@ func createContent(curPath string) {
 		return
 	}
 
-	modelList, modelErr := queryObject(projectName, batisService)
+	definePath := path.Join("/Users/rangh/Documents/GoPATH/src/github.com/muidea/magicCas", "doc", "define.json")
+	modelDefine, modelErr := util.GetModelDefine(projectName, definePath)
 	if modelErr != nil {
-		log.Printf("query project model failed, err:%s", modelErr.Error())
+		log.Printf("get project model define failed, err:%s", modelErr.Error())
 		return
 	}
 
-	content := content.New(curPath, modelList)
+	objectList, objectErr := util.QueryObject(projectName, batisService)
+	if objectErr != nil {
+		log.Printf("query project object failed, err:%s", objectErr.Error())
+		return
+	}
+
+	content := content.New(curPath, modelDefine, objectList)
 	curErr := content.Create(projectName, forceFlag)
 	if curErr != nil {
 		log.Printf("Create project content failed, err:%s", curErr.Error())
