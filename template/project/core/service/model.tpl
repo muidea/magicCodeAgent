@@ -29,13 +29,13 @@ engine "github.com/muidea/magicEngine"
 
 
 {{- define "filterFuncDefine"}}
-    func (s *{{.ServiceName}})filter{{.Model.Name}}Lite(res http.ResponseWriter, req *http.Request, dataFilter *commonDef.Filter) {
+    func (s *{{.ServiceName}}){{toVariable .FuncName}}Lite(res http.ResponseWriter, req *http.Request, dataFilter *commonDef.Filter) {
         filter := def.NewFilter()
         filter.Page(dataFilter.PageFilter)
 
         result := &common.{{.Model.Name}}ListResult{ {{.Model.Name}}: []*common.{{.Model.Name}}Lite{} }
         for {
-            {{toLower .Model.Name}}List, _, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.Filter{{.Model.Name}}(filter)
+            {{toLower .Model.Name}}List, _, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(filter)
             if {{toLower .Model.Name}}Err != nil {
                 result.ErrorCode = commonDef.Failed
                 result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -70,13 +70,13 @@ engine "github.com/muidea/magicEngine"
     
         modelVal, modelOK := dataFilter.Get("mode")
         if modelOK && modelVal == "1" {
-            s.filter{{.Model.Name}}Lite(res, req, dataFilter)
+            s.{{toVariable .FuncName}}Lite(res, req, dataFilter)
             return
         }
     
         result := &common.{{.Model.Name}}StatisticResult{ {{.Model.Name}}: []*common.{{.Model.Name}}View{} }
         for {
-        {{toLower .Model.Name}}List, {{toLower .Model.Name}}Total, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.Filter{{.Model.Name}}(filter)
+        {{toLower .Model.Name}}List, {{toLower .Model.Name}}Total, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(filter)
         if {{toLower .Model.Name}}Err != nil {
         result.ErrorCode = commonDef.Failed
         result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -116,7 +116,7 @@ engine "github.com/muidea/magicEngine"
                 break
             }
 
-            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.Query{{.Model.Name}}(id)
+            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(id)
             if {{toLower .Model.Name}}Err != nil {
                 result.ErrorCode = commonDef.Failed
                 result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -152,7 +152,7 @@ engine "github.com/muidea/magicEngine"
         break
         }
 
-        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.Create{{.Model.Name}}(param.To{{.Model.Name}}())
+        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(param.To{{.Model.Name}}())
         if {{toLower .Model.Name}}Err != nil {
         result.ErrorCode = commonDef.Failed
         result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -198,7 +198,7 @@ engine "github.com/muidea/magicEngine"
         }
         param.ID = id
 
-        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.Update{{.Model.Name}}(param)
+        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(param)
         if {{toLower .Model.Name}}Err != nil {
         result.ErrorCode = commonDef.Failed
         result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -234,7 +234,7 @@ engine "github.com/muidea/magicEngine"
     break
     }
 
-    {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.Delete{{.Model.Name}}(id)
+    {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(id)
     if {{toLower .Model.Name}}Err != nil {
     result.ErrorCode = commonDef.Failed
     result.Reason = {{toLower .Model.Name}}Err.Error()
