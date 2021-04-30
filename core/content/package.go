@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"github.com/muidea/magicToolkit/factory"
 	"path"
 	"strings"
 
@@ -31,32 +32,32 @@ func (s *Package) Create(relativePath, templateFile string) (err error) {
 
 	packageFileName := fmt.Sprintf("%s.go", packageName)
 	packageVal := map[string]interface{}{"PackageName": packageName, "ProjectName": s.projectName, "ServiceList": s.serviceList}
-	packageFactory := util.NewFileFactory(s.templatePath, s.projectPath, templateFile, packageVal)
+	packageFactory := factory.NewFileFactory(s.templatePath, s.projectPath, templateFile, packageVal)
 	err = packageFactory.Create(relativePath, packageFileName, true)
 	if err != nil {
 		return
 	}
 
-	serviceTemplate := path.Join(s.templatePath, relativePath, util.ServiceTemplateFile)
+	serviceTemplate := path.Join(s.templatePath, relativePath, factory.ServiceTemplateFile)
 	if util.Exists(serviceTemplate) {
 		for _, val := range s.serviceList {
 			val.ApiVersion = s.apiVersion
 			servicePtr := NewService(s.templatePath, s.projectPath, s.projectName, val)
-			err = servicePtr.Create(relativePath, util.ServiceTemplateFile)
+			err = servicePtr.Create(relativePath, factory.ServiceTemplateFile)
 			if err != nil {
 				return
 			}
 		}
 	}
 
-	modelTemplate := path.Join(s.templatePath, relativePath, util.ModelTemplateFile)
+	modelTemplate := path.Join(s.templatePath, relativePath, factory.ModelTemplateFile)
 	if util.Exists(modelTemplate) {
 		for _, val := range s.serviceList {
 			val.ApiVersion = s.apiVersion
 			for _, sv := range val.Child {
 				sv.ApiVersion = s.apiVersion
 				modelPtr := NewModel(s.templatePath, s.projectPath, s.projectName, val.Name, sv)
-				err = modelPtr.Create(relativePath, util.ModelTemplateFile)
+				err = modelPtr.Create(relativePath, factory.ModelTemplateFile)
 				if err != nil {
 					return
 				}

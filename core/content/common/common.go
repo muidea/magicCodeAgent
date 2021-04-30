@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/muidea/magicToolkit/factory"
 	"os"
 	"os/exec"
 	"strings"
@@ -12,12 +13,12 @@ import (
 )
 
 func init() {
-	util.RegisterFunc("commonServiceFuncCreate", ServiceFuncCreate)
+	factory.RegisterFunc("commonServiceFuncCreate", ServiceFuncCreate)
 }
 
 func ServiceFuncCreate(servicePtr *model.Module) string {
 	serviceVal := map[string]interface{}{"Service": servicePtr}
-	factoryPtr := util.NewValueFactory("serviceFuncCreate.tpl", serviceVal)
+	factoryPtr := factory.NewValueFactory("serviceFuncCreate.tpl", serviceVal)
 	valStr, valErr := factoryPtr.Create("common")
 	if valErr == nil {
 		return valStr

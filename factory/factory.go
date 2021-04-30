@@ -1,19 +1,15 @@
-package util
+package factory
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/muidea/magicToolkit/core/util"
 	"os"
 	"os/exec"
 	"path"
 	"text/template"
 
 	fu "github.com/muidea/magicCommon/foundation/util"
-)
-
-const (
-	ProjectTemplatePath = "project"
-	UnitTemplatePath    = "unit"
 )
 
 const (
@@ -26,6 +22,23 @@ var functionMap template.FuncMap
 
 func init() {
 	functionMap = template.FuncMap{}
+
+	RegisterFunc("toLower", util.ToLower)
+	RegisterFunc("toTitle", util.ToTitle)
+	RegisterFunc("toVariable", util.ToVariable)
+	RegisterFunc("mergeArgs", util.MergeArgs)
+	RegisterFunc("extractAction", util.ExtractActionVal)
+	RegisterFunc("getActionMethod", util.GetActionMethod)
+	RegisterFunc("formatAction", util.FormatAction)
+	RegisterFunc("formatParam", util.FormatParam)
+	RegisterFunc("formatResult", util.FormatResult)
+	RegisterFunc("isEntity", util.IsEntity)
+}
+
+func RegisterFunc(name string, funcPtr interface{}) {
+	fu.ValidateFunc(funcPtr)
+
+	functionMap[name] = funcPtr
 }
 
 type FileFactory struct {
@@ -33,12 +46,6 @@ type FileFactory struct {
 	rootPath     string
 	templateName string
 	contentData  map[string]interface{}
-}
-
-func RegisterFunc(name string, funcPtr interface{}) {
-	fu.ValidateFunc(funcPtr)
-
-	functionMap[name] = funcPtr
 }
 
 func NewFileFactory(templatePath, rootPath, templateName string, contentData map[string]interface{}) *FileFactory {
@@ -50,7 +57,7 @@ func (s *FileFactory) getTemplateName(relativePath string) string {
 }
 
 func (s *FileFactory) getTemplateContent(relativePath string) (ret string, err error) {
-	contentVal, contentErr := getTemplateContent(s.templatePath, relativePath, s.templateName)
+	contentVal, contentErr := util.GetTemplateContent(s.templatePath, relativePath, s.templateName)
 	if contentErr != nil {
 		err = contentErr
 		return
@@ -63,7 +70,7 @@ func (s *FileFactory) getTemplateContent(relativePath string) (ret string, err e
 func (s *FileFactory) Create(relativePath, fileName string, forceFlag bool) (err error) {
 	filePath := path.Join(s.rootPath, relativePath, fileName)
 	filePath, fileName = path.Split(filePath)
-	existFlag := Exists(filePath)
+	existFlag := util.Exists(filePath)
 	if !existFlag {
 		err = os.MkdirAll(filePath, os.ModePerm)
 		if err != nil {
@@ -72,7 +79,7 @@ func (s *FileFactory) Create(relativePath, fileName string, forceFlag bool) (err
 	}
 
 	fullFilePath := path.Join(filePath, fileName)
-	existFlag = Exists(fullFilePath)
+	existFlag = util.Exists(fullFilePath)
 	if !existFlag || forceFlag {
 		func() {
 			fileHandle, fileErr := os.Create(fullFilePath)
@@ -121,7 +128,7 @@ func (s *ValueFactory) getTemplateName(relativePath string) string {
 }
 
 func (s *ValueFactory) getTemplateContent(relativePath string) (ret string, err error) {
-	contentVal, contentErr := GetTemplateUnitContent(relativePath, s.templateName)
+	contentVal, contentErr := util.GetTemplateUnitContent(relativePath, s.templateName)
 	if contentErr != nil {
 		err = contentErr
 		return

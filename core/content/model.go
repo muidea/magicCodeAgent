@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"github.com/muidea/magicToolkit/factory"
 	"strings"
 
 	"github.com/muidea/magicToolkit/core/util"
@@ -27,7 +28,7 @@ func (s *Model) getPackageName(relativePath string) string {
 
 func (s *Model) Create(relativePath, templateFile string) (err error) {
 	modelVal := map[string]interface{}{"PackageName": util.ToLower(s.serviceName), "ProjectName": s.projectName, "ServiceName": s.serviceName, "Model": s.modelDefine}
-	factoryPtr := util.NewFileFactory(s.templatePath, s.projectPath, templateFile, modelVal)
+	factoryPtr := factory.NewFileFactory(s.templatePath, s.projectPath, templateFile, modelVal)
 
 	fileName := fmt.Sprintf("%s/%s.go", util.ToLower(s.serviceName), strings.ToLower(s.modelDefine.Name))
 	err = factoryPtr.Create(relativePath, fileName, true)

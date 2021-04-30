@@ -18,25 +18,17 @@ import (
 )
 
 const (
+	ProjectTemplatePath = "project"
+	UnitTemplatePath    = "unit"
+)
+
+const (
 	filterAction = "filter"
 	queryAction  = "query"
 	createAction = "create"
 	updateAction = "update"
 	deleteAction = "delete"
 )
-
-func init() {
-	RegisterFunc("toLower", ToLower)
-	RegisterFunc("toTitle", ToTitle)
-	RegisterFunc("toVariable", ToVariable)
-	RegisterFunc("mergeArgs", MergeArgs)
-	RegisterFunc("extractAction", ExtractActionVal)
-	RegisterFunc("getActionMethod", GetActionMethod)
-	RegisterFunc("formatAction", FormatAction)
-	RegisterFunc("formatParam", FormatParam)
-	RegisterFunc("formatResult", FormatResult)
-	RegisterFunc("isEntity", IsEntity)
-}
 
 func Exists(itemPath string) bool {
 	_, err := os.Stat(itemPath)
@@ -188,7 +180,7 @@ func GetTemplatePath(typeVal string) (ret string, err error) {
 	return
 }
 
-func getTemplateContent(templatePath, filePath, fileName string) (ret string, err error) {
+func GetTemplateContent(templatePath, filePath, fileName string) (ret string, err error) {
 	var fullFilePath string
 	if filePath == "" {
 		fullFilePath = fmt.Sprintf("%s/%s", templatePath, fileName)
@@ -219,7 +211,7 @@ func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
 		return
 	}
 
-	ret, err = getTemplateContent(templatePath, filePath, fileName)
+	ret, err = GetTemplateContent(templatePath, filePath, fileName)
 	return
 }
 
@@ -230,7 +222,7 @@ func GetTemplateUnitContent(filePath, unitName string) (ret string, err error) {
 		return
 	}
 
-	ret, err = getTemplateContent(templatePath, filePath, unitName)
+	ret, err = GetTemplateContent(templatePath, filePath, unitName)
 	return
 }
 

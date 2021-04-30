@@ -3,6 +3,7 @@ package project
 import (
 	"fmt"
 	"github.com/muidea/magicToolkit/core/content"
+	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
 	"log"
@@ -42,7 +43,7 @@ func (s *Project) cloneContent(templatePath, filePath, fileName string) (err err
 	log.Print(fileName)
 
 	contentVal := map[string]interface{}{"ProjectName": s.projectName}
-	factoryPtr := util.NewFileFactory(templatePath, s.rootPath, fileName, contentVal)
+	factoryPtr := factory.NewFileFactory(templatePath, s.rootPath, fileName, contentVal)
 
 	items := strings.Split(fileName, ".")
 	fileName = strings.Join(items[:len(items)-1], ".")
@@ -109,9 +110,9 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 			continue
 		}
 
-		if fileName == util.PackageTemplateFile {
+		if fileName == factory.PackageTemplateFile {
 			packagePtr := content.NewPackage(baseTemplatePath, s.rootPath, s.projectName, s.modelDefine.ApiVersion, s.modelDefine.Module)
-			err = packagePtr.Create(relativePath, util.PackageTemplateFile)
+			err = packagePtr.Create(relativePath, factory.PackageTemplateFile)
 			if err != nil {
 				return
 			}
