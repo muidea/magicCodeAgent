@@ -35,6 +35,7 @@ func init() {
 	RegisterFunc("formatAction", FormatAction)
 	RegisterFunc("formatParam", FormatParam)
 	RegisterFunc("formatResult", FormatResult)
+	RegisterFunc("isEntity", IsEntity)
 }
 
 func Exists(itemPath string) bool {
@@ -158,6 +159,10 @@ func FormatResult(serviceName, modelName, actionUrl string) string {
 	}
 
 	return ""
+}
+
+func IsEntity(ptr *model.Module) bool {
+	return false
 }
 
 func GetModelName(modelPtr *remote.Object) string {
