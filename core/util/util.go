@@ -81,7 +81,11 @@ func validAction(actionUrl string) ([]string, string) {
 }
 
 func ExtractActionVal(actionUrl string) string {
-	_, val := validAction(actionUrl)
+	others, val := validAction(actionUrl)
+	if len(others) > 0 {
+		return ""
+	}
+
 	return val
 }
 
