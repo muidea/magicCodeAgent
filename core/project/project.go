@@ -23,6 +23,50 @@ type Project struct {
 	objectList  []*remote.Object
 }
 
+var objectMap map[string]*remote.Object
+
+func init() {
+	objectMap = map[string]*remote.Object{}
+
+	factory.RegisterFunc("isEntity", IsEntity)
+}
+
+func updateObjectMap(objectList []*remote.Object) {
+	oMap := map[string]*remote.Object{}
+	for _, val := range objectList {
+		log.Printf("object:%s", val.Name)
+		oMap[util.GetModelName(val)] = val
+	}
+
+	objectMap = oMap
+}
+
+func findObject(name string) *remote.Object {
+	ptr, ok := objectMap[name]
+	if !ok {
+		return nil
+	}
+
+	return ptr
+}
+
+func IsEntity(ptr *model.Module) bool {
+	log.Printf("module:%s, child size:%d", ptr.Name, len(ptr.Child))
+	findObjectFlag := false
+	for _, val := range ptr.Child {
+		if len(val.Action) == 0 {
+			continue
+		}
+
+		if findObject(val.Name) != nil {
+			findObjectFlag = true
+			break
+		}
+	}
+
+	return findObjectFlag
+}
+
 // New new core
 func New(rootPath string, modelDefine *model.Define, objectList []*remote.Object) *Project {
 	return &Project{rootPath: rootPath, modelDefine: modelDefine, objectList: objectList}
@@ -58,6 +102,8 @@ func (s *Project) cloneContent(templatePath, filePath, fileName string) (err err
 // Create create
 func (s *Project) Create(projectName string) (err error) {
 	s.projectName = projectName
+
+	updateObjectMap(s.objectList)
 
 	err = s.walkTemplate("")
 	return

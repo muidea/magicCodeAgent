@@ -153,10 +153,6 @@ func FormatResult(serviceName, modelName, actionUrl string) string {
 	return ""
 }
 
-func IsEntity(ptr *model.Module) bool {
-	return false
-}
-
 func GetModelName(modelPtr *remote.Object) string {
 	items := strings.Split(modelPtr.GetName(), ".")
 	return items[1]

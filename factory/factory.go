@@ -33,7 +33,6 @@ func init() {
 	RegisterFunc("formatAction", util.FormatAction)
 	RegisterFunc("formatParam", util.FormatParam)
 	RegisterFunc("formatResult", util.FormatResult)
-	RegisterFunc("isEntity", util.IsEntity)
 }
 
 func RegisterFunc(name string, funcPtr interface{}) {

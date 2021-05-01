@@ -8,7 +8,10 @@ import (
 "github.com/muidea/magicCommon/task"
 "github.com/muidea/{{$projectName}}/core/dao"
 {{range $sv := $serviceList}}
-"github.com/muidea/{{$projectName}}/core/biz/{{toLower $sv.Name}}"{{end}}
+    {{- if isEntity $sv -}}
+    "github.com/muidea/{{$projectName}}/core/biz/{{toLower $sv.Name}}"
+    {{end -}}
+{{- end -}}
 )
 
 {{define "serviceFuncDeclare"}}
@@ -22,5 +25,10 @@ import (
     }
 {{end}}
 
-{{range $serviceList}}
-    {{template "serviceFuncDeclare" .}}{{end}}
+{{range $sv := $serviceList}}
+    {{if isEntity $sv}}
+        {{with $sv}}
+            {{template "serviceFuncDeclare" .}}
+        {{end -}}
+    {{end -}}
+{{end -}}

@@ -13,5 +13,10 @@ import "github.com/muidea/magicBatis/client"
     }
 {{end}}
 
-{{range $serviceList}}
-    {{template "serviceFuncDefine" .}}{{end}}
+{{range $sv := $serviceList}}
+    {{if isEntity $sv}}
+        {{with $sv}}
+            {{template "serviceFuncDefine" .}}
+        {{end -}}
+    {{end -}}
+{{end -}}
