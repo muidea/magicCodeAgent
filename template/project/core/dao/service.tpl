@@ -124,8 +124,6 @@ type {{$serviceName}} interface {
                     {{- template "updateFuncDeclare" . -}}
                 {{else if eq $action "delete"}}
                     {{- template "deleteFuncDeclare" . -}}
-                {{else}}
-                    {{- template "otherFuncDeclare" . -}}
                 {{end}}
             {{- end}}
         {{- end}}
@@ -151,8 +149,6 @@ type {{toLower $serviceName}} struct {
                 {{- template "updateFuncDefine" . -}}
             {{else if eq $action "delete"}}
                 {{- template "deleteFuncDefine" . -}}
-            {{else}}
-                {{- template "otherFuncDefine" . -}}
             {{end}}
         {{end}}
     {{- end}}
