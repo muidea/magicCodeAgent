@@ -107,7 +107,7 @@ import (
     "github.com/muidea/{{$projectName}}/model"
 )
 
-// {{$serviceName}} {{toLower $serviceName}} handler
+// {{$serviceName}} {{toLower $serviceName}} dao
 type {{$serviceName}} interface {
     {{range $mv := $childList}}
         {{range $av := $mv.Action}}
