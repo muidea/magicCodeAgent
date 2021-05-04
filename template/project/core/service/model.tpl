@@ -74,7 +74,7 @@ engine "github.com/muidea/magicEngine"
             return
         }
     
-        result := &common.{{.Model.Name}}StatisticResult{ {{.Model.Name}}: []*common.{{.Model.Name}}View{} }
+        result := &common.{{.Model.Name}}StatisticResult{ {{.Model.Name}}: []*model.{{.Model.Name}}{} }
         for {
         {{toLower .Model.Name}}List, {{toLower .Model.Name}}Total, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(filter)
         if {{toLower .Model.Name}}Err != nil {
@@ -82,13 +82,8 @@ engine "github.com/muidea/magicEngine"
         result.Reason = {{toLower .Model.Name}}Err.Error()
         break
         }
-    
-        for _, val := range {{toLower .Model.Name}}List {
-        {{toLower .Model.Name}}View := &common.{{.Model.Name}}View{}
-        {{toLower .Model.Name}}View.From{{.Model.Name}}(val)
-        result.{{.Model.Name}} = append(result.{{.Model.Name}}, {{toLower .Model.Name}}View)
-        }
-    
+
+        result.{{.Model.Name}} = {{toLower .Model.Name}}List
         result.Total = {{toLower .Model.Name}}Total
         result.ErrorCode = commonDef.Success
         break
@@ -123,9 +118,7 @@ engine "github.com/muidea/magicEngine"
                 break
             }
 
-            {{toLower .Model.Name}}View := &common.{{.Model.Name}}View{}
-            {{toLower .Model.Name}}View.From{{.Model.Name}}({{toLower .Model.Name}}Ptr)
-            result.{{.Model.Name}} = {{toLower .Model.Name}}View
+            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
             result.ErrorCode = commonDef.Success
             break
         }
@@ -159,9 +152,7 @@ engine "github.com/muidea/magicEngine"
         break
         }
 
-        {{toLower .Model.Name}}View := &common.{{.Model.Name}}View{}
-        {{toLower .Model.Name}}View.From{{.Model.Name}}({{toLower .Model.Name}}Ptr)
-        result.{{.Model.Name}} = {{toLower .Model.Name}}View
+        result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
         result.ErrorCode = commonDef.Success
         break
         }
@@ -205,9 +196,7 @@ engine "github.com/muidea/magicEngine"
         break
         }
 
-        {{toLower .Model.Name}}View := &common.{{.Model.Name}}View{}
-        {{toLower .Model.Name}}View.From{{.Model.Name}}({{toLower .Model.Name}}Ptr)
-        result.{{.Model.Name}} = {{toLower .Model.Name}}View
+        result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
         result.ErrorCode = commonDef.Success
         break
         }
@@ -241,9 +230,7 @@ engine "github.com/muidea/magicEngine"
     break
     }
 
-    {{toLower .Model.Name}}View := &common.{{.Model.Name}}View{}
-    {{toLower .Model.Name}}View.From{{.Model.Name}}({{toLower .Model.Name}}Ptr)
-    result.{{.Model.Name}} = {{toLower .Model.Name}}View
+    result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
     result.ErrorCode = commonDef.Success
     break
     }
