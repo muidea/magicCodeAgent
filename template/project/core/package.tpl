@@ -36,15 +36,15 @@ func New(clnt batisClient.Client) (*Core, error) {
 
     {{range $sv := $serviceList}}
         {{toLower $sv.Name}} := dao.New{{$sv.Name}}(clnt)
-    {{end}}
+    {{- end }}
 
     {{range $sv := $serviceList}}
         {{toLower $sv.Name}}Biz := biz.New{{$sv.Name}}({{toLower $sv.Name}}, eventHub, backgroundRoutine)
-    {{end}}
+    {{- end }}
 
     {{range $sv := $serviceList}}
         {{toLower $sv.Name}}Service := service.New{{$sv.Name}}(common, {{toLower $sv.Name}}Biz)
-    {{end}}
+    {{- end }}
 
     core := &Core{ {{range $sv := $serviceList}}
             {{toLower $sv.Name}}Service: {{toLower $sv.Name}}Service, {{end}}
@@ -65,9 +65,9 @@ type Core struct {
 
 // Startup 启动
 func (s *Core) Startup(router engine.Router) {
-    {{range $sv := $serviceList}}
+    {{- range $sv := $serviceList}}
     s.{{toLower $sv.Name}}Service.RegisterHandler(router)
-    {{end}}
+    {{- end}}
 }
 
 // Teardown 销毁

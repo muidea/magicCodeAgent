@@ -2,24 +2,112 @@
 {{$projectName := .ProjectName}}
 {{$serviceList := .ServiceList}}
 
+{{- define "filterFuncDefine"}}
+    func (s *client){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error) {
+    return
+    }
+{{- end}}
+{{- define "filterFuncDeclare"}}
+    {{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error)
+{{- end}}
+
+{{- define "queryFuncDefine"}}
+    func (s *client){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    return
+    }
+{{- end}}
+{{- define "queryFuncDeclare"}}
+    {{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error)
+{{- end}}
+
+{{- define "createFuncDefine"}}
+    func (s *client){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+    return
+    }
+{{- end}}
+{{- define "createFuncDeclare"}}
+    {{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error)
+{{- end}}
+
+{{- define "updateFuncDefine"}}
+    func (s *client){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+    return
+    }
+{{- end}}
+{{- define "updateFuncDeclare"}}
+    {{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error)
+{{- end}}
+
+{{- define "deleteFuncDefine"}}
+    func (s *client){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    return
+    }
+{{- end}}
+{{- define "deleteFuncDeclare"}}
+    {{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error)
+{{- end}}
+
+{{- define "otherFuncDefine"}}
+    func (s *client){{.FuncName}}(){
+    return
+    }
+{{- end}}
+{{- define "otherFuncDeclare"}}
+    {{.FuncName}}()
+{{- end}}
+
 {{define "serviceFuncDeclare"}}
     {{$serviceName := .Name}}
     {{$modelList := .Child}}
-    {{range $modelList}}
-        {{$modelName := .Name}}
-        {{range $url := .Action}}
-            {{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){{end}}{{end}}
+    {{- range $mv := $modelList}}
+        {{$modelName := $mv.Name}}
+        {{- range $av := $mv.Action}}
+            {{- $funcName := formatAction $serviceName $modelName $av -}}
+            {{- with mergeArgs $funcName $serviceName $mv}}
+                {{- $action := extractAction $av -}}
+                {{if eq $action "filter"}}
+                    {{- template "filterFuncDeclare" . -}}
+                {{else if eq $action "query"}}
+                    {{- template "queryFuncDeclare" . -}}
+                {{else if eq $action "create"}}
+                    {{- template "createFuncDeclare" . -}}
+                {{else if eq $action "update"}}
+                    {{- template "updateFuncDeclare" . -}}
+                {{else if eq $action "delete"}}
+                    {{- template "deleteFuncDeclare" . -}}
+                {{else}}
+                    {{- template "otherFuncDeclare" . -}}
+                {{end}}
+            {{- end}}
+        {{- end}}
+    {{- end}}
 {{end}}
 
 {{define "serviceFuncDefine"}}
     {{$serviceName := .Name}}
     {{$modelList := .Child}}
-    {{range $modelList}}
-        {{$modelName := .Name}}
-        {{range $url := .Action}}
-            func (s *client) {{formatAction $serviceName $modelName $url}}({{formatParam $serviceName $modelName $url}})({{formatResult $serviceName $modelName $url}}){
-                return
-            }{{end}}{{end}}
+    {{- range $mv := $modelList}}
+        {{$modelName := $mv.Name}}
+        {{- range $av := $mv.Action}}
+            {{- $funcName := formatAction $serviceName $modelName $av -}}
+            {{with mergeArgs $funcName $serviceName $mv}}
+                {{- $action := extractAction $av -}}
+                {{if eq $action "filter"}}
+                    {{- template "filterFuncDefine" . -}}
+                {{else if eq $action "query"}}
+                    {{- template "queryFuncDefine" . -}}
+                {{else if eq $action "create"}}
+                    {{- template "createFuncDefine" . -}}
+                {{else if eq $action "update"}}
+                    {{- template "updateFuncDefine" . -}}
+                {{else if eq $action "delete"}}
+                    {{- template "deleteFuncDefine" . -}}
+                {{else}}
+                    {{- template "otherFuncDefine" . -}}
+                {{end}}
+            {{end}}
+        {{- end}}
+    {{- end}}
 {{end}}
 
 
@@ -40,8 +128,9 @@ type Client interface {
     AttachContext(ctx commonCommon.ContextInfo)
     DetachContext()
 
-    {{range $serviceList}}
-        {{template "serviceFuncDeclare" .}}{{end}}
+    {{- range $serviceList}}
+        {{template "serviceFuncDeclare" .}}
+    {{- end}}
 
     BindSession(sessionInfo *commonCommon.SessionInfo)
     UnBindSession()
@@ -64,7 +153,8 @@ type client struct {
 }
 
 {{range $serviceList}}
-    {{template "serviceFuncDefine" .}}{{end}}
+    {{template "serviceFuncDefine" .}}
+{{- end}}
 
 func (s *client) AttachContext(ctx commonCommon.ContextInfo) {
     s.contextInfo = ctx

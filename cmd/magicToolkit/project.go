@@ -24,7 +24,7 @@ func createProject(curPath string) {
 		return
 	}
 
-	definePath := path.Join("/Users/rangh/Documents/GoPATH/src/github.com/muidea/magicCas", "doc", "define.json")
+	definePath := path.Join(curPath, "doc", "define.json")
 	modelDefine, modelErr := util.GetModelDefine(projectName, definePath)
 	if modelErr != nil {
 		log.Printf("get project model define failed, err:%s", modelErr.Error())
