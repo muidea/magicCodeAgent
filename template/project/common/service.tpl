@@ -36,20 +36,10 @@ const (
         return &model.{{$modelName}}{}
         }
 
-        type {{$modelName}}View struct {
-        }
-
-        func (s *{{$modelName}}View) From{{$modelName}}(ptr *model.{{$modelName}}) {
-        }
-
-        func (s *{{$modelName}}View) To{{$modelName}}() *model.{{$modelName}} {
-        return &model.{{$modelName}}{}
-        }
-
         {{$jsonName := toLower $modelName}}
         type {{$modelName}}Result struct {
         commonDef.Result
-        {{$modelName}} *{{$modelName}}View `json:"{{$jsonName}}"`
+        {{$modelName}} *model.{{$modelName}} `json:"{{$jsonName}}"`
         }
 
         type {{$modelName}}ListResult struct {
@@ -60,7 +50,7 @@ const (
         type {{$modelName}}StatisticResult struct {
         commonDef.Result
         Total    int64                 `json:"total"`
-        {{$modelName}} []*{{$modelName}}View `json:"{{$jsonName}}"`
+        {{$modelName}} []*model.{{$modelName}} `json:"{{$jsonName}}"`
         }
     {{end}}
 {{end}}
