@@ -12,8 +12,8 @@ import (
 
 log "github.com/cihub/seelog"
 
-"github.com/muidea/magicCommon/foundation/net"
-"github.com/muidea/magicCommon/foundation/util"
+fn "github.com/muidea/magicCommon/foundation/net"
+fu "github.com/muidea/magicCommon/foundation/util"
 
 commonDef "github.com/muidea/magicCommon/def"
 commonSession "github.com/muidea/magicCommon/session"
@@ -103,7 +103,7 @@ engine "github.com/muidea/magicEngine"
     func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request) {
         result := &common.{{.Model.Name}}Result{}
         for {
-            _, value := net.SplitRESTAPI(req.URL.Path)
+            _, value := fn.SplitRESTAPI(req.URL.Path)
             id, err := strconv.Atoi(value)
             if err != nil || id == 0 {
                 result.ErrorCode = commonDef.Failed
@@ -138,7 +138,7 @@ engine "github.com/muidea/magicEngine"
         result := &common.{{.Model.Name}}Result{}
         for {
         param := &common.{{.Model.Name}}Param{}
-        err := net.ParseJSONBody(req, s.validator, param)
+        err := fn.ParseJSONBody(req, s.validator, param)
         if err != nil {
         result.ErrorCode = commonDef.IllegalParam
         result.Reason = "invalid param"
@@ -171,7 +171,7 @@ engine "github.com/muidea/magicEngine"
     func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
         result := &common.{{.Model.Name}}Result{}
         for {
-        _, value := net.SplitRESTAPI(req.URL.Path)
+        _, value := fn.SplitRESTAPI(req.URL.Path)
         id, err := strconv.Atoi(value)
         if err != nil || id == 0 {
         log.Errorf("update partner failed, illegal id, id:%s", value)
@@ -181,7 +181,7 @@ engine "github.com/muidea/magicEngine"
         }
 
         param := &model.{{.Model.Name}}{}
-        err = net.ParseJSONBody(req, s.validator, param)
+        err = fn.ParseJSONBody(req, s.validator, param)
         if err != nil {
         result.ErrorCode = commonDef.IllegalParam
         result.Reason = "invalid param"
@@ -215,7 +215,7 @@ engine "github.com/muidea/magicEngine"
     func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
     result := &common.{{.Model.Name}}Result{}
     for {
-    _, value := net.SplitRESTAPI(req.URL.Path)
+    _, value := fn.SplitRESTAPI(req.URL.Path)
     id, err := strconv.Atoi(value)
     if err != nil || id == 0 {
     result.ErrorCode = commonDef.Failed
@@ -253,7 +253,7 @@ engine "github.com/muidea/magicEngine"
 {{if eq $serviceName $modelName}}
     type {{$serviceName}} struct {
     sessionRegistry      commonSession.Registry
-    validator util.Validator
+    validator fu.Validator
 
     common dao.Common
     {{toLower $serviceName}}Biz *{{toLower $serviceName}}.{{$serviceName}}
@@ -266,7 +266,7 @@ engine "github.com/muidea/magicEngine"
     ptr := &{{$serviceName}}{
     common:common,
     {{toLower $serviceName}}Biz:{{toLower $serviceName}}Biz,
-    validator:     util.NewFormValidator(),
+    validator:     fu.NewFormValidator(),
     }
 
     return ptr
