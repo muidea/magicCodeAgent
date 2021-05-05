@@ -28,7 +28,7 @@ function cleanUp()
 function buildBin()
 {
     echo "buildBin..."
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $binPath github.com/muidea/{{.ProjectName}}/cmd/{{.ProjectName}}
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $binPath github.com/muidea/{{.ProjectName}}/cmd/{{.ProjectName}}
     if [ $? -ne 0 ]; then
         echo "buildBin failed."
         exit 1
