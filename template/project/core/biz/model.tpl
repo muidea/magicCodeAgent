@@ -10,6 +10,7 @@ import (
 "github.com/muidea/magicCommon/event"
 "github.com/muidea/magicCommon/task"
 
+"github.com/muidea/{{$projectName}}/common"
 "github.com/muidea/{{$projectName}}/model"
 
 "github.com/muidea/{{$projectName}}/core/dao"
@@ -30,8 +31,8 @@ import (
 {{- end}}
 
 {{- define "createFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
-    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr)
+    func (s *{{.ServiceName}}){{.FuncName}}(ptr *common.{{.Model.Name}}Param) (ret *model.{{.Model.Name}}, err error){
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr.To{{.Model.Name}}())
     return
     }
 {{- end}}
