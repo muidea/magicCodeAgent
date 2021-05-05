@@ -60,7 +60,7 @@ func main() {
 	}
 
 	router := engine.NewRouter()
-	core, err := core.New(clnt)
+	core, err := core.New(clnt,endpointName)
 
 	if err == nil {
 		core.Startup(router)

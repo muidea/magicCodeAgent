@@ -22,7 +22,7 @@ engine "github.com/muidea/magicEngine"
 
 
 // New 新建Core
-func New(clnt batisClient.Client) (*Core, error) {
+func New(clnt batisClient.Client,endpointName string) (*Core, error) {
     err := model.InitializeModel(clnt)
     if err != nil {
     log.Errorf("initializeModel failed, err:%s", err.Error())
