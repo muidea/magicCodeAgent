@@ -28,7 +28,7 @@ function cleanUp()
 function buildBin()
 {
     echo "buildBin..."
-    GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags netgo  -o $binPath github.com/muidea/{{.ProjectName}}/cmd/{{.ProjectName}}
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $binPath github.com/muidea/{{.ProjectName}}/cmd/{{.ProjectName}}
     if [ $? -ne 0 ]; then
         echo "buildBin failed."
         exit 1
@@ -139,7 +139,7 @@ function build()
 
     buildImage
 
-    tagImage $imageID $imageName:$imageVersion    
+    tagImage $imageID $imageName:$imageVersion
 }
 
 action='all'
@@ -155,3 +155,4 @@ elif [ $action == 'build' ]; then
     build
 else
     all
+fi
