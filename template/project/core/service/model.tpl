@@ -145,7 +145,7 @@ engine "github.com/muidea/magicEngine"
         break
         }
 
-        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(param.To{{.Model.Name}}())
+        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(param)
         if {{toLower .Model.Name}}Err != nil {
         result.ErrorCode = commonDef.Failed
         result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -284,11 +284,11 @@ engine "github.com/muidea/magicEngine"
 
     // RegisterHandler 注册路由
     func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
-        {{range $av := $model.Action}}
+        {{- range $av := $model.Action}}
             {{$funcName := formatAction $serviceName $modelName $av}}
             {{toVariable $funcName}}Route := engine.CreateRoute(common.{{$funcName}}URL, "{{getActionMethod $av}}", s.{{$funcName}})
             router.AddRoute({{toVariable $funcName}}Route, s)
-        {{end}}
+        {{- end}}
     }
 
 {{end}}
