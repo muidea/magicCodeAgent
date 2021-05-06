@@ -16,7 +16,8 @@ const (
 {{range $mk, $mv := $childList}}
     {{$modelName := $mv.Name}}
     {{range $ak, $av := $mv.Action}}
-        {{formatAction $serviceName $serviceName $av}}URL = "/{{$apiVersion}}/{{toLower $serviceName}}/{{toLower $av}}"{{end}}
+        {{formatAction $serviceName $serviceName $av}}URL = "/{{$apiVersion}}/{{toLower $serviceName}}/{{toLower $av}}"
+    {{- end -}}
 {{end}}
 )
 
@@ -30,6 +31,10 @@ const (
         }
 
         type {{$modelName}}Param struct {
+        }
+
+        func (s *{{$modelName}}Param) To{{$modelName}}() (ret *model.{{$modelName}}) {
+            return
         }
 
         {{$jsonName := toLower $modelName}}
