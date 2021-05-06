@@ -26,7 +26,7 @@ func init() {
 
 	RegisterFunc("toLower", util.ToLower)
 	RegisterFunc("toTitle", util.ToTitle)
-	RegisterFunc("toVariable", util.ToVariable)
+	RegisterFunc("toCamelCase", util.ToCamelCase)
 	RegisterFunc("mergeArgs", util.MergeArgs)
 	RegisterFunc("extractAction", util.ExtractActionVal)
 	RegisterFunc("getActionMethod", util.GetActionMethod)

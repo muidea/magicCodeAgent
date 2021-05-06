@@ -51,7 +51,7 @@ func ToTitle(val string) string {
 	return strings.Title(val)
 }
 
-func ToVariable(val string) string {
+func ToCamelCase(val string) string {
 	if len(val) == 1 {
 		return strings.ToLower(val)
 	}

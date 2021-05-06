@@ -29,7 +29,7 @@ engine "github.com/muidea/magicEngine"
 
 
 {{- define "filterFuncDefine"}}
-    func (s *{{.ServiceName}}){{toVariable .FuncName}}Lite(res http.ResponseWriter, req *http.Request, dataFilter *commonDef.Filter) {
+    func (s *{{.ServiceName}}){{toCamelCase .FuncName}}Lite(res http.ResponseWriter, req *http.Request, dataFilter *commonDef.Filter) {
         filter := def.NewFilter()
         filter.Page(dataFilter.PageFilter)
 
@@ -70,7 +70,7 @@ engine "github.com/muidea/magicEngine"
     
         modelVal, modelOK := dataFilter.Get("mode")
         if modelOK && modelVal == "1" {
-            s.{{toVariable .FuncName}}Lite(res, req, dataFilter)
+            s.{{toCamelCase .FuncName}}Lite(res, req, dataFilter)
             return
         }
     
@@ -286,8 +286,8 @@ engine "github.com/muidea/magicEngine"
     func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
         {{- range $av := $model.Action}}
             {{$funcName := formatAction $serviceName $modelName $av}}
-            {{toVariable $funcName}}Route := engine.CreateRoute(common.{{$funcName}}URL, "{{getActionMethod $av}}", s.{{$funcName}})
-            router.AddRoute({{toVariable $funcName}}Route, s)
+            {{toCamelCase $funcName}}Route := engine.CreateRoute(common.{{$funcName}}URL, "{{getActionMethod $av}}", s.{{$funcName}})
+            router.AddRoute({{toCamelCase $funcName}}Route, s)
         {{- end}}
     }
 
