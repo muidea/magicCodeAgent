@@ -32,10 +32,6 @@ const (
         type {{$modelName}}Param struct {
         }
 
-        func (s *{{$modelName}}Param) To{{$modelName}}() *model.{{$modelName}} {
-        return &model.{{$modelName}}{}
-        }
-
         {{$jsonName := toLower $modelName}}
         type {{$modelName}}Result struct {
         commonDef.Result
