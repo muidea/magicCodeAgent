@@ -18,6 +18,7 @@ import (
 
 {{- define "filterFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error) {
+    // TODO
     ret,total,err = s.{{toLower .ServiceName}}.{{.FuncName}}(filter)
     return
     }
@@ -25,6 +26,7 @@ import (
 
 {{- define "queryFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    // TODO
     ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id)
     return
     }
@@ -32,6 +34,7 @@ import (
 
 {{- define "createFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(ptr *common.{{.Model.Name}}Param) (ret *model.{{.Model.Name}}, err error){
+    // TODO
     ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr.To{{.Model.Name}}())
     return
     }
@@ -39,6 +42,7 @@ import (
 
 {{- define "updateFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+    // TODO
     ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr)
     return
     }
@@ -46,6 +50,7 @@ import (
 
 {{- define "deleteFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    // TODO
     ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id)
     return
     }
@@ -53,6 +58,7 @@ import (
 
 {{- define "otherFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(){
+    // TODO
     return
     }
 {{- end}}

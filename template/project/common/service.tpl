@@ -28,12 +28,15 @@ const (
         }
 
         func (s *{{$modelName}}Lite) From{{$modelName}}(ptr *model.{{$modelName}}) {
+            // TODO
         }
 
         type {{$modelName}}Param struct {
+            // TODO
         }
 
         func (s *{{$modelName}}Param) To{{$modelName}}() (ret *model.{{$modelName}}) {
+            // TODO
             return
         }
 
