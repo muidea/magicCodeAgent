@@ -65,8 +65,13 @@ type Core struct {
 
 // Startup 启动
 func (s *Core) Startup(router engine.Router) {
+    sessionRegistry := session.CreateRegistry(nil)
     {{- range $sv := $serviceList}}
-    s.{{toLower $sv.Name}}Service.RegisterHandler(router)
+        s.{{toLower $sv.Name}}Service.BindRegistry(sessionRegistry)
+    {{- end}}
+
+    {{- range $sv := $serviceList}}
+        s.{{toLower $sv.Name}}Service.RegisterHandler(router)
     {{- end}}
 }
 
