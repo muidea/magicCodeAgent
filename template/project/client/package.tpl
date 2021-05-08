@@ -3,12 +3,12 @@
 {{$serviceList := .ServiceList}}
 
 {{- define "filterFuncDefine"}}
-    func (s *client){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error) {
+    func (s *client){{.FuncName}}(filter *commonDef.Filter) (ret []*model.{{.Model.Name}}, total int64, err error) {
     return
     }
 {{- end}}
 {{- define "filterFuncDeclare"}}
-    {{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error)
+    {{.FuncName}}(filter *commonDef.Filter) (ret []*model.{{.Model.Name}}, total int64, err error)
 {{- end}}
 
 {{- define "queryFuncDefine"}}
