@@ -125,12 +125,12 @@ commonCommon "github.com/muidea/magicCommon/common"
 
 // Client client interface
 type Client interface {
-    AttachContext(ctx commonCommon.ContextInfo)
-    DetachContext()
-
     {{- range $serviceList}}
         {{template "serviceFuncDeclare" .}}
     {{- end}}
+
+    AttachContext(ctx commonCommon.ContextInfo)
+    DetachContext()
 
     BindSession(sessionInfo *commonCommon.SessionInfo)
     UnBindSession()
