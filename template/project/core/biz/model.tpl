@@ -7,6 +7,7 @@ package {{$packageName}}
 
 import (
 "github.com/muidea/magicBatis/def"
+commonDef "github.com/muidea/magicCommon/def"
 "github.com/muidea/magicCommon/event"
 "github.com/muidea/magicCommon/task"
 
@@ -17,9 +18,11 @@ import (
 )
 
 {{- define "filterFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error) {
+    func (s *{{.ServiceName}}){{.FuncName}}(filter *commonDef.Filter) (ret []*model.{{.Model.Name}}, total int64, err error) {
     // TODO
-    ret,total,err = s.{{toLower .ServiceName}}.{{.FuncName}}(filter)
+    queryFilter := def.NewFilter()
+    queryFilter.Page(filter.PageFilter)
+    ret,total,err = s.{{toLower .ServiceName}}.{{.FuncName}}(queryFilter)
     return
     }
 {{- end}}

@@ -29,10 +29,7 @@ engine "github.com/muidea/magicEngine"
 
 
 {{- define "filterFuncDefine"}}
-    func (s *{{.ServiceName}}){{toCamelCase .FuncName}}Lite(res http.ResponseWriter, req *http.Request, dataFilter *commonDef.Filter) {
-        filter := def.NewFilter()
-        filter.Page(dataFilter.PageFilter)
-
+    func (s *{{.ServiceName}}){{toCamelCase .FuncName}}Lite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
         result := &common.{{.Model.Name}}ListResult{ {{.Model.Name}}: []*common.{{.Model.Name}}Lite{} }
         for {
             {{toLower .Model.Name}}List, _, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(filter)
@@ -62,15 +59,12 @@ engine "github.com/muidea/magicEngine"
     }
     
     func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request) {
-        dataFilter := commonDef.NewFilter()
-        dataFilter.Decode(req)
-    
-        filter := def.NewFilter()
-        filter.Page(dataFilter.PageFilter)
+        filter := commonDef.NewFilter()
+        filter.Decode(req)
     
         modelVal, modelOK := dataFilter.Get("mode")
         if modelOK && modelVal == "1" {
-            s.{{toCamelCase .FuncName}}Lite(res, req, dataFilter)
+            s.{{toCamelCase .FuncName}}Lite(res, req, filter)
             return
         }
     
