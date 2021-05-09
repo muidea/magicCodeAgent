@@ -8,6 +8,7 @@ import (
 log "github.com/cihub/seelog"
 batisClient "github.com/muidea/magicBatis/client"
 "github.com/muidea/magicCommon/event"
+"github.com/muidea/magicCommon/session"
 "github.com/muidea/magicCommon/task"
 engine "github.com/muidea/magicEngine"
 
