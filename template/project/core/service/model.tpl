@@ -19,8 +19,6 @@ commonDef "github.com/muidea/magicCommon/def"
 commonSession "github.com/muidea/magicCommon/session"
 engine "github.com/muidea/magicEngine"
 
-"github.com/muidea/magicBatis/def"
-
 "github.com/muidea/{{$projectName}}/common"
 "github.com/muidea/{{$projectName}}/core/biz/{{toLower $serviceName}}"
 "github.com/muidea/{{$projectName}}/core/dao"
@@ -62,7 +60,7 @@ engine "github.com/muidea/magicEngine"
         filter := commonDef.NewFilter()
         filter.Decode(req)
     
-        modelVal, modelOK := dataFilter.Get("mode")
+        modelVal, modelOK := filter.Get("mode")
         if modelOK && modelVal == "1" {
             s.{{toCamelCase .FuncName}}Lite(res, req, filter)
             return

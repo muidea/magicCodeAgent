@@ -26,6 +26,9 @@ type common struct {
 
 func (s *common) QueryLog(filter *def.QueryFilter) (ret []*model.Log, total int64, err error) {
     ret = []*model.Log{}
+    if filter == nil {
+        filter = def.NewFilter()
+    }
     filter.SortFilter = &util.SortFilter{AscSort: false, FieldName: "CreateTime"}
 
     total, err = s.batisClient.BatchQueryEntity(&ret, filter)

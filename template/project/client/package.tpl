@@ -4,7 +4,32 @@
 
 {{- define "filterFuncDefine"}}
     func (s *client){{.FuncName}}(filter *commonDef.Filter) (ret []*model.{{.Model.Name}}, total int64, err error) {
-    return
+        result := &common.{{.Model.Name}}StatisticResult{}
+
+        vals := url.Values{}
+        if s.sessionInfo != nil {
+            vals = s.sessionInfo.Encode(vals)
+        }
+        if filter != nil {
+            vals = filter.Encode(vals)
+        }
+        url, _ := url.ParseRequestURI(s.serverURL)
+        url.Path = strings.Join([]string{url.Path, common.{{.FuncName}}URL}, "")
+        url.RawQuery = vals.Encode()
+
+        _, err = fn.HTTPGet(s.httpClient, url.String(), result, s.getContextValues())
+        if err != nil {
+            return
+        }
+
+        if result.ErrorCode != commonDef.Success {
+        err = fmt.Errorf("查询{{.Model.Name}}失败，%s", result.Reason)
+            return
+        }
+
+        ret = result.{{.Model.Name}}
+        total = result.Total
+        return
     }
 {{- end}}
 {{- define "filterFuncDeclare"}}
@@ -13,7 +38,29 @@
 
 {{- define "queryFuncDefine"}}
     func (s *client){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
-    return
+        result := &common.{{.Model.Name}}Result{}
+
+        vals := url.Values{}
+        if s.sessionInfo != nil {
+            vals = s.sessionInfo.Encode(vals)
+        }
+        url, _ := url.ParseRequestURI(s.serverURL)
+        url.Path = strings.Join([]string{url.Path, common.{{.FuncName}}URL}, "")
+        url.Path = strings.ReplaceAll(url.Path, ":id", fmt.Sprintf("%d", id))
+        url.RawQuery = vals.Encode()
+
+        _, err = fn.HTTPGet(s.httpClient, url.String(), result, s.getContextValues())
+        if err != nil {
+            return
+        }
+
+        if result.ErrorCode != commonDef.Success {
+        err = fmt.Errorf("查询指定{{.Model.Name}}失败，%s", result.Reason)
+            return
+        }
+
+        ret = result.{{.Model.Name}}
+        return
     }
 {{- end}}
 {{- define "queryFuncDeclare"}}
@@ -21,17 +68,59 @@
 {{- end}}
 
 {{- define "createFuncDefine"}}
-    func (s *client){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
-    return
+    func (s *client){{.FuncName}}(ptr *common.{{.Model.Name}}Param) (ret *model.{{.Model.Name}}, err error){
+        result := &common.{{.Model.Name}}Result{}
+
+        vals := url.Values{}
+        if s.sessionInfo != nil {
+            vals = s.sessionInfo.Encode(vals)
+        }
+        url, _ := url.ParseRequestURI(s.serverURL)
+        url.Path = strings.Join([]string{url.Path, common.{{.FuncName}}URL}, "")
+        url.RawQuery = vals.Encode()
+        _, err = fn.HTTPPost(s.httpClient, url.String(), ptr, result, s.getContextValues())
+        if err != nil {
+            return
+        }
+
+        if result.ErrorCode != commonDef.Success {
+        err = fmt.Errorf("新建{{.Model.Name}}失败，%s", result.Reason)
+            return
+        }
+
+        ret = result.{{.Model.Name}}
+        return
     }
 {{- end}}
 {{- define "createFuncDeclare"}}
-    {{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error)
+    {{.FuncName}}(ptr *common.{{.Model.Name}}Param) (ret *model.{{.Model.Name}}, err error)
 {{- end}}
 
 {{- define "updateFuncDefine"}}
     func (s *client){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
-    return
+        result := &common.{{.Model.Name}}Result{}
+
+        vals := url.Values{}
+        if s.sessionInfo != nil {
+            vals = s.sessionInfo.Encode(vals)
+        }
+        url, _ := url.ParseRequestURI(s.serverURL)
+        url.Path = strings.Join([]string{url.Path, common.{{.FuncName}}URL}, "")
+        url.Path = strings.ReplaceAll(url.Path, ":id", fmt.Sprintf("%d", ptr.ID))
+        url.RawQuery = vals.Encode()
+
+        _, err = fn.HTTPPut(s.httpClient, url.String(), ptr, result, s.getContextValues())
+        if err != nil {
+            return
+        }
+
+        if result.ErrorCode != commonDef.Success {
+        err = fmt.Errorf("修改{{.Model.Name}}失败，%s", result.Reason)
+            return
+        }
+
+        ret = result.{{.Model.Name}}
+        return
     }
 {{- end}}
 {{- define "updateFuncDeclare"}}
@@ -40,7 +129,29 @@
 
 {{- define "deleteFuncDefine"}}
     func (s *client){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
-    return
+        result := &common.{{.Model.Name}}Result{}
+
+        vals := url.Values{}
+        if s.sessionInfo != nil {
+            vals = s.sessionInfo.Encode(vals)
+        }
+        url, _ := url.ParseRequestURI(s.serverURL)
+        url.Path = strings.Join([]string{url.Path, common.{{.FuncName}}URL}, "")
+        url.Path = strings.ReplaceAll(url.Path, ":id", fmt.Sprintf("%d", id))
+        url.RawQuery = vals.Encode()
+
+        _, err = fn.HTTPDelete(s.httpClient, url.String(), result, s.getContextValues())
+        if err != nil {
+            return
+        }
+
+        if result.ErrorCode != commonDef.Success {
+        err = fmt.Errorf("删除{{.Model.Name}}失败，%s", result.Reason)
+            return
+        }
+
+        ret = result.{{.Model.Name}}
+        return
     }
 {{- end}}
 {{- define "deleteFuncDeclare"}}
@@ -49,6 +160,7 @@
 
 {{- define "otherFuncDefine"}}
     func (s *client){{.FuncName}}(){
+    // TODO
     return
     }
 {{- end}}
@@ -114,12 +226,17 @@
 package {{$packageName}}
 
 import (
+"fmt"
+"strings"
 "net/http"
 "net/url"
 
-"github.com/muidea/magicBatis/def"
-commonCommon "github.com/muidea/magicCommon/common"
+fn "github.com/muidea/magicCommon/foundation/net"
 
+commonCommon "github.com/muidea/magicCommon/common"
+commonDef "github.com/muidea/magicCommon/def"
+
+"github.com/muidea/{{$projectName}}/common"
 "github.com/muidea/{{$projectName}}/model"
 )
 

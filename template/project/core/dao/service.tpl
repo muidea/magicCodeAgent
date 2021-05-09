@@ -10,6 +10,9 @@
 {{- define "filterFuncDefine"}}
     func (s *{{toLower .ServiceName}}){{.FuncName}}(filter *def.QueryFilter) (ret []*model.{{.Model.Name}}, total int64, err error) {
         ret = []*model.{{.Model.Name}}{}
+        if filter == nil {
+            filter = def.NewFilter()
+        }
         total, err = s.batisClient.BatchQueryEntity(&ret, filter)
         return
     }
