@@ -24,7 +24,16 @@ const (
 {{if isEntity .Service}}
     {{range $mk, $mv := $childList}}
         {{$modelName := $mv.Name}}
+        type {{$modelName}}View struct {
+            // TODO
+        }
+
+        func (s *{{$modelName}}View) From{{$modelName}}(ptr *model.{{$modelName}}) {
+            // TODO
+        }
+
         type {{$modelName}}Lite struct {
+            // TODO
         }
 
         func (s *{{$modelName}}Lite) From{{$modelName}}(ptr *model.{{$modelName}}) {
@@ -40,7 +49,7 @@ const (
             return
         }
 
-        {{$jsonName := toLower $modelName}}
+        {{$jsonName := toCamelCase $modelName}}
         type {{$modelName}}Result struct {
         commonDef.Result
         {{$modelName}} *model.{{$modelName}} `json:"{{$jsonName}}"`
