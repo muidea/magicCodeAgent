@@ -23,11 +23,11 @@ engine "github.com/muidea/magicEngine"
 
 
 // New 新建Core
-func New(clnt batisClient.Client,endpointName string) (*Core, error) {
-    err := model.InitializeModel(clnt)
+func New(clnt batisClient.Client,endpointName string) (ret *Core, err error) {
+    err = model.InitializeModel(clnt)
     if err != nil {
-    log.Errorf("initializeModel failed, err:%s", err.Error())
-    return nil, err
+        log.Errorf("initializeModel failed, err:%s", err.Error())
+        return
     }
 
     eventHub := event.NewHub()
@@ -53,7 +53,8 @@ func New(clnt batisClient.Client,endpointName string) (*Core, error) {
         backgroundRoutine: backgroundRoutine,
     }
 
-    return core, nil
+    ret = core
+    return
 }
 
 // Core Core对象
