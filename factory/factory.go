@@ -31,6 +31,7 @@ func init() {
 	RegisterFunc("extractAction", util.ExtractActionVal)
 	RegisterFunc("getActionMethod", util.GetActionMethod)
 	RegisterFunc("formatAction", util.FormatAction)
+	RegisterFunc("formatUrl", util.FormatURL)
 	RegisterFunc("formatParam", util.FormatParam)
 	RegisterFunc("formatResult", util.FormatResult)
 }

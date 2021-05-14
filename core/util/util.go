@@ -119,6 +119,16 @@ func FormatAction(serviceName, modelName, actionUrl string) string {
 	return strings.Join(items, "")
 }
 
+func FormatURL(serviceName, modelName, actionUrl string) string {
+	items := []string{strings.ToLower(serviceName)}
+	if serviceName != modelName {
+		items = append(items, strings.ToLower(modelName))
+	}
+
+	items = append(items, strings.ToLower(actionUrl))
+	return strings.Join(items, "/")
+}
+
 func FormatParam(serviceName, modelName, actionUrl string) string {
 	_, action := validAction(actionUrl)
 	switch action {

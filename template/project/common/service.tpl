@@ -16,7 +16,7 @@ const (
 {{range $mk, $mv := $childList}}
     {{$modelName := $mv.Name}}
     {{range $ak, $av := $mv.Action}}
-        {{formatAction $serviceName $serviceName $av}}URL = "/{{$apiVersion}}/{{toLower $serviceName}}/{{toLower $av}}"
+        {{formatAction $serviceName $modelName $av}}URL = "/{{$apiVersion}}/{{formatUrl $serviceName $modelName $av}}"
     {{- end -}}
 {{end}}
 )
