@@ -53,10 +53,24 @@ func (s *Package) Create(relativePath, templateFile string) (err error) {
 	modelTemplate := path.Join(s.templatePath, relativePath, factory.ModelTemplateFile)
 	if util.Exists(modelTemplate) {
 		for _, val := range s.serviceList {
+			serviceModel := false
 			val.ApiVersion = s.apiVersion
 			for _, sv := range val.Child {
+				if sv.Name == val.Name {
+					serviceModel = true
+				}
+
 				sv.ApiVersion = s.apiVersion
 				modelPtr := NewModel(s.templatePath, s.projectPath, s.projectName, val.Name, sv)
+				err = modelPtr.Create(relativePath, factory.ModelTemplateFile)
+				if err != nil {
+					return
+				}
+			}
+
+			// if no service model, special create it
+			if !serviceModel {
+				modelPtr := NewModel(s.templatePath, s.projectPath, s.projectName, val.Name, val)
 				err = modelPtr.Create(relativePath, factory.ModelTemplateFile)
 				if err != nil {
 					return
