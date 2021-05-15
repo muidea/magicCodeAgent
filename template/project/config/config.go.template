@@ -3,23 +3,16 @@ package config
 import "flag"
 
 var casService = "http://127.0.0.1:8081"
-var userService = "http://127.0.0.1:8082"
 var fileService = "http://127.0.0.1:8083"
 
 func init() {
 	flag.StringVar(&casService, "CasService", casService, "magicCas partner address")
-	flag.StringVar(&userService, "UserService", userService, "magicUser partner address")
 	flag.StringVar(&fileService, "FileService", fileService, "magicFile partner address")
 }
 
 //CasService cas partner addr
 func CasService() string {
 	return casService
-}
-
-//UserService user partner addr
-func UserService() string {
-	return userService
 }
 
 //FileService file partner addr
