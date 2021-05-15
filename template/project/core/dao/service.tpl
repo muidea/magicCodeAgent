@@ -24,7 +24,7 @@
 {{- define "queryFuncDefine"}}
     func (s *{{toLower .ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
         if id <= 0 {
-            err = fmt.Errorf("illegal id value")
+            err = fmt.Errorf("illegal id value, id:%d",id)
             return
         }
         ptr := &model.{{.Model.Name}}{ID:id}
@@ -60,6 +60,10 @@
 {{- end}}
 {{- define "updateFuncDefine"}}
     func (s *{{toLower .ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+        if ptr == nil || ptr.ID <= 0 {
+            err = fmt.Errorf("illegal update ptr")
+            return
+        }
         err = s.batisClient.UpdateEntity(ptr)
         if err != nil {
             return
@@ -75,7 +79,7 @@
 {{- define "deleteFuncDefine"}}
     func (s *{{toLower .ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
         if id <= 0 {
-            err = fmt.Errorf("illegal id value")
+            err = fmt.Errorf("illegal id value, id:%d",id)
             return
         }
         ptr := &model.{{.Model.Name}}{ID:id}
