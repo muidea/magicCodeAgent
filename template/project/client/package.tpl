@@ -171,7 +171,7 @@
 {{define "serviceFuncDeclare"}}
     {{$serviceName := .Name}}
     {{$modelList := .Child}}
-    {{- range $mv := $modelList}}
+    {{- range $mv := $modelList -}}
         {{$modelName := $mv.Name}}
         {{- range $av := $mv.Action}}
             {{- $funcName := formatAction $serviceName $modelName $av -}}
@@ -192,7 +192,7 @@
                 {{end}}
             {{- end}}
         {{- end}}
-    {{- end}}
+    {{- end -}}
 {{end}}
 
 {{define "serviceFuncDefine"}}
