@@ -1,0 +1,21 @@
+package config
+
+import "flag"
+
+var casService = "http://127.0.0.1:8081"
+var fileService = "http://127.0.0.1:8083"
+
+func init() {
+	flag.StringVar(&casService, "CasService", casService, "magicCas partner address")
+	flag.StringVar(&fileService, "FileService", fileService, "magicFile partner address")
+}
+
+//CasService cas partner addr
+func CasService() string {
+	return casService
+}
+
+//FileService file partner addr
+func FileService() string {
+	return fileService
+}

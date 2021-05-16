@@ -25,7 +25,7 @@ func main() {
 		val := actionList[idx]
 		flag.BoolVar(&val.value, val.name, val.defaultValue, val.description)
 	}
-	flag.StringVar(&projectName, "name", projectName, "project name")
+	flag.StringVar(&projectName, "projectName", projectName, "project name")
 	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis service address.")
 	flag.BoolVar(&forceFlag, "force", forceFlag, "force update")
 

@@ -1,0 +1,45 @@
+package dao
+
+import (
+"time"
+
+"github.com/muidea/magicBatis/client"
+"github.com/muidea/magicBatis/def"
+"github.com/muidea/magicCommon/foundation/util"
+"github.com/muidea/{{.ProjectName}}/model"
+)
+
+// Common common dao
+type Common interface {
+    QueryLog(filter *def.QueryFilter) ([]*model.Log, int64, error)
+    WriteLog(address, memo string, operator int) (*model.Log, error)
+}
+
+// NewCommon 新建Common
+func NewCommon(clnt client.Client) Common {
+    return &common{batisClient: clnt}
+}
+
+type common struct {
+    batisClient client.Client
+}
+
+func (s *common) QueryLog(filter *def.QueryFilter) (ret []*model.Log, total int64, err error) {
+    ret = []*model.Log{}
+    if filter == nil {
+        filter = def.NewFilter()
+    }
+    filter.SortFilter = &util.SortFilter{AscSort: false, FieldName: "CreateTime"}
+
+    total, err = s.batisClient.BatchQueryEntity(&ret, filter)
+    return
+}
+
+func (s *common) WriteLog(address, memo string, operator int) (ret *model.Log, err error) {
+    ptr := &model.Log{Address: address, Memo: memo, Creater: operator, CreateTime: time.Now().UTC().Unix()}
+    err = s.batisClient.InsertEntity(ptr)
+    if err == nil {
+        ret = ptr
+    }
+    return
+}

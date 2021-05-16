@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	ProjectTemplatePath = "simple"
-	UnitTemplatePath    = "unit"
+	ProjectDefaultTemplatePath = "default"
+	ProjectSimpleTemplatePath  = "simple"
+	UnitTemplatePath           = "unit"
 )
 
 const (
@@ -215,7 +216,7 @@ func GetTemplateContent(templatePath, filePath, fileName string) (ret string, er
 }
 
 func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
-	templatePath, templateErr := GetTemplatePath(ProjectTemplatePath)
+	templatePath, templateErr := GetTemplatePath(ProjectSimpleTemplatePath)
 	if templateErr != nil {
 		err = templateErr
 		return

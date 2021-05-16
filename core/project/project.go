@@ -111,7 +111,7 @@ func (s *Project) Create(projectName, projectType string) (err error) {
 
 func (s *Project) walkTemplate(relativePath, projectType string) (err error) {
 	if projectType == "" {
-		projectType = util.ProjectTemplatePath
+		projectType = util.ProjectDefaultTemplatePath
 	}
 
 	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(projectType)

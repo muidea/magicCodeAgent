@@ -1,0 +1,306 @@
+{{$packageName := .PackageName}}
+{{$projectName := .ProjectName}}
+{{$serviceName := .ServiceName}}
+{{$model := .Model}}
+{{$modelName := .Model.Name}}
+package {{$packageName}}
+
+import (
+"encoding/json"
+"net/http"
+"strconv"
+
+log "github.com/cihub/seelog"
+
+fn "github.com/muidea/magicCommon/foundation/net"
+fu "github.com/muidea/magicCommon/foundation/util"
+
+commonDef "github.com/muidea/magicCommon/def"
+commonSession "github.com/muidea/magicCommon/session"
+engine "github.com/muidea/magicEngine"
+
+"github.com/muidea/{{$projectName}}/common"
+"github.com/muidea/{{$projectName}}/core/biz/{{toLower $serviceName}}"
+"github.com/muidea/{{$projectName}}/core/dao"
+"github.com/muidea/{{$projectName}}/model"
+)
+
+
+{{- define "filterFuncDefine"}}
+    func (s *{{.ServiceName}}){{toCamelCase .FuncName}}Lite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
+        result := &common.{{.Model.Name}}ListResult{ {{.Model.Name}}: []*common.{{.Model.Name}}Lite{} }
+        for {
+            {{toLower .Model.Name}}List, _, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(filter)
+            if {{toLower .Model.Name}}Err != nil {
+                result.ErrorCode = commonDef.Failed
+                result.Reason = {{toLower .Model.Name}}Err.Error()
+                break
+            }
+
+            for _, val := range {{toLower .Model.Name}}List {
+                {{toLower .Model.Name}}Lite := &common.{{.Model.Name}}Lite{}
+                {{toLower .Model.Name}}Lite.From{{.Model.Name}}(val)
+                result.{{.Model.Name}} = append(result.{{.Model.Name}}, {{toLower .Model.Name}}Lite)
+            }
+
+            result.ErrorCode = commonDef.Success
+            break
+        }
+
+        block, err := json.Marshal(result)
+        if err == nil {
+            res.Write(block)
+            return
+        }
+
+        res.WriteHeader(http.StatusExpectationFailed)
+    }
+    
+    func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request) {
+        filter := commonDef.NewFilter()
+        filter.Decode(req)
+    
+        modelVal, modelOK := filter.Get("mode")
+        if modelOK && modelVal == "1" {
+            s.{{toCamelCase .FuncName}}Lite(res, req, filter)
+            return
+        }
+    
+        result := &common.{{.Model.Name}}StatisticResult{ {{.Model.Name}}: []*model.{{.Model.Name}}{} }
+        for {
+        {{toLower .Model.Name}}List, {{toLower .Model.Name}}Total, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(filter)
+        if {{toLower .Model.Name}}Err != nil {
+        result.ErrorCode = commonDef.Failed
+        result.Reason = {{toLower .Model.Name}}Err.Error()
+        break
+        }
+
+        result.{{.Model.Name}} = {{toLower .Model.Name}}List
+        result.Total = {{toLower .Model.Name}}Total
+        result.ErrorCode = commonDef.Success
+        break
+        }
+    
+        block, err := json.Marshal(result)
+        if err == nil {
+        res.Write(block)
+        return
+        }
+    
+        res.WriteHeader(http.StatusExpectationFailed)
+    }
+{{- end}}
+
+{{- define "queryFuncDefine"}}
+    func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request) {
+        result := &common.{{.Model.Name}}Result{}
+        for {
+            _, value := fn.SplitRESTAPI(req.URL.Path)
+            id, err := strconv.Atoi(value)
+            if err != nil || id == 0 {
+                result.ErrorCode = commonDef.Failed
+                result.Reason = "invalid param"
+                break
+            }
+
+            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(id)
+            if {{toLower .Model.Name}}Err != nil {
+                result.ErrorCode = commonDef.Failed
+                result.Reason = {{toLower .Model.Name}}Err.Error()
+                break
+            }
+
+            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+            result.ErrorCode = commonDef.Success
+            break
+        }
+
+        block, err := json.Marshal(result)
+        if err == nil {
+        res.Write(block)
+        return
+        }
+
+        res.WriteHeader(http.StatusExpectationFailed)
+    }
+{{- end}}
+
+{{- define "createFuncDefine"}}
+    func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
+        result := &common.{{.Model.Name}}Result{}
+        for {
+        param := &common.{{.Model.Name}}Param{}
+        err := fn.ParseJSONBody(req, s.validator, param)
+        if err != nil {
+        result.ErrorCode = commonDef.IllegalParam
+        result.Reason = "invalid param"
+        break
+        }
+
+        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param)
+        if {{toLower .Model.Name}}Err != nil {
+        result.ErrorCode = commonDef.Failed
+        result.Reason = {{toLower .Model.Name}}Err.Error()
+        break
+        }
+
+        result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+        result.ErrorCode = commonDef.Success
+        break
+        }
+
+        block, err := json.Marshal(result)
+        if err == nil {
+        res.Write(block)
+        return
+        }
+
+        res.WriteHeader(http.StatusExpectationFailed)
+    }
+{{- end}}
+
+{{- define "updateFuncDefine"}}
+    func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
+        result := &common.{{.Model.Name}}Result{}
+        for {
+        _, value := fn.SplitRESTAPI(req.URL.Path)
+        id, err := strconv.Atoi(value)
+        if err != nil || id == 0 {
+        log.Errorf("update partner failed, illegal id, id:%s", value)
+        result.ErrorCode = commonDef.Failed
+        result.Reason = "invalid param"
+        break
+        }
+
+        param := &model.{{.Model.Name}}{}
+        err = fn.ParseJSONBody(req, s.validator, param)
+        if err != nil {
+        result.ErrorCode = commonDef.IllegalParam
+        result.Reason = "invalid param"
+        break
+        }
+        param.ID = id
+
+        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param)
+        if {{toLower .Model.Name}}Err != nil {
+        result.ErrorCode = commonDef.Failed
+        result.Reason = {{toLower .Model.Name}}Err.Error()
+        break
+        }
+
+        result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+        result.ErrorCode = commonDef.Success
+        break
+        }
+
+        block, err := json.Marshal(result)
+        if err == nil {
+        res.Write(block)
+        return
+        }
+
+        res.WriteHeader(http.StatusExpectationFailed)
+    }
+{{- end}}
+
+{{- define "deleteFuncDefine"}}
+    func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
+    result := &common.{{.Model.Name}}Result{}
+    for {
+    _, value := fn.SplitRESTAPI(req.URL.Path)
+    id, err := strconv.Atoi(value)
+    if err != nil || id == 0 {
+    result.ErrorCode = commonDef.Failed
+    result.Reason = "invalid param"
+    break
+    }
+
+    {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(id)
+    if {{toLower .Model.Name}}Err != nil {
+    result.ErrorCode = commonDef.Failed
+    result.Reason = {{toLower .Model.Name}}Err.Error()
+    break
+    }
+
+    result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+    result.ErrorCode = commonDef.Success
+    break
+    }
+
+    block, err := json.Marshal(result)
+    if err == nil {
+    res.Write(block)
+    return
+    }
+
+    res.WriteHeader(http.StatusExpectationFailed)
+    }
+{{- end}}
+
+{{- define "otherFuncDefine"}}
+    func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
+    }
+{{- end}}
+
+{{if eq $serviceName $modelName}}
+    type {{$serviceName}} struct {
+    sessionRegistry      commonSession.Registry
+    validator fu.Validator
+
+    common dao.Common
+    {{toLower $serviceName}}Biz *{{toLower $serviceName}}.{{$serviceName}}
+    }
+
+    func New(
+    common dao.Common,
+    {{toLower $serviceName}}Biz *{{toLower $serviceName}}.{{$serviceName}},
+    ) *{{$serviceName}} {
+    ptr := &{{$serviceName}}{
+    common:common,
+    {{toLower $serviceName}}Biz:{{toLower $serviceName}}Biz,
+    validator:     fu.NewFormValidator(),
+    }
+
+    return ptr
+    }
+
+    func (s *{{$serviceName}}) BindRegistry(sessionRegistry commonSession.Registry) {
+        s.sessionRegistry = sessionRegistry
+    }
+
+
+    // Handle middleware handler
+    func (s *{{$serviceName}}) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
+        ctx.Next()
+    }
+
+    // RegisterHandler 注册路由
+    func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
+        {{- range $av := $model.Action -}}
+            {{$funcName := formatAction $serviceName $modelName $av}}
+            {{toCamelCase $funcName}}Route := engine.CreateRoute(common.{{$funcName}}URL, "{{getActionMethod $av}}", s.{{$funcName}})
+            router.AddRoute({{toCamelCase $funcName}}Route, s)
+        {{- end}}
+    }
+
+{{end}}
+
+{{range $av := $model.Action}}
+    {{- $funcName := formatAction $serviceName $model.Name $av -}}
+    {{with mergeArgs $funcName $serviceName $model}}
+        {{- $action := extractAction $av -}}
+        {{if eq $action "filter"}}
+            {{- template "filterFuncDefine" . -}}
+        {{else if eq $action "query"}}
+            {{- template "queryFuncDefine" . -}}
+        {{else if eq $action "create"}}
+            {{- template "createFuncDefine" . -}}
+        {{else if eq $action "update"}}
+            {{- template "updateFuncDefine" . -}}
+        {{else if eq $action "delete"}}
+            {{- template "deleteFuncDefine" . -}}
+        {{else}}
+            {{- template "otherFuncDefine" . -}}
+        {{end}}
+    {{end}}
+{{- end}}
