@@ -18,7 +18,7 @@ commonDef "github.com/muidea/magicCommon/def"
 )
 
 {{- define "filterFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(filter *commonDef.Filter) (ret []*model.{{.Model.Name}}, total int64, err error) {
+    func (s *{{.ServiceName}}){{.FuncName}}(filter *commonDef.Filter, namespace string) (ret []*model.{{.Model.Name}}, total int64, err error) {
     // TODO
     queryFilter := def.NewFilter()
     queryFilter.Page(filter.PageFilter)
@@ -28,7 +28,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- end}}
 
 {{- define "queryFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{.ServiceName}}){{.FuncName}}(id int, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
     ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id)
     return
@@ -36,7 +36,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- end}}
 
 {{- define "createFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(ptr *common.{{.Model.Name}}Param) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{.ServiceName}}){{.FuncName}}(ptr *common.{{.Model.Name}}Param, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
     ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr.To{{.Model.Name}}())
     return
@@ -44,7 +44,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- end}}
 
 {{- define "updateFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{.ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
     ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr)
     return
@@ -52,7 +52,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- end}}
 
 {{- define "deleteFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(id int) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{.ServiceName}}){{.FuncName}}(id int, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
     ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id)
     return
@@ -60,7 +60,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- end}}
 
 {{- define "otherFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(){
+    func (s *{{.ServiceName}}){{.FuncName}}(namespace string){
     // TODO
     return
     }

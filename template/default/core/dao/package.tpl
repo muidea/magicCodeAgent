@@ -9,7 +9,7 @@ import "github.com/muidea/magicBatis/client"
     {{$serviceName := .Name}}
     // New{{$serviceName}} 新建{{$serviceName}}
     func New{{$serviceName}}(clnt client.Client) {{$serviceName}} {
-    return &{{toLower $serviceName}}{ common{batisClient: clnt} }
+    return &{{toLower $serviceName}}{ batisClient: clnt }
     }
 {{end}}
 
