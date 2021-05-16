@@ -41,7 +41,7 @@ func (s *common) QueryLog(filter *def.QueryFilter, namespace string) (ret []*mod
     if filter == nil {
         filter = def.NewFilter()
     }
-    filter.SortFilter = &util.SortFilter{AscSort: false, FieldName: "CreateTime"}
+    filter.SortFilter = &fu.SortFilter{AscSort: false, FieldName: "CreateTime"}
     filter.Equal("Namespace", namespace)
 
     total, err = s.batisClient.BatchQueryEntity(&ret, filter)
@@ -72,7 +72,6 @@ func (s *common) QueryNamespace(sessionInfo *commonCommon.SessionInfo, namespace
     defer casClient.Release()
 
     casClient.BindSession(sessionInfo)
-    casClient.AttachNameSpace(namespace)
 
     filter := commonDef.NewFilter()
     filter.Set("Name", namespace)
