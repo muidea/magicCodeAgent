@@ -14,6 +14,7 @@ commonDef "github.com/muidea/magicCommon/def"
 "github.com/muidea/{{$projectName}}/common"
 "github.com/muidea/{{$projectName}}/model"
 
+"github.com/muidea/{{$projectName}}/core/biz/base"
 "github.com/muidea/{{$projectName}}/core/dao"
 )
 
@@ -22,7 +23,7 @@ commonDef "github.com/muidea/magicCommon/def"
     // TODO
     queryFilter := def.NewFilter()
     queryFilter.Page(filter.PageFilter)
-    ret,total,err = s.{{toLower .ServiceName}}.{{.FuncName}}(queryFilter)
+    ret,total,err = s.{{toLower .ServiceName}}.{{.FuncName}}(queryFilter,namespace)
     return
     }
 {{- end}}
@@ -30,7 +31,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- define "queryFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(id int, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
-    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id)
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id,namespace)
     return
     }
 {{- end}}
@@ -38,7 +39,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- define "createFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(ptr *common.{{.Model.Name}}Param, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
-    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr.To{{.Model.Name}}())
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr.To{{.Model.Name}}(),namespace)
     return
     }
 {{- end}}
@@ -46,7 +47,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- define "updateFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(ptr *model.{{.Model.Name}}, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
-    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr)
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr,namespace)
     return
     }
 {{- end}}
@@ -54,7 +55,7 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- define "deleteFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(id int, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
-    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id)
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(id,namespace)
     return
     }
 {{- end}}
@@ -68,9 +69,9 @@ commonDef "github.com/muidea/magicCommon/def"
 
 {{if eq $serviceName $modelName}}
 type {{$serviceName}} struct {
-{{toLower $serviceName}} dao.{{$serviceName}}
-eventHub event.Hub
-backgroundRoutine *task.BackgroundRoutine
+    base.Base
+
+    {{toLower $serviceName}} dao.{{$serviceName}}
 }
 
 func New(
@@ -79,9 +80,8 @@ eventHub event.Hub,
 backgroundRoutine *task.BackgroundRoutine,
 ) *{{$serviceName}} {
     ptr := &{{$serviceName}}{
+        Base: base.New("/{{toLower $packageName}}/{{$serviceName}}", eventHub, backgroundRoutine),
         {{toLower $serviceName}}: {{toLower $serviceName}},
-        eventHub: eventHub,
-        backgroundRoutine: backgroundRoutine,
     }
 
     return ptr
