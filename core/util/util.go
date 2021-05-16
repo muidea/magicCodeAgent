@@ -106,6 +106,22 @@ func GetActionMethod(actionUrl string) string {
 	}
 }
 
+func GetActionPrivate(actionUrl string) string {
+	_, val := validAction(actionUrl)
+	switch val {
+	case filterAction, queryAction:
+		return "casCommon.ReadPrivate"
+	case createAction:
+		return "casCommon.WritePrivate"
+	case updateAction:
+		return "casCommon.WritePrivate"
+	case deleteAction:
+		return "casCommon.DeletePrivate"
+	default:
+		return "casCommon.ReadPrivate"
+	}
+}
+
 func FormatAction(serviceName, modelName, actionUrl string) string {
 	others, action := validAction(actionUrl)
 	items := []string{strings.Title(action)}

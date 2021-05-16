@@ -25,6 +25,7 @@ engine "github.com/muidea/magicEngine"
 
 casCommon "github.com/muidea/magicCas/common"
 casModel "github.com/muidea/magicCas/model"
+casToolkit "github.com/muidea/magicCas/toolkit"
 
 "github.com/muidea/{{$projectName}}/common"
 "github.com/muidea/{{$projectName}}/core/biz/{{toLower $serviceName}}"
@@ -258,6 +259,7 @@ casModel "github.com/muidea/magicCas/model"
 {{if eq $serviceName $modelName}}
     type {{$serviceName}} struct {
         sessionRegistry      commonSession.Registry
+        privateRouteRegistry casToolkit.RoleRegistry
         validator fu.Validator
 
         common dao.Common
@@ -277,13 +279,22 @@ casModel "github.com/muidea/magicCas/model"
         return ptr
     }
 
-    func (s *{{$serviceName}}) BindRegistry(sessionRegistry commonSession.Registry) {
+    func (s *{{$serviceName}}) BindRegistry(sessionRegistry commonSession.Registry,privateRouteRegistry casToolkit.RoleRegistry) {
         s.sessionRegistry = sessionRegistry
+        s.privateRouteRegistry = privateRouteRegistry
     }
-
 
     // Handle middleware handler
     func (s *{{$serviceName}}) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
+        curSession := s.sessionRegistry.GetSession(res, req)
+
+        sessionInfo := curSession.GetSessionInfo()
+        sessionInfo.Scope = commonCommon.ShareSession
+
+        values := req.URL.Query()
+        values = sessionInfo.Encode(values)
+        req.URL.RawQuery = values.Encode()
+
         ctx.Next()
     }
 
@@ -291,8 +302,7 @@ casModel "github.com/muidea/magicCas/model"
     func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
         {{- range $av := $model.Action -}}
             {{$funcName := formatAction $serviceName $modelName $av}}
-            {{toCamelCase $funcName}}Route := engine.CreateRoute(common.{{$funcName}}URL, "{{getActionMethod $av}}", s.{{$funcName}})
-            router.AddRoute({{toCamelCase $funcName}}Route, s)
+            s.privateRouteRegistry.AddHandler(common.{{$funcName}}URL, "{{getActionMethod $av}}", {{getActionPrivate $av}}, s.{{$funcName}})
         {{- end}}
     }
 
