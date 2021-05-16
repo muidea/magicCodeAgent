@@ -30,7 +30,7 @@ engine "github.com/muidea/magicEngine"
     func (s *{{.ServiceName}}){{toCamelCase .FuncName}}Lite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
         result := &common.{{.Model.Name}}ListResult{ {{.Model.Name}}: []*common.{{.Model.Name}}Lite{} }
         for {
-            {{toLower .Model.Name}}List, _, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(filter)
+            {{toLower .Model.Name}}List, _, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(filter)
             if {{toLower .Model.Name}}Err != nil {
                 result.ErrorCode = commonDef.Failed
                 result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -68,7 +68,7 @@ engine "github.com/muidea/magicEngine"
     
         result := &common.{{.Model.Name}}StatisticResult{ {{.Model.Name}}: []*model.{{.Model.Name}}{} }
         for {
-        {{toLower .Model.Name}}List, {{toLower .Model.Name}}Total, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(filter)
+        {{toLower .Model.Name}}List, {{toLower .Model.Name}}Total, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(filter)
         if {{toLower .Model.Name}}Err != nil {
         result.ErrorCode = commonDef.Failed
         result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -103,7 +103,7 @@ engine "github.com/muidea/magicEngine"
                 break
             }
 
-            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(id)
+            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(id)
             if {{toLower .Model.Name}}Err != nil {
                 result.ErrorCode = commonDef.Failed
                 result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -137,7 +137,7 @@ engine "github.com/muidea/magicEngine"
         break
         }
 
-        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(param)
+        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param)
         if {{toLower .Model.Name}}Err != nil {
         result.ErrorCode = commonDef.Failed
         result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -181,7 +181,7 @@ engine "github.com/muidea/magicEngine"
         }
         param.ID = id
 
-        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(param)
+        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param)
         if {{toLower .Model.Name}}Err != nil {
         result.ErrorCode = commonDef.Failed
         result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -215,7 +215,7 @@ engine "github.com/muidea/magicEngine"
     break
     }
 
-    {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .Model.Name}}Biz.{{.FuncName}}(id)
+    {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(id)
     if {{toLower .Model.Name}}Err != nil {
     result.ErrorCode = commonDef.Failed
     result.Reason = {{toLower .Model.Name}}Err.Error()
