@@ -276,7 +276,7 @@ engine "github.com/muidea/magicEngine"
 
     // RegisterHandler 注册路由
     func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
-        {{- range $av := $model.Action}}
+        {{- range $av := $model.Action -}}
             {{$funcName := formatAction $serviceName $modelName $av}}
             {{toCamelCase $funcName}}Route := engine.CreateRoute(common.{{$funcName}}URL, "{{getActionMethod $av}}", s.{{$funcName}})
             router.AddRoute({{toCamelCase $funcName}}Route, s)
