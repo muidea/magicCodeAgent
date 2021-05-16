@@ -137,34 +137,38 @@ casToolkit "github.com/muidea/magicCas/toolkit"
 {{- end}}
 
 {{- define "createFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
+    func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request) {
         result := &common.{{.Model.Name}}Result{}
         for {
-        param := &common.{{.Model.Name}}Param{}
-        err := fn.ParseJSONBody(req, s.validator, param)
-        if err != nil {
-        result.ErrorCode = commonDef.IllegalParam
-        result.Reason = "invalid param"
-        break
-        }
+            param := &common.{{.Model.Name}}Param{}
+            err := fn.ParseJSONBody(req, s.validator, param)
+            if err != nil {
+                result.ErrorCode = commonDef.IllegalParam
+                result.Reason = "invalid param"
+                break
+            }
 
-        curNamespace := s.getCurrentNamespace(res,req)
-        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param, curNamespace)
-        if {{toLower .Model.Name}}Err != nil {
-        result.ErrorCode = commonDef.Failed
-        result.Reason = {{toLower .Model.Name}}Err.Error()
-        break
-        }
+            curNamespace := s.getCurrentNamespace(res,req)
+            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param, curNamespace)
+            if {{toLower .Model.Name}}Err != nil {
+                result.ErrorCode = commonDef.Failed
+                result.Reason = {{toLower .Model.Name}}Err.Error()
+                break
+            }
 
-        result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
-        result.ErrorCode = commonDef.Success
-        break
+            // TODO
+            memo := fmt.Sprintf("删除{{.Model.Name}}:%s", {{toLower .Model.Name}}Ptr)
+            s.writeLog(res, req, memo)
+
+            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+            result.ErrorCode = commonDef.Success
+            break
         }
 
         block, err := json.Marshal(result)
         if err == nil {
-        res.Write(block)
-        return
+            res.Write(block)
+            return
         }
 
         res.WriteHeader(http.StatusExpectationFailed)
@@ -175,41 +179,45 @@ casToolkit "github.com/muidea/magicCas/toolkit"
     func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
         result := &common.{{.Model.Name}}Result{}
         for {
-        _, value := fn.SplitRESTAPI(req.URL.Path)
-        id, err := strconv.Atoi(value)
-        if err != nil || id == 0 {
-        log.Errorf("update partner failed, illegal id, id:%s", value)
-        result.ErrorCode = commonDef.Failed
-        result.Reason = "invalid param"
-        break
-        }
+            _, value := fn.SplitRESTAPI(req.URL.Path)
+            id, err := strconv.Atoi(value)
+            if err != nil || id == 0 {
+                log.Errorf("update partner failed, illegal id, id:%s", value)
+                result.ErrorCode = commonDef.Failed
+                result.Reason = "invalid param"
+                break
+            }
 
-        param := &model.{{.Model.Name}}{}
-        err = fn.ParseJSONBody(req, s.validator, param)
-        if err != nil {
-        result.ErrorCode = commonDef.IllegalParam
-        result.Reason = "invalid param"
-        break
-        }
-        param.ID = id
+            param := &model.{{.Model.Name}}{}
+            err = fn.ParseJSONBody(req, s.validator, param)
+            if err != nil {
+                result.ErrorCode = commonDef.IllegalParam
+                result.Reason = "invalid param"
+                break
+            }
+            param.ID = id
 
-        curNamespace := s.getCurrentNamespace(res,req)
-        {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param, curNamespace)
-        if {{toLower .Model.Name}}Err != nil {
-        result.ErrorCode = commonDef.Failed
-        result.Reason = {{toLower .Model.Name}}Err.Error()
-        break
-        }
+            curNamespace := s.getCurrentNamespace(res,req)
+            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param, curNamespace)
+            if {{toLower .Model.Name}}Err != nil {
+                result.ErrorCode = commonDef.Failed
+                result.Reason = {{toLower .Model.Name}}Err.Error()
+                break
+            }
 
-        result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
-        result.ErrorCode = commonDef.Success
-        break
+            // TODO
+            memo := fmt.Sprintf("删除{{.Model.Name}}:%s", {{toLower .Model.Name}}Ptr)
+            s.writeLog(res, req, memo)
+
+            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+            result.ErrorCode = commonDef.Success
+            break
         }
 
         block, err := json.Marshal(result)
         if err == nil {
-        res.Write(block)
-        return
+            res.Write(block)
+            return
         }
 
         res.WriteHeader(http.StatusExpectationFailed)
@@ -218,36 +226,40 @@ casToolkit "github.com/muidea/magicCas/toolkit"
 
 {{- define "deleteFuncDefine"}}
     func (s *{{.ServiceName}}){{.FuncName}}(res http.ResponseWriter, req *http.Request){
-    result := &common.{{.Model.Name}}Result{}
-    for {
-    _, value := fn.SplitRESTAPI(req.URL.Path)
-    id, err := strconv.Atoi(value)
-    if err != nil || id == 0 {
-    result.ErrorCode = commonDef.Failed
-    result.Reason = "invalid param"
-    break
-    }
+        result := &common.{{.Model.Name}}Result{}
+        for {
+            _, value := fn.SplitRESTAPI(req.URL.Path)
+            id, err := strconv.Atoi(value)
+            if err != nil || id == 0 {
+                result.ErrorCode = commonDef.Failed
+                result.Reason = "invalid param"
+                break
+            }
 
-    curNamespace := s.getCurrentNamespace(res,req)
-    {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(id, curNamespace)
-    if {{toLower .Model.Name}}Err != nil {
-    result.ErrorCode = commonDef.Failed
-    result.Reason = {{toLower .Model.Name}}Err.Error()
-    break
-    }
+            curNamespace := s.getCurrentNamespace(res,req)
+            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(id, curNamespace)
+            if {{toLower .Model.Name}}Err != nil {
+                result.ErrorCode = commonDef.Failed
+                result.Reason = {{toLower .Model.Name}}Err.Error()
+                break
+            }
 
-    result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
-    result.ErrorCode = commonDef.Success
-    break
-    }
+            // TODO
+            memo := fmt.Sprintf("删除{{.Model.Name}}:%s", {{toLower .Model.Name}}Ptr)
+            s.writeLog(res, req, memo)
 
-    block, err := json.Marshal(result)
-    if err == nil {
-    res.Write(block)
-    return
-    }
+            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+            result.ErrorCode = commonDef.Success
+            break
+        }
 
-    res.WriteHeader(http.StatusExpectationFailed)
+        block, err := json.Marshal(result)
+        if err == nil {
+            res.Write(block)
+            return
+        }
+
+        res.WriteHeader(http.StatusExpectationFailed)
     }
 {{- end}}
 
@@ -352,6 +364,15 @@ casToolkit "github.com/muidea/magicCas/toolkit"
         return
     }
 
+    func (s *{{$serviceName}}) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
+        address := fn.GetHTTPRemoteAddress(req)
+        curEntity, _ := s.getCurrentEntity(res, req)
+        curNamespace := s.getCurrentNamespace(res, req)
+        _, logErr := s.common.WriteLog(address,memo,curEntity.ID,curNamespace)
+        if logErr != nil {
+            log.Errorf("Write log failed, err:%s", logErr.Error())
+        }
+    }
 {{end}}
 
 {{range $av := $model.Action}}
