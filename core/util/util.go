@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	ProjectTemplatePath = "project"
+	ProjectTemplatePath = "simple"
 	UnitTemplatePath    = "unit"
 )
 

@@ -100,17 +100,21 @@ func (s *Project) cloneContent(templatePath, filePath, fileName string) (err err
 }
 
 // Create create
-func (s *Project) Create(projectName string) (err error) {
+func (s *Project) Create(projectName, projectType string) (err error) {
 	s.projectName = projectName
 
 	updateObjectMap(s.objectList)
 
-	err = s.walkTemplate("")
+	err = s.walkTemplate("", projectType)
 	return
 }
 
-func (s *Project) walkTemplate(relativePath string) (err error) {
-	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(util.ProjectTemplatePath)
+func (s *Project) walkTemplate(relativePath, projectType string) (err error) {
+	if projectType == "" {
+		projectType = util.ProjectTemplatePath
+	}
+
+	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(projectType)
 	if baseTemplateErr != nil {
 		err = baseTemplateErr
 		return
@@ -137,7 +141,7 @@ func (s *Project) walkTemplate(relativePath string) (err error) {
 			}
 		}()
 		if fd.IsDir() {
-			err = s.walkTemplate(path.Join(relativePath, fileName))
+			err = s.walkTemplate(path.Join(relativePath, fileName), projectType)
 			if err != nil {
 				return
 			}

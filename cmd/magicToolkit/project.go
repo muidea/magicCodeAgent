@@ -1,13 +1,16 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"github.com/muidea/magicToolkit/core/util"
 	"log"
 	"path"
 
 	"github.com/muidea/magicToolkit/core/project"
+	"github.com/muidea/magicToolkit/core/util"
 )
+
+var projectType = ""
 
 func init() {
 	actionList = append(actionList, &action{
@@ -16,6 +19,8 @@ func init() {
 		description:  "create new project,and initialize",
 		funcPtr:      createProject,
 	})
+
+	flag.StringVar(&projectType, "projectType", projectType, "project type")
 }
 
 func createProject(curPath string) {
@@ -38,7 +43,7 @@ func createProject(curPath string) {
 	}
 
 	project := project.New(curPath, modelDefine, objectList)
-	curErr := project.Create(projectName)
+	curErr := project.Create(projectName, projectType)
 	if curErr != nil {
 		log.Printf("Create project failed, err:%s", curErr.Error())
 		return
