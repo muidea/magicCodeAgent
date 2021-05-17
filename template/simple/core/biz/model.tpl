@@ -36,9 +36,9 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- end}}
 
 {{- define "createFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(ptr *common.{{.Model.Name}}Param) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{.ServiceName}}){{.FuncName}}(param *common.{{.Model.Name}}Param) (ret *model.{{.Model.Name}}, err error){
     // TODO
-    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr.To{{.Model.Name}}())
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(param.To{{.Model.Name}}())
     return
     }
 {{- end}}

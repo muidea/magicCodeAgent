@@ -37,9 +37,9 @@ commonDef "github.com/muidea/magicCommon/def"
 {{- end}}
 
 {{- define "createFuncDefine"}}
-    func (s *{{.ServiceName}}){{.FuncName}}(ptr *common.{{.Model.Name}}Param, namespace string) (ret *model.{{.Model.Name}}, err error){
+    func (s *{{.ServiceName}}){{.FuncName}}(param *common.{{.Model.Name}}Param, namespace string) (ret *model.{{.Model.Name}}, err error){
     // TODO
-    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(ptr.To{{.Model.Name}}(),namespace)
+    ret,err = s.{{toLower .ServiceName}}.{{.FuncName}}(param.To{{.Model.Name}}(),namespace)
     return
     }
 {{- end}}
@@ -75,16 +75,20 @@ type {{$serviceName}} struct {
 }
 
 func New(
-{{toLower $serviceName}} dao.{{$serviceName}},
-eventHub event.Hub,
-backgroundRoutine *task.BackgroundRoutine,
+    {{toLower $serviceName}} dao.{{$serviceName}},
+    eventHub event.Hub,
+    backgroundRoutine *task.BackgroundRoutine,
 ) *{{$serviceName}} {
     ptr := &{{$serviceName}}{
-        Base: base.New("/{{toLower $packageName}}/{{$serviceName}}", eventHub, backgroundRoutine),
+        Base: base.New("/biz/{{toLower $packageName}}", eventHub, backgroundRoutine),
         {{toLower $serviceName}}: {{toLower $serviceName}},
     }
 
     return ptr
+}
+
+func (s *{{$serviceName}}) Notify(event event.Event, result event.Result) {
+    // TODO
 }
 
 {{end}}
