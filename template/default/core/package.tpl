@@ -33,7 +33,7 @@ func New(clnt batisClient.Client,endpointName string) (ret *Core, err error) {
     eventHub := event.NewHub()
     backgroundRoutine := task.NewBackgroundRoutine()
 
-    common := dao.NewCommon(clnt)
+    common := dao.NewCommon(clnt, config.CasService())
 
     {{range $sv := $serviceList}}
         {{toLower $sv.Name}} := dao.New{{$sv.Name}}(clnt)
@@ -47,8 +47,12 @@ func New(clnt batisClient.Client,endpointName string) (ret *Core, err error) {
         {{toLower $sv.Name}}Service := service.New{{$sv.Name}}(common, {{toLower $sv.Name}}Biz)
     {{- end }}
 
+    casBiz := cas.NewCas(config.CasService(), eventHub, backgroundRoutine)
+    baseService := base.New(common, casBiz, config.FileService())
+
     core := &Core{ {{range $sv := $serviceList}}
             {{toLower $sv.Name}}Service: {{toLower $sv.Name}}Service, {{end}}
+        baseService:       baseService,
         eventHub:          eventHub,
         backgroundRoutine: backgroundRoutine,
     }
@@ -60,7 +64,10 @@ func New(clnt batisClient.Client,endpointName string) (ret *Core, err error) {
 // Core Core对象
 type Core struct {
     {{range $sv := $serviceList}}
-        {{toLower $sv.Name}}Service  *{{toLower $sv.Name}}.{{$sv.Name}} {{end}}
+        {{toLower $sv.Name}}Service  *{{toLower $sv.Name}}.{{$sv.Name}}
+    {{- end -}}
+
+    baseService       *base.Base
     eventHub          event.Hub
     backgroundRoutine *task.BackgroundRoutine
 }
@@ -68,6 +75,10 @@ type Core struct {
 // Startup 启动
 func (s *Core) Startup(router engine.Router) {
     sessionRegistry := session.CreateRegistry(nil)
+    casRouteRegistry := casToolkit.NewCasRegistry(s.baseService, router)
+    roleRouteRegistry := casToolkit.NewRoleRegistry(s.baseService, router)
+    s.baseService.BindRegistry(sessionRegistry, casRouteRegistry, roleRouteRegistry)
+
     {{range $sv := $serviceList}}
         s.{{toLower $sv.Name}}Service.BindRegistry(sessionRegistry)
     {{- end}}

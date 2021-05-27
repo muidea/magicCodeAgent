@@ -271,7 +271,7 @@ casToolkit "github.com/muidea/magicCas/toolkit"
 {{if eq $serviceName $modelName}}
     type {{$serviceName}} struct {
         sessionRegistry      commonSession.Registry
-        privateRouteRegistry casToolkit.RoleRegistry
+        roleRouteRegistry casToolkit.RoleRegistry
         validator fu.Validator
 
         common dao.Common
@@ -291,9 +291,9 @@ casToolkit "github.com/muidea/magicCas/toolkit"
         return ptr
     }
 
-    func (s *{{$serviceName}}) BindRegistry(sessionRegistry commonSession.Registry,privateRouteRegistry casToolkit.RoleRegistry) {
+    func (s *{{$serviceName}}) BindRegistry(sessionRegistry commonSession.Registry,roleRouteRegistry casToolkit.RoleRegistry) {
         s.sessionRegistry = sessionRegistry
-        s.privateRouteRegistry = privateRouteRegistry
+        s.roleRouteRegistry = roleRouteRegistry
     }
 
     // Handle middleware handler
@@ -314,7 +314,7 @@ casToolkit "github.com/muidea/magicCas/toolkit"
     func (s *{{$serviceName}}) RegisterHandler(router engine.Router) {
         {{- range $av := $model.Action -}}
             {{$funcName := formatAction $serviceName $modelName $av}}
-            s.privateRouteRegistry.AddHandler(common.{{$funcName}}URL, "{{getActionMethod $av}}", {{getActionPrivate $av}}, s.{{$funcName}})
+            s.roleRouteRegistry.AddHandler(common.{{$funcName}}URL, "{{getActionMethod $av}}", {{getActionPrivate $av}}, s.{{$funcName}})
         {{- end}}
     }
 

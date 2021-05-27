@@ -433,7 +433,7 @@ func (s *Module) FilterUrlRoute(serviceName string) (ret string, err error) {
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$lowModuleName := $module.Lower $serviceName}}
-s.privateRouteRegistry.AddHandler(common.Filter{{$moduleName}}URL, "GET", casModel.ReadPrivate, s.Filter{{$moduleName}})
+s.roleRouteRegistry.AddHandler(common.Filter{{$moduleName}}URL, "GET", casModel.ReadPrivate, s.Filter{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("FilterUrlRoute").Parse(templateVal)
 	if templateErr != nil {
@@ -458,7 +458,7 @@ func (s *Module) QueryUrlRoute(serviceName string) (ret string, err error) {
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$lowModuleName := $module.Lower $serviceName}}
-s.privateRouteRegistry.AddHandler(common.Query{{$moduleName}}URL, "GET", casModel.ReadPrivate, s.Query{{$moduleName}})
+s.roleRouteRegistry.AddHandler(common.Query{{$moduleName}}URL, "GET", casModel.ReadPrivate, s.Query{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("QueryUrlRoute").Parse(templateVal)
 	if templateErr != nil {
@@ -483,7 +483,7 @@ func (s *Module) CreateUrlRoute(serviceName string) (ret string, err error) {
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$lowModuleName := $module.Lower $serviceName}}
-s.privateRouteRegistry.AddHandler(common.Create{{$moduleName}}URL, "POST", casModel.WritePrivate, s.Create{{$moduleName}})
+s.roleRouteRegistry.AddHandler(common.Create{{$moduleName}}URL, "POST", casModel.WritePrivate, s.Create{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("CreateUrlRoute").Parse(templateVal)
 	if templateErr != nil {
@@ -508,7 +508,7 @@ func (s *Module) UpdateUrlRoute(serviceName string) (ret string, err error) {
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$lowModuleName := $module.Lower $serviceName}}
-s.privateRouteRegistry.AddHandler(common.Update{{$moduleName}}URL, "PUT", casModel.WritePrivate, s.Update{{$moduleName}})
+s.roleRouteRegistry.AddHandler(common.Update{{$moduleName}}URL, "PUT", casModel.WritePrivate, s.Update{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("UpdateUrlRoute").Parse(templateVal)
 	if templateErr != nil {
@@ -533,7 +533,7 @@ func (s *Module) DeleteUrlRoute(serviceName string) (ret string, err error) {
 {{$module := .Module}}
 {{$moduleName := $module.Name}}
 {{$lowModuleName := $module.Lower $serviceName}}
-s.privateRouteRegistry.AddHandler(common.Delete{{$moduleName}}URL, "DELETE", casModel.DeletePrivate, s.Delete{{$moduleName}})
+s.roleRouteRegistry.AddHandler(common.Delete{{$moduleName}}URL, "DELETE", casModel.DeletePrivate, s.Delete{{$moduleName}})
 `
 	templateHandle, templateErr := template.New("DeleteUrlRoute").Parse(templateVal)
 	if templateErr != nil {
