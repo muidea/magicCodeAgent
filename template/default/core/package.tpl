@@ -7,16 +7,20 @@ package {{$packageName}}
 import (
 log "github.com/cihub/seelog"
 batisClient "github.com/muidea/magicBatis/client"
+casToolkit "github.com/muidea/magicCas/toolkit"
 "github.com/muidea/magicCommon/event"
 "github.com/muidea/magicCommon/session"
 "github.com/muidea/magicCommon/task"
 engine "github.com/muidea/magicEngine"
 
+"github.com/muidea/{{$projectName}}/config"
 "github.com/muidea/{{$projectName}}/model"
 
 "github.com/muidea/{{$projectName}}/core/biz"
+"github.com/muidea/{{$projectName}}/core/biz/cas"
 "github.com/muidea/{{$projectName}}/core/dao"
 "github.com/muidea/{{$projectName}}/core/service"
+"github.com/muidea/{{$projectName}}/core/service/base"
 {{range $sv := $serviceList}}
 "github.com/muidea/{{$projectName}}/core/service/{{toLower $sv.Name}}"{{end}}
 )
@@ -65,7 +69,7 @@ func New(clnt batisClient.Client,endpointName string) (ret *Core, err error) {
 type Core struct {
     {{range $sv := $serviceList}}
         {{toLower $sv.Name}}Service  *{{toLower $sv.Name}}.{{$sv.Name}}
-    {{- end -}}
+    {{- end}}
 
     baseService       *base.Base
     eventHub          event.Hub
@@ -80,7 +84,7 @@ func (s *Core) Startup(router engine.Router) {
     s.baseService.BindRegistry(sessionRegistry, casRouteRegistry, roleRouteRegistry)
 
     {{range $sv := $serviceList}}
-        s.{{toLower $sv.Name}}Service.BindRegistry(sessionRegistry)
+        s.{{toLower $sv.Name}}Service.BindRegistry(sessionRegistry,roleRouteRegistry)
     {{- end}}
 
     {{range $sv := $serviceList}}

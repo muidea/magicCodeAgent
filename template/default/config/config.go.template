@@ -4,10 +4,12 @@ import "flag"
 
 var casService = "http://127.0.0.1:8081"
 var fileService = "http://127.0.0.1:8083"
+var superNamespace = "local"
 
 func init() {
 	flag.StringVar(&casService, "CasService", casService, "magicCas partner address")
 	flag.StringVar(&fileService, "FileService", fileService, "magicFile partner address")
+	flag.StringVar(&superNamespace, "SuperNamespace", superNamespace, "{{.ProjectName}} super namespace.")
 }
 
 //CasService cas partner addr
@@ -18,4 +20,9 @@ func CasService() string {
 //FileService file partner addr
 func FileService() string {
 	return fileService
+}
+
+//SuperNamespace super namespace
+func SuperNamespace() string {
+	return superNamespace
 }

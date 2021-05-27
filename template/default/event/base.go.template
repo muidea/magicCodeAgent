@@ -1,0 +1,18 @@
+package event
+
+import "time"
+
+const (
+	LoadNamespace    = "/base/namespace/+/load"
+	DisableNamespace = "/base/namespace/+/disable"
+	EnableNamespace  = "/base/namespace/+/enable"
+	CreateNamespace  = "/base/namespace/+/create"
+	DeleteNamespace  = "/base/namespace/+/delete"
+
+	NotifyTimer = "/base/timer/notify"
+)
+
+type TimerNotify struct {
+	PreTime time.Time
+	CurTime time.Time
+}

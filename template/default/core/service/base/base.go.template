@@ -1,0 +1,616 @@
+package base
+
+import (
+	"encoding/json"
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
+
+	log "github.com/cihub/seelog"
+
+	fn "github.com/muidea/magicCommon/foundation/net"
+	fu "github.com/muidea/magicCommon/foundation/util"
+
+	commonCommon "github.com/muidea/magicCommon/common"
+	commonDef "github.com/muidea/magicCommon/def"
+	commonSession "github.com/muidea/magicCommon/session"
+	engine "github.com/muidea/magicEngine"
+
+	casCommon "github.com/muidea/magicCas/common"
+	casModel "github.com/muidea/magicCas/model"
+	casToolkit "github.com/muidea/magicCas/toolkit"
+
+	fileCommon "github.com/muidea/magicFile/common"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/config"
+	"github.com/muidea/{{.ProjectName}}/core/biz/cas"
+	"github.com/muidea/{{.ProjectName}}/core/dao"
+	"github.com/muidea/{{.ProjectName}}/core/service/base/biz"
+)
+
+// Base BaseService
+type Base struct {
+	sessionRegistry   commonSession.Registry
+	roleRouteRegistry casToolkit.RoleRegistry
+	casRouteRegistry  casToolkit.CasRegistry
+	validator         fu.Validator
+
+	common dao.Common
+	casBiz *cas.Cas
+
+	fileService string
+	systemBiz   biz.System
+}
+
+// New create base
+func New(common dao.Common, casBiz *cas.Cas, fileService string) *Base {
+	ptr := &Base{
+		common:      common,
+		casBiz:      casBiz,
+		fileService: fileService,
+		validator:   fu.NewFormValidator(),
+	}
+
+	return ptr
+}
+
+func (s *Base) BindRegistry(
+	sessionRegistry commonSession.Registry,
+	casRouteRegistry casToolkit.CasRegistry,
+	roleRouteRegistry casToolkit.RoleRegistry) {
+
+	s.sessionRegistry = sessionRegistry
+	s.casRouteRegistry = casRouteRegistry
+	s.roleRouteRegistry = roleRouteRegistry
+}
+
+// Login login account
+func (s *Base) Login(res http.ResponseWriter, req *http.Request) {
+	/*
+		curSession := s.sessionRegistry.GetSession(res, req)
+
+		result := &common.LoginResult{}
+		for {
+			param := &common.LoginParam{}
+			err := net.ParseJSONBody(req, s.validator, param)
+			if err != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = "非法参数"
+				break
+			}
+
+			if param.Account == "" || param.Password == "" {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = "非法参数,输入参数为空"
+				break
+			}
+			namespace := s.getCurrentNamespace(res, req)
+			loginEntity, loginSession, loginErr := s.casBiz.Login(curSession, param.Account, param.Password, namespace)
+			if loginErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = loginErr.Error()
+				break
+			}
+
+			curSession.SetSessionInfo(loginSession)
+			curSession.SetOption(commonCommon.AuthAccount, loginEntity)
+			curSession.Flush(res, req)
+
+			result.Entity = &casCommon.EntityView{}
+			result.Entity.FromEntity(loginEntity)
+			result.SessionInfo = loginSession
+			break
+		}
+
+		block, err := json.Marshal(result)
+		if err == nil {
+			res.Write(block)
+			return
+		}
+
+		res.WriteHeader(http.StatusExpectationFailed)
+
+	*/
+	return
+}
+
+// Logout logout account
+func (s *Base) Logout(res http.ResponseWriter, req *http.Request) {
+	/*
+		curSession := s.sessionRegistry.GetSession(res, req)
+
+		result := &casCommon.LogoutResult{}
+		for {
+			namespace := s.getCurrentNamespace(res, req)
+			logoutSession, logoutErr := s.casBiz.Logout(curSession, namespace)
+			if logoutErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = logoutErr.Error()
+				break
+			}
+
+			curSession.SetSessionInfo(logoutSession)
+			curSession.RemoveOption(commonCommon.AuthAccount)
+			curSession.Flush(res, req)
+
+			result.SessionInfo = logoutSession
+			result.ErrorCode = commonDef.Success
+			break
+		}
+
+		block, err := json.Marshal(result)
+		if err == nil {
+			res.Write(block)
+			return
+		}
+
+		res.WriteHeader(http.StatusExpectationFailed)
+
+	*/
+	return
+}
+
+func (s *Base) UpdateAccountPassword(res http.ResponseWriter, req *http.Request) {
+	/*
+		type updateResult struct {
+			commonDef.Result
+			Account *casCommon.AccountView `json:"account"`
+		}
+
+		curSession := s.sessionRegistry.GetSession(res, req)
+		result := &updateResult{}
+		for {
+			param := &casCommon.UpdatePasswordParam{}
+			err := net.ParseJSONBody(req, s.validator, param)
+			if err != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = "非法参数"
+				break
+			}
+			_, value := net.SplitRESTAPI(req.URL.Path)
+			id, err := strconv.Atoi(value)
+			if err != nil || id == 0 {
+				log.Errorf("update account failed, illegal id, id:%s", value)
+				result.ErrorCode = commonDef.Failed
+				result.Reason = "非法参数"
+				break
+			}
+
+			namespace := s.getCurrentNamespace(res, req)
+			accountPtr, accountErr := s.casBiz.UpdateAccountPassword(curSession, id, param, namespace)
+			if accountErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = "非法参数"
+				break
+			}
+
+			result.Account = &casCommon.AccountView{}
+			result.Account.FromAccount(accountPtr)
+			result.ErrorCode = commonDef.Success
+			break
+		}
+		block, err := json.Marshal(result)
+		if err == nil {
+			res.Write(block)
+			return
+		}
+
+		res.WriteHeader(http.StatusExpectationFailed)
+
+	*/
+	return
+}
+
+// VerifyEndpoint verify endpoint
+func (s *Base) VerifyEndpoint(res http.ResponseWriter, req *http.Request) {
+	/*
+		curSession := s.sessionRegistry.GetSession(res, req)
+
+		result := &common.ConfirmResult{}
+		for {
+			endpointName := req.URL.Query().Get("endpointName")
+			authToken := req.URL.Query().Get("authToken")
+			identifyID := req.URL.Query().Get("identifyID")
+			if authToken == "" || identifyID == "" {
+				result.ErrorCode = commonDef.IllegalParam
+				result.Reason = "无效参数"
+				break
+			}
+
+			namespace := s.getCurrentNamespace(res, req)
+			verifyEntity, verifySession, verifyErr := s.casBiz.VerifyEndpoint(curSession, endpointName, identifyID, authToken, namespace)
+			if verifyErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = verifyErr.Error()
+				break
+			}
+
+			curSession.SetSessionInfo(verifySession)
+			curSession.SetOption(commonCommon.AuthAccount, verifyEntity)
+			curSession.Flush(res, req)
+
+			result.Entity = &casCommon.EntityView{}
+			result.Entity.FromEntity(verifyEntity)
+			result.SessionInfo = verifySession
+			break
+		}
+
+		block, err := json.Marshal(result)
+		if err == nil {
+			res.Write(block)
+			return
+		}
+
+		res.WriteHeader(http.StatusExpectationFailed)
+
+	*/
+	return
+}
+
+// RefreshSession refresh commonSession status
+func (s *Base) RefreshSession(res http.ResponseWriter, req *http.Request) {
+	/*
+		curSession := s.sessionRegistry.GetSession(res, req)
+
+		result := &common.RefreshResult{}
+		for {
+			namespace := s.getCurrentNamespace(res, req)
+			refreshEntity, refreshSession, refreshErr := s.casBiz.RefreshSession(curSession, namespace)
+			if refreshErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = refreshErr.Error()
+				break
+			}
+
+			curSession.SetSessionInfo(refreshSession)
+			curSession.SetOption(commonCommon.AuthAccount, refreshEntity)
+			curSession.Flush(res, req)
+
+			result.Entity = &casCommon.EntityView{}
+			result.Entity.FromEntity(refreshEntity)
+			result.SessionInfo = refreshSession
+			break
+		}
+
+		block, err := json.Marshal(result)
+		if err == nil {
+			res.Write(block)
+			return
+		}
+
+		res.WriteHeader(http.StatusExpectationFailed)
+
+	*/
+	return
+}
+
+// QueryAccessLog query access log
+func (s *Base) QueryAccessLog(res http.ResponseWriter, req *http.Request) {
+	/*
+		filter := util.NewPageFilter()
+		filter.Decode(req)
+
+		curSession := s.sessionRegistry.GetSession(res, req)
+		result := &common.QueryAllAccessLogResult{}
+		for {
+			curEntity, curErr := s.getCurrentEntity(res, req)
+			if curErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = "查询访问日志失败"
+				break
+			}
+
+			namespace := s.getCurrentNamespace(res, req)
+			logList, logCount, logErr := s.casBiz.QueryAccessLog(curSession, curEntity, filter, namespace)
+			if logErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = logErr.Error()
+				break
+			}
+
+			for _, val := range logList {
+				view := &casCommon.LogView{}
+				view.FromLog(val)
+				view.Creater = &casCommon.EntityView{}
+				view.Creater.FromEntity(curEntity)
+
+				result.AccessLog = append(result.AccessLog, view)
+			}
+
+			result.Total = logCount
+			result.ErrorCode = commonDef.Success
+			break
+		}
+
+		block, err := json.Marshal(result)
+		if err == nil {
+			res.Write(block)
+			return
+		}
+
+		res.WriteHeader(http.StatusExpectationFailed)
+
+	*/
+	return
+}
+
+// QueryOperateLog query operate log
+func (s *Base) QueryOperateLog(res http.ResponseWriter, req *http.Request) {
+	/*
+		pageFilter := util.NewPageFilter()
+		pageFilter.Decode(req)
+
+		filter := def.NewFilter()
+		filter.Page(pageFilter)
+		result := &common.QueryAllOperateLogResult{}
+		for {
+			namespace := s.getCurrentNamespace(res, req)
+			curEntity, curErr := s.getCurrentEntity(res, req)
+			if curErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = curErr.Error()
+				break
+			}
+
+			filter.Equal("Creater", curEntity.ID)
+			logList, logCount, logErr := s.common.QueryOperateLog(filter, namespace)
+			if logErr != nil {
+				result.ErrorCode = commonDef.Failed
+				result.Reason = logErr.Error()
+				break
+			}
+
+			for _, val := range logList {
+				view := &common.LogView{}
+				view.FromLog(val)
+				view.Creater = &casCommon.EntityView{}
+				view.Creater.FromEntity(curEntity)
+				result.OperateLog = append(result.OperateLog, view)
+			}
+
+			result.Total = logCount
+			result.ErrorCode = commonDef.Success
+			break
+		}
+
+		block, err := json.Marshal(result)
+		if err == nil {
+			res.Write(block)
+			return
+		}
+
+		res.WriteHeader(http.StatusExpectationFailed)
+
+	*/
+	return
+}
+
+func (s *Base) EnumPrivate(res http.ResponseWriter, req *http.Request) {
+	type enumResult struct {
+		commonDef.Result
+		Private []*casCommon.PrivateItem `json:"private"`
+	}
+
+	namespace := s.getCurrentNamespace(res, req)
+	result := &enumResult{Private: []*casCommon.PrivateItem{}}
+	for {
+		items := s.roleRouteRegistry.GetAllPrivateItem()
+		for _, val := range items {
+			if s.systemBiz.IsSpecialRoute(val.Path) && !s.isSuperNamespace(namespace) {
+				continue
+			}
+			if !s.systemBiz.IsSettingRoute(val.Path) {
+				if !s.systemBiz.IsSpecialRoute(val.Path) && s.isSuperNamespace(namespace) {
+					continue
+				}
+			}
+
+			result.Private = append(result.Private, val)
+		}
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusInternalServerError)
+}
+
+// GetSystemInfo get system info
+func (s *Base) GetSystemInfo(res http.ResponseWriter, req *http.Request) {
+	type getResult struct {
+		commonDef.Result
+		Route   []*biz.Route   `json:"route"`
+		Content []*biz.Content `json:"content"`
+	}
+
+	result := &getResult{}
+	for {
+		curSession := s.sessionRegistry.GetSession(res, req)
+		curEntity, curErr := s.getCurrentEntity(res, req)
+		if curErr != nil {
+			result.ErrorCode = commonDef.InvalidAuthority
+			result.Reason = "无效权限"
+			break
+		}
+
+		namespace := s.getCurrentNamespace(res, req)
+		curAccount, curErr := s.casBiz.QueryAccount(curSession, curEntity.EID, namespace)
+		if curErr != nil {
+			result.ErrorCode = commonDef.InvalidAuthority
+			result.Reason = "无效权限"
+			break
+		}
+
+		isSuper := s.isSuperNamespace(namespace)
+		result.Route, result.Content = s.systemBiz.SystemInfo(curAccount.Role, isSuper)
+		break
+	}
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+// Verify verify current commonSession
+func (s *Base) Verify(res http.ResponseWriter, req *http.Request) (err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	namespace := s.getCurrentNamespace(res, req)
+	sessionEntity, sessionInfo, sessionErr := s.casBiz.RefreshSession(curSession, namespace)
+	if sessionErr != nil {
+		err = sessionErr
+		log.Errorf("verify current commonSession failed, err:%s", sessionErr.Error())
+		return
+	}
+
+	curSession.SetSessionInfo(sessionInfo)
+	curSession.SetOption(commonCommon.AuthAccount, sessionEntity)
+	curSession.Flush(res, req)
+
+	return
+}
+
+// VerifyRole verify role
+func (s *Base) VerifyRole(res http.ResponseWriter, req *http.Request) (ret *casModel.Role, err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	curEntity, curErr := s.getCurrentEntity(res, req)
+	if curErr != nil {
+		err = curErr
+		return
+	}
+
+	namespace := s.getCurrentNamespace(res, req)
+	_, ret, err = s.casBiz.VerifyEntity(curSession, curEntity, namespace)
+	return
+}
+
+// Handle middleware handler
+func (s *Base) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	sessionInfo := curSession.GetSessionInfo()
+	sessionInfo.Scope = commonCommon.ShareSession
+
+	values := req.URL.Query()
+	values = sessionInfo.Encode(values)
+	req.URL.RawQuery = values.Encode()
+
+	ctx.Next()
+}
+
+// RegisterHandler 注册路由
+func (s *Base) RegisterHandler(router engine.Router) {
+	// account login,logout, confirm, refresh
+	//---------------------------------------------------------------------------------------
+	loginRoute := engine.CreateRoute(common.LoginAccountURL, "POST", s.Login)
+	router.AddRoute(loginRoute, s)
+
+	logoutRoute := engine.CreateRoute(common.LogoutAccountURL, "DELETE", s.Logout)
+	s.casRouteRegistry.AddRoute(logoutRoute, s)
+
+	changePasswordRoute := engine.CreateRoute(common.UpdateAccountPasswordURL, "PUT", s.UpdateAccountPassword)
+	s.casRouteRegistry.AddRoute(changePasswordRoute, s)
+
+	verifyEndpointRoute := engine.CreateRoute(common.VerifyEndpointURL, "GET", s.VerifyEndpoint)
+	router.AddRoute(verifyEndpointRoute, s)
+
+	s.casRouteRegistry.AddHandler(common.RefreshSessionURL, "GET", s.RefreshSession)
+
+	s.casRouteRegistry.AddHandler(common.QueryAccessLogURL, "GET", s.QueryAccessLog)
+
+	s.casRouteRegistry.AddHandler(common.QueryOperateLogURL, "GET", s.QueryOperateLog)
+
+	s.roleRouteRegistry.AddHandler(common.EnumPrivateURL, "GET", casCommon.ReadPrivate, s.EnumPrivate)
+
+	// upload file
+	//---------------------------------------------------------------------------------------
+	uploadFileURL := fn.JoinURL(s.fileService, fileCommon.UploadFileURL)
+	uploadFileRoute := engine.CreateProxyRoute(common.UploadFileURL, "POST", uploadFileURL, true)
+	router.AddRoute(uploadFileRoute, s)
+
+	viewFileURL := fn.JoinURL(s.fileService, fileCommon.DownloadFileURL)
+	viewFileRoute := engine.CreateProxyRoute(common.ViewFileURL, "GET", viewFileURL, true)
+	router.AddRoute(viewFileRoute, s)
+
+	s.casRouteRegistry.AddHandler(common.QuerySystemInfoURL, "GET", s.GetSystemInfo)
+}
+
+func (s *Base) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
+	address := fn.GetHTTPRemoteAddress(req)
+	curEntity, _ := s.getCurrentEntity(res, req)
+	curNamespace := s.getCurrentNamespace(res, req)
+	_, logErr := s.common.WriteLog(address, memo, curEntity.ID, curNamespace)
+	if logErr != nil {
+		log.Errorf("Write log failed, err:%s", logErr.Error())
+	}
+}
+
+func (s *Base) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
+	if !ok {
+		err = fmt.Errorf("无效权限,未通过验证")
+		return
+	}
+	ret = authVal.(*casModel.Entity)
+
+	ctx := casCommon.NewEntityContext(nil)
+	ctx.Decode(req)
+
+	ctxEntity := ctx.GetEntity()
+	if ctxEntity == nil {
+		return
+	}
+
+	ret = ctxEntity
+	return
+}
+
+func (s *Base) queryEntity(id int, sessionInfo *commonCommon.SessionInfo, namespace string) (ret *casModel.Entity) {
+	entityPtr, entityErr := s.common.QueryEntity(id, sessionInfo, namespace)
+	if entityErr != nil {
+		ret = casModel.UnknownEntity()
+		return
+	}
+
+	ret = entityPtr
+	return
+}
+
+func (s *Base) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string) {
+	namespace := req.Header.Get(casCommon.NamespaceID)
+	if namespace != "" {
+		ret = namespace
+		return
+	}
+
+	items := strings.Split(req.Host, ":")
+	if nil != net.ParseIP(items[0]) {
+		ret = "default"
+		return
+	}
+
+	items = strings.Split(items[0], ".")
+	if len(items) <= 1 {
+		ret = "default"
+		return
+	}
+
+	ret = items[0]
+	return
+}
+
+func (s *Base) isSuperNamespace(namespace string) bool {
+	return namespace == config.SuperNamespace()
+}

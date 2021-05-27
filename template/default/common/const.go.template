@@ -1,0 +1,26 @@
+package common
+
+const (
+	// LoginAccountURL login account url
+	LoginAccountURL = "/api/v1/common/account/login/"
+	// LogoutAccountURL logout account url
+	LogoutAccountURL = "/api/v1/common/account/logout/"
+	// UpdateAccountPasswordURL update account password url
+	UpdateAccountPasswordURL = "/api/v1/common/account/password/update/:id"
+	// VerifyEndpointURL verify endpoint url
+	VerifyEndpointURL = "/api/v1/common/endpoint/verify/"
+	// RefreshSessionURL refresh session url
+	RefreshSessionURL = "/api/v1/common/session/refresh/"
+	// QueryAccessLogURL query access log url
+	QueryAccessLogURL = "/api/v1/common/access/log/query/"
+	// QueryOperateLogURL query operate log url
+	QueryOperateLogURL = "/api/v1/common/operate/log/query/"
+
+	// UploadFileURL upload file url
+	UploadFileURL = "/api/v1/common/file/upload/"
+	// ViewFileURL view file url
+	ViewFileURL = "/api/v1/common/file/view/"
+
+	EnumPrivateURL     = "/api/v1/common/private/enum/"
+	QuerySystemInfoURL = "/api/v1/common/system/query/"
+)

@@ -1,0 +1,11 @@
+package biz
+
+type Content struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
+func (s *Content) FromModule(modulePtr *Module) {
+	s.Name = modulePtr.Title
+	s.Content = modulePtr.Content
+}

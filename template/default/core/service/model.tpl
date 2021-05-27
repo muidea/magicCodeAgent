@@ -147,9 +147,14 @@ casToolkit "github.com/muidea/magicCas/toolkit"
                 result.Reason = "invalid param"
                 break
             }
-
+            curEntity, curErr := s.getCurrentEntity(res, req)
+            if curErr != nil {
+                result.ErrorCode = commonDef.InvalidAuthority
+                result.Reason = "invalid authority"
+                break
+            }
             curNamespace := s.getCurrentNamespace(res,req)
-            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param, curNamespace)
+            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param, curEntity.ID, curNamespace)
             if {{toLower .Model.Name}}Err != nil {
                 result.ErrorCode = commonDef.Failed
                 result.Reason = {{toLower .Model.Name}}Err.Error()
@@ -196,9 +201,15 @@ casToolkit "github.com/muidea/magicCas/toolkit"
                 break
             }
             param.ID = id
+            curEntity, curErr := s.getCurrentEntity(res, req)
+            if curErr != nil {
+                result.ErrorCode = commonDef.InvalidAuthority
+                result.Reason = "invalid authority"
+                break
+            }
 
             curNamespace := s.getCurrentNamespace(res,req)
-            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param, curNamespace)
+            {{toLower .Model.Name}}Ptr, {{toLower .Model.Name}}Err := s.{{toLower .ServiceName}}Biz.{{.FuncName}}(param, curEntity.ID, curNamespace)
             if {{toLower .Model.Name}}Err != nil {
                 result.ErrorCode = commonDef.Failed
                 result.Reason = {{toLower .Model.Name}}Err.Error()
