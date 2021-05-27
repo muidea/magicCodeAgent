@@ -1,0 +1,233 @@
+package authority
+
+import (
+	"encoding/json"
+	"fmt"
+	log "github.com/cihub/seelog"
+	"net/http"
+	"strconv"
+
+	casCommon "github.com/muidea/magicCas/common"
+	casModel "github.com/muidea/magicCas/model"
+	commonDef "github.com/muidea/magicCommon/def"
+	fn "github.com/muidea/magicCommon/foundation/net"
+)
+
+func (s *Authority) filterAuthorityEndpointLite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
+	result := &casCommon.EndpointListResult{Endpoint: []*casCommon.EndpointLite{}}
+	for {
+		curNamespace := s.getCurrentNamespace(res, req)
+		endpointList, _, endpointErr := s.authorityBiz.FilterAuthorityEndpoint(filter, curNamespace)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = endpointErr.Error()
+			break
+		}
+
+		for _, val := range endpointList {
+			endpointLite := &casCommon.EndpointLite{}
+			endpointLite.FromEndpoint(val)
+			result.Endpoint = append(result.Endpoint, endpointLite)
+		}
+
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) FilterAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
+	filter := commonDef.NewFilter()
+	filter.Decode(req)
+
+	modelVal, modelOK := filter.Get("mode")
+	if modelOK && modelVal == "1" {
+		s.filterAuthorityEndpointLite(res, req, filter)
+		return
+	}
+
+	result := &casCommon.EndpointStatisticResult{Endpoint: []*casModel.Endpoint{}}
+	for {
+		curNamespace := s.getCurrentNamespace(res, req)
+		endpointList, endpointTotal, endpointErr := s.authorityBiz.FilterAuthorityEndpoint(filter, curNamespace)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = endpointErr.Error()
+			break
+		}
+
+		result.Endpoint = endpointList
+		result.Total = endpointTotal
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) QueryAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
+	result := &casCommon.EndpointResult{}
+	for {
+		_, value := fn.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "invalid param"
+			break
+		}
+
+		curNamespace := s.getCurrentNamespace(res, req)
+		endpointPtr, endpointErr := s.authorityBiz.QueryAuthorityEndpoint(id, curNamespace)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = endpointErr.Error()
+			break
+		}
+
+		result.Endpoint = endpointPtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
+	result := &casCommon.EndpointResult{}
+	for {
+		param := &casCommon.EndpointParam{}
+		err := fn.ParseJSONBody(req, s.validator, param)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "invalid param"
+			break
+		}
+
+		curNamespace := s.getCurrentNamespace(res, req)
+		endpointPtr, endpointErr := s.authorityBiz.CreateAuthorityEndpoint(param, curNamespace)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = endpointErr.Error()
+			break
+		}
+
+		// TODO
+		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr)
+		s.writeLog(res, req, memo)
+
+		result.Endpoint = endpointPtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
+	result := &casCommon.EndpointResult{}
+	for {
+		_, value := fn.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			log.Errorf("update partner failed, illegal id, id:%s", value)
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "invalid param"
+			break
+		}
+
+		param := &casModel.Endpoint{}
+		err = fn.ParseJSONBody(req, s.validator, param)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "invalid param"
+			break
+		}
+		param.ID = id
+
+		curNamespace := s.getCurrentNamespace(res, req)
+		endpointPtr, endpointErr := s.authorityBiz.UpdateAuthorityEndpoint(param, curNamespace)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = endpointErr.Error()
+			break
+		}
+
+		// TODO
+		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr)
+		s.writeLog(res, req, memo)
+
+		result.Endpoint = endpointPtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) DeleteAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
+	result := &casCommon.EndpointResult{}
+	for {
+		_, value := fn.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "invalid param"
+			break
+		}
+
+		curNamespace := s.getCurrentNamespace(res, req)
+		endpointPtr, endpointErr := s.authorityBiz.DeleteAuthorityEndpoint(id, curNamespace)
+		if endpointErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = endpointErr.Error()
+			break
+		}
+
+		// TODO
+		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr)
+		s.writeLog(res, req, memo)
+
+		result.Endpoint = endpointPtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}

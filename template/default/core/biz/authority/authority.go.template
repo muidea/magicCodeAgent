@@ -1,0 +1,31 @@
+package authority
+
+import (
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/task"
+
+	"github.com/muidea/{{.ProjectName}}/core/biz/base"
+)
+
+type Authority struct {
+	base.Base
+
+	casService string
+}
+
+func New(
+	casService string,
+	eventHub event.Hub,
+	backgroundRoutine *task.BackgroundRoutine,
+) *Authority {
+	ptr := &Authority{
+		Base:       base.New("/biz/authority", eventHub, backgroundRoutine),
+		casService: casService,
+	}
+
+	return ptr
+}
+
+func (s *Authority) Notify(event event.Event, result event.Result) {
+	// TODO
+}

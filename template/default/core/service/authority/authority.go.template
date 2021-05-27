@@ -1,0 +1,148 @@
+package authority
+
+import (
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
+
+	log "github.com/cihub/seelog"
+
+	fn "github.com/muidea/magicCommon/foundation/net"
+	fu "github.com/muidea/magicCommon/foundation/util"
+
+	commonCommon "github.com/muidea/magicCommon/common"
+	commonSession "github.com/muidea/magicCommon/session"
+	engine "github.com/muidea/magicEngine"
+
+	casCommon "github.com/muidea/magicCas/common"
+	casModel "github.com/muidea/magicCas/model"
+	casToolkit "github.com/muidea/magicCas/toolkit"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/core/biz/authority"
+	"github.com/muidea/{{.ProjectName}}/core/dao"
+)
+
+type Authority struct {
+	sessionRegistry   commonSession.Registry
+	roleRouteRegistry casToolkit.RoleRegistry
+	validator         fu.Validator
+
+	common       dao.Common
+	authorityBiz *authority.Authority
+}
+
+func New(
+	common dao.Common,
+	authorityBiz *authority.Authority,
+) *Authority {
+	ptr := &Authority{
+		common:       common,
+		authorityBiz: authorityBiz,
+		validator:    fu.NewFormValidator(),
+	}
+
+	return ptr
+}
+
+func (s *Authority) BindRegistry(sessionRegistry commonSession.Registry, roleRouteRegistry casToolkit.RoleRegistry) {
+	s.sessionRegistry = sessionRegistry
+	s.roleRouteRegistry = roleRouteRegistry
+}
+
+// Handle middleware handler
+func (s *Authority) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	sessionInfo := curSession.GetSessionInfo()
+	sessionInfo.Scope = commonCommon.ShareSession
+
+	values := req.URL.Query()
+	values = sessionInfo.Encode(values)
+	req.URL.RawQuery = values.Encode()
+
+	ctx.Next()
+}
+
+// RegisterHandler 注册路由
+func (s *Authority) RegisterHandler(router engine.Router) {
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityAccountURL, "GET", casCommon.ReadPrivate, s.FilterAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityAccountURL, "GET", casCommon.ReadPrivate, s.QueryAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityAccountURL, "POST", casCommon.WritePrivate, s.CreateAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityAccountURL, "PUT", casCommon.WritePrivate, s.UpdateAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityAccountURL, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityAccount)
+
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityEndpointURL, "GET", casCommon.ReadPrivate, s.FilterAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityEndpointURL, "GET", casCommon.ReadPrivate, s.QueryAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityEndpointURL, "POST", casCommon.WritePrivate, s.CreateAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityEndpointURL, "PUT", casCommon.WritePrivate, s.UpdateAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityEndpointURL, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityEndpoint)
+
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityRoleURL, "GET", casCommon.ReadPrivate, s.FilterAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityRoleURL, "GET", casCommon.ReadPrivate, s.QueryAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityRoleURL, "POST", casCommon.WritePrivate, s.CreateAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityRoleURL, "PUT", casCommon.WritePrivate, s.UpdateAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityRoleURL, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityRole)
+
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityNamespaceURL, "GET", casCommon.ReadPrivate, s.FilterAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityNamespaceURL, "GET", casCommon.ReadPrivate, s.QueryAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityNamespaceURL, "POST", casCommon.WritePrivate, s.CreateAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityNamespaceURL, "PUT", casCommon.WritePrivate, s.UpdateAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityNamespaceURL, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityNamespace)
+}
+
+func (s *Authority) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
+	if !ok {
+		err = fmt.Errorf("无效权限,未通过验证")
+		return
+	}
+	ret = authVal.(*casModel.Entity)
+	return
+}
+
+func (s *Authority) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string) {
+	namespace := req.Header.Get(casCommon.NamespaceID)
+	if namespace != "" {
+		ret = namespace
+		return
+	}
+
+	items := strings.Split(req.Host, ":")
+	if nil != net.ParseIP(items[0]) {
+		ret = "default"
+		return
+	}
+
+	items = strings.Split(items[0], ".")
+	if len(items) <= 1 {
+		ret = "default"
+		return
+	}
+
+	ret = items[0]
+	return
+}
+
+func (s *Authority) queryEntity(id int, sessionInfo *commonCommon.SessionInfo, namespace string) (ret *casModel.Entity) {
+	entityPtr, entityErr := s.common.QueryEntity(id, sessionInfo, namespace)
+	if entityErr != nil {
+		ret = casModel.UnknownEntity()
+		return
+	}
+
+	ret = entityPtr
+	return
+}
+
+func (s *Authority) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
+	address := fn.GetHTTPRemoteAddress(req)
+	curEntity, _ := s.getCurrentEntity(res, req)
+	curNamespace := s.getCurrentNamespace(res, req)
+	_, logErr := s.common.WriteLog(address, memo, curEntity.ID, curNamespace)
+	if logErr != nil {
+		log.Errorf("Write log failed, err:%s", logErr.Error())
+	}
+}

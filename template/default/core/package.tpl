@@ -21,6 +21,10 @@ engine "github.com/muidea/magicEngine"
 "github.com/muidea/{{$projectName}}/core/dao"
 "github.com/muidea/{{$projectName}}/core/service"
 "github.com/muidea/{{$projectName}}/core/service/base"
+
+authorityBiz "github.com/muidea/{{$projectName}}/core/biz/authority"
+"github.com/muidea/{{$projectName}}/core/service/authority"
+
 {{range $sv := $serviceList}}
 "github.com/muidea/{{$projectName}}/core/service/{{toLower $sv.Name}}"{{end}}
 )
@@ -51,12 +55,16 @@ func New(clnt batisClient.Client,endpointName string) (ret *Core, err error) {
         {{toLower $sv.Name}}Service := service.New{{$sv.Name}}(common, {{toLower $sv.Name}}Biz)
     {{- end }}
 
+    authorityBiz := authorityBiz.New(config.CasService(), eventHub, backgroundRoutine)
+    authorityService := authority.New(common, authorityBiz)
+
     casBiz := cas.NewCas(config.CasService(), eventHub, backgroundRoutine)
     baseService := base.New(common, casBiz, config.FileService())
 
     core := &Core{ {{range $sv := $serviceList}}
             {{toLower $sv.Name}}Service: {{toLower $sv.Name}}Service, {{end}}
         baseService:       baseService,
+        authorityService:  authorityService,
         eventHub:          eventHub,
         backgroundRoutine: backgroundRoutine,
     }
@@ -72,6 +80,7 @@ type Core struct {
     {{- end}}
 
     baseService       *base.Base
+    authorityService *authority.Authority
     eventHub          event.Hub
     backgroundRoutine *task.BackgroundRoutine
 }
@@ -82,6 +91,8 @@ func (s *Core) Startup(router engine.Router) {
     casRouteRegistry := casToolkit.NewCasRegistry(s.baseService, router)
     roleRouteRegistry := casToolkit.NewRoleRegistry(s.baseService, router)
     s.baseService.BindRegistry(sessionRegistry, casRouteRegistry, roleRouteRegistry)
+    s.authorityService.BindRegistry(sessionRegistry, roleRouteRegistry)
+    s.authorityService.RegisterHandler(router)
 
     {{range $sv := $serviceList}}
         s.{{toLower $sv.Name}}Service.BindRegistry(sessionRegistry,roleRouteRegistry)

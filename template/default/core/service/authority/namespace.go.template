@@ -1,0 +1,232 @@
+package authority
+
+import (
+	"encoding/json"
+	"fmt"
+	log "github.com/cihub/seelog"
+	"net/http"
+	"strconv"
+
+	casCommon "github.com/muidea/magicCas/common"
+	casModel "github.com/muidea/magicCas/model"
+	commonDef "github.com/muidea/magicCommon/def"
+	fn "github.com/muidea/magicCommon/foundation/net"
+)
+
+func (s *Authority) filterAuthorityNamespaceLite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
+	result := &casCommon.NamespaceListResult{Namespace: []*casCommon.NamespaceLite{}}
+	for {
+		curNamespace := s.getCurrentNamespace(res, req)
+		namespaceList, _, namespaceErr := s.authorityBiz.FilterAuthorityNamespace(filter, curNamespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = namespaceErr.Error()
+			break
+		}
+
+		for _, val := range namespaceList {
+			namespaceLite := &casCommon.NamespaceLite{}
+			namespaceLite.FromNamespace(val)
+			result.Namespace = append(result.Namespace, namespaceLite)
+		}
+
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) FilterAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
+	filter := commonDef.NewFilter()
+	filter.Decode(req)
+
+	modelVal, modelOK := filter.Get("mode")
+	if modelOK && modelVal == "1" {
+		s.filterAuthorityNamespaceLite(res, req, filter)
+		return
+	}
+
+	result := &casCommon.NamespaceStatisticResult{Namespace: []*casModel.Namespace{}}
+	for {
+		curNamespace := s.getCurrentNamespace(res, req)
+		namespaceList, namespaceTotal, namespaceErr := s.authorityBiz.FilterAuthorityNamespace(filter, curNamespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = namespaceErr.Error()
+			break
+		}
+
+		result.Namespace = namespaceList
+		result.Total = namespaceTotal
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) QueryAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
+	result := &casCommon.NamespaceResult{}
+	for {
+		_, value := fn.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "invalid param"
+			break
+		}
+
+		curNamespace := s.getCurrentNamespace(res, req)
+		namespacePtr, namespaceErr := s.authorityBiz.QueryAuthorityNamespace(id, curNamespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = namespaceErr.Error()
+			break
+		}
+
+		result.Namespace = namespacePtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
+	result := &casCommon.NamespaceResult{}
+	for {
+		param := &casCommon.NamespaceParam{}
+		err := fn.ParseJSONBody(req, s.validator, param)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "invalid param"
+			break
+		}
+
+		curNamespace := s.getCurrentNamespace(res, req)
+		namespacePtr, namespaceErr := s.authorityBiz.CreateAuthorityNamespace(param, curNamespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = namespaceErr.Error()
+			break
+		}
+
+		// TODO
+		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr)
+		s.writeLog(res, req, memo)
+
+		result.Namespace = namespacePtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
+	result := &casCommon.NamespaceResult{}
+	for {
+		_, value := fn.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			log.Errorf("update partner failed, illegal id, id:%s", value)
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "invalid param"
+			break
+		}
+
+		param := &casCommon.NamespaceParam{}
+		err = fn.ParseJSONBody(req, s.validator, param)
+		if err != nil {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "invalid param"
+			break
+		}
+
+		curNamespace := s.getCurrentNamespace(res, req)
+		namespacePtr, namespaceErr := s.authorityBiz.UpdateAuthorityNamespace(id, param, curNamespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = namespaceErr.Error()
+			break
+		}
+
+		// TODO
+		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr)
+		s.writeLog(res, req, memo)
+
+		result.Namespace = namespacePtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}
+
+func (s *Authority) DeleteAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
+	result := &casCommon.NamespaceResult{}
+	for {
+		_, value := fn.SplitRESTAPI(req.URL.Path)
+		id, err := strconv.Atoi(value)
+		if err != nil || id == 0 {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = "invalid param"
+			break
+		}
+
+		curNamespace := s.getCurrentNamespace(res, req)
+		namespacePtr, namespaceErr := s.authorityBiz.DeleteAuthorityNamespace(id, curNamespace)
+		if namespaceErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = namespaceErr.Error()
+			break
+		}
+
+		// TODO
+		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr)
+		s.writeLog(res, req, memo)
+
+		result.Namespace = namespacePtr
+		result.ErrorCode = commonDef.Success
+		break
+	}
+
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+}

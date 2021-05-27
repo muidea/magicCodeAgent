@@ -1,0 +1,53 @@
+package authority
+
+import (
+	"github.com/muidea/magicCas/client"
+	casCommon "github.com/muidea/magicCas/common"
+	casModel "github.com/muidea/magicCas/model"
+	commonDef "github.com/muidea/magicCommon/def"
+)
+
+func (s *Authority) FilterAuthorityEndpoint(filter *commonDef.Filter, namespace string) (ret []*casModel.Endpoint, total int64, err error) {
+	clnt := client.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.AttachNameSpace(namespace)
+	ret, total, err = clnt.FilterEndpoint(filter)
+	return
+}
+
+func (s *Authority) QueryAuthorityEndpoint(id int, namespace string) (ret *casModel.Endpoint, err error) {
+	clnt := client.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.AttachNameSpace(namespace)
+	ret, err = clnt.QueryEndpoint(id)
+	return
+}
+
+func (s *Authority) CreateAuthorityEndpoint(ptr *casCommon.EndpointParam, namespace string) (ret *casModel.Endpoint, err error) {
+	clnt := client.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.AttachNameSpace(namespace)
+	ret, err = clnt.CreateEndpoint(ptr)
+	return
+}
+
+func (s *Authority) UpdateAuthorityEndpoint(ptr *casModel.Endpoint, namespace string) (ret *casModel.Endpoint, err error) {
+	clnt := client.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.AttachNameSpace(namespace)
+	ret, err = clnt.UpdateEndpoint(ptr)
+	return
+}
+
+func (s *Authority) DeleteAuthorityEndpoint(id int, namespace string) (ret *casModel.Endpoint, err error) {
+	clnt := client.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.AttachNameSpace(namespace)
+	ret, err = clnt.DeleteEndpoint(id)
+	return
+}
