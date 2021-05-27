@@ -1,0 +1,27 @@
+package common
+
+const (
+	FilterAuthorityAccountURL = "/api/v1/authority/account/query/"
+	QueryAuthorityAccountURL  = "/api/v1/authority/account/query/:id"
+	CreateAuthorityAccountURL = "/api/v1/authority/account/create/"
+	UpdateAuthorityAccountURL = "/api/v1/authority/account/update/:id"
+	DeleteAuthorityAccountURL = "/api/v1/authority/account/delete/:id"
+
+	FilterAuthorityEndpointURL = "/api/v1/authority/endpoint/query/"
+	QueryAuthorityEndpointURL  = "/api/v1/authority/endpoint/query/:id"
+	CreateAuthorityEndpointURL = "/api/v1/authority/endpoint/create/"
+	UpdateAuthorityEndpointURL = "/api/v1/authority/endpoint/update/:id"
+	DeleteAuthorityEndpointURL = "/api/v1/authority/endpoint/delete/:id"
+
+	FilterAuthorityRoleURL = "/api/v1/authority/role/query/"
+	QueryAuthorityRoleURL  = "/api/v1/authority/role/query/:id"
+	CreateAuthorityRoleURL = "/api/v1/authority/role/create/"
+	UpdateAuthorityRoleURL = "/api/v1/authority/role/update/:id"
+	DeleteAuthorityRoleURL = "/api/v1/authority/role/delete/:id"
+
+	FilterAuthorityNamespaceURL = "/api/v1/authority/namespace/query/"
+	QueryAuthorityNamespaceURL  = "/api/v1/authority/namespace/query/:id"
+	CreateAuthorityNamespaceURL = "/api/v1/authority/namespace/create/"
+	UpdateAuthorityNamespaceURL = "/api/v1/authority/namespace/update/:id"
+	DeleteAuthorityNamespaceURL = "/api/v1/authority/namespace/delete/:id"
+)
