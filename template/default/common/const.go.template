@@ -21,6 +21,6 @@ const (
 	// ViewFileURL view file url
 	ViewFileURL = "/api/v1/common/file/view/"
 
-	EnumPrivateURL     = "/api/v1/common/private/enum/"
-	QuerySystemInfoURL = "/api/v1/common/system/query/"
+	EnumPrivateURL   = "/api/v1/common/private/enum/"
+	QueryBaseInfoURL = "/api/v1/common/base/query/"
 )

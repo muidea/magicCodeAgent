@@ -422,13 +422,13 @@ func (s *Base) EnumPrivate(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusInternalServerError)
 }
 
-// GetSystemInfo get system info
-func (s *Base) GetSystemInfo(res http.ResponseWriter, req *http.Request) {
-	type getResult struct {
-		commonDef.Result
-		Route   []*biz.Route   `json:"route"`
-		Content []*biz.Content `json:"content"`
-	}
+// QueryBaseInfo get system info
+func (s *Base) QueryBaseInfo(res http.ResponseWriter, req *http.Request) {
+    type getResult struct {
+        commonDef.Result
+        Route   []*biz.Route   `json:"route"`
+        Content []*biz.Content `json:"content"`
+    }
 
 	result := &getResult{}
 	for {
@@ -531,8 +531,6 @@ func (s *Base) RegisterHandler(router engine.Router) {
 
 	s.casRouteRegistry.AddHandler(common.QueryOperateLogURL, "GET", s.QueryOperateLog)
 
-	s.roleRouteRegistry.AddHandler(common.EnumPrivateURL, "GET", casCommon.ReadPrivate, s.EnumPrivate)
-
 	// upload file
 	//---------------------------------------------------------------------------------------
 	uploadFileURL := fn.JoinURL(s.fileService, fileCommon.UploadFileURL)
@@ -543,7 +541,8 @@ func (s *Base) RegisterHandler(router engine.Router) {
 	viewFileRoute := engine.CreateProxyRoute(common.ViewFileURL, "GET", viewFileURL, true)
 	router.AddRoute(viewFileRoute, s)
 
-	s.casRouteRegistry.AddHandler(common.QuerySystemInfoURL, "GET", s.GetSystemInfo)
+    s.roleRouteRegistry.AddHandler(common.EnumPrivateURL, "GET", casCommon.ReadPrivate, s.EnumPrivate)
+    s.casRouteRegistry.AddHandler(common.QueryBaseInfoURL, "GET", s.QueryBaseInfo)
 }
 
 func (s *Base) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
