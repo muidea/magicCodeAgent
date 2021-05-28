@@ -55,11 +55,11 @@ func New(clnt batisClient.Client,endpointName string) (ret *Core, err error) {
         {{toLower $sv.Name}}Service := service.New{{$sv.Name}}(common, {{toLower $sv.Name}}Biz)
     {{- end }}
 
-    authorityBiz := authorityBiz.New(config.CasService(), eventHub, backgroundRoutine)
-    authorityService := authority.New(common, authorityBiz)
-
     casBiz := cas.NewCas(config.CasService(), eventHub, backgroundRoutine)
     baseService := base.New(common, casBiz, config.FileService())
+
+    authorityBiz := authorityBiz.New(config.CasService(), eventHub, backgroundRoutine)
+    authorityService := authority.New(common, authorityBiz)
 
     core := &Core{ {{range $sv := $serviceList}}
             {{toLower $sv.Name}}Service: {{toLower $sv.Name}}Service, {{end}}
