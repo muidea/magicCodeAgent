@@ -90,17 +90,17 @@ func (s *Core) Startup(router engine.Router) {
     sessionRegistry := session.CreateRegistry(nil)
     casRouteRegistry := casToolkit.NewCasRegistry(s.baseService, router)
     roleRouteRegistry := casToolkit.NewRoleRegistry(s.baseService, router)
+
     s.baseService.BindRegistry(sessionRegistry, casRouteRegistry, roleRouteRegistry)
+    s.baseService.RegisterHandler(router)
+
     s.authorityService.BindRegistry(sessionRegistry, roleRouteRegistry)
     s.authorityService.RegisterHandler(router)
 
     {{range $sv := $serviceList}}
         s.{{toLower $sv.Name}}Service.BindRegistry(sessionRegistry,roleRouteRegistry)
-    {{- end}}
-
-    {{range $sv := $serviceList}}
         s.{{toLower $sv.Name}}Service.RegisterHandler(router)
-    {{- end}}
+    {{end}}
 }
 
 // Teardown 销毁
