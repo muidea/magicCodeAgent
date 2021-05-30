@@ -1,5 +1,14 @@
 package common
 
+import (
+	"github.com/muidea/magicCommon/common"
+	commonDef "github.com/muidea/magicCommon/def"
+
+	casCommon "github.com/muidea/magicCas/common"
+
+	"github.com/muidea/{{.ProjectName}}/model"
+)
+
 const (
 	// LoginAccountURL login account url
 	LoginAccountURL = "/api/v1/common/account/login/"
@@ -24,3 +33,69 @@ const (
 	EnumPrivateURL   = "/api/v1/common/private/enum/"
 	QueryBaseInfoURL = "/api/v1/common/base/query/"
 )
+
+type LogView casCommon.LogView
+
+func (s *LogView) FromLog(ptr *model.Log, createrPtr *casCommon.EntityView) {
+	s.ID = ptr.ID
+	s.Address = ptr.Address
+	s.Memo = ptr.Memo
+	s.Creater = createrPtr
+	s.CreateTime = ptr.CreateTime
+}
+
+type RefreshResult struct {
+	commonDef.Result
+	Entity      *casCommon.EntityView `json:"entity"`
+	SessionInfo *common.SessionInfo   `json:"sessionInfo"`
+}
+
+type LoginParam struct {
+	Account  string `json:"account" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type LoginResult RefreshResult
+
+type LogoutResult struct {
+	commonDef.Result
+	SessionInfo *common.SessionInfo `json:"sessionInfo"`
+}
+
+type VerifyEndpointParam struct {
+	Endpoint   string `json:"endpoint" validate:"required"`
+	IdentifyID string `json:"identifyID" validate:"required"`
+	AuthToken  string `json:"authToken" validate:"required"`
+}
+
+type VerifyEndpointResult RefreshResult
+
+type VerifyEntityResult struct {
+	commonDef.Result
+	Entity *casCommon.EntityView `json:"entity"`
+	Role   *casCommon.RoleView   `json:"role"`
+}
+
+type QueryEntityResult struct {
+	commonDef.Result
+	Entity *casCommon.EntityView `json:"entity"`
+}
+
+type QueryAllAccessLogResult struct {
+	commonDef.Result
+	Total     int64                `json:"total"`
+	AccessLog []*casCommon.LogView `json:"accessLog"`
+}
+
+// QueryAllOperateLogResult query all operate log result
+type QueryAllOperateLogResult struct {
+	commonDef.Result
+	Total      int64      `json:"total"`
+	OperateLog []*LogView `json:"operateLog"`
+}
+
+// EnumPrivateItemResult enum private item result
+type EnumPrivateItemResult struct {
+	commonDef.Result
+	Private []*casCommon.PrivateItem `json:"private"`
+}
