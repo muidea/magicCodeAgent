@@ -51,7 +51,6 @@ func findObject(name string) *remote.Object {
 }
 
 func IsEntity(ptr *model.Module) bool {
-	log.Printf("module:%s, child size:%d", ptr.Name, len(ptr.Child))
 	findObjectFlag := false
 	for _, val := range ptr.Child {
 		if len(val.Action) == 0 {
