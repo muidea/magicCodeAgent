@@ -11,27 +11,27 @@ import (
 
 const (
 	// LoginAccountURL login account url
-	LoginAccountURL = "/api/v1/common/account/login/"
+	LoginAccountURL = "/api/v1/access/account/login/"
 	// LogoutAccountURL logout account url
-	LogoutAccountURL = "/api/v1/common/account/logout/"
+	LogoutAccountURL = "/api/v1/access/account/logout/"
 	// UpdateAccountPasswordURL update account password url
-	UpdateAccountPasswordURL = "/api/v1/common/account/password/update/:id"
+	UpdateAccountPasswordURL = "/api/v1/access/account/password/update/:id"
 	// VerifyEndpointURL verify endpoint url
-	VerifyEndpointURL = "/api/v1/common/endpoint/verify/"
+	VerifyEndpointURL = "/api/v1/access/endpoint/verify/"
 	// RefreshSessionURL refresh session url
-	RefreshSessionURL = "/api/v1/common/session/refresh/"
+	RefreshSessionURL = "/api/v1/access/session/refresh/"
 	// QueryAccessLogURL query access log url
-	QueryAccessLogURL = "/api/v1/common/access/log/query/"
+	QueryAccessLogURL = "/api/v1/access/log/query/"
 	// QueryOperateLogURL query operate log url
-	QueryOperateLogURL = "/api/v1/common/operate/log/query/"
+	QueryOperateLogURL = "/api/v1/operate/log/query/"
 
 	// UploadFileURL upload file url
-	UploadFileURL = "/api/v1/common/file/upload/"
+	UploadFileURL = "/api/v1/file/upload/"
 	// ViewFileURL view file url
-	ViewFileURL = "/api/v1/common/file/view/"
+	ViewFileURL = "/api/v1/file/view/"
 
-	EnumPrivateURL   = "/api/v1/common/private/enum/"
-	QueryBaseInfoURL = "/api/v1/common/base/query/"
+	EnumPrivateURL   = "/api/v1/base/private/enum/"
+	QueryBaseInfoURL = "/api/v1/base/info/query/"
 )
 
 type LogView casCommon.LogView

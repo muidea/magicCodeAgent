@@ -3,18 +3,21 @@ package authority
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/cihub/seelog"
 	"net/http"
 	"strconv"
+
+	log "github.com/cihub/seelog"
 
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
+
+	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 func (s *Authority) filterAuthorityEndpointLite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
-	result := &casCommon.EndpointListResult{Endpoint: []*casCommon.EndpointLite{}}
+	result := &common.EndpointListResult{Endpoint: []*casCommon.EndpointLite{}}
 	for {
 		curNamespace := s.getCurrentNamespace(res, req)
 		endpointList, _, endpointErr := s.authorityBiz.FilterAuthorityEndpoint(filter, curNamespace)
@@ -53,7 +56,7 @@ func (s *Authority) FilterAuthorityEndpoint(res http.ResponseWriter, req *http.R
 		return
 	}
 
-	result := &casCommon.EndpointStatisticResult{Endpoint: []*casModel.Endpoint{}}
+	result := &common.EndpointStatisticResult{Endpoint: []*casCommon.EndpointView{}}
 	for {
 		curNamespace := s.getCurrentNamespace(res, req)
 		endpointList, endpointTotal, endpointErr := s.authorityBiz.FilterAuthorityEndpoint(filter, curNamespace)
@@ -63,7 +66,13 @@ func (s *Authority) FilterAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			break
 		}
 
-		result.Endpoint = endpointList
+		result.Endpoint = []*casCommon.EndpointView{}
+		for _, val := range endpointList {
+			view := &casCommon.EndpointView{}
+			view.FromEndpoint(val)
+			result.Endpoint = append(result.Endpoint, view)
+		}
+
 		result.Total = endpointTotal
 		result.ErrorCode = commonDef.Success
 		break
@@ -79,7 +88,7 @@ func (s *Authority) FilterAuthorityEndpoint(res http.ResponseWriter, req *http.R
 }
 
 func (s *Authority) QueryAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.EndpointResult{}
+	result := &common.EndpointResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -97,7 +106,8 @@ func (s *Authority) QueryAuthorityEndpoint(res http.ResponseWriter, req *http.Re
 			break
 		}
 
-		result.Endpoint = endpointPtr
+		result.Endpoint = &casCommon.EndpointView{}
+		result.Endpoint.FromEndpoint(endpointPtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -112,7 +122,7 @@ func (s *Authority) QueryAuthorityEndpoint(res http.ResponseWriter, req *http.Re
 }
 
 func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.EndpointResult{}
+	result := &common.EndpointResult{}
 	for {
 		param := &casCommon.EndpointParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
@@ -130,11 +140,11 @@ func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr)
+		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr.Endpoint)
 		s.writeLog(res, req, memo)
 
-		result.Endpoint = endpointPtr
+		result.Endpoint = &casCommon.EndpointView{}
+		result.Endpoint.FromEndpoint(endpointPtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -149,7 +159,7 @@ func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 }
 
 func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.EndpointResult{}
+	result := &common.EndpointResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -177,11 +187,11 @@ func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr)
+		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr.Endpoint)
 		s.writeLog(res, req, memo)
 
-		result.Endpoint = endpointPtr
+		result.Endpoint = &casCommon.EndpointView{}
+		result.Endpoint.FromEndpoint(endpointPtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -196,7 +206,7 @@ func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 }
 
 func (s *Authority) DeleteAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.EndpointResult{}
+	result := &common.EndpointResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -214,11 +224,11 @@ func (s *Authority) DeleteAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr)
+		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr.Endpoint)
 		s.writeLog(res, req, memo)
 
-		result.Endpoint = endpointPtr
+		result.Endpoint = &casCommon.EndpointView{}
+		result.Endpoint.FromEndpoint(endpointPtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}

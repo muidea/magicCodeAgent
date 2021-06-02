@@ -3,18 +3,21 @@ package authority
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/cihub/seelog"
 	"net/http"
 	"strconv"
+
+	log "github.com/cihub/seelog"
 
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
+
+	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 func (s *Authority) filterAuthorityRoleLite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
-	result := &casCommon.RoleListResult{Role: []*casCommon.RoleLite{}}
+	result := &common.RoleListResult{Role: []*casCommon.RoleLite{}}
 	for {
 		curNamespace := s.getCurrentNamespace(res, req)
 		roleList, _, roleErr := s.authorityBiz.FilterAuthorityRole(filter, curNamespace)
@@ -53,7 +56,7 @@ func (s *Authority) FilterAuthorityRole(res http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	result := &casCommon.RoleStatisticResult{Role: []*casModel.Role{}}
+	result := &common.RoleStatisticResult{Role: []*casCommon.RoleView{}}
 	for {
 		curNamespace := s.getCurrentNamespace(res, req)
 		roleList, roleTotal, roleErr := s.authorityBiz.FilterAuthorityRole(filter, curNamespace)
@@ -63,7 +66,13 @@ func (s *Authority) FilterAuthorityRole(res http.ResponseWriter, req *http.Reque
 			break
 		}
 
-		result.Role = roleList
+		result.Role = []*casCommon.RoleView{}
+		for _, val := range roleList {
+			view := &casCommon.RoleView{}
+			view.FromRole(val)
+			result.Role = append(result.Role, view)
+		}
+
 		result.Total = roleTotal
 		result.ErrorCode = commonDef.Success
 		break
@@ -79,7 +88,7 @@ func (s *Authority) FilterAuthorityRole(res http.ResponseWriter, req *http.Reque
 }
 
 func (s *Authority) QueryAuthorityRole(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.RoleResult{}
+	result := &common.RoleResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -97,7 +106,8 @@ func (s *Authority) QueryAuthorityRole(res http.ResponseWriter, req *http.Reques
 			break
 		}
 
-		result.Role = rolePtr
+		result.Role = &casCommon.RoleView{}
+		result.Role.FromRole(rolePtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -112,7 +122,7 @@ func (s *Authority) QueryAuthorityRole(res http.ResponseWriter, req *http.Reques
 }
 
 func (s *Authority) CreateAuthorityRole(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.RoleResult{}
+	result := &common.RoleResult{}
 	for {
 		param := &casCommon.RoleParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
@@ -130,11 +140,11 @@ func (s *Authority) CreateAuthorityRole(res http.ResponseWriter, req *http.Reque
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Role:%s", rolePtr)
+		memo := fmt.Sprintf("删除Role:%s", rolePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Role = rolePtr
+		result.Role = &casCommon.RoleView{}
+		result.Role.FromRole(rolePtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -149,7 +159,7 @@ func (s *Authority) CreateAuthorityRole(res http.ResponseWriter, req *http.Reque
 }
 
 func (s *Authority) UpdateAuthorityRole(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.RoleResult{}
+	result := &common.RoleResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -177,11 +187,11 @@ func (s *Authority) UpdateAuthorityRole(res http.ResponseWriter, req *http.Reque
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Role:%s", rolePtr)
+		memo := fmt.Sprintf("删除Role:%s", rolePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Role = rolePtr
+		result.Role = &casCommon.RoleView{}
+		result.Role.FromRole(rolePtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -196,7 +206,7 @@ func (s *Authority) UpdateAuthorityRole(res http.ResponseWriter, req *http.Reque
 }
 
 func (s *Authority) DeleteAuthorityRole(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.RoleResult{}
+	result := &common.RoleResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -214,11 +224,11 @@ func (s *Authority) DeleteAuthorityRole(res http.ResponseWriter, req *http.Reque
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Role:%s", rolePtr)
+		memo := fmt.Sprintf("删除Role:%s", rolePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Role = rolePtr
+		result.Role = &casCommon.RoleView{}
+		result.Role.FromRole(rolePtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}

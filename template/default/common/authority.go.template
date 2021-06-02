@@ -1,5 +1,10 @@
 package common
 
+import (
+	casCommon "github.com/muidea/magicCas/common"
+	commonDef "github.com/muidea/magicCommon/def"
+)
+
 const (
 	FilterAuthorityAccountURL = "/api/v1/authority/account/query/"
 	QueryAuthorityAccountURL  = "/api/v1/authority/account/query/:id"
@@ -25,3 +30,55 @@ const (
 	UpdateAuthorityNamespaceURL = "/api/v1/authority/namespace/update/:id"
 	DeleteAuthorityNamespaceURL = "/api/v1/authority/namespace/delete/:id"
 )
+
+type AccountResult struct {
+	commonDef.Result
+	Account *casCommon.AccountView `json:"account"`
+}
+
+type AccountListResult casCommon.AccountListResult
+
+type AccountStatisticResult struct {
+	commonDef.Result
+	Total   int64                    `json:"total"`
+	Account []*casCommon.AccountView `json:"account"`
+}
+
+type EndpointResult struct {
+	commonDef.Result
+	Endpoint *casCommon.EndpointView `json:"endpoint"`
+}
+
+type EndpointListResult casCommon.EndpointListResult
+
+type EndpointStatisticResult struct {
+	commonDef.Result
+	Total    int64                     `json:"total"`
+	Endpoint []*casCommon.EndpointView `json:"endpoint"`
+}
+
+type RoleResult struct {
+	commonDef.Result
+	Role *casCommon.RoleView `json:"role"`
+}
+
+type RoleListResult casCommon.RoleListResult
+
+type RoleStatisticResult struct {
+	commonDef.Result
+	Total int64                 `json:"total"`
+	Role  []*casCommon.RoleView `json:"role"`
+}
+
+type NamespaceResult struct {
+	commonDef.Result
+	Namespace *casCommon.NamespaceView `json:"namespace"`
+}
+
+type NamespaceListResult casCommon.NamespaceListResult
+
+type NamespaceStatisticResult struct {
+	commonDef.Result
+	Total     int64                      `json:"total"`
+	Namespace []*casCommon.NamespaceView `json:"namespace"`
+}

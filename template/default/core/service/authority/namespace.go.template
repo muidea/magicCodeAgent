@@ -3,18 +3,20 @@ package authority
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/cihub/seelog"
 	"net/http"
 	"strconv"
 
+	log "github.com/cihub/seelog"
+
 	casCommon "github.com/muidea/magicCas/common"
-	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
+
+	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 func (s *Authority) filterAuthorityNamespaceLite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
-	result := &casCommon.NamespaceListResult{Namespace: []*casCommon.NamespaceLite{}}
+	result := &common.NamespaceListResult{Namespace: []*casCommon.NamespaceLite{}}
 	for {
 		curNamespace := s.getCurrentNamespace(res, req)
 		namespaceList, _, namespaceErr := s.authorityBiz.FilterAuthorityNamespace(filter, curNamespace)
@@ -53,7 +55,7 @@ func (s *Authority) FilterAuthorityNamespace(res http.ResponseWriter, req *http.
 		return
 	}
 
-	result := &casCommon.NamespaceStatisticResult{Namespace: []*casModel.Namespace{}}
+	result := &common.NamespaceStatisticResult{Namespace: []*casCommon.NamespaceView{}}
 	for {
 		curNamespace := s.getCurrentNamespace(res, req)
 		namespaceList, namespaceTotal, namespaceErr := s.authorityBiz.FilterAuthorityNamespace(filter, curNamespace)
@@ -63,7 +65,13 @@ func (s *Authority) FilterAuthorityNamespace(res http.ResponseWriter, req *http.
 			break
 		}
 
-		result.Namespace = namespaceList
+		result.Namespace = []*casCommon.NamespaceView{}
+		for _, val := range namespaceList {
+			view := &casCommon.NamespaceView{}
+			view.FromNamespace(val)
+			result.Namespace = append(result.Namespace, view)
+		}
+
 		result.Total = namespaceTotal
 		result.ErrorCode = commonDef.Success
 		break
@@ -79,7 +87,7 @@ func (s *Authority) FilterAuthorityNamespace(res http.ResponseWriter, req *http.
 }
 
 func (s *Authority) QueryAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.NamespaceResult{}
+	result := &common.NamespaceResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -97,7 +105,8 @@ func (s *Authority) QueryAuthorityNamespace(res http.ResponseWriter, req *http.R
 			break
 		}
 
-		result.Namespace = namespacePtr
+		result.Namespace = &casCommon.NamespaceView{}
+		result.Namespace.FromNamespace(namespacePtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -112,7 +121,7 @@ func (s *Authority) QueryAuthorityNamespace(res http.ResponseWriter, req *http.R
 }
 
 func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.NamespaceResult{}
+	result := &common.NamespaceResult{}
 	for {
 		param := &casCommon.NamespaceParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
@@ -130,11 +139,11 @@ func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr)
+		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Namespace = namespacePtr
+		result.Namespace = &casCommon.NamespaceView{}
+		result.Namespace.FromNamespace(namespacePtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -149,7 +158,7 @@ func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.
 }
 
 func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.NamespaceResult{}
+	result := &common.NamespaceResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -176,11 +185,11 @@ func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr)
+		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Namespace = namespacePtr
+		result.Namespace = &casCommon.NamespaceView{}
+		result.Namespace.FromNamespace(namespacePtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -195,7 +204,7 @@ func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.
 }
 
 func (s *Authority) DeleteAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
-	result := &casCommon.NamespaceResult{}
+	result := &common.NamespaceResult{}
 	for {
 		_, value := fn.SplitRESTAPI(req.URL.Path)
 		id, err := strconv.Atoi(value)
@@ -213,11 +222,11 @@ func (s *Authority) DeleteAuthorityNamespace(res http.ResponseWriter, req *http.
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr)
+		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Namespace = namespacePtr
+		result.Namespace = &casCommon.NamespaceView{}
+		result.Namespace.FromNamespace(namespacePtr)
 		result.ErrorCode = commonDef.Success
 		break
 	}
