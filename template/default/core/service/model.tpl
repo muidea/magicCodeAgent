@@ -74,7 +74,7 @@ casToolkit "github.com/muidea/magicCas/toolkit"
             s.{{toCamelCase .FuncName}}Lite(res, req, filter)
             return
         }
-    
+
         result := &common.{{.Model.Name}}StatisticResult{ {{.Model.Name}}: []*model.{{.Model.Name}}{} }
         for {
             curNamespace := s.getCurrentNamespace(res,req)
@@ -85,7 +85,11 @@ casToolkit "github.com/muidea/magicCas/toolkit"
                 break
             }
 
-            result.{{.Model.Name}} = {{toLower .Model.Name}}List
+            for _, val := range {{toLower .Model.Name}}List {
+                view := &common.{{.Model.Name}}View{}
+                view.FromPartner(val)
+                result.{{.Model.Name}} = append(result.{{.Model.Name}},view)
+            }
             result.Total = {{toLower .Model.Name}}Total
             result.ErrorCode = commonDef.Success
             break
@@ -121,7 +125,8 @@ casToolkit "github.com/muidea/magicCas/toolkit"
                 break
             }
 
-            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+            result.{{.Model.Name}} = &common.{{.Model.Name}}View{}
+            result.{{.Model.Name}}.From{{.Model.Name}}({{toLower .Model.Name}}Ptr)
             result.ErrorCode = commonDef.Success
             break
         }
@@ -162,10 +167,11 @@ casToolkit "github.com/muidea/magicCas/toolkit"
             }
 
             // TODO
-            memo := fmt.Sprintf("删除{{.Model.Name}}:%s", {{toLower .Model.Name}}Ptr)
+            memo := fmt.Sprintf("新建{{.Model.Name}}:%s", {{toLower .Model.Name}}Ptr)
             s.writeLog(res, req, memo)
 
-            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+            result.{{.Model.Name}} = &common.{{.Model.Name}}View{}
+            result.{{.Model.Name}}.From{{.Model.Name}}({{toLower .Model.Name}}Ptr)
             result.ErrorCode = commonDef.Success
             break
         }
@@ -217,10 +223,11 @@ casToolkit "github.com/muidea/magicCas/toolkit"
             }
 
             // TODO
-            memo := fmt.Sprintf("删除{{.Model.Name}}:%s", {{toLower .Model.Name}}Ptr)
+            memo := fmt.Sprintf("更新{{.Model.Name}}:%s", {{toLower .Model.Name}}Ptr)
             s.writeLog(res, req, memo)
 
-            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+            result.{{.Model.Name}} = &common.{{.Model.Name}}View{}
+            result.{{.Model.Name}}.From{{.Model.Name}}({{toLower .Model.Name}}Ptr)
             result.ErrorCode = commonDef.Success
             break
         }
@@ -259,7 +266,8 @@ casToolkit "github.com/muidea/magicCas/toolkit"
             memo := fmt.Sprintf("删除{{.Model.Name}}:%s", {{toLower .Model.Name}}Ptr)
             s.writeLog(res, req, memo)
 
-            result.{{.Model.Name}} = {{toLower .Model.Name}}Ptr
+            result.{{.Model.Name}} = &common.{{.Model.Name}}View{}
+            result.{{.Model.Name}}.From{{.Model.Name}}({{toLower .Model.Name}}Ptr)
             result.ErrorCode = commonDef.Success
             break
         }

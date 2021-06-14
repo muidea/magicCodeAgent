@@ -40,6 +40,11 @@ const (
             // TODO
         }
 
+        func (s *{{$modelName}}Lite) To{{$modelName}}()(ret *model.{{$modelName}}) {
+            // TODO
+            return
+        }
+
         type {{$modelName}}Param struct {
             // TODO
         }
