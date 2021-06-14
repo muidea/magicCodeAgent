@@ -4,6 +4,10 @@ import (
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 
+	casModel "github.com/muidea/magicCas/model"
+
+	ed "github.com/muidea/{{.ProjectName}}/event"
+	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/biz/base"
 )
 
@@ -19,13 +23,41 @@ func New(
 	backgroundRoutine *task.BackgroundRoutine,
 ) *Authority {
 	ptr := &Authority{
-		Base:       base.New("/biz/authority", eventHub, backgroundRoutine),
+		Base:       base.New(ed.AuthorityBiz, eventHub, backgroundRoutine),
 		casService: casService,
 	}
+
+	eventHub.Subscribe(ed.QueryAccount, ptr)
+	eventHub.Subscribe(ed.CreateAccount, ptr)
 
 	return ptr
 }
 
 func (s *Authority) Notify(event event.Event, result event.Result) {
 	// TODO
+	if event.Match(ed.QueryAccount) {
+		entityPtr := event.Data().(*casModel.Entity)
+		if entityPtr == nil {
+			return
+		}
+
+		accountPtr, accountErr := s.QueryAuthorityAccount(entityPtr.EID, entityPtr.Namespace)
+		if accountErr != nil {
+			return
+		}
+		if result != nil {
+			result.Set(accountPtr)
+		}
+		return
+	}
+
+	if event.Match(ed.CreateAccount) {
+		paramPtr := event.Data().(*common.AccountParam)
+		if paramPtr == nil {
+			return
+		}
+
+		//s.CreateAuthorityAccount(paramPtr, paramPtr.Namespace)
+		return
+	}
 }

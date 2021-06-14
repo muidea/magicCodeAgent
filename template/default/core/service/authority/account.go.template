@@ -9,7 +9,6 @@ import (
 	log "github.com/cihub/seelog"
 
 	casCommon "github.com/muidea/magicCas/common"
-	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
 
@@ -56,7 +55,7 @@ func (s *Authority) FilterAuthorityAccount(res http.ResponseWriter, req *http.Re
 		return
 	}
 
-	result := &common.AccountStatisticResult{Account: []*casCommon.AccountView{}}
+	result := &common.AccountStatisticResult{Account: []*casCommon.AccountView{}, Role: []*casCommon.RoleLite{}}
 	for {
 		curNamespace := s.getCurrentNamespace(res, req)
 		accountList, accountTotal, accountErr := s.authorityBiz.FilterAuthorityAccount(filter, curNamespace)
@@ -65,12 +64,22 @@ func (s *Authority) FilterAuthorityAccount(res http.ResponseWriter, req *http.Re
 			result.Reason = accountErr.Error()
 			break
 		}
-
-		result.Account = []*casCommon.AccountView{}
 		for _, val := range accountList {
 			view := &casCommon.AccountView{}
 			view.FromAccount(val)
 			result.Account = append(result.Account, view)
+		}
+
+		roleList, _, roleErr := s.authorityBiz.FilterAuthorityRole(nil, curNamespace)
+		if roleErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = roleErr.Error()
+			break
+		}
+		for _, val := range roleList {
+			lite := &casCommon.RoleLite{}
+			lite.FromRole(val)
+			result.Role = append(result.Role, lite)
 		}
 
 		result.Total = accountTotal
@@ -124,7 +133,7 @@ func (s *Authority) QueryAuthorityAccount(res http.ResponseWriter, req *http.Req
 func (s *Authority) CreateAuthorityAccount(res http.ResponseWriter, req *http.Request) {
 	result := &common.AccountResult{}
 	for {
-		param := &casCommon.AccountParam{}
+		param := &common.AccountParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -140,7 +149,7 @@ func (s *Authority) CreateAuthorityAccount(res http.ResponseWriter, req *http.Re
 			break
 		}
 
-		memo := fmt.Sprintf("删除Account:%s", accountPtr.Account)
+		memo := fmt.Sprintf("新建Account:%s", accountPtr.Account)
 		s.writeLog(res, req, memo)
 
 		result.Account = &casCommon.AccountView{}
@@ -170,7 +179,7 @@ func (s *Authority) UpdateAuthorityAccount(res http.ResponseWriter, req *http.Re
 			break
 		}
 
-		param := &casModel.Account{}
+		param := &common.Account{}
 		err = fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -187,7 +196,7 @@ func (s *Authority) UpdateAuthorityAccount(res http.ResponseWriter, req *http.Re
 			break
 		}
 
-		memo := fmt.Sprintf("删除Account:%s", accountPtr.Account)
+		memo := fmt.Sprintf("更新Account:%s", accountPtr.Account)
 		s.writeLog(res, req, memo)
 
 		result.Account = &casCommon.AccountView{}

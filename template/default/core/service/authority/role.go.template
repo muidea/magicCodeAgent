@@ -9,7 +9,6 @@ import (
 	log "github.com/cihub/seelog"
 
 	casCommon "github.com/muidea/magicCas/common"
-	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
 
@@ -124,7 +123,7 @@ func (s *Authority) QueryAuthorityRole(res http.ResponseWriter, req *http.Reques
 func (s *Authority) CreateAuthorityRole(res http.ResponseWriter, req *http.Request) {
 	result := &common.RoleResult{}
 	for {
-		param := &casCommon.RoleParam{}
+		param := &common.RoleParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -170,7 +169,7 @@ func (s *Authority) UpdateAuthorityRole(res http.ResponseWriter, req *http.Reque
 			break
 		}
 
-		param := &casModel.Role{}
+		param := &common.Role{}
 		err = fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam

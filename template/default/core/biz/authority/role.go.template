@@ -5,13 +5,15 @@ import (
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
+
+	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 func (s *Authority) FilterAuthorityRole(filter *commonDef.Filter, namespace string) (ret []*casModel.Role, total int64, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, total, err = clnt.FilterRole(filter)
 	return
 }
@@ -19,35 +21,38 @@ func (s *Authority) FilterAuthorityRole(filter *commonDef.Filter, namespace stri
 func (s *Authority) QueryAuthorityRole(id int, namespace string) (ret *casModel.Role, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, err = clnt.QueryRole(id)
 	return
 }
 
-func (s *Authority) CreateAuthorityRole(ptr *casCommon.RoleParam, namespace string) (ret *casModel.Role, err error) {
+func (s *Authority) CreateAuthorityRole(ptr *common.RoleParam, namespace string) (ret *casModel.Role, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
-	ret, err = clnt.CreateRole(ptr)
+
+	param := &casCommon.RoleParam{Name: ptr.Name, Description: ptr.Description, Private: ptr.Private, Namespace: namespace}
+	ret, err = clnt.CreateRole(param)
 	return
 }
 
-func (s *Authority) UpdateAuthorityRole(ptr *casModel.Role, namespace string) (ret *casModel.Role, err error) {
+func (s *Authority) UpdateAuthorityRole(ptr *common.Role, namespace string) (ret *casModel.Role, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
-	ret, err = clnt.UpdateRole(ptr)
+
+	role := ptr.ToRole()
+	role.Namespace = namespace
+	ret, err = clnt.UpdateRole(role)
 	return
 }
 
 func (s *Authority) DeleteAuthorityRole(id int, namespace string) (ret *casModel.Role, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, err = clnt.DeleteRole(id)
 	return
 }

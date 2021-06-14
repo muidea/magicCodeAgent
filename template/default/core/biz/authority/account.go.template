@@ -5,13 +5,15 @@ import (
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
+
+	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 func (s *Authority) FilterAuthorityAccount(filter *commonDef.Filter, namespace string) (ret []*casModel.Account, total int64, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, total, err = clnt.FilterAccount(filter)
 	return
 }
@@ -19,35 +21,38 @@ func (s *Authority) FilterAuthorityAccount(filter *commonDef.Filter, namespace s
 func (s *Authority) QueryAuthorityAccount(id int, namespace string) (ret *casModel.Account, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, err = clnt.QueryAccount(id)
 	return
 }
 
-func (s *Authority) CreateAuthorityAccount(ptr *casCommon.AccountParam, namespace string) (ret *casModel.Account, err error) {
+func (s *Authority) CreateAuthorityAccount(ptr *common.AccountParam, namespace string) (ret *casModel.Account, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
-	ret, err = clnt.CreateAccount(ptr)
+
+	param := &casCommon.AccountParam{Account: ptr.Account, Password: ptr.Password, EMail: ptr.EMail, Description: ptr.Description, Namespace: namespace}
+	ret, err = clnt.CreateAccount(param)
 	return
 }
 
-func (s *Authority) UpdateAuthorityAccount(ptr *casModel.Account, namespace string) (ret *casModel.Account, err error) {
+func (s *Authority) UpdateAuthorityAccount(ptr *common.Account, namespace string) (ret *casModel.Account, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
-	ret, err = clnt.UpdateAccount(ptr)
+
+	account := ptr.ToAccount()
+	account.Namespace = namespace
+	ret, err = clnt.UpdateAccount(account)
 	return
 }
 
 func (s *Authority) DeleteAuthorityAccount(id int, namespace string) (ret *casModel.Account, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, err = clnt.DeleteAccount(id)
 	return
 }

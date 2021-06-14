@@ -2,40 +2,17 @@ package authority
 
 import (
 	"github.com/muidea/magicCas/client"
-	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
+
+	"github.com/muidea/{{.ProjectName}}/common"
 )
-
-func (s *Authority) LoadNamespace() (ret []*casCommon.NamespaceLite, err error) {
-	clnt := client.NewClient(s.casService)
-	defer clnt.Release()
-
-	namespaceList, namespaceTotal, namespaceErr := clnt.FilterNamespace(nil)
-	if namespaceErr != nil {
-		err = namespaceErr
-		return
-	}
-	ret = []*casCommon.NamespaceLite{}
-	if namespaceTotal == 0 {
-		return
-	}
-
-	for _, val := range namespaceList {
-		lite := &casCommon.NamespaceLite{}
-		lite.FromNamespace(val)
-
-		ret = append(ret, lite)
-	}
-
-	return
-}
 
 func (s *Authority) FilterAuthorityNamespace(filter *commonDef.Filter, namespace string) (ret []*casModel.Namespace, total int64, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, total, err = clnt.FilterNamespace(filter)
 	return
 }
@@ -43,35 +20,35 @@ func (s *Authority) FilterAuthorityNamespace(filter *commonDef.Filter, namespace
 func (s *Authority) QueryAuthorityNamespace(id int, namespace string) (ret *casModel.Namespace, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, err = clnt.QueryNamespace(id)
 	return
 }
 
-func (s *Authority) CreateAuthorityNamespace(ptr *casCommon.NamespaceParam, namespace string) (ret *casModel.Namespace, err error) {
+func (s *Authority) CreateAuthorityNamespace(ptr *common.NamespaceParam, namespace string) (ret *casModel.Namespace, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
-	ret, err = clnt.CreateNamespace(ptr)
+
+	ret, err = clnt.CreateNamespace(&ptr.NamespaceParam)
 	return
 }
 
-func (s *Authority) UpdateAuthorityNamespace(id int, ptr *casCommon.NamespaceParam, namespace string) (ret *casModel.Namespace, err error) {
+func (s *Authority) UpdateAuthorityNamespace(id int, ptr *common.NamespaceParam, namespace string) (ret *casModel.Namespace, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
-	ret, err = clnt.UpdateNamespace(id, ptr)
+
+	ret, err = clnt.UpdateNamespace(id, &ptr.NamespaceParam)
 	return
 }
 
 func (s *Authority) DeleteAuthorityNamespace(id int, namespace string) (ret *casModel.Namespace, err error) {
 	clnt := client.NewClient(s.casService)
 	defer clnt.Release()
-
 	clnt.AttachNameSpace(namespace)
+
 	ret, err = clnt.DeleteNamespace(id)
 	return
 }

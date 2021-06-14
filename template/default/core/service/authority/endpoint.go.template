@@ -9,7 +9,6 @@ import (
 	log "github.com/cihub/seelog"
 
 	casCommon "github.com/muidea/magicCas/common"
-	casModel "github.com/muidea/magicCas/model"
 	commonDef "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
 
@@ -56,7 +55,7 @@ func (s *Authority) FilterAuthorityEndpoint(res http.ResponseWriter, req *http.R
 		return
 	}
 
-	result := &common.EndpointStatisticResult{Endpoint: []*casCommon.EndpointView{}}
+	result := &common.EndpointStatisticResult{Endpoint: []*casCommon.EndpointView{}, Role: []*casCommon.RoleLite{}}
 	for {
 		curNamespace := s.getCurrentNamespace(res, req)
 		endpointList, endpointTotal, endpointErr := s.authorityBiz.FilterAuthorityEndpoint(filter, curNamespace)
@@ -65,12 +64,22 @@ func (s *Authority) FilterAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			result.Reason = endpointErr.Error()
 			break
 		}
-
-		result.Endpoint = []*casCommon.EndpointView{}
 		for _, val := range endpointList {
 			view := &casCommon.EndpointView{}
 			view.FromEndpoint(val)
 			result.Endpoint = append(result.Endpoint, view)
+		}
+
+		roleList, _, roleErr := s.authorityBiz.FilterAuthorityRole(nil, curNamespace)
+		if roleErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = roleErr.Error()
+			break
+		}
+		for _, val := range roleList {
+			lite := &casCommon.RoleLite{}
+			lite.FromRole(val)
+			result.Role = append(result.Role, lite)
 		}
 
 		result.Total = endpointTotal
@@ -124,7 +133,7 @@ func (s *Authority) QueryAuthorityEndpoint(res http.ResponseWriter, req *http.Re
 func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
 	result := &common.EndpointResult{}
 	for {
-		param := &casCommon.EndpointParam{}
+		param := &common.EndpointParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -140,7 +149,7 @@ func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			break
 		}
 
-		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr.Endpoint)
+		memo := fmt.Sprintf("新建Endpoint:%s", endpointPtr.Endpoint)
 		s.writeLog(res, req, memo)
 
 		result.Endpoint = &casCommon.EndpointView{}
@@ -170,7 +179,7 @@ func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			break
 		}
 
-		param := &casModel.Endpoint{}
+		param := &common.Endpoint{}
 		err = fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -187,7 +196,7 @@ func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			break
 		}
 
-		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr.Endpoint)
+		memo := fmt.Sprintf("更新Endpoint:%s", endpointPtr.Endpoint)
 		s.writeLog(res, req, memo)
 
 		result.Endpoint = &casCommon.EndpointView{}

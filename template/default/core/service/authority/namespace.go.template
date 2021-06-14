@@ -123,7 +123,7 @@ func (s *Authority) QueryAuthorityNamespace(res http.ResponseWriter, req *http.R
 func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
 	result := &common.NamespaceResult{}
 	for {
-		param := &casCommon.NamespaceParam{}
+		param := &common.NamespaceParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -169,7 +169,7 @@ func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.
 			break
 		}
 
-		param := &casCommon.NamespaceParam{}
+		param := &common.NamespaceParam{}
 		err = fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
