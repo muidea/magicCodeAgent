@@ -31,6 +31,17 @@ const (
 	DeleteAuthorityNamespaceURL = "/api/v1/authority/namespace/delete/:id"
 )
 
+type AccountParam struct {
+	Account     string `json:"account" validate:"required"`
+	Password    string `json:"password" validate:"required"`
+	EMail       string `json:"email"`
+	Description string `json:"description"`
+}
+
+type Account struct {
+	casCommon.AccountView
+}
+
 type AccountResult struct {
 	commonDef.Result
 	Account *casCommon.AccountView `json:"account"`
@@ -42,6 +53,19 @@ type AccountStatisticResult struct {
 	commonDef.Result
 	Total   int64                    `json:"total"`
 	Account []*casCommon.AccountView `json:"account"`
+	Role    []*casCommon.RoleLite    `json:"role"`
+}
+
+type EndpointParam struct {
+	Endpoint    string `json:"endpoint" validate:"required"`
+	Description string `json:"description"`
+	IdentifyID  string `json:"identifyID" validate:"required"`
+	AuthToken   string `json:"authToken" validate:"required"`
+	Status      int    `json:"status"`
+}
+
+type Endpoint struct {
+	casCommon.EndpointView
 }
 
 type EndpointResult struct {
@@ -55,6 +79,17 @@ type EndpointStatisticResult struct {
 	commonDef.Result
 	Total    int64                     `json:"total"`
 	Endpoint []*casCommon.EndpointView `json:"endpoint"`
+	Role     []*casCommon.RoleLite     `json:"role"`
+}
+
+type RoleParam struct {
+	Name        string                   `json:"name" validate:"required"`
+	Description string                   `json:"description"`
+	Private     []*casCommon.PrivateItem `json:"private"`
+}
+
+type Role struct {
+	casCommon.RoleView
 }
 
 type RoleResult struct {
@@ -68,6 +103,14 @@ type RoleStatisticResult struct {
 	commonDef.Result
 	Total int64                 `json:"total"`
 	Role  []*casCommon.RoleView `json:"role"`
+}
+
+type NamespaceParam struct {
+	casCommon.NamespaceParam
+}
+
+type Namespace struct {
+	casCommon.NamespaceView
 }
 
 type NamespaceResult struct {
