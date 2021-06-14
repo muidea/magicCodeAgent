@@ -1,16 +1,17 @@
 package authority
 
 import (
-	"github.com/muidea/magicCas/client"
+	commonDef "github.com/muidea/magicCommon/def"
+
+	casClient "github.com/muidea/magicCas/client"
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
-	commonDef "github.com/muidea/magicCommon/def"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 func (s *Authority) FilterAuthorityRole(filter *commonDef.Filter, namespace string) (ret []*casModel.Role, total int64, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
@@ -19,7 +20,7 @@ func (s *Authority) FilterAuthorityRole(filter *commonDef.Filter, namespace stri
 }
 
 func (s *Authority) QueryAuthorityRole(id int, namespace string) (ret *casModel.Role, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
@@ -28,7 +29,7 @@ func (s *Authority) QueryAuthorityRole(id int, namespace string) (ret *casModel.
 }
 
 func (s *Authority) CreateAuthorityRole(ptr *common.RoleParam, namespace string) (ret *casModel.Role, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
@@ -38,7 +39,7 @@ func (s *Authority) CreateAuthorityRole(ptr *common.RoleParam, namespace string)
 }
 
 func (s *Authority) UpdateAuthorityRole(ptr *common.Role, namespace string) (ret *casModel.Role, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
@@ -49,7 +50,7 @@ func (s *Authority) UpdateAuthorityRole(ptr *common.Role, namespace string) (ret
 }
 
 func (s *Authority) DeleteAuthorityRole(id int, namespace string) (ret *casModel.Role, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 

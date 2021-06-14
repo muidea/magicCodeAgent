@@ -6,9 +6,9 @@ import (
 
 	casModel "github.com/muidea/magicCas/model"
 
-	ed "github.com/muidea/{{.ProjectName}}/event"
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/biz/base"
+	ed "github.com/muidea/{{.ProjectName}}/event"
 )
 
 type Authority struct {

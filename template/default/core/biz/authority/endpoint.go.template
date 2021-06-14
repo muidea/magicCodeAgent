@@ -1,16 +1,17 @@
 package authority
 
 import (
-	"github.com/muidea/magicCas/client"
+	commonDef "github.com/muidea/magicCommon/def"
+
+	casClient "github.com/muidea/magicCas/client"
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
-	commonDef "github.com/muidea/magicCommon/def"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 func (s *Authority) FilterAuthorityEndpoint(filter *commonDef.Filter, namespace string) (ret []*casModel.Endpoint, total int64, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
@@ -19,7 +20,7 @@ func (s *Authority) FilterAuthorityEndpoint(filter *commonDef.Filter, namespace 
 }
 
 func (s *Authority) QueryAuthorityEndpoint(id int, namespace string) (ret *casModel.Endpoint, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
@@ -28,7 +29,7 @@ func (s *Authority) QueryAuthorityEndpoint(id int, namespace string) (ret *casMo
 }
 
 func (s *Authority) CreateAuthorityEndpoint(ptr *common.EndpointParam, namespace string) (ret *casModel.Endpoint, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
@@ -38,7 +39,7 @@ func (s *Authority) CreateAuthorityEndpoint(ptr *common.EndpointParam, namespace
 }
 
 func (s *Authority) UpdateAuthorityEndpoint(ptr *common.Endpoint, namespace string) (ret *casModel.Endpoint, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
@@ -49,7 +50,7 @@ func (s *Authority) UpdateAuthorityEndpoint(ptr *common.Endpoint, namespace stri
 }
 
 func (s *Authority) DeleteAuthorityEndpoint(id int, namespace string) (ret *casModel.Endpoint, err error) {
-	clnt := client.NewClient(s.casService)
+	clnt := casClient.NewClient(s.casService)
 	defer clnt.Release()
 	clnt.AttachNameSpace(namespace)
 
