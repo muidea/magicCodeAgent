@@ -40,12 +40,14 @@ type Base struct {
 	bizPtr    *biz.Base
 	systemBiz biz.System
 
+	endpointName string
 	fileService string
 }
 
 // New create base
-func New(fileService string, bizPtr *biz.Base) *Base {
+func New(endpointName, fileService string, bizPtr *biz.Base) *Base {
 	ptr := &Base{
+		endpointName: endpointName,
 		fileService: fileService,
 		bizPtr:      bizPtr,
 		validator:   fu.NewFormValidator(),

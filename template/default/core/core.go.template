@@ -113,7 +113,7 @@ func (s *Core) Startup(router engine.Router) {
 	}
 
 	for _, val := range moduleList {
-		val.Startup(router)
+		val.Startup(s.endpointName, router)
 	}
 
 	loadTask := &loadNamespaceTask{eventHub: s.eventHub}

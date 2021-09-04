@@ -15,7 +15,7 @@ type Module interface {
 	BindEventHub(eventHub event.Hub)
 	BindBackgroundRoutine(backgroundRoutine *task.BackgroundRoutine)
 	BindRegistry(sessionRegistry session.Registry, casRouteRegistry toolkit.CasRegistry, roleRouteRegistry toolkit.RoleRegistry)
-	Startup(router engine.Router)
+	Startup(endpointName string, router engine.Router)
 	Shutdown()
 }
 

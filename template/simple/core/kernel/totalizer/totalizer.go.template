@@ -58,7 +58,7 @@ func (s *Totalizer) BindRegistry(
 	s.roleRouteRegistry = roleRouteRegistry
 }
 
-func (s *Totalizer) Startup(router engine.Router) {
+func (s *Totalizer) Startup(endpointName string, router engine.Router) {
 	s.biz = biz.New(s.batisClient, s.eventHub, s.backgroundRoutine)
 }
 

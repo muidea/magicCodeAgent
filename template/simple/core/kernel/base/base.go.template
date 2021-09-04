@@ -61,10 +61,10 @@ func (s *Base) BindRegistry(
 	s.roleRouteRegistry = roleRouteRegistry
 }
 
-func (s *Base) Startup(router engine.Router) {
+func (s *Base) Startup(endpointName string, router engine.Router) {
 	s.biz = biz.New(config.CasService(), s.batisClient, s.eventHub, s.backgroundRoutine)
 
-	s.service = service.New(config.FileService(), s.biz)
+	s.service = service.New(endpointName, config.FileService(), s.biz)
 	s.service.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
 	s.service.RegisterRoute(router)
 }
