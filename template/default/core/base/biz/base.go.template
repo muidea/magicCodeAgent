@@ -2,10 +2,8 @@ package biz
 
 import (
 	"path"
-	"sync"
 
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/foundation/generator"
 	fn "github.com/muidea/magicCommon/foundation/net"
 	"github.com/muidea/magicCommon/task"
 
