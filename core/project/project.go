@@ -67,8 +67,8 @@ func IsEntity(ptr *model.Module) bool {
 }
 
 // New new core
-func New(rootPath string, modelDefine *model.Define, objectList []*remote.Object) *Project {
-	return &Project{rootPath: rootPath, modelDefine: modelDefine, objectList: objectList}
+func New(rootPath string) *Project {
+	return &Project{rootPath: rootPath}
 }
 
 func (s *Project) getFile(filePath string) (ret *os.File, err error) {

@@ -4,10 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"path"
 
 	"github.com/muidea/magicToolkit/core/project"
-	"github.com/muidea/magicToolkit/core/util"
 )
 
 var projectType = ""
@@ -29,20 +27,7 @@ func createProject(curPath string) {
 		return
 	}
 
-	definePath := path.Join(curPath, "doc", "define.json")
-	modelDefine, modelErr := util.GetModelDefine(projectName, definePath)
-	if modelErr != nil {
-		log.Printf("get project model define failed, err:%s", modelErr.Error())
-		return
-	}
-
-	objectList, objectErr := util.QueryObject(projectName, batisService)
-	if objectErr != nil {
-		log.Printf("query project object failed, err:%s", objectErr.Error())
-		return
-	}
-
-	project := project.New(curPath, modelDefine, objectList)
+	project := project.New(curPath)
 	curErr := project.Create(projectName, projectType)
 	if curErr != nil {
 		log.Printf("Create project failed, err:%s", curErr.Error())
