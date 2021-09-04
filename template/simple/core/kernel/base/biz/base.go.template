@@ -3,7 +3,6 @@ package biz
 import (
 	"fmt"
 	log "github.com/cihub/seelog"
-	"github.com/muidea/{{.ProjectName}}/config"
 
 	"github.com/muidea/magicBatis/client"
 	"github.com/muidea/magicBatis/def"
@@ -19,6 +18,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/base/dao"
 	"github.com/muidea/{{.ProjectName}}/model"

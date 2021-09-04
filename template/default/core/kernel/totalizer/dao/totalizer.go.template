@@ -5,6 +5,7 @@ import (
 
 	"github.com/muidea/magicBatis/client"
 	"github.com/muidea/magicBatis/def"
+
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 

@@ -1,12 +1,12 @@
 package biz
 
 import (
-	"github.com/muidea/{{.ProjectName}}/common"
 	"time"
 
 	log "github.com/cihub/seelog"
 	"github.com/muidea/magicBatis/def"
 
+	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 

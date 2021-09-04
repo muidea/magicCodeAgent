@@ -2,6 +2,8 @@ package biz
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/muidea/magicBatis/client"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
@@ -9,7 +11,6 @@ import (
 	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/setting/dao"
-	"time"
 )
 
 type Setting struct {

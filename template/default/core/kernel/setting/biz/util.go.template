@@ -1,12 +1,13 @@
 package biz
 
 import (
-	"github.com/muidea/{{.ProjectName}}/common"
 	"strings"
 
 	casModel "github.com/muidea/magicCas/model"
 	"github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+
+	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 func (s *Setting) queryNamespace(namespace string) (ret *casModel.Namespace) {

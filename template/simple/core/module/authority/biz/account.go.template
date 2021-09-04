@@ -2,13 +2,13 @@ package biz
 
 import (
 	commonDef "github.com/muidea/magicCommon/def"
-	"github.com/muidea/{{.ProjectName}}/config"
 
 	casClient "github.com/muidea/magicCas/client"
 	casCommon "github.com/muidea/magicCas/common"
 	casModel "github.com/muidea/magicCas/model"
 
 	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/config"
 )
 
 func (s *Authority) FilterAuthorityAccount(filter *commonDef.Filter) (ret []*casModel.Account, total int64, err error) {

@@ -1,7 +1,6 @@
 package biz
 
 import (
-	"github.com/muidea/{{.ProjectName}}/common"
 	"time"
 
 	log "github.com/cihub/seelog"
@@ -9,6 +8,7 @@ import (
 
 	casModel "github.com/muidea/magicCas/model"
 
+	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 

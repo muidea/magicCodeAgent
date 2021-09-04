@@ -3,8 +3,6 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/muidea/{{.ProjectName}}/core/kernel/base/biz"
-	"github.com/muidea/{{.ProjectName}}/model"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,6 +26,8 @@ import (
 	fileCommon "github.com/muidea/magicFile/common"
 
 	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/core/kernel/base/biz"
+	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 // Base BaseService

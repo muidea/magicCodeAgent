@@ -2,8 +2,6 @@ package service
 
 import (
 	"fmt"
-	"github.com/muidea/{{.ProjectName}}/core/module/authority/biz"
-	"github.com/muidea/{{.ProjectName}}/model"
 	"net"
 	"net/http"
 	"strings"
@@ -21,6 +19,8 @@ import (
 	casToolkit "github.com/muidea/magicCas/toolkit"
 
 	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/core/module/authority/biz"
+	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 type Authority struct {
