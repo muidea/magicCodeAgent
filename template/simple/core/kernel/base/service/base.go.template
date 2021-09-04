@@ -192,49 +192,6 @@ func (s *Base) UpdateAccountPassword(res http.ResponseWriter, req *http.Request)
 	return
 }
 
-// VerifyEndpoint verify endpoint
-func (s *Base) VerifyEndpoint(res http.ResponseWriter, req *http.Request) {
-	curSession := s.sessionRegistry.GetSession(res, req)
-
-	result := &common.VerifyEndpointResult{}
-	for {
-		endpointName := req.URL.Query().Get("endpointName")
-		authToken := req.URL.Query().Get("authToken")
-		identifyID := req.URL.Query().Get("identifyID")
-		if authToken == "" || identifyID == "" {
-			result.ErrorCode = commonDef.IllegalParam
-			result.Reason = "无效参数"
-			break
-		}
-
-		verifyEntity, verifySession, verifyErr := s.bizPtr.VerifyEndpoint(endpointName, identifyID, authToken)
-		if verifyErr != nil {
-			result.ErrorCode = commonDef.Failed
-			result.Reason = verifyErr.Error()
-			break
-		}
-
-		curSession.SetSessionInfo(verifySession)
-		curSession.SetOption(commonCommon.AuthAccount, verifyEntity)
-		curSession.Flush(res, req)
-
-		result.Entity = &casCommon.EntityView{}
-		result.Entity.FromEntity(verifyEntity)
-		result.SessionInfo = verifySession
-		break
-	}
-
-	block, err := json.Marshal(result)
-	if err == nil {
-		res.Write(block)
-		return
-	}
-
-	res.WriteHeader(http.StatusExpectationFailed)
-
-	return
-}
-
 // RefreshSession refresh commonSession status
 func (s *Base) RefreshSession(res http.ResponseWriter, req *http.Request) {
 	curSession := s.sessionRegistry.GetSession(res, req)
@@ -470,9 +427,6 @@ func (s *Base) RegisterRoute(router engine.Router) {
 
 	changePasswordRoute := engine.CreateRoute(common.UpdateAccountPassword, "PUT", s.UpdateAccountPassword)
 	s.casRouteRegistry.AddRoute(changePasswordRoute, s)
-
-	verifyEndpointRoute := engine.CreateRoute(common.VerifyEndpoint, "GET", s.VerifyEndpoint)
-	router.AddRoute(verifyEndpointRoute, s)
 
 	s.casRouteRegistry.AddHandler(common.RefreshSession, "GET", s.RefreshSession)
 

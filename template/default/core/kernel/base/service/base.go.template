@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+
 	"net"
 	"net/http"
 	"strconv"
@@ -187,6 +188,50 @@ func (s *Base) UpdateAccountPassword(res http.ResponseWriter, req *http.Request)
 		result.ErrorCode = commonDef.Success
 		break
 	}
+	block, err := json.Marshal(result)
+	if err == nil {
+		res.Write(block)
+		return
+	}
+
+	res.WriteHeader(http.StatusExpectationFailed)
+
+	return
+}
+
+// VerifyEndpoint verify endpoint
+func (s *Base) VerifyEndpoint(res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	result := &common.VerifyEndpointResult{}
+	for {
+		endpointName := req.URL.Query().Get("endpointName")
+		authToken := req.URL.Query().Get("authToken")
+		identifyID := req.URL.Query().Get("identifyID")
+		if authToken == "" || identifyID == "" {
+			result.ErrorCode = commonDef.IllegalParam
+			result.Reason = "无效参数"
+			break
+		}
+
+		namespace := s.getCurrentNamespace(res, req)
+		verifyEntity, verifySession, verifyErr := s.bizPtr.VerifyEndpoint(endpointName, identifyID, authToken, namespace)
+		if verifyErr != nil {
+			result.ErrorCode = commonDef.Failed
+			result.Reason = verifyErr.Error()
+			break
+		}
+
+		curSession.SetSessionInfo(verifySession)
+		curSession.SetOption(commonCommon.AuthAccount, verifyEntity)
+		curSession.Flush(res, req)
+
+		result.Entity = &casCommon.EntityView{}
+		result.Entity.FromEntity(verifyEntity)
+		result.SessionInfo = verifySession
+		break
+	}
+
 	block, err := json.Marshal(result)
 	if err == nil {
 		res.Write(block)
@@ -452,6 +497,9 @@ func (s *Base) RegisterRoute(router engine.Router) {
 
 	changePasswordRoute := engine.CreateRoute(common.UpdateAccountPassword, "PUT", s.UpdateAccountPassword)
 	s.casRouteRegistry.AddRoute(changePasswordRoute, s)
+
+	verifyEndpointRoute := engine.CreateRoute(common.VerifyEndpoint, "GET", s.VerifyEndpoint)
+	router.AddRoute(verifyEndpointRoute, s)
 
 	s.casRouteRegistry.AddHandler(common.RefreshSession, "GET", s.RefreshSession)
 
