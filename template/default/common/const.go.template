@@ -1,101 +1,14 @@
 package common
 
-import (
-	"github.com/muidea/magicCommon/common"
-	commonDef "github.com/muidea/magicCommon/def"
-
-	casCommon "github.com/muidea/magicCas/common"
-
-	"github.com/muidea/{{.ProjectName}}/model"
+const (
+	v1Version      = "/api/v1"
+	defaultVersion = v1Version
 )
+
+const ApiVersion = defaultVersion
 
 const (
-	// LoginAccountURL login account url
-	LoginAccountURL = "/api/v1/access/account/login/"
-	// LogoutAccountURL logout account url
-	LogoutAccountURL = "/api/v1/access/account/logout/"
-	// UpdateAccountPasswordURL update account password url
-	UpdateAccountPasswordURL = "/api/v1/access/account/password/update/:id"
-	// VerifyEndpointURL verify endpoint url
-	VerifyEndpointURL = "/api/v1/access/endpoint/verify/"
-	// RefreshSessionURL refresh session url
-	RefreshSessionURL = "/api/v1/access/session/refresh/"
-	// QueryAccessLogURL query access log url
-	QueryAccessLogURL = "/api/v1/access/log/query/"
-	// QueryOperateLogURL query operate log url
-	QueryOperateLogURL = "/api/v1/operate/log/query/"
-
-	// UploadFileURL upload file url
-	UploadFileURL = "/api/v1/file/upload/"
-	// ViewFileURL view file url
-	ViewFileURL = "/api/v1/file/view/"
-
-	EnumPrivateURL   = "/api/v1/base/private/enum/"
-	QueryBaseInfoURL = "/api/v1/base/info/query/"
+	CreateEventMask = "/#/create/"
+	DeleteEventMask = "/#/delete/+"
+	UpdateEventMask = "/#/update/+"
 )
-
-type LogView casCommon.LogView
-
-func (s *LogView) FromLog(ptr *model.Log, createrPtr *casCommon.EntityView) {
-	s.ID = ptr.ID
-	s.Address = ptr.Address
-	s.Memo = ptr.Memo
-	s.Creater = createrPtr
-	s.CreateTime = ptr.CreateTime
-}
-
-type RefreshResult struct {
-	commonDef.Result
-	Entity      *casCommon.EntityView `json:"entity"`
-	SessionInfo *common.SessionInfo   `json:"sessionInfo"`
-}
-
-type LoginParam struct {
-	Account  string `json:"account" validate:"required"`
-	Password string `json:"password" validate:"required"`
-}
-
-type LoginResult RefreshResult
-
-type LogoutResult struct {
-	commonDef.Result
-	SessionInfo *common.SessionInfo `json:"sessionInfo"`
-}
-
-type VerifyEndpointParam struct {
-	Endpoint   string `json:"endpoint" validate:"required"`
-	IdentifyID string `json:"identifyID" validate:"required"`
-	AuthToken  string `json:"authToken" validate:"required"`
-}
-
-type VerifyEndpointResult RefreshResult
-
-type VerifyEntityResult struct {
-	commonDef.Result
-	Entity *casCommon.EntityView `json:"entity"`
-	Role   *casCommon.RoleView   `json:"role"`
-}
-
-type QueryEntityResult struct {
-	commonDef.Result
-	Entity *casCommon.EntityView `json:"entity"`
-}
-
-type QueryAllAccessLogResult struct {
-	commonDef.Result
-	Total     int64                `json:"total"`
-	AccessLog []*casCommon.LogView `json:"accessLog"`
-}
-
-// QueryAllOperateLogResult query all operate log result
-type QueryAllOperateLogResult struct {
-	commonDef.Result
-	Total      int64      `json:"total"`
-	OperateLog []*LogView `json:"operateLog"`
-}
-
-// EnumPrivateItemResult enum private item result
-type EnumPrivateItemResult struct {
-	commonDef.Result
-	Private []*casCommon.PrivateItem `json:"private"`
-}

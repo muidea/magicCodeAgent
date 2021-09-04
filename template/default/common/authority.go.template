@@ -6,30 +6,36 @@ import (
 )
 
 const (
-	FilterAuthorityAccountURL = "/api/v1/authority/account/query/"
-	QueryAuthorityAccountURL  = "/api/v1/authority/account/query/:id"
-	CreateAuthorityAccountURL = "/api/v1/authority/account/create/"
-	UpdateAuthorityAccountURL = "/api/v1/authority/account/update/:id"
-	DeleteAuthorityAccountURL = "/api/v1/authority/account/delete/:id"
+	FilterAuthorityAccount = "/authority/account/query/"
+	QueryAuthorityAccount  = "/authority/account/query/:id"
+	CreateAuthorityAccount = "/authority/account/create/"
+	UpdateAuthorityAccount = "/authority/account/update/:id"
+	DeleteAuthorityAccount = "/authority/account/delete/:id"
 
-	FilterAuthorityEndpointURL = "/api/v1/authority/endpoint/query/"
-	QueryAuthorityEndpointURL  = "/api/v1/authority/endpoint/query/:id"
-	CreateAuthorityEndpointURL = "/api/v1/authority/endpoint/create/"
-	UpdateAuthorityEndpointURL = "/api/v1/authority/endpoint/update/:id"
-	DeleteAuthorityEndpointURL = "/api/v1/authority/endpoint/delete/:id"
+	FilterAuthorityEndpoint = "/authority/endpoint/query/"
+	QueryAuthorityEndpoint  = "/authority/endpoint/query/:id"
+	CreateAuthorityEndpoint = "/authority/endpoint/create/"
+	UpdateAuthorityEndpoint = "/authority/endpoint/update/:id"
+	DeleteAuthorityEndpoint = "/authority/endpoint/delete/:id"
 
-	FilterAuthorityRoleURL = "/api/v1/authority/role/query/"
-	QueryAuthorityRoleURL  = "/api/v1/authority/role/query/:id"
-	CreateAuthorityRoleURL = "/api/v1/authority/role/create/"
-	UpdateAuthorityRoleURL = "/api/v1/authority/role/update/:id"
-	DeleteAuthorityRoleURL = "/api/v1/authority/role/delete/:id"
+	FilterAuthorityRole = "/authority/role/query/"
+	QueryAuthorityRole  = "/authority/role/query/:id"
+	CreateAuthorityRole = "/authority/role/create/"
+	UpdateAuthorityRole = "/authority/role/update/:id"
+	DeleteAuthorityRole = "/authority/role/delete/:id"
 
-	FilterAuthorityNamespaceURL = "/api/v1/authority/namespace/query/"
-	QueryAuthorityNamespaceURL  = "/api/v1/authority/namespace/query/:id"
-	CreateAuthorityNamespaceURL = "/api/v1/authority/namespace/create/"
-	UpdateAuthorityNamespaceURL = "/api/v1/authority/namespace/update/:id"
-	DeleteAuthorityNamespaceURL = "/api/v1/authority/namespace/delete/:id"
+	FilterAuthorityNamespace     = "/authority/namespace/query/"
+	QueryAuthorityNamespace      = "/authority/namespace/query/:id"
+	CreateAuthorityNamespace     = "/authority/namespace/create/"
+	UpdateAuthorityNamespace     = "/authority/namespace/update/:id"
+	DeleteAuthorityNamespace     = "/authority/namespace/delete/:id"
+	LoadAuthorityNamespace       = FilterAuthorityNamespace
+	InitializeAuthorityNamespace = "/authority/namespace/initialize"
+	DisableAuthorityNamespace    = "/authority/namespace/disable/:id"
+	EnableAuthorityNamespace     = "/authority/namespace/enable/:id"
 )
+
+const AuthorityModule = "/module/authority"
 
 type AccountParam struct {
 	Account     string `json:"account" validate:"required"`

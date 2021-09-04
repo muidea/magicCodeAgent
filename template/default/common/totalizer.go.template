@@ -1,0 +1,10 @@
+package common
+
+const (
+	CreateTotalizer = "/base/totalizer/create/"
+	DeleteTotalizer = "/base/totalizer/delete/:id"
+	UpdateTotalizer = "/base/totalizer/update/:id"
+	QueryTotalizer  = "/base/totalizer/query/"
+)
+
+const TotalizerModule = "/kernel/totalizer"

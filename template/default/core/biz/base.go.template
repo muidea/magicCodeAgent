@@ -1,0 +1,169 @@
+package biz
+
+import (
+	"path"
+	"sync"
+
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/generator"
+	fn "github.com/muidea/magicCommon/foundation/net"
+	"github.com/muidea/magicCommon/task"
+
+	"github.com/muidea/magicBatis/def"
+
+	casModel "github.com/muidea/magicCas/model"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/model"
+)
+
+type Base struct {
+	id                string
+	eventHub          event.Hub
+	backgroundRoutine *task.BackgroundRoutine
+}
+
+type invokeTask struct {
+	funcPtr func()
+}
+
+func (s *invokeTask) Run() {
+	s.funcPtr()
+}
+
+func New(
+	id string,
+	eventHub event.Hub,
+	backgroundRoutine *task.BackgroundRoutine) Base {
+	return Base{
+		id:                id,
+		eventHub:          eventHub,
+		backgroundRoutine: backgroundRoutine,
+	}
+}
+
+func (s *Base) ID() string {
+	return s.id
+}
+
+func (s *Base) PostEvent(event event.Event) {
+	s.eventHub.Post(event)
+}
+
+func (s *Base) SendEvent(event event.Event) event.Result {
+	return s.eventHub.Send(event)
+}
+
+func (s *Base) CallEvent(event event.Event) event.Result {
+	return s.eventHub.Call(event)
+}
+
+func (s *Base) Invoke(funcPtr func()) {
+	task := &invokeTask{funcPtr: funcPtr}
+
+	s.backgroundRoutine.Post(task)
+}
+
+func (s *Base) RootDestination() string {
+	return "/#"
+}
+
+func (s *Base) InnerDestination() string {
+	return s.ID()
+}
+
+func (s *Base) QueryEntity(id int, namespace string) (ret *casModel.Entity) {
+	eid := fn.FormatID(common.QueryEntity, id)
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+	header.Set("owner", s.ID())
+
+	queryEvent := event.NewEvent(eid, s.ID(), common.BaseModule, header, nil)
+	queryResult := s.CallEvent(queryEvent)
+	if !queryResult.IsOK() {
+		return casModel.UnknownEntity()
+	}
+
+	ret = queryResult.Get().(*casModel.Entity)
+	return
+}
+
+func (s *Base) WriteLog(ptr *model.Log, namespace string) {
+	eid := common.WriteOperateLog
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+	header.Set("owner", s.ID())
+
+	writeEvent := event.NewEvent(eid, s.ID(), common.BaseModule, header, ptr)
+	s.PostEvent(writeEvent)
+	return
+}
+
+func (s *Base) CheckIn(feature, namespace string) {
+	owner := path.Join(s.ID(), feature)
+
+	eid := common.CreateTotalizer
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+	header.Set("owner", owner)
+
+	rtdTotalizer := model.NewTotalizer(owner, model.TotalizeRealtime, namespace)
+	rtdEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, rtdTotalizer)
+	s.PostEvent(rtdEvent)
+
+	weekTotalizer := model.NewTotalizer(owner, model.TotalizeWeek, namespace)
+	weekEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, weekTotalizer)
+	s.PostEvent(weekEvent)
+
+	monthTotalizer := model.NewTotalizer(owner, model.TotalizeMonth, namespace)
+	monthEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, monthTotalizer)
+	s.PostEvent(monthEvent)
+}
+
+func (s *Base) CheckOut(feature, namespace string) {
+	owner := path.Join(s.ID(), feature)
+
+	eid := common.DeleteTotalizer
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+	header.Set("owner", owner)
+
+	rtdTotalizer := model.NewTotalizer(owner, model.TotalizeRealtime, namespace)
+	rtdEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, rtdTotalizer)
+	s.PostEvent(rtdEvent)
+
+	weekTotalizer := model.NewTotalizer(owner, model.TotalizeWeek, namespace)
+	weekEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, weekTotalizer)
+	s.PostEvent(weekEvent)
+
+	monthTotalizer := model.NewTotalizer(owner, model.TotalizeMonth, namespace)
+	monthEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, monthTotalizer)
+	s.PostEvent(monthEvent)
+}
+
+func (s *Base) QuerySummary(feature, namespace string) (ret []*model.Totalizer) {
+	owner := path.Join(s.ID(), feature)
+
+	eid := common.QueryTotalizer
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+	header.Set("owner", owner)
+
+	filter := def.NewFilter()
+	filter.Equal("Owner", owner)
+	filter.Equal("Catalog", model.TotalizeCurrent)
+
+	eventPtr := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, filter)
+	resultPtr := s.CallEvent(eventPtr)
+	if resultPtr == nil {
+		return
+	}
+
+	totalizerList, totalizerOK := resultPtr.Get().([]*model.Totalizer)
+	if !totalizerOK {
+		return
+	}
+
+	ret = totalizerList
+	return
+}

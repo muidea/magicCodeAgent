@@ -1,0 +1,255 @@
+package biz
+
+import (
+	"fmt"
+	log "github.com/cihub/seelog"
+
+	"github.com/muidea/magicBatis/client"
+	"github.com/muidea/magicBatis/def"
+
+	casClient "github.com/muidea/magicCas/client"
+	casCommon "github.com/muidea/magicCas/common"
+	casModel "github.com/muidea/magicCas/model"
+
+	commonCommon "github.com/muidea/magicCommon/common"
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/util"
+	commonSession "github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/task"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/core/base/biz"
+	"github.com/muidea/{{.ProjectName}}/core/kernel/base/dao"
+	"github.com/muidea/{{.ProjectName}}/model"
+)
+
+type Base struct {
+	biz.Base
+
+	baseDao dao.Base
+
+	casService string
+}
+
+func New(
+	casService string,
+	batisClient client.Client,
+	eventHub event.Hub,
+	backgroundRoutine *task.BackgroundRoutine,
+) *Base {
+	ptr := &Base{
+		Base:       biz.New(common.BaseModule, eventHub, backgroundRoutine),
+		casService: casService,
+		baseDao:    dao.New(batisClient),
+	}
+
+	eventHub.Subscribe(common.RefreshSession, ptr)
+	eventHub.Subscribe(common.VerifyEntityRole, ptr)
+	eventHub.Subscribe(common.QueryEntity, ptr)
+	eventHub.Subscribe(common.WriteOperateLog, ptr)
+	eventHub.Subscribe(common.QueryOperateLog, ptr)
+
+	return ptr
+}
+
+func (s *Base) Notify(event event.Event, result event.Result) {
+	namespace := event.Header().Get("namespace")
+	if event.Match(common.RefreshSession) {
+		sessionInfo, sessionOK := event.Data().(*commonCommon.SessionInfo)
+		if !sessionOK {
+			return
+		}
+
+		sessionEntity, sessionErr := s.RefreshSession(sessionInfo, namespace)
+		if sessionErr != nil {
+			return
+		}
+
+		result.Set(sessionEntity)
+	}
+	if event.Match(common.VerifyEntityRole) {
+		entityPtr, entityOK := event.Data().(*casModel.Entity)
+		if !entityOK {
+			return
+		}
+
+		entityRole, entityErr := s.VerifyEntityRole(entityPtr, namespace)
+		if entityErr != nil {
+			return
+		}
+
+		result.Set(entityRole)
+	}
+	if event.Match(common.QueryEntity) {
+		id, err := common.GetEntityID(event.ID())
+		if err != nil {
+			return
+		}
+		entityPtr, entityErr := s.QueryEntity(id, namespace)
+		if entityErr != nil {
+			return
+		}
+
+		result.Set(entityPtr)
+		return
+	}
+	if event.Match(common.WriteOperateLog) {
+		ptr := event.Data().(*model.Log)
+		s.baseDao.WriteLog(ptr, namespace)
+		return
+	}
+	if event.Match(common.QueryOperateLog) {
+		filterPtr, filterOK := event.Data().(*def.QueryFilter)
+		if !filterOK {
+			return
+		}
+
+		logsList, _, logErr := s.baseDao.QueryLog(filterPtr, namespace)
+		if logErr != nil {
+			return
+		}
+
+		result.Set(logsList)
+		return
+	}
+}
+
+func (s *Base) LoginAccount(curSession commonSession.Session, account, password, namespace string) (entityPtr *casModel.Entity, sessionInfo *commonCommon.SessionInfo, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	ctxInfo := curSession.GetSessionInfo()
+	ctxInfo.Scope = commonCommon.ShareSession
+	clnt.BindSession(ctxInfo)
+	clnt.AttachNameSpace(namespace)
+
+	loginEntity, loginSession, loginErr := clnt.LoginAccessAccount(account, password)
+	if loginErr != nil {
+		err = loginErr
+		log.Errorf("login account failed, err:%s", err.Error())
+		return
+	}
+
+	entityPtr = loginEntity
+	sessionInfo = loginSession
+	return
+}
+
+func (s *Base) LogoutAccount(curSession commonSession.Session, namespace string) (ret *commonCommon.SessionInfo, err error) {
+	sessionInfo := curSession.GetSessionInfo()
+	if sessionInfo == nil {
+		err = fmt.Errorf("must login first")
+		return
+	}
+
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.BindSession(sessionInfo)
+	clnt.AttachNameSpace(namespace)
+
+	logoutSession, logoutErr := clnt.LogoutAccessAccount()
+	if logoutErr != nil {
+		err = logoutErr
+		log.Errorf("logout account failed, err:%s", err.Error())
+		return
+	}
+
+	ret = logoutSession
+
+	return
+}
+
+func (s *Base) UpdateAccountPassword(curSession commonSession.Session, id int, ptr *casCommon.UpdatePasswordParam, namespace string) (ret *casModel.Account, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	ctxInfo := curSession.GetSessionInfo()
+	clnt.BindSession(ctxInfo)
+	clnt.AttachNameSpace(namespace)
+
+	ret, err = clnt.UpdateAccountPassword(id, ptr)
+	return
+}
+
+func (s *Base) VerifyEndpoint(endpointName, identifyID, authToken, namespace string) (entityPtr *casModel.Entity, sessionInfo *commonCommon.SessionInfo, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.AttachNameSpace(namespace)
+
+	confirmEntity, confirmSession, confirmErr := clnt.VerifyAccessEndpoint(endpointName, identifyID, authToken)
+	if confirmErr != nil {
+		err = confirmErr
+		log.Errorf("confirm endpoint failed, err:%s", err.Error())
+		return
+	}
+
+	entityPtr = confirmEntity
+	sessionInfo = confirmSession
+
+	return
+}
+
+func (s *Base) RefreshSession(curInfo *commonCommon.SessionInfo, namespace string) (ret *casModel.Entity, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+	clnt.BindSession(curInfo)
+	clnt.AttachNameSpace(namespace)
+	refreshEntity, refreshErr := clnt.RefreshAccessSession()
+	if refreshErr != nil {
+		err = refreshErr
+		return
+	}
+
+	ret = refreshEntity
+	return
+}
+
+func (s *Base) VerifyEntityRole(ptr *casModel.Entity, namespace string) (ret *casModel.Role, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.AttachNameSpace(namespace)
+
+	verifyRole, verifyErr := clnt.VerifyEntityRole(ptr)
+	if verifyErr != nil {
+		err = verifyErr
+		log.Errorf("verify account failed, err:%s", err.Error())
+		return
+	}
+
+	ret = verifyRole
+	return
+}
+
+func (s *Base) QueryEntity(id int, namespace string) (*casModel.Entity, error) {
+	casClient := casClient.NewClient(s.casService)
+	defer casClient.Release()
+
+	casClient.AttachNameSpace(namespace)
+
+	return casClient.QueryAccessEntity(id)
+}
+
+func (s *Base) QueryAccessLog(entityPtr *casModel.Entity, filter *util.PageFilter, namespace string) (ret []*casModel.Log, total int64, err error) {
+	clnt := casClient.NewClient(s.casService)
+	defer clnt.Release()
+
+	clnt.AttachNameSpace(namespace)
+
+	ret, total, err = clnt.FilterAccessLog(entityPtr, filter)
+	return
+}
+
+func (s *Base) WriteOperateLog(log *model.Log, namespace string) (ret *model.Log, err error) {
+	ret, err = s.baseDao.WriteLog(log, namespace)
+
+	return
+}
+
+func (s *Base) QueryOperateLog(filter *def.QueryFilter, namespace string) (ret []*model.Log, total int64, err error) {
+	ret, total, err = s.baseDao.QueryLog(filter, namespace)
+
+	return
+}

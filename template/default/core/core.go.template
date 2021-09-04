@@ -1,0 +1,206 @@
+package core
+
+import (
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
+
+	log "github.com/cihub/seelog"
+
+	"github.com/muidea/magicBatis/client"
+
+	commonCommon "github.com/muidea/magicCommon/common"
+	"github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/task"
+	engine "github.com/muidea/magicEngine"
+
+	casCommon "github.com/muidea/magicCas/common"
+	casModel "github.com/muidea/magicCas/model"
+	"github.com/muidea/magicCas/toolkit"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/config"
+	"github.com/muidea/{{.ProjectName}}/model"
+	"github.com/muidea/{{.ProjectName}}/module"
+
+	_ "github.com/muidea/{{.ProjectName}}/core/kernel/base"
+	_ "github.com/muidea/{{.ProjectName}}/core/kernel/setting"
+	_ "github.com/muidea/{{.ProjectName}}/core/kernel/totalizer"
+)
+
+type loadNamespaceTask struct {
+	eventHub event.Hub
+}
+
+func (s *loadNamespaceTask) Run() {
+	log.Info("load namespace task running!")
+	eid := common.LoadAuthorityNamespace
+	header := event.NewValues()
+	header.Set("namespace", config.SuperNamespace())
+	header.Set("owner", common.BaseModule)
+
+	filter := def.NewFilter()
+	eventPtr := event.NewEvent(eid, "/", common.AuthorityModule, header, filter)
+	result := s.eventHub.Call(eventPtr)
+	if !result.IsOK() {
+		return
+	}
+
+	namespaceList, namespaceOK := result.Get().([]*casModel.Namespace)
+	if !namespaceOK {
+		return
+	}
+
+	eid = common.InitializeAuthorityNamespace
+	for _, val := range namespaceList {
+		eventPtr = event.NewEvent(eid, "/", "/#", header, val)
+		s.eventHub.Post(eventPtr)
+	}
+}
+
+// New 新建Core
+func New(clnt client.Client, endpointName string) (ret *Core, err error) {
+	err = model.InitializeModel(clnt)
+	if err != nil {
+		log.Errorf("initializeModel failed, err:%s", err.Error())
+		return
+	}
+
+	sessionRegistry := session.CreateRegistry(nil)
+	eventHub := event.NewHub()
+	backgroundRoutine := task.NewBackgroundRoutine()
+
+	core := &Core{
+		batisClient:       clnt,
+		endpointName:      endpointName,
+		sessionRegistry:   sessionRegistry,
+		eventHub:          eventHub,
+		backgroundRoutine: backgroundRoutine,
+	}
+
+	ret = core
+	return
+}
+
+// Core Core对象
+type Core struct {
+	batisClient       client.Client
+	endpointName      string
+	sessionRegistry   session.Registry
+	casRouteRegistry  toolkit.CasRegistry
+	roleRouteRegistry toolkit.RoleRegistry
+	eventHub          event.Hub
+	backgroundRoutine *task.BackgroundRoutine
+}
+
+// Startup 启动
+func (s *Core) Startup(router engine.Router) {
+	router.SetApiVersion(common.ApiVersion)
+
+	s.casRouteRegistry = toolkit.NewCasRegistry(s, router)
+	s.roleRouteRegistry = toolkit.NewRoleRegistry(s, router)
+
+	moduleList := module.GetList()
+	for _, val := range moduleList {
+		val.BindBatisClient(s.batisClient)
+		val.BindBackgroundRoutine(s.backgroundRoutine)
+		val.BindEventHub(s.eventHub)
+		val.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
+	}
+
+	for _, val := range moduleList {
+		val.Startup(router)
+	}
+
+	loadTask := &loadNamespaceTask{eventHub: s.eventHub}
+	s.backgroundRoutine.Post(loadTask)
+}
+
+// Teardown 销毁
+func (s *Core) Teardown() {
+}
+
+// Verify verify current commonSession
+func (s *Core) Verify(res http.ResponseWriter, req *http.Request) (err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	namespace := s.getCurrentNamespace(res, req)
+
+	eid := common.RefreshSession
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+
+	refreshEvent := event.NewEvent(eid, "/", common.BaseModule, header, curSession.GetSessionInfo())
+	refreshResult := s.eventHub.Call(refreshEvent)
+	if !refreshResult.IsOK() {
+		err = fmt.Errorf("refresh current session failed")
+		log.Errorf("refresh current session failed")
+		return
+	}
+
+	return
+}
+
+// VerifyRole verify role
+func (s *Core) VerifyRole(res http.ResponseWriter, req *http.Request) (ret *casModel.Role, err error) {
+	curEntity, curErr := s.getCurrentEntity(res, req)
+	if curErr != nil {
+		err = curErr
+		return
+	}
+
+	namespace := s.getCurrentNamespace(res, req)
+
+	eid := common.VerifyEntityRole
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+
+	verifyEvent := event.NewEvent(eid, "/", common.BaseModule, header, curEntity)
+	verifyResult := s.eventHub.Call(verifyEvent)
+	if !verifyResult.IsOK() {
+		err = fmt.Errorf("verify entity role failed")
+		log.Errorf("verify entity role failed")
+		return
+	}
+
+	ret = verifyResult.Get().(*casModel.Role)
+	return
+}
+
+func (s *Core) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string) {
+	namespace := req.Header.Get(casCommon.NamespaceID)
+	if namespace != "" {
+		ret = namespace
+		return
+	}
+
+	items := strings.Split(req.Host, ":")
+	if nil != net.ParseIP(items[0]) {
+		ret = "default"
+		return
+	}
+
+	items = strings.Split(items[0], ".")
+	if len(items) <= 1 {
+		ret = "default"
+		return
+	}
+
+	ret = items[0]
+	return
+}
+
+func (s *Core) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
+	if !ok {
+		err = fmt.Errorf("无效权限,未通过验证")
+		return
+	}
+
+	ret = authVal.(*casModel.Entity)
+	return
+}
