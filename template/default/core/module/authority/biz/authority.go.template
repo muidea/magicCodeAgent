@@ -1,0 +1,107 @@
+package biz
+
+import (
+	"strconv"
+
+	"github.com/muidea/magicBatis/client"
+
+	"github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/event"
+	fn "github.com/muidea/magicCommon/foundation/net"
+	"github.com/muidea/magicCommon/task"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/core/base/biz"
+)
+
+type Authority struct {
+	biz.Base
+
+	casService string
+}
+
+func New(
+	casService string,
+	batisClient client.Client,
+	eventHub event.Hub,
+	backgroundRoutine *task.BackgroundRoutine,
+) *Authority {
+	ptr := &Authority{
+		Base:       biz.New(common.AuthorityModule, eventHub, backgroundRoutine),
+		casService: casService,
+	}
+
+	eventHub.Subscribe(common.LoadAuthorityNamespace, ptr)
+	eventHub.Subscribe(common.QueryAuthorityNamespace, ptr)
+
+	eventHub.Subscribe(common.QueryAuthorityAccount, ptr)
+	eventHub.Subscribe(common.CreateAuthorityAccount, ptr)
+
+	return ptr
+}
+
+func (s *Authority) Notify(event event.Event, result event.Result) {
+	namespace := event.Header().Get("namespace")
+	if event.Match(common.LoadAuthorityNamespace) {
+		filter, ok := event.Data().(*def.Filter)
+		if !ok {
+			return
+		}
+
+		namespaceList, _, namespaceErr := s.FilterAuthorityNamespace(filter, namespace)
+		if namespaceErr != nil {
+			return
+		}
+		if result != nil {
+			result.Set(namespaceList)
+		}
+		return
+	}
+	if event.Match(common.QueryAuthorityNamespace) {
+		filter, ok := event.Data().(*def.Filter)
+		if !ok {
+			return
+		}
+
+		namespaceList, _, namespaceErr := s.FilterAuthorityNamespace(filter, namespace)
+		if namespaceErr != nil || len(namespaceList) == 0 {
+			return
+		}
+		if result != nil {
+			result.Set(namespaceList[0])
+		}
+	}
+
+	if event.Match(common.QueryAuthorityAccount) {
+		strID := fn.ExtractID(event.ID())
+		idVal, idErr := strconv.Atoi(strID)
+		if idErr != nil {
+			return
+		}
+
+		accountPtr, accountErr := s.QueryAuthorityAccount(idVal, namespace)
+		if accountErr != nil {
+			return
+		}
+		if result != nil {
+			result.Set(accountPtr)
+		}
+		return
+	}
+
+	if event.Match(common.CreateAuthorityAccount) {
+		paramPtr := event.Data().(*common.AccountParam)
+		if paramPtr == nil {
+			return
+		}
+
+		accountPtr, accountErr := s.CreateAuthorityAccount(paramPtr, namespace)
+		if accountErr != nil {
+			return
+		}
+		if result != nil {
+			result.Set(accountPtr)
+		}
+		return
+	}
+}

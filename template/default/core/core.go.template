@@ -29,6 +29,7 @@ import (
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/base"
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/setting"
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/totalizer"
+	_ "github.com/muidea/{{.ProjectName}}/core/module/authority"
 )
 
 type loadNamespaceTask struct {
