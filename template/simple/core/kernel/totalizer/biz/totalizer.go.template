@@ -1,0 +1,106 @@
+package biz
+
+import (
+	log "github.com/cihub/seelog"
+
+	"github.com/muidea/magicBatis/client"
+	"github.com/muidea/magicBatis/def"
+
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/task"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/core/base/biz"
+	"github.com/muidea/{{.ProjectName}}/core/kernel/totalizer/dao"
+	"github.com/muidea/{{.ProjectName}}/model"
+)
+
+type Totalizer struct {
+	biz.Base
+
+	totalizerDao dao.Totalizer
+
+	type2Totalizer Type2Totalizer
+}
+
+func New(
+	batisClient client.Client,
+	eventHub event.Hub,
+	backgroundRoutine *task.BackgroundRoutine,
+) *Totalizer {
+	totalizer := &Totalizer{
+		Base:           biz.New(common.TotalizerModule, eventHub, backgroundRoutine),
+		totalizerDao:   dao.New(batisClient),
+		type2Totalizer: Type2Totalizer{},
+	}
+
+	eventHub.Subscribe(common.CreateTotalizer, totalizer)
+	eventHub.Subscribe(common.DeleteTotalizer, totalizer)
+	eventHub.Subscribe(common.UpdateTotalizer, totalizer)
+	eventHub.Subscribe(common.QueryTotalizer, totalizer)
+	eventHub.Subscribe(common.NotifyTimer, totalizer)
+
+	eventHub.Subscribe(common.CreateEventMask, totalizer)
+	eventHub.Subscribe(common.DeleteEventMask, totalizer)
+	eventHub.Subscribe(common.UpdateEventMask, totalizer)
+
+	return totalizer
+}
+
+func (s *Totalizer) Notify(event event.Event, result event.Result) {
+	owner := event.Header().Get("owner")
+	log.Infof("notify event, id:%s,source:%s,destination:%s, owner:%s", event.ID(), event.Source(), event.Destination(),owner)
+	if event.Match(common.CreateTotalizer) {
+		totalizerPtr, totalizerOK := event.Data().(*model.Totalizer)
+		if !totalizerOK {
+			return
+		}
+
+		s.onCreateTotalizer(totalizerPtr)
+		return
+	}
+	if event.Match(common.DeleteTotalizer) {
+		totalizerPtr, totalizerOK := event.Data().(*model.Totalizer)
+		if !totalizerOK {
+			return
+		}
+
+		s.onDeleteTotalizer(totalizerPtr)
+		return
+	}
+	if event.Match(common.UpdateTotalizer) {
+		return
+	}
+	if event.Match(common.QueryTotalizer) {
+		filterPtr, filterOK := event.Data().(*def.QueryFilter)
+		if !filterOK {
+			return
+		}
+		totalizerList, totalizerErr := s.filterTotalizer(filterPtr)
+		if totalizerErr != nil {
+			return
+		}
+
+		result.Set(totalizerList)
+		return
+	}
+	if event.Match(common.NotifyTimer) {
+		eventPtr, eventOK := event.Data().(*common.TimerNotify)
+		if !eventOK {
+			return
+		}
+		s.onTimerNotify(eventPtr)
+		return
+	}
+	if event.Match(common.CreateEventMask) {
+		s.onIncreaseTotalizer(owner)
+		return
+	}
+	if event.Match(common.UpdateEventMask) {
+		return
+	}
+	if event.Match(common.DeleteEventMask) {
+		s.onDecreaseTotalizer(owner)
+		return
+	}
+}

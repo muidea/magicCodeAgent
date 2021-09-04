@@ -1,0 +1,7 @@
+package biz
+
+import "github.com/muidea/{{.ProjectName}}/model"
+
+type Owner2Totalizer map[string]*model.Totalizer
+
+type Type2Totalizer map[int]Owner2Totalizer

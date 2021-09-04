@@ -1,0 +1,70 @@
+package biz
+
+import (
+	"fmt"
+
+	"github.com/muidea/magicBatis/def"
+
+	"github.com/muidea/magicCommon/event"
+	fn "github.com/muidea/magicCommon/foundation/net"
+
+	casModel "github.com/muidea/magicCas/model"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/model"
+)
+
+func (s *Setting) QuerySettingProfile(entityPtr *casModel.Entity, namespace string) (ret *casModel.Account, err error) {
+	eid := fn.FormatID(common.QueryAuthorityAccount, entityPtr.EID)
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+	header.Set("owner", s.ID())
+
+	event := event.NewEvent(eid, s.ID(), common.AuthorityModule, header, nil)
+	result := s.CallEvent(event)
+	if result == nil {
+		err = fmt.Errorf("can't query account")
+		return
+	}
+	if !result.IsOK() {
+		err = fmt.Errorf("query account failed")
+		return
+	}
+
+	accountPtr := result.Get().(*casModel.Account)
+	if accountPtr == nil {
+		err = fmt.Errorf("illegal account value")
+		return
+	}
+
+	ret = accountPtr
+	return
+}
+
+func (s *Setting) QueryOperateLog(filter *def.QueryFilter, namespace string) (ret []*model.Log, err error) {
+	eid := common.QueryOperateLog
+	header := event.NewValues()
+	header.Set("namespace", namespace)
+	header.Set("owner", s.ID())
+
+	event := event.NewEvent(eid, s.ID(), common.BaseModule, header, filter)
+	result := s.CallEvent(event)
+	if result == nil {
+		err = fmt.Errorf("can't query operate log")
+		return
+	}
+
+	if !result.IsOK() {
+		err = fmt.Errorf("query operate log failed")
+		return
+	}
+
+	logList, logOK := result.Get().([]*model.Log)
+	if !logOK {
+		err = fmt.Errorf("query operate log failed")
+		return
+	}
+
+	ret = logList
+	return
+}

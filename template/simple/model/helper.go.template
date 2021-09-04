@@ -4,6 +4,7 @@ import "github.com/muidea/magicBatis/client"
 
 var modelList = []interface{}{
 	&Log{},
+	&Totalizer{},
 }
 
 // InitializeModel initialize model
