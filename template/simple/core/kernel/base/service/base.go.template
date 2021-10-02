@@ -162,7 +162,7 @@ func (s *Base) UpdateAccountPassword(res http.ResponseWriter, req *http.Request)
 			result.Reason = "非法参数"
 			break
 		}
-		_, value := fn.SplitRESTAPI(req.URL.Path)
+		_, value := fn.SplitRESTURL(req.URL.Path)
 		id, err := strconv.Atoi(value)
 		if err != nil || id == 0 {
 			log.Errorf("update account failed, illegal id, id:%s", value)

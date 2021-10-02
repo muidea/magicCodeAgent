@@ -87,7 +87,7 @@ func (s *Authority) FilterAuthorityRole(res http.ResponseWriter, req *http.Reque
 func (s *Authority) QueryAuthorityRole(res http.ResponseWriter, req *http.Request) {
 	result := &common.RoleResult{}
 	for {
-		_, value := fn.SplitRESTAPI(req.URL.Path)
+		_, value := fn.SplitRESTURL(req.URL.Path)
 		id, err := strconv.Atoi(value)
 		if err != nil || id == 0 {
 			result.ErrorCode = commonDef.Failed
@@ -156,7 +156,7 @@ func (s *Authority) CreateAuthorityRole(res http.ResponseWriter, req *http.Reque
 func (s *Authority) UpdateAuthorityRole(res http.ResponseWriter, req *http.Request) {
 	result := &common.RoleResult{}
 	for {
-		_, value := fn.SplitRESTAPI(req.URL.Path)
+		_, value := fn.SplitRESTURL(req.URL.Path)
 		id, err := strconv.Atoi(value)
 		if err != nil || id == 0 {
 			log.Errorf("update partner failed, illegal id, id:%s", value)
@@ -202,7 +202,7 @@ func (s *Authority) UpdateAuthorityRole(res http.ResponseWriter, req *http.Reque
 func (s *Authority) DeleteAuthorityRole(res http.ResponseWriter, req *http.Request) {
 	result := &common.RoleResult{}
 	for {
-		_, value := fn.SplitRESTAPI(req.URL.Path)
+		_, value := fn.SplitRESTURL(req.URL.Path)
 		id, err := strconv.Atoi(value)
 		if err != nil || id == 0 {
 			result.ErrorCode = commonDef.Failed
