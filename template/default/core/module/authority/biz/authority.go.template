@@ -41,7 +41,7 @@ func New(
 }
 
 func (s *Authority) Notify(event event.Event, result event.Result) {
-	namespace := event.Header().Get("namespace")
+	namespace := event.Header().GetString("namespace")
 	if event.Match(common.LoadAuthorityNamespace) {
 		filter, ok := event.Data().(*def.Filter)
 		if !ok {

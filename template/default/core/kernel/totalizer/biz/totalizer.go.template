@@ -51,8 +51,8 @@ func New(
 }
 
 func (s *Totalizer) Notify(event event.Event, result event.Result) {
-	namespace := event.Header().Get("namespace")
-	owner := event.Header().Get("owner")
+	namespace := event.Header().GetString("namespace")
+	owner := event.Header().GetString("owner")
 	log.Infof("notify event, id:%s,source:%s,destination:%s, namespace:%s, owner:%s", event.ID(), event.Source(), event.Destination(), namespace, owner)
 	if event.Match(common.InitializeAuthorityNamespace) {
 		namespaceLite, namespaceOK := event.Data().(*casModel.Namespace)

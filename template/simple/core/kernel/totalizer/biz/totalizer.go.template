@@ -48,7 +48,7 @@ func New(
 }
 
 func (s *Totalizer) Notify(event event.Event, result event.Result) {
-	owner := event.Header().Get("owner")
+	owner := event.Header().GetString("owner")
 	log.Infof("notify event, id:%s,source:%s,destination:%s, owner:%s", event.ID(), event.Source(), event.Destination(),owner)
 	if event.Match(common.CreateTotalizer) {
 		totalizerPtr, totalizerOK := event.Data().(*model.Totalizer)

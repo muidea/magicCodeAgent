@@ -53,7 +53,7 @@ func New(
 }
 
 func (s *Base) Notify(event event.Event, result event.Result) {
-	namespace := event.Header().Get("namespace")
+	namespace := event.Header().GetString("namespace")
 	if event.Match(common.RefreshSession) {
 		sessionInfo, sessionOK := event.Data().(*commonCommon.SessionInfo)
 		if !sessionOK {
