@@ -59,6 +59,8 @@ func (s *Totalizer) BindRegistry(
 }
 
 func (s *Totalizer) Startup(endpointName string, router engine.Router) {
+	router.SetApiVersion(common.ApiVersion)
+
 	s.biz = biz.New(s.batisClient, s.eventHub, s.backgroundRoutine)
 }
 

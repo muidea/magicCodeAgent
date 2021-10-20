@@ -7,11 +7,8 @@ import (
 	"github.com/muidea/magicCommon/session"
 	"github.com/muidea/magicCommon/task"
 	engine "github.com/muidea/magicEngine"
-
 	"github.com/muidea/{{.ProjectName}}/common"
-	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/base/biz"
-	"github.com/muidea/{{.ProjectName}}/core/kernel/base/service"
 	"github.com/muidea/{{.ProjectName}}/module"
 )
 
@@ -27,8 +24,7 @@ type Base struct {
 	eventHub          event.Hub
 	backgroundRoutine *task.BackgroundRoutine
 
-	service *service.Base
-	biz     *biz.Base
+	biz *biz.Base
 }
 
 func New() module.Module {
@@ -62,11 +58,9 @@ func (s *Base) BindRegistry(
 }
 
 func (s *Base) Startup(endpointName string, router engine.Router) {
-	s.biz = biz.New(config.CasService(), s.batisClient, s.eventHub, s.backgroundRoutine)
+	router.SetApiVersion(common.ApiVersion)
 
-	s.service = service.New(endpointName, config.FileService(), s.biz)
-	s.service.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
-	s.service.RegisterRoute(router)
+	s.biz = biz.New(s.batisClient, s.eventHub, s.backgroundRoutine)
 }
 
 func (s *Base) Shutdown() {

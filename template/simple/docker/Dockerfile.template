@@ -4,17 +4,17 @@ LABEL Author="rangh"
 LABEL Application="{{.ProjectName}}"
 
 RUN mkdir -p /var/app
+RUN mkdir -p /var/app/config
 
 WORKDIR /var/app
 
 ADD {{.ProjectName}} /var/app/{{.ProjectName}}
 ADD bootstrap.sh /var/app/bootstrap.sh
-ADD wait-for-it.sh /var/app/wait-for-it.sh
+ADD cfg.json /var/app/config/cfg.json
 
 RUN chmod +x /var/app/{{.ProjectName}}
 RUN chmod +x /var/app/bootstrap.sh
-RUN chmod +x /var/app/wait-for-it.sh
 
 ENTRYPOINT [ "/var/app/bootstrap.sh" ]
 
-EXPOSE 8080
+EXPOSE 8880

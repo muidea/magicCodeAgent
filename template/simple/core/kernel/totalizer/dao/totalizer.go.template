@@ -10,11 +10,11 @@ import (
 )
 
 type Totalizer interface {
-	FilterTotalizer(filter *def.QueryFilter) (ret []*model.Totalizer, total int64, err error)
-	QueryTotalizer(name string, typeVal, catalog int) (ret *model.Totalizer, err error)
-	CreateTotalizer(totalizer *model.Totalizer) (ret *model.Totalizer, err error)
-	DestroyTotalizer(id int) (ret *model.Totalizer, err error)
-	UpdateTotalizer(totalizer *model.Totalizer) (ret *model.Totalizer, err error)
+	FilterTotalizer(filter *def.QueryFilter, namespace string) (ret []*model.Totalizer, total int64, err error)
+	QueryTotalizer(name string, typeVal, catalog int, namespace string) (ret *model.Totalizer, err error)
+	CreateTotalizer(totalizer *model.Totalizer, namespace string) (ret *model.Totalizer, err error)
+	DestroyTotalizer(id int, namespace string) (ret *model.Totalizer, err error)
+	UpdateTotalizer(totalizer *model.Totalizer, namespace string) (ret *model.Totalizer, err error)
 }
 
 func New(clnt client.Client) Totalizer {
@@ -25,19 +25,20 @@ type totalizer struct {
 	batisClient client.Client
 }
 
-func (s *totalizer) FilterTotalizer(filter *def.QueryFilter) (ret []*model.Totalizer, total int64, err error) {
+func (s *totalizer) FilterTotalizer(filter *def.QueryFilter, namespace string) (ret []*model.Totalizer, total int64, err error) {
 	ret = []*model.Totalizer{}
 	if filter == nil {
 		filter = def.NewFilter()
 	}
 
+	filter.Equal("Namespace", namespace)
 	total, err = s.batisClient.BatchQueryEntity(&ret, filter)
 
 	return
 }
 
-func (s *totalizer) QueryTotalizer(name string, typeVal, catalog int) (ret *model.Totalizer, err error) {
-	val := &model.Totalizer{Owner: name, Type: typeVal, Catalog: catalog}
+func (s *totalizer) QueryTotalizer(name string, typeVal, catalog int, namespace string) (ret *model.Totalizer, err error) {
+	val := &model.Totalizer{Owner: name, Type: typeVal, Catalog: catalog, Namespace: namespace}
 	err = s.batisClient.QueryEntity(val)
 	if err == nil {
 		ret = val
@@ -46,12 +47,13 @@ func (s *totalizer) QueryTotalizer(name string, typeVal, catalog int) (ret *mode
 	return
 }
 
-func (s *totalizer) CreateTotalizer(totalizer *model.Totalizer) (ret *model.Totalizer, err error) {
+func (s *totalizer) CreateTotalizer(totalizer *model.Totalizer, namespace string) (ret *model.Totalizer, err error) {
 	if totalizer == nil {
 		err = fmt.Errorf("illegal totalizer")
 		return
 	}
 
+	totalizer.Namespace = namespace
 	err = s.batisClient.InsertEntity(totalizer)
 	if err == nil {
 		ret = totalizer
@@ -60,13 +62,13 @@ func (s *totalizer) CreateTotalizer(totalizer *model.Totalizer) (ret *model.Tota
 	return
 }
 
-func (s *totalizer) queryByID(id int) (ret *model.Totalizer, err error) {
+func (s *totalizer) queryByID(id int, namespace string) (ret *model.Totalizer, err error) {
 	if id <= 0 {
 		err = fmt.Errorf("illegal totalizer id, id:%d", id)
 		return
 	}
 
-	val := &model.Totalizer{ID: id}
+	val := &model.Totalizer{ID: id, Namespace: namespace}
 	err = s.batisClient.QueryEntity(val)
 	if err == nil {
 		ret = val
@@ -75,8 +77,8 @@ func (s *totalizer) queryByID(id int) (ret *model.Totalizer, err error) {
 	return
 }
 
-func (s *totalizer) DestroyTotalizer(id int) (ret *model.Totalizer, err error) {
-	ret, err = s.queryByID(id)
+func (s *totalizer) DestroyTotalizer(id int, namespace string) (ret *model.Totalizer, err error) {
+	ret, err = s.queryByID(id, namespace)
 	if err == nil {
 		err = s.batisClient.DeleteEntity(ret)
 	}
@@ -84,12 +86,13 @@ func (s *totalizer) DestroyTotalizer(id int) (ret *model.Totalizer, err error) {
 	return
 }
 
-func (s *totalizer) UpdateTotalizer(totalizer *model.Totalizer) (ret *model.Totalizer, err error) {
+func (s *totalizer) UpdateTotalizer(totalizer *model.Totalizer, namespace string) (ret *model.Totalizer, err error) {
 	if totalizer == nil || totalizer.ID <= 0 {
 		err = fmt.Errorf("illegal totalizer")
 		return
 	}
 
+	totalizer.Namespace = namespace
 	err = s.batisClient.UpdateEntity(totalizer)
 	if err == nil {
 		ret = totalizer

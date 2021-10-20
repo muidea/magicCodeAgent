@@ -1,28 +1,24 @@
 package config
 
-import "flag"
+import (
+	log "github.com/cihub/seelog"
+	fu "github.com/muidea/magicCommon/foundation/util"
+)
 
-var casService = "http://127.0.0.1:8081"
-var fileService = "http://127.0.0.1:8083"
-var namespace = "local"
+var configItem *CfgItem
+
+const cfgPath = "/var/app/config/cfg.json"
 
 func init() {
-	flag.StringVar(&casService, "CasService", casService, "magicCas partner address")
-	flag.StringVar(&fileService, "FileService", fileService, "magicFile partner address")
-	flag.StringVar(&namespace, "Namespace", namespace, "{{.ProjectName}} namespace.")
+	cfg := &CfgItem{}
+	err := fu.LoadConfig(cfgPath, cfg)
+	if err != nil {
+		log.Errorf("load config failed, err:%s", err.Error())
+		return
+	}
+
+	configItem = cfg
 }
 
-//CasService cas partner addr
-func CasService() string {
-	return casService
-}
-
-//FileService file partner addr
-func FileService() string {
-	return fileService
-}
-
-//Namespace namespace
-func Namespace() string {
-	return namespace
+type CfgItem struct {
 }

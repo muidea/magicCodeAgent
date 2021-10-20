@@ -25,6 +25,7 @@ type Totalizer struct {
 	TimeStamp int64   `json:"timeStamp" orm:"timeStamp"`
 	Value     float64 `json:"value" orm:"value"`
 	Catalog   int     `json:"catalog" orm:"catalog"`
+	Namespace string  `json:"namespace" orm:"namespace"`
 }
 
 func (s *Totalizer) Reset() {
@@ -33,10 +34,10 @@ func (s *Totalizer) Reset() {
 	s.Catalog = TotalizeCurrent
 }
 
-func NewTotalizer(owner string, typeVal int) *Totalizer {
+func NewTotalizer(owner string, typeVal int, namespace string) *Totalizer {
 	if typeVal < TotalizeRealtime || typeVal > TotalizeMonth {
 		return nil
 	}
 
-	return &Totalizer{Owner: owner, Type: typeVal, Catalog: TotalizeCurrent}
+	return &Totalizer{Owner: owner, Type: typeVal, Catalog: TotalizeCurrent, Namespace: namespace}
 }

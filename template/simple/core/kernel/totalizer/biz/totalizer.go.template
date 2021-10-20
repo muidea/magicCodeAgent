@@ -20,7 +20,7 @@ type Totalizer struct {
 
 	totalizerDao dao.Totalizer
 
-	type2Totalizer Type2Totalizer
+	namespace2Totalizer Namespace2Totalizer
 }
 
 func New(
@@ -29,9 +29,9 @@ func New(
 	backgroundRoutine *task.BackgroundRoutine,
 ) *Totalizer {
 	totalizer := &Totalizer{
-		Base:           biz.New(common.TotalizerModule, eventHub, backgroundRoutine),
-		totalizerDao:   dao.New(batisClient),
-		type2Totalizer: Type2Totalizer{},
+		Base:                biz.New(common.TotalizerModule, eventHub, backgroundRoutine),
+		totalizerDao:        dao.New(batisClient),
+		namespace2Totalizer: Namespace2Totalizer{},
 	}
 
 	eventHub.Subscribe(common.CreateTotalizer, totalizer)
@@ -48,8 +48,9 @@ func New(
 }
 
 func (s *Totalizer) Notify(event event.Event, result event.Result) {
+	namespace := event.Header().GetString("namespace")
 	owner := event.Header().GetString("owner")
-	log.Infof("notify event, id:%s,source:%s,destination:%s, owner:%s", event.ID(), event.Source(), event.Destination(),owner)
+	log.Infof("notify event, id:%s,source:%s,destination:%s, namespace:%s, owner:%s", event.ID(), event.Source(), event.Destination(), namespace, owner)
 	if event.Match(common.CreateTotalizer) {
 		totalizerPtr, totalizerOK := event.Data().(*model.Totalizer)
 		if !totalizerOK {
@@ -76,12 +77,10 @@ func (s *Totalizer) Notify(event event.Event, result event.Result) {
 		if !filterOK {
 			return
 		}
-		totalizerList, totalizerErr := s.filterTotalizer(filterPtr)
-		if totalizerErr != nil {
-			return
+		totalizerList, totalizerErr := s.filterTotalizer(filterPtr, namespace)
+		if result != nil {
+			result.Set(totalizerList, totalizerErr)
 		}
-
-		result.Set(totalizerList)
 		return
 	}
 	if event.Match(common.NotifyTimer) {
@@ -93,14 +92,14 @@ func (s *Totalizer) Notify(event event.Event, result event.Result) {
 		return
 	}
 	if event.Match(common.CreateEventMask) {
-		s.onIncreaseTotalizer(owner)
+		s.onIncreaseTotalizer(owner, namespace)
 		return
 	}
 	if event.Match(common.UpdateEventMask) {
 		return
 	}
 	if event.Match(common.DeleteEventMask) {
-		s.onDecreaseTotalizer(owner)
+		s.onDecreaseTotalizer(owner, namespace)
 		return
 	}
 }

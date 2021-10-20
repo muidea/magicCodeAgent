@@ -1,15 +1,11 @@
 package biz
 
 import (
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/task"
 	"path"
 
-	"github.com/muidea/magicCommon/event"
-	fn "github.com/muidea/magicCommon/foundation/net"
-	"github.com/muidea/magicCommon/task"
-
 	"github.com/muidea/magicBatis/def"
-
-	casModel "github.com/muidea/magicCas/model"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
@@ -70,76 +66,64 @@ func (s *Base) InnerDestination() string {
 	return s.ID()
 }
 
-func (s *Base) QueryEntity(id int) (ret *casModel.Entity) {
-	eid := fn.FormatID(common.QueryEntity, id)
-	header := event.NewValues()
-	header.Set("owner", s.ID())
-
-	queryEvent := event.NewEvent(eid, s.ID(), common.BaseModule, header, nil)
-	queryResult := s.CallEvent(queryEvent)
-	if !queryResult.IsOK() {
-		return casModel.UnknownEntity()
-	}
-
-	ret = queryResult.Get().(*casModel.Entity)
-	return
-}
-
-func (s *Base) WriteLog(ptr *model.Log) {
+func (s *Base) WriteLog(ptr *model.Log, namespace string) {
 	eid := common.WriteOperateLog
 	header := event.NewValues()
-	header.Set("owner", s.ID())
+	header.Set("namespace", namespace)
 
 	writeEvent := event.NewEvent(eid, s.ID(), common.BaseModule, header, ptr)
 	s.PostEvent(writeEvent)
 	return
 }
 
-func (s *Base) CheckIn(feature string) {
+func (s *Base) CheckIn(feature, namespace string) {
 	owner := path.Join(s.ID(), feature)
 
 	eid := common.CreateTotalizer
 	header := event.NewValues()
+	header.Set("namespace", namespace)
 	header.Set("owner", owner)
 
-	rtdTotalizer := model.NewTotalizer(owner, model.TotalizeRealtime)
+	rtdTotalizer := model.NewTotalizer(owner, model.TotalizeRealtime, namespace)
 	rtdEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, rtdTotalizer)
 	s.PostEvent(rtdEvent)
 
-	weekTotalizer := model.NewTotalizer(owner, model.TotalizeWeek)
+	weekTotalizer := model.NewTotalizer(owner, model.TotalizeWeek, namespace)
 	weekEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, weekTotalizer)
 	s.PostEvent(weekEvent)
 
-	monthTotalizer := model.NewTotalizer(owner, model.TotalizeMonth)
+	monthTotalizer := model.NewTotalizer(owner, model.TotalizeMonth, namespace)
 	monthEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, monthTotalizer)
 	s.PostEvent(monthEvent)
 }
 
-func (s *Base) CheckOut(feature string) {
+func (s *Base) CheckOut(feature, namespace string) {
 	owner := path.Join(s.ID(), feature)
 
 	eid := common.DeleteTotalizer
 	header := event.NewValues()
+	header.Set("namespace", namespace)
 	header.Set("owner", owner)
 
-	rtdTotalizer := model.NewTotalizer(owner, model.TotalizeRealtime)
+	rtdTotalizer := model.NewTotalizer(owner, model.TotalizeRealtime, namespace)
 	rtdEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, rtdTotalizer)
 	s.PostEvent(rtdEvent)
 
-	weekTotalizer := model.NewTotalizer(owner, model.TotalizeWeek)
+	weekTotalizer := model.NewTotalizer(owner, model.TotalizeWeek, namespace)
 	weekEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, weekTotalizer)
 	s.PostEvent(weekEvent)
 
-	monthTotalizer := model.NewTotalizer(owner, model.TotalizeMonth)
+	monthTotalizer := model.NewTotalizer(owner, model.TotalizeMonth, namespace)
 	monthEvent := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, monthTotalizer)
 	s.PostEvent(monthEvent)
 }
 
-func (s *Base) QuerySummary(feature string) (ret []*model.Totalizer) {
+func (s *Base) QuerySummary(feature, namespace string) (ret []*model.Totalizer) {
 	owner := path.Join(s.ID(), feature)
 
 	eid := common.QueryTotalizer
 	header := event.NewValues()
+	header.Set("namespace", namespace)
 	header.Set("owner", owner)
 
 	filter := def.NewFilter()
@@ -148,11 +132,11 @@ func (s *Base) QuerySummary(feature string) (ret []*model.Totalizer) {
 
 	eventPtr := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, filter)
 	resultPtr := s.CallEvent(eventPtr)
-	if resultPtr == nil {
+	resultVal, resultErr := resultPtr.Get()
+	if resultErr != nil {
 		return
 	}
-
-	totalizerList, totalizerOK := resultPtr.Get().([]*model.Totalizer)
+	totalizerList, totalizerOK := resultVal.([]*model.Totalizer)
 	if !totalizerOK {
 		return
 	}
