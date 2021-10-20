@@ -7,14 +7,12 @@ import (
 	"net/http"
 	"strings"
 
-	commonCommon "github.com/muidea/magicCommon/common"
 	commonDef "github.com/muidea/magicCommon/def"
 	fu "github.com/muidea/magicCommon/foundation/util"
 	commonSession "github.com/muidea/magicCommon/session"
 	engine "github.com/muidea/magicEngine"
 
 	casCommon "github.com/muidea/magicCas/common"
-	casModel "github.com/muidea/magicCas/model"
 	casToolkit "github.com/muidea/magicCas/toolkit"
 
 	"github.com/muidea/{{.ProjectName}}/common"
@@ -56,7 +54,7 @@ func (s *Setting) Handle(ctx engine.RequestContext, res http.ResponseWriter, req
 	curSession := s.sessionRegistry.GetSession(res, req)
 
 	sessionInfo := curSession.GetSessionInfo()
-	sessionInfo.Scope = commonCommon.ShareSession
+	sessionInfo.Scope = commonSession.ShareSession
 
 	values := req.URL.Query()
 	values = sessionInfo.Encode(values)
@@ -72,14 +70,14 @@ func (s *Setting) RegisterRoute(router engine.Router) {
 	s.roleRouteRegistry.AddHandler(common.ViewSettingProfile, "GET", casCommon.ReadPrivate, s.ViewSettingProfile)
 }
 
-func (s *Setting) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
+func (s *Setting) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casCommon.EntityView, err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
-	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
+	authVal, ok := curSession.GetOption(commonSession.AuthAccount)
 	if !ok {
 		err = fmt.Errorf("无效权限,未通过验证")
 		return
 	}
-	ret = authVal.(*casModel.Entity)
+	ret = authVal.(*casCommon.EntityView)
 	return
 }
 
@@ -109,6 +107,7 @@ func (s *Setting) getCurrentNamespace(res http.ResponseWriter, req *http.Request
 func (s *Setting) ViewSetting(res http.ResponseWriter, req *http.Request) {
 	result := &common.SettingResult{Item: []*common.Content{}}
 	for {
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
 		curEntity, curErr := s.getCurrentEntity(res, req)
 		if curErr != nil {
@@ -117,7 +116,7 @@ func (s *Setting) ViewSetting(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		itemList, itemErr := s.settingBiz.QuerySetting(curNamespace)
+		itemList, itemErr := s.settingBiz.QuerySetting(curSession.GetSessionInfo(), curNamespace)
 		if itemErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "查询数据失败"
@@ -151,7 +150,7 @@ func (s *namespaceFilter) Enable(val interface{}) bool {
 	if session == nil {
 		return false
 	}
-	nVal, nOK := session.GetOption(casCommon.NamespaceID)
+	nVal, nOK := session.GetOption(commonSession.AuthNamespace)
 	if !nOK {
 		return false
 	}

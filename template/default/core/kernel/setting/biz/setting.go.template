@@ -2,15 +2,15 @@ package biz
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/muidea/magicBatis/client"
 	"github.com/muidea/magicCommon/event"
+	commonSession "github.com/muidea/magicCommon/session"
 	"github.com/muidea/magicCommon/task"
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/setting/dao"
+	"time"
 )
 
 type Setting struct {
@@ -38,7 +38,7 @@ func (s *Setting) Notify(event event.Event, result event.Result) {
 	// TODO
 }
 
-func (s *Setting) QuerySetting(namespace string) (ret []*common.Content, err error) {
+func (s *Setting) QuerySetting(sessionInfo *commonSession.SessionInfo, namespace string) (ret []*common.Content, err error) {
 	ret = []*common.Content{}
 
 	if namespace == config.SuperNamespace() {
@@ -47,7 +47,7 @@ func (s *Setting) QuerySetting(namespace string) (ret []*common.Content, err err
 		return
 	}
 
-	namespacePtr := s.queryNamespace(namespace)
+	namespacePtr := s.queryNamespace(sessionInfo, namespace)
 	if namespacePtr == nil {
 		err = fmt.Errorf("指定租户不存在,%s", namespace)
 		return
@@ -60,7 +60,7 @@ func (s *Setting) QuerySetting(namespace string) (ret []*common.Content, err err
 	endTimeItem := &common.Content{Name: "截止时间", Content: endTime.Local().Format("2006-01-02 15:04:05")}
 	ret = append(ret, endTimeItem)
 
-	expireItem := &common.Content{Name: "有效期限", Content: fmt.Sprintf("剩余时间%d天", namespacePtr.Validity.Expire())}
+	expireItem := &common.Content{Name: "有效期限", Content: fmt.Sprintf("剩余时间%d天", namespacePtr.Validity.Expired)}
 	ret = append(ret, expireItem)
 	return
 }

@@ -1,15 +1,18 @@
 package biz
 
 import (
+	commonSession "github.com/muidea/magicCommon/session"
 	"path"
+	"sync"
 
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/generator"
 	fn "github.com/muidea/magicCommon/foundation/net"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicBatis/def"
 
-	casModel "github.com/muidea/magicCas/model"
+	casCommon "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
@@ -17,6 +20,7 @@ import (
 
 type Base struct {
 	id                string
+	codeGenerator     sync.Map
 	eventHub          event.Hub
 	backgroundRoutine *task.BackgroundRoutine
 }
@@ -70,19 +74,45 @@ func (s *Base) InnerDestination() string {
 	return s.ID()
 }
 
-func (s *Base) QueryEntity(id int, namespace string) (ret *casModel.Entity) {
+func (s *Base) GetGenerator(pattern string) generator.Generator {
+	val, ok := s.codeGenerator.Load(pattern)
+	if !ok {
+		generator, _ := generator.New(pattern)
+		s.codeGenerator.Store(pattern, generator)
+		return generator
+	}
+
+	return val.(generator.Generator)
+}
+
+func (s *Base) RemoveGenerator(pattern string) {
+	s.codeGenerator.Delete(pattern)
+}
+
+func (s *Base) GenerateCode(generator generator.Generator) string {
+	task := task.NewGeneratorTask(generator)
+	s.backgroundRoutine.Invoke(task)
+	return task.Result()
+}
+
+func (s *Base) GetPatternCode(pattern string) string {
+	return s.GenerateCode(s.GetGenerator(pattern))
+}
+
+func (s *Base) QueryEntity(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.EntityView) {
 	eid := fn.FormatID(common.QueryEntity, id)
 	header := event.NewValues()
 	header.Set("namespace", namespace)
-	header.Set("owner", s.ID())
+	header.Set("sessionInfo", sessionInfo)
 
 	queryEvent := event.NewEvent(eid, s.ID(), common.BaseModule, header, nil)
 	queryResult := s.CallEvent(queryEvent)
-	if !queryResult.IsOK() {
-		return casModel.UnknownEntity()
+	resultVal, resultErr := queryResult.Get()
+	if resultErr != nil {
+		return
 	}
 
-	ret = queryResult.Get().(*casModel.Entity)
+	ret = resultVal.(*casCommon.EntityView)
 	return
 }
 
@@ -90,7 +120,6 @@ func (s *Base) WriteLog(ptr *model.Log, namespace string) {
 	eid := common.WriteOperateLog
 	header := event.NewValues()
 	header.Set("namespace", namespace)
-	header.Set("owner", s.ID())
 
 	writeEvent := event.NewEvent(eid, s.ID(), common.BaseModule, header, ptr)
 	s.PostEvent(writeEvent)
@@ -153,11 +182,12 @@ func (s *Base) QuerySummary(feature, namespace string) (ret []*model.Totalizer) 
 
 	eventPtr := event.NewEvent(eid, s.ID(), common.TotalizerModule, header, filter)
 	resultPtr := s.CallEvent(eventPtr)
-	if resultPtr == nil {
+	resultVal, resultErr := resultPtr.Get()
+	if resultErr != nil {
 		return
 	}
 
-	totalizerList, totalizerOK := resultPtr.Get().([]*model.Totalizer)
+	totalizerList, totalizerOK := resultVal.([]*model.Totalizer)
 	if !totalizerOK {
 		return
 	}

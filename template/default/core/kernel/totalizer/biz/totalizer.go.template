@@ -2,14 +2,13 @@ package biz
 
 import (
 	log "github.com/cihub/seelog"
+	casCommon "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/magicBatis/client"
 	"github.com/muidea/magicBatis/def"
 
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
-
-	casModel "github.com/muidea/magicCas/model"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
@@ -55,7 +54,7 @@ func (s *Totalizer) Notify(event event.Event, result event.Result) {
 	owner := event.Header().GetString("owner")
 	log.Infof("notify event, id:%s,source:%s,destination:%s, namespace:%s, owner:%s", event.ID(), event.Source(), event.Destination(), namespace, owner)
 	if event.Match(common.InitializeAuthorityNamespace) {
-		namespaceLite, namespaceOK := event.Data().(*casModel.Namespace)
+		namespaceLite, namespaceOK := event.Data().(*casCommon.NamespaceView)
 		if !namespaceOK {
 			return
 		}
@@ -90,11 +89,9 @@ func (s *Totalizer) Notify(event event.Event, result event.Result) {
 			return
 		}
 		totalizerList, totalizerErr := s.filterTotalizer(filterPtr, namespace)
-		if totalizerErr != nil {
-			return
+		if result != nil {
+			result.Set(totalizerList, totalizerErr)
 		}
-
-		result.Set(totalizerList)
 		return
 	}
 	if event.Match(common.NotifyTimer) {

@@ -10,7 +10,6 @@ import (
 
 	"github.com/muidea/magicBatis/client"
 
-	commonCommon "github.com/muidea/magicCommon/common"
 	"github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/session"
@@ -18,7 +17,6 @@ import (
 	engine "github.com/muidea/magicEngine"
 
 	casCommon "github.com/muidea/magicCas/common"
-	casModel "github.com/muidea/magicCas/model"
 	"github.com/muidea/magicCas/toolkit"
 
 	"github.com/muidea/{{.ProjectName}}/common"
@@ -30,6 +28,7 @@ import (
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/setting"
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/totalizer"
 	_ "github.com/muidea/{{.ProjectName}}/core/module/authority"
+	_ "github.com/muidea/{{.ProjectName}}/core/module/image"
 )
 
 type loadNamespaceTask struct {
@@ -41,16 +40,15 @@ func (s *loadNamespaceTask) Run() {
 	eid := common.LoadAuthorityNamespace
 	header := event.NewValues()
 	header.Set("namespace", config.SuperNamespace())
-	header.Set("owner", common.BaseModule)
 
 	filter := def.NewFilter()
 	eventPtr := event.NewEvent(eid, "/", common.AuthorityModule, header, filter)
 	result := s.eventHub.Call(eventPtr)
-	if !result.IsOK() {
+	resultVal, resultErr := result.Get()
+	if resultErr != nil {
 		return
 	}
-
-	namespaceList, namespaceOK := result.Get().([]*casModel.Namespace)
+	namespaceList, namespaceOK := resultVal.([]*casCommon.NamespaceView)
 	if !namespaceOK {
 		return
 	}
@@ -124,50 +122,21 @@ func (s *Core) Startup(router engine.Router) {
 func (s *Core) Teardown() {
 }
 
-// Verify verify current commonSession
+// Verify verify current session
 func (s *Core) Verify(res http.ResponseWriter, req *http.Request) (err error) {
-	curSession := s.sessionRegistry.GetSession(res, req)
-
-	namespace := s.getCurrentNamespace(res, req)
-
-	eid := common.RefreshSession
-	header := event.NewValues()
-	header.Set("namespace", namespace)
-
-	refreshEvent := event.NewEvent(eid, "/", common.BaseModule, header, curSession.GetSessionInfo())
-	refreshResult := s.eventHub.Call(refreshEvent)
-	if !refreshResult.IsOK() {
-		err = fmt.Errorf("refresh current session failed")
-		log.Errorf("refresh current session failed")
-		return
-	}
-
+	_, err = s.getCurrentEntity(res, req)
 	return
 }
 
-// VerifyRole verify role
-func (s *Core) VerifyRole(res http.ResponseWriter, req *http.Request) (ret *casModel.Role, err error) {
-	curEntity, curErr := s.getCurrentEntity(res, req)
+// VerifyRole verify current role
+func (s *Core) VerifyRole(res http.ResponseWriter, req *http.Request) (ret *casCommon.RoleView, err error) {
+	curRole, curErr := s.getCurrentRole(res, req)
 	if curErr != nil {
 		err = curErr
 		return
 	}
 
-	namespace := s.getCurrentNamespace(res, req)
-
-	eid := common.VerifyEntityRole
-	header := event.NewValues()
-	header.Set("namespace", namespace)
-
-	verifyEvent := event.NewEvent(eid, "/", common.BaseModule, header, curEntity)
-	verifyResult := s.eventHub.Call(verifyEvent)
-	if !verifyResult.IsOK() {
-		err = fmt.Errorf("verify entity role failed")
-		log.Errorf("verify entity role failed")
-		return
-	}
-
-	ret = verifyResult.Get().(*casModel.Role)
+	ret = curRole
 	return
 }
 
@@ -194,14 +163,26 @@ func (s *Core) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (
 	return
 }
 
-func (s *Core) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
+func (s *Core) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casCommon.EntityView, err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
-	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
+	authVal, ok := curSession.GetOption(session.AuthAccount)
 	if !ok {
 		err = fmt.Errorf("无效权限,未通过验证")
 		return
 	}
 
-	ret = authVal.(*casModel.Entity)
+	ret = authVal.(*casCommon.EntityView)
+	return
+}
+
+func (s *Core) getCurrentRole(res http.ResponseWriter, req *http.Request) (ret *casCommon.RoleView, err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authVal, ok := curSession.GetOption(session.AuthRole)
+	if !ok {
+		err = fmt.Errorf("无效权限,未通过验证")
+		return
+	}
+
+	ret = authVal.(*casCommon.RoleView)
 	return
 }

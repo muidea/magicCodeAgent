@@ -5,7 +5,6 @@ import (
 
 	"github.com/muidea/magicBatis/client"
 	"github.com/muidea/magicBatis/def"
-
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
@@ -88,7 +87,7 @@ func (s *totalizer) DestroyTotalizer(id int, namespace string) (ret *model.Total
 
 func (s *totalizer) UpdateTotalizer(totalizer *model.Totalizer, namespace string) (ret *model.Totalizer, err error) {
 	if totalizer == nil || totalizer.ID <= 0 {
-		err = fmt.Errorf("illegal totalizer")
+		err = fmt.Errorf("illegal totalizer, val:%v", totalizer)
 		return
 	}
 

@@ -11,7 +11,6 @@ import (
 	log "github.com/cihub/seelog"
 
 	casCommon "github.com/muidea/magicCas/common"
-	casModel "github.com/muidea/magicCas/model"
 )
 
 const moduleDefine = `
@@ -106,13 +105,13 @@ const moduleDefine = `
         },
         {
             "name": "Product",
-            "icon": "icon-folder",
+            "icon": "icon-catalog",
             "title": "产品管理",
 			"content": "产品信息管理，支持产品信息的查询，新增，修改，删除操作，不同权限组的账号可以执行不同的操作。",
             "child": [
                 {
                     "name": "Product",
-                    "icon": "icon-text",
+                    "icon": "icon-gift",
                     "title": "产品信息",
                     "action": [
                         "query/",
@@ -155,7 +154,7 @@ const moduleDefine = `
                 {
                     "name": "Goods",
                     "icon": "icon-shop",
-                    "title": "商品库存",
+                    "title": "商品管理",
                     "action": [
                         "query/",
                         "query/:id",
@@ -178,7 +177,7 @@ const moduleDefine = `
         },
         {
             "name": "Warehouse",
-            "icon": "icon-home",
+            "icon": "icon-warehouse",
             "title": "仓库管理",
 			"content": "仓库信息管理，支持仓库信息的查询，新增，修改，删除操作，支持货架信息查询，新增，修改，删除操作，不同权限组的账号可以执行不同的操作。",
             "child": [
@@ -196,7 +195,7 @@ const moduleDefine = `
                 },
                 {
                     "name": "Warehouse",
-                    "icon": "icon-more1",
+                    "icon": "icon-home",
                     "title": "仓库信息",
                     "action": [
                         "query/",
@@ -260,6 +259,26 @@ const systemDefine = `
                     "name": "Namespace",
                     "icon": "icon-namespace",
                     "title": "租户信息",
+                    "action": [
+                        "query/",
+                        "query/:id",
+                        "create/",
+                        "update/:id",
+                        "delete/:id"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Image",
+            "icon": "icon-folder",
+            "title": "图片管理",
+			"content": "图片信息管理，支持对系统里上传的图片信息查询，更新操作，不同权限组的账号可以执行不同的操作。",
+            "child": [
+				{
+                    "name": "Image",
+                    "icon": "icon-image",
+                    "title": "图片信息",
                     "action": [
                         "query/",
                         "query/:id",
@@ -387,7 +406,7 @@ func (s *System) loadDefine(strDefine string) (ret *Define, err error) {
 	return
 }
 
-func (s *System) SystemInfo(ptr *casModel.Role, isSuper bool) (route []*Route, content []*Content) {
+func (s *System) SystemInfo(ptr *casCommon.RoleView, isSuper bool) (route []*Route, content []*Content) {
 	err := s.loadModule()
 	if err != nil {
 		log.Errorf("load module failed, err:%s", err.Error())
@@ -439,6 +458,10 @@ func (s *System) SystemInfo(ptr *casModel.Role, isSuper bool) (route []*Route, c
 				continue
 			}
 
+			if s.IsImageRoute(st.Path) && isSuper {
+				continue
+			}
+
 			authorityPtr := s.checkAuthority(st.Path, ptr)
 			if authorityPtr != nil {
 				st.Authority = authorityPtr
@@ -461,7 +484,7 @@ func (s *System) SystemInfo(ptr *casModel.Role, isSuper bool) (route []*Route, c
 
 var patternReg, _ = regexp.Compile("(/[a-z]+)+/(query|create|update|delete)")
 
-func (s *System) checkAuthority(prefix string, ptr *casModel.Role) (ret *Authority) {
+func (s *System) checkAuthority(prefix string, ptr *casCommon.RoleView) (ret *Authority) {
 	if ptr == nil {
 		return
 	}
@@ -475,7 +498,7 @@ func (s *System) checkAuthority(prefix string, ptr *casModel.Role) (ret *Authori
 	for _, val := range ptr.Private {
 		subStr := patternReg.FindString(val.Path)
 		if strings.Index(subStr, prefix) == 0 {
-			privates[val.Value] = val.Value
+			privates[val.Value.Value] = val.Value.Value
 		}
 	}
 
@@ -499,22 +522,29 @@ func (s *System) checkAuthority(prefix string, ptr *casModel.Role) (ret *Authori
 }
 
 var namespaceRoute = "/authority/namespace"
-var endpointRoute = "/authority/endpoint"
 var fullNamespaceRoute = "/api/v1/authority/namespace"
-var fullEndpointRoute = "/api/v1/authority/endpoint"
 
 func (s *System) IsSpecialRoute(prefix string) bool {
 	if 0 == strings.Index(prefix, namespaceRoute) {
-		return true
-	}
-	if 0 == strings.Index(prefix, endpointRoute) {
 		return true
 	}
 
 	if 0 == strings.Index(prefix, fullNamespaceRoute) {
 		return true
 	}
-	if 0 == strings.Index(prefix, fullEndpointRoute) {
+
+	return false
+}
+
+var imageRoute = "/image"
+var fullImageRoute = "/api/v1/image"
+
+func (s *System) IsImageRoute(prefix string) bool {
+	if 0 == strings.Index(prefix, imageRoute) {
+		return true
+	}
+
+	if 0 == strings.Index(prefix, fullImageRoute) {
 		return true
 	}
 

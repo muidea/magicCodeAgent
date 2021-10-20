@@ -1,21 +1,20 @@
 package biz
 
 import (
+	casCommon "github.com/muidea/magicCas/common"
+	"github.com/muidea/{{.ProjectName}}/common"
 	"time"
 
 	log "github.com/cihub/seelog"
 	"github.com/muidea/magicBatis/def"
 
-	casModel "github.com/muidea/magicCas/model"
-
-	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 /*
 namespace  -> type -> owner -> totalizer
 */
-func (s *Totalizer) onInitializeNamespace(namespacePtr *casModel.Namespace) {
+func (s *Totalizer) onInitializeNamespace(namespacePtr *casCommon.NamespaceView) {
 	s.Invoke(func() {
 		totalizerList, _, totalizerErr := s.totalizerDao.FilterTotalizer(nil, namespacePtr.Name)
 		if totalizerErr != nil {
@@ -107,6 +106,10 @@ func (s *Totalizer) onIncreaseTotalizer(owner, namespace string) {
 				v.TimeStamp = time.Now().UTC().Unix()
 
 				v = s.saveTotalizer(v)
+				if v == nil {
+					continue
+				}
+
 				//nnv[k] = v
 				tv[k] = v
 			}
@@ -134,6 +137,10 @@ func (s *Totalizer) onDecreaseTotalizer(owner, namespace string) {
 				v.TimeStamp = time.Now().UTC().Unix()
 
 				v = s.saveTotalizer(v)
+				if v == nil {
+					continue
+				}
+
 				//nnv[k] = v
 				tv[k] = v
 			}
@@ -185,6 +192,7 @@ func (s *Totalizer) saveTotalizer(totalizerPtr *model.Totalizer) (ret *model.Tot
 	if curErr != nil {
 		curTotalizer, curErr = s.totalizerDao.CreateTotalizer(totalizerPtr, totalizerPtr.Namespace)
 		if curErr != nil {
+			log.Errorf("create totalizer failed, totalizer:%v , err:%v", totalizerPtr, curErr)
 			return
 		}
 
@@ -196,8 +204,10 @@ func (s *Totalizer) saveTotalizer(totalizerPtr *model.Totalizer) (ret *model.Tot
 	curTotalizer.TimeStamp = totalizerPtr.TimeStamp
 	curTotalizer, curErr = s.totalizerDao.UpdateTotalizer(curTotalizer, curTotalizer.Namespace)
 	if curErr != nil {
+		log.Errorf("update totalizer failed, totalizer:%v, err:%v", curTotalizer, curErr)
 		return
 	}
+
 	ret = curTotalizer
 	return
 }
@@ -205,7 +215,7 @@ func (s *Totalizer) saveTotalizer(totalizerPtr *model.Totalizer) (ret *model.Tot
 func (s *Totalizer) loadTotalizer(totalizerPtr *model.Totalizer) (ret *model.Totalizer) {
 	curTotalizer, curErr := s.totalizerDao.QueryTotalizer(totalizerPtr.Owner, totalizerPtr.Type, totalizerPtr.Catalog, totalizerPtr.Namespace)
 	if curErr != nil {
-
+		return
 	}
 
 	ret = curTotalizer

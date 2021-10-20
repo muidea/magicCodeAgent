@@ -3,35 +3,25 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"strconv"
-
-	log "github.com/cihub/seelog"
-
 	casCommon "github.com/muidea/magicCas/common"
 	commonDef "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
-
-	"github.com/muidea/{{.ProjectName}}/common"
+	"net/http"
 )
 
 func (s *Authority) filterAuthorityNamespaceLite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
-	result := &common.NamespaceListResult{Namespace: []*casCommon.NamespaceLite{}}
+	result := &casCommon.NamespaceLiteListResult{}
 	for {
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		namespaceList, _, namespaceErr := s.bizPtr.FilterAuthorityNamespace(filter, curNamespace)
+		namespaceList, _, namespaceErr := s.bizPtr.FilterAuthorityNamespaceLite(curSession.GetSessionInfo(), filter, curNamespace)
 		if namespaceErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = namespaceErr.Error()
 			break
 		}
 
-		for _, val := range namespaceList {
-			namespaceLite := &casCommon.NamespaceLite{}
-			namespaceLite.FromNamespace(val)
-			result.Namespace = append(result.Namespace, namespaceLite)
-		}
-
+		result.Namespace = namespaceList
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -55,23 +45,18 @@ func (s *Authority) FilterAuthorityNamespace(res http.ResponseWriter, req *http.
 		return
 	}
 
-	result := &common.NamespaceStatisticResult{Namespace: []*casCommon.NamespaceView{}}
+	result := &casCommon.NamespaceStatisticResult{}
 	for {
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		namespaceList, namespaceTotal, namespaceErr := s.bizPtr.FilterAuthorityNamespace(filter, curNamespace)
+		namespaceList, namespaceTotal, namespaceErr := s.bizPtr.FilterAuthorityNamespace(curSession.GetSessionInfo(), filter, curNamespace)
 		if namespaceErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = namespaceErr.Error()
 			break
 		}
 
-		result.Namespace = []*casCommon.NamespaceView{}
-		for _, val := range namespaceList {
-			view := &casCommon.NamespaceView{}
-			view.FromNamespace(val)
-			result.Namespace = append(result.Namespace, view)
-		}
-
+		result.Namespace = namespaceList
 		result.Total = namespaceTotal
 		result.ErrorCode = commonDef.Success
 		break
@@ -87,26 +72,25 @@ func (s *Authority) FilterAuthorityNamespace(res http.ResponseWriter, req *http.
 }
 
 func (s *Authority) QueryAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
-	result := &common.NamespaceResult{}
+	result := &casCommon.NamespaceResult{}
 	for {
-		_, value := fn.SplitRESTURL(req.URL.Path)
-		id, err := strconv.Atoi(value)
+		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "invalid param"
 			break
 		}
 
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		namespacePtr, namespaceErr := s.bizPtr.QueryAuthorityNamespace(id, curNamespace)
+		namespacePtr, namespaceErr := s.bizPtr.QueryAuthorityNamespace(curSession.GetSessionInfo(), id, curNamespace)
 		if namespaceErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = namespaceErr.Error()
 			break
 		}
 
-		result.Namespace = &casCommon.NamespaceView{}
-		result.Namespace.FromNamespace(namespacePtr)
+		result.Namespace = namespacePtr
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -121,9 +105,9 @@ func (s *Authority) QueryAuthorityNamespace(res http.ResponseWriter, req *http.R
 }
 
 func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
-	result := &common.NamespaceResult{}
+	result := &casCommon.NamespaceResult{}
 	for {
-		param := &common.NamespaceParam{}
+		param := &casCommon.NamespaceParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -131,8 +115,9 @@ func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.
 			break
 		}
 
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		namespacePtr, namespaceErr := s.bizPtr.CreateAuthorityNamespace(param, curNamespace)
+		namespacePtr, namespaceErr := s.bizPtr.CreateAuthorityNamespace(curSession.GetSessionInfo(), param, curNamespace)
 		if namespaceErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = namespaceErr.Error()
@@ -142,8 +127,7 @@ func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.
 		memo := fmt.Sprintf("新建Namespace:%s", namespacePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Namespace = &casCommon.NamespaceView{}
-		result.Namespace.FromNamespace(namespacePtr)
+		result.Namespace = namespacePtr
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -158,18 +142,16 @@ func (s *Authority) CreateAuthorityNamespace(res http.ResponseWriter, req *http.
 }
 
 func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
-	result := &common.NamespaceResult{}
+	result := &casCommon.NamespaceResult{}
 	for {
-		_, value := fn.SplitRESTURL(req.URL.Path)
-		id, err := strconv.Atoi(value)
+		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
-			log.Errorf("update partner failed, illegal id, id:%s", value)
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "invalid param"
 			break
 		}
 
-		param := &common.NamespaceParam{}
+		param := &casCommon.NamespaceParam{}
 		err = fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -177,8 +159,9 @@ func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.
 			break
 		}
 
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		namespacePtr, namespaceErr := s.bizPtr.UpdateAuthorityNamespace(id, param, curNamespace)
+		namespacePtr, namespaceErr := s.bizPtr.UpdateAuthorityNamespace(curSession.GetSessionInfo(), id, param, curNamespace)
 		if namespaceErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = namespaceErr.Error()
@@ -188,8 +171,7 @@ func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.
 		memo := fmt.Sprintf("更新Namespace:%s", namespacePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Namespace = &casCommon.NamespaceView{}
-		result.Namespace.FromNamespace(namespacePtr)
+		result.Namespace = namespacePtr
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -204,18 +186,18 @@ func (s *Authority) UpdateAuthorityNamespace(res http.ResponseWriter, req *http.
 }
 
 func (s *Authority) DeleteAuthorityNamespace(res http.ResponseWriter, req *http.Request) {
-	result := &common.NamespaceResult{}
+	result := &casCommon.NamespaceResult{}
 	for {
-		_, value := fn.SplitRESTURL(req.URL.Path)
-		id, err := strconv.Atoi(value)
+		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "invalid param"
 			break
 		}
 
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		namespacePtr, namespaceErr := s.bizPtr.DeleteAuthorityNamespace(id, curNamespace)
+		namespacePtr, namespaceErr := s.bizPtr.DeleteAuthorityNamespace(curSession.GetSessionInfo(), id, curNamespace)
 		if namespaceErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = namespaceErr.Error()
@@ -225,8 +207,7 @@ func (s *Authority) DeleteAuthorityNamespace(res http.ResponseWriter, req *http.
 		memo := fmt.Sprintf("删除Namespace:%s", namespacePtr.Name)
 		s.writeLog(res, req, memo)
 
-		result.Namespace = &casCommon.NamespaceView{}
-		result.Namespace.FromNamespace(namespacePtr)
+		result.Namespace = namespacePtr
 		result.ErrorCode = commonDef.Success
 		break
 	}

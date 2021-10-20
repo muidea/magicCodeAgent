@@ -2,6 +2,8 @@ package service
 
 import (
 	"fmt"
+	"github.com/muidea/{{.ProjectName}}/core/module/authority/biz"
+	"github.com/muidea/{{.ProjectName}}/model"
 	"net"
 	"net/http"
 	"strings"
@@ -10,17 +12,13 @@ import (
 	fn "github.com/muidea/magicCommon/foundation/net"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
-	commonCommon "github.com/muidea/magicCommon/common"
 	commonSession "github.com/muidea/magicCommon/session"
 	engine "github.com/muidea/magicEngine"
 
 	casCommon "github.com/muidea/magicCas/common"
-	casModel "github.com/muidea/magicCas/model"
 	casToolkit "github.com/muidea/magicCas/toolkit"
 
 	"github.com/muidea/{{.ProjectName}}/common"
-	"github.com/muidea/{{.ProjectName}}/core/module/authority/biz"
-	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 type Authority struct {
@@ -58,7 +56,7 @@ func (s *Authority) Handle(ctx engine.RequestContext, res http.ResponseWriter, r
 	curSession := s.sessionRegistry.GetSession(res, req)
 
 	sessionInfo := curSession.GetSessionInfo()
-	sessionInfo.Scope = commonCommon.ShareSession
+	sessionInfo.Scope = commonSession.ShareSession
 
 	values := req.URL.Query()
 	values = sessionInfo.Encode(values)
@@ -94,14 +92,14 @@ func (s *Authority) RegisterRoute(roleRouteRegistry casToolkit.RoleRegistry) {
 	roleRouteRegistry.AddHandler(common.DeleteAuthorityNamespace, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityNamespace)
 }
 
-func (s *Authority) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casModel.Entity, err error) {
+func (s *Authority) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casCommon.EntityView, err error) {
 	curSession := s.sessionRegistry.GetSession(res, req)
-	authVal, ok := curSession.GetOption(commonCommon.AuthAccount)
+	authVal, ok := curSession.GetOption(commonSession.AuthAccount)
 	if !ok {
 		err = fmt.Errorf("无效权限,未通过验证")
 		return
 	}
-	ret = authVal.(*casModel.Entity)
+	ret = authVal.(*casCommon.EntityView)
 	return
 }
 
@@ -128,8 +126,8 @@ func (s *Authority) getCurrentNamespace(res http.ResponseWriter, req *http.Reque
 	return
 }
 
-func (s *Authority) queryEntity(id int, namespace string) (ret *casModel.Entity) {
-	ret = s.bizPtr.QueryEntity(id, namespace)
+func (s *Authority) queryEntity(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.EntityView) {
+	ret = s.bizPtr.QueryEntity(sessionInfo, id, namespace)
 	return
 }
 

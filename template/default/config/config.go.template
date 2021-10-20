@@ -4,7 +4,7 @@ import "flag"
 
 var casService = "http://127.0.0.1:8081"
 var fileService = "http://127.0.0.1:8083"
-var superNamespace = "local"
+var superNamespace = "super"
 
 func init() {
 	flag.StringVar(&casService, "CasService", casService, "magicCas partner address")

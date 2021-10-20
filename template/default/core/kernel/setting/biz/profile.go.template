@@ -2,23 +2,23 @@ package biz
 
 import (
 	"fmt"
+	commonSession "github.com/muidea/magicCommon/session"
 
 	"github.com/muidea/magicBatis/def"
 
 	"github.com/muidea/magicCommon/event"
 	fn "github.com/muidea/magicCommon/foundation/net"
 
-	casModel "github.com/muidea/magicCas/model"
-
+	casCommon "github.com/muidea/magicCas/common"
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
-func (s *Setting) QuerySettingProfile(entityPtr *casModel.Entity, namespace string) (ret *casModel.Account, err error) {
+func (s *Setting) QuerySettingProfile(sessionInfo *commonSession.SessionInfo, entityPtr *casCommon.EntityView, namespace string) (ret *casCommon.AccountView, err error) {
 	eid := fn.FormatID(common.QueryAuthorityAccount, entityPtr.EID)
 	header := event.NewValues()
 	header.Set("namespace", namespace)
-	header.Set("owner", s.ID())
+	header.Set("sessionInfo", sessionInfo)
 
 	event := event.NewEvent(eid, s.ID(), common.AuthorityModule, header, nil)
 	result := s.CallEvent(event)
@@ -26,12 +26,12 @@ func (s *Setting) QuerySettingProfile(entityPtr *casModel.Entity, namespace stri
 		err = fmt.Errorf("can't query account")
 		return
 	}
-	if !result.IsOK() {
-		err = fmt.Errorf("query account failed")
+	resultVal, resultErr := result.Get()
+	if resultErr != nil {
+		err = resultErr
 		return
 	}
-
-	accountPtr := result.Get().(*casModel.Account)
+	accountPtr := resultVal.(*casCommon.AccountView)
 	if accountPtr == nil {
 		err = fmt.Errorf("illegal account value")
 		return
@@ -41,7 +41,7 @@ func (s *Setting) QuerySettingProfile(entityPtr *casModel.Entity, namespace stri
 	return
 }
 
-func (s *Setting) QueryOperateLog(filter *def.QueryFilter, namespace string) (ret []*model.Log, err error) {
+func (s *Setting) QueryOperateLog(sessionInfo *commonSession.SessionInfo, filter *def.QueryFilter, namespace string) (ret []*model.Log, err error) {
 	eid := common.QueryOperateLog
 	header := event.NewValues()
 	header.Set("namespace", namespace)
@@ -53,13 +53,12 @@ func (s *Setting) QueryOperateLog(filter *def.QueryFilter, namespace string) (re
 		err = fmt.Errorf("can't query operate log")
 		return
 	}
-
-	if !result.IsOK() {
-		err = fmt.Errorf("query operate log failed")
+	resultVal, resultErr := result.Get()
+	if resultErr != nil {
+		err = resultErr
 		return
 	}
-
-	logList, logOK := result.Get().([]*model.Log)
+	logList, logOK := resultVal.([]*model.Log)
 	if !logOK {
 		err = fmt.Errorf("query operate log failed")
 		return

@@ -1,0 +1,73 @@
+package authority
+
+import (
+	"github.com/muidea/magicBatis/client"
+	"github.com/muidea/magicCas/toolkit"
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/task"
+	engine "github.com/muidea/magicEngine"
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/config"
+	"github.com/muidea/{{.ProjectName}}/core/module/image/biz"
+	"github.com/muidea/{{.ProjectName}}/core/module/image/service"
+	"github.com/muidea/{{.ProjectName}}/module"
+)
+
+func init() {
+	module.Register(New())
+}
+
+type Image struct {
+	batisClient       client.Client
+	sessionRegistry   session.Registry
+	roleRouteRegistry toolkit.RoleRegistry
+	casRouteRegistry  toolkit.CasRegistry
+	eventHub          event.Hub
+	backgroundRoutine *task.BackgroundRoutine
+
+	service *service.Image
+	biz     *biz.Image
+}
+
+func New() module.Module {
+	return &Image{}
+}
+
+func (s *Image) ID() string {
+	return common.ImageModule
+}
+
+func (s *Image) BindBatisClient(clnt client.Client) {
+	s.batisClient = clnt
+}
+
+func (s *Image) BindEventHub(eventHub event.Hub) {
+	s.eventHub = eventHub
+}
+
+func (s *Image) BindBackgroundRoutine(backgroundRoutine *task.BackgroundRoutine) {
+	s.backgroundRoutine = backgroundRoutine
+}
+
+func (s *Image) BindRegistry(
+	sessionRegistry session.Registry,
+	casRouteRegistry toolkit.CasRegistry,
+	roleRouteRegistry toolkit.RoleRegistry) {
+
+	s.sessionRegistry = sessionRegistry
+	s.casRouteRegistry = casRouteRegistry
+	s.roleRouteRegistry = roleRouteRegistry
+}
+
+func (s *Image) Startup(endpointName string, router engine.Router) {
+	s.biz = biz.New(endpointName, config.FileService(), s.batisClient, s.eventHub, s.backgroundRoutine)
+
+	s.service = service.New(s.biz)
+	s.service.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
+	s.service.RegisterRoute(s.roleRouteRegistry)
+}
+
+func (s *Image) Shutdown() {
+
+}

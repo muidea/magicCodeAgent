@@ -9,8 +9,6 @@ import (
 	commonDef "github.com/muidea/magicCommon/def"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
-	casCommon "github.com/muidea/magicCas/common"
-
 	"github.com/muidea/{{.ProjectName}}/common"
 )
 
@@ -23,6 +21,7 @@ func (s *Setting) ViewSettingProfile(res http.ResponseWriter, req *http.Request)
 
 	result := &common.ProfileResult{}
 	for {
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
 		curEntity, curErr := s.getCurrentEntity(res, req)
 		if curErr != nil {
@@ -31,7 +30,7 @@ func (s *Setting) ViewSettingProfile(res http.ResponseWriter, req *http.Request)
 			break
 		}
 
-		curAccount, curErr := s.settingBiz.QuerySettingProfile(curEntity, curNamespace)
+		curAccount, curErr := s.settingBiz.QuerySettingProfile(curSession.GetSessionInfo(), curEntity, curNamespace)
 		if curErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = curErr.Error()
@@ -39,22 +38,19 @@ func (s *Setting) ViewSettingProfile(res http.ResponseWriter, req *http.Request)
 		}
 
 		filter.Equal("Creater", curEntity.ID)
-		logList, logErr := s.settingBiz.QueryOperateLog(filter, curNamespace)
+		logList, logErr := s.settingBiz.QueryOperateLog(curSession.GetSessionInfo(), filter, curNamespace)
 		if logErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = logErr.Error()
 			break
 		}
-		entityView := &casCommon.EntityView{}
-		entityView.FromEntity(curEntity)
 		for _, val := range logList {
 			view := &common.LogView{}
-			view.FromLog(val, entityView)
+			view.FromLog(val, curEntity)
 			result.OperateLog = append(result.OperateLog, view)
 		}
 
-		result.Profile = &casCommon.AccountView{}
-		result.Profile.FromAccount(curAccount)
+		result.Profile = curAccount
 		result.ErrorCode = commonDef.Success
 		break
 	}

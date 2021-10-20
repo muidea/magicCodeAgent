@@ -1,14 +1,14 @@
 package biz
 
 import (
-	"strconv"
-
 	"github.com/muidea/magicBatis/client"
-
 	"github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	fn "github.com/muidea/magicCommon/foundation/net"
+	"github.com/muidea/magicCommon/session"
 	"github.com/muidea/magicCommon/task"
+
+	casCommon "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
@@ -32,7 +32,7 @@ func New(
 	}
 
 	eventHub.Subscribe(common.LoadAuthorityNamespace, ptr)
-	eventHub.Subscribe(common.QueryAuthorityNamespace, ptr)
+	eventHub.Subscribe(common.FilterAuthorityNamespace, ptr)
 
 	eventHub.Subscribe(common.QueryAuthorityAccount, ptr)
 	eventHub.Subscribe(common.CreateAuthorityAccount, ptr)
@@ -42,65 +42,69 @@ func New(
 
 func (s *Authority) Notify(event event.Event, result event.Result) {
 	namespace := event.Header().GetString("namespace")
+	var sessionInfo *session.SessionInfo
+	val := event.Header().Get("sessionInfo")
+	if val != nil {
+		sessionInfo = val.(*session.SessionInfo)
+	}
 	if event.Match(common.LoadAuthorityNamespace) {
 		filter, ok := event.Data().(*def.Filter)
 		if !ok {
 			return
 		}
 
-		namespaceList, _, namespaceErr := s.FilterAuthorityNamespace(filter, namespace)
+		namespaceList, _, namespaceErr := s.FilterAuthorityNamespace(sessionInfo, filter, namespace)
 		if namespaceErr != nil {
 			return
 		}
 		if result != nil {
-			result.Set(namespaceList)
+			result.Set(namespaceList, namespaceErr)
 		}
 		return
 	}
-	if event.Match(common.QueryAuthorityNamespace) {
+	if event.Match(common.FilterAuthorityNamespace) {
 		filter, ok := event.Data().(*def.Filter)
 		if !ok {
 			return
 		}
 
-		namespaceList, _, namespaceErr := s.FilterAuthorityNamespace(filter, namespace)
-		if namespaceErr != nil || len(namespaceList) == 0 {
+		namespaceList, _, namespaceErr := s.FilterAuthorityNamespace(sessionInfo, filter, namespace)
+		if namespaceErr != nil {
 			return
 		}
 		if result != nil {
-			result.Set(namespaceList[0])
+			result.Set(namespaceList, namespaceErr)
 		}
 	}
 
 	if event.Match(common.QueryAuthorityAccount) {
-		strID := fn.ExtractID(event.ID())
-		idVal, idErr := strconv.Atoi(strID)
+		idVal, idErr := fn.SplitRESTID(event.ID())
 		if idErr != nil {
 			return
 		}
 
-		accountPtr, accountErr := s.QueryAuthorityAccount(idVal, namespace)
+		accountPtr, accountErr := s.QueryAuthorityAccount(sessionInfo, idVal, namespace)
 		if accountErr != nil {
 			return
 		}
 		if result != nil {
-			result.Set(accountPtr)
+			result.Set(accountPtr, accountErr)
 		}
 		return
 	}
 
 	if event.Match(common.CreateAuthorityAccount) {
-		paramPtr := event.Data().(*common.AccountParam)
+		paramPtr := event.Data().(*casCommon.AccountParam)
 		if paramPtr == nil {
 			return
 		}
 
-		accountPtr, accountErr := s.CreateAuthorityAccount(paramPtr, namespace)
+		accountPtr, accountErr := s.CreateAuthorityAccount(sessionInfo, paramPtr, namespace)
 		if accountErr != nil {
 			return
 		}
 		if result != nil {
-			result.Set(accountPtr)
+			result.Set(accountPtr, accountErr)
 		}
 		return
 	}

@@ -1,33 +1,33 @@
 package biz
 
 import (
-	"strings"
-
-	casModel "github.com/muidea/magicCas/model"
+	casCommon "github.com/muidea/magicCas/common"
 	"github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
-
+	commonSession "github.com/muidea/magicCommon/session"
 	"github.com/muidea/{{.ProjectName}}/common"
 )
 
-func (s *Setting) queryNamespace(namespace string) (ret *casModel.Namespace) {
-	eid := strings.ReplaceAll(common.QueryAuthorityNamespace, "+", namespace)
+func (s *Setting) queryNamespace(sessionInfo *commonSession.SessionInfo, namespace string) (ret *casCommon.NamespaceView) {
+	eid := common.FilterAuthorityNamespace
 	header := event.NewValues()
 	header.Set("namespace", namespace)
-	header.Set("owner", common.SettingModule)
+	header.Set("sessionInfo", sessionInfo)
 
 	filter := def.NewFilter()
 	filter.Set("name", namespace)
 	eventPtr := event.NewEvent(eid, s.ID(), common.AuthorityModule, header, filter)
 	result := s.CallEvent(eventPtr)
-	if result == nil {
+	resultVal, resultErr := result.Get()
+	if resultErr != nil {
 		return
 	}
 
-	namespacePtr, namespaceOK := result.Get().(*casModel.Namespace)
-	if !namespaceOK {
+	namespaceList, namespaceOK := resultVal.([]*casCommon.NamespaceView)
+	if !namespaceOK || len(namespaceList) <= 0 {
 		return
 	}
-	ret = namespacePtr
+
+	ret = namespaceList[0]
 	return
 }

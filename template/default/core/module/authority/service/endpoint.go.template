@@ -3,35 +3,25 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"strconv"
-
-	log "github.com/cihub/seelog"
-
 	casCommon "github.com/muidea/magicCas/common"
 	commonDef "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
-
-	"github.com/muidea/{{.ProjectName}}/common"
+	"net/http"
 )
 
 func (s *Authority) filterAuthorityEndpointLite(res http.ResponseWriter, req *http.Request, filter *commonDef.Filter) {
-	result := &common.EndpointListResult{Endpoint: []*casCommon.EndpointLite{}}
+	result := &casCommon.EndpointLiteListResult{}
 	for {
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		endpointList, _, endpointErr := s.bizPtr.FilterAuthorityEndpoint(filter, curNamespace)
+		endpointList, _, endpointErr := s.bizPtr.FilterAuthorityEndpointLite(curSession.GetSessionInfo(), filter, curNamespace)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = endpointErr.Error()
 			break
 		}
 
-		for _, val := range endpointList {
-			endpointLite := &casCommon.EndpointLite{}
-			endpointLite.FromEndpoint(val)
-			result.Endpoint = append(result.Endpoint, endpointLite)
-		}
-
+		result.Endpoint = endpointList
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -55,33 +45,26 @@ func (s *Authority) FilterAuthorityEndpoint(res http.ResponseWriter, req *http.R
 		return
 	}
 
-	result := &common.EndpointStatisticResult{Endpoint: []*casCommon.EndpointView{}, Role: []*casCommon.RoleLite{}}
+	result := &casCommon.EndpointStatisticResult{}
 	for {
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		endpointList, endpointTotal, endpointErr := s.bizPtr.FilterAuthorityEndpoint(filter, curNamespace)
+		endpointList, endpointTotal, endpointErr := s.bizPtr.FilterAuthorityEndpoint(curSession.GetSessionInfo(), filter, curNamespace)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = endpointErr.Error()
 			break
 		}
-		for _, val := range endpointList {
-			view := &casCommon.EndpointView{}
-			view.FromEndpoint(val)
-			result.Endpoint = append(result.Endpoint, view)
-		}
 
-		roleList, _, roleErr := s.bizPtr.FilterAuthorityRole(nil, curNamespace)
+		roleList, _, roleErr := s.bizPtr.FilterAuthorityRoleLite(curSession.GetSessionInfo(), nil, curNamespace)
 		if roleErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = roleErr.Error()
 			break
 		}
-		for _, val := range roleList {
-			lite := &casCommon.RoleLite{}
-			lite.FromRole(val)
-			result.Role = append(result.Role, lite)
-		}
 
+		result.Endpoint = endpointList
+		result.Role = roleList
 		result.Total = endpointTotal
 		result.ErrorCode = commonDef.Success
 		break
@@ -97,26 +80,25 @@ func (s *Authority) FilterAuthorityEndpoint(res http.ResponseWriter, req *http.R
 }
 
 func (s *Authority) QueryAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
-	result := &common.EndpointResult{}
+	result := &casCommon.EndpointResult{}
 	for {
-		_, value := fn.SplitRESTURL(req.URL.Path)
-		id, err := strconv.Atoi(value)
+		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "invalid param"
 			break
 		}
 
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		endpointPtr, endpointErr := s.bizPtr.QueryAuthorityEndpoint(id, curNamespace)
+		endpointPtr, endpointErr := s.bizPtr.QueryAuthorityEndpoint(curSession.GetSessionInfo(), id, curNamespace)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = endpointErr.Error()
 			break
 		}
 
-		result.Endpoint = &casCommon.EndpointView{}
-		result.Endpoint.FromEndpoint(endpointPtr)
+		result.Endpoint = endpointPtr
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -131,9 +113,9 @@ func (s *Authority) QueryAuthorityEndpoint(res http.ResponseWriter, req *http.Re
 }
 
 func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
-	result := &common.EndpointResult{}
+	result := &casCommon.EndpointResult{}
 	for {
-		param := &common.EndpointParam{}
+		param := &casCommon.EndpointParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
@@ -141,8 +123,9 @@ func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 			break
 		}
 
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		endpointPtr, endpointErr := s.bizPtr.CreateAuthorityEndpoint(param, curNamespace)
+		endpointPtr, endpointErr := s.bizPtr.CreateAuthorityEndpoint(curSession.GetSessionInfo(), param, curNamespace)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = endpointErr.Error()
@@ -152,8 +135,7 @@ func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 		memo := fmt.Sprintf("新建Endpoint:%s", endpointPtr.Endpoint)
 		s.writeLog(res, req, memo)
 
-		result.Endpoint = &casCommon.EndpointView{}
-		result.Endpoint.FromEndpoint(endpointPtr)
+		result.Endpoint = endpointPtr
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -168,28 +150,26 @@ func (s *Authority) CreateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 }
 
 func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
-	result := &common.EndpointResult{}
+	result := &casCommon.EndpointResult{}
 	for {
-		_, value := fn.SplitRESTURL(req.URL.Path)
-		id, err := strconv.Atoi(value)
+		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
-			log.Errorf("update partner failed, illegal id, id:%s", value)
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "invalid param"
 			break
 		}
 
-		param := &common.Endpoint{}
+		param := &casCommon.EndpointParam{}
 		err = fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = commonDef.IllegalParam
 			result.Reason = "invalid param"
 			break
 		}
-		param.ID = id
 
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		endpointPtr, endpointErr := s.bizPtr.UpdateAuthorityEndpoint(param, curNamespace)
+		endpointPtr, endpointErr := s.bizPtr.UpdateAuthorityEndpoint(curSession.GetSessionInfo(), id, param, curNamespace)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = endpointErr.Error()
@@ -199,8 +179,7 @@ func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 		memo := fmt.Sprintf("更新Endpoint:%s", endpointPtr.Endpoint)
 		s.writeLog(res, req, memo)
 
-		result.Endpoint = &casCommon.EndpointView{}
-		result.Endpoint.FromEndpoint(endpointPtr)
+		result.Endpoint = endpointPtr
 		result.ErrorCode = commonDef.Success
 		break
 	}
@@ -215,18 +194,18 @@ func (s *Authority) UpdateAuthorityEndpoint(res http.ResponseWriter, req *http.R
 }
 
 func (s *Authority) DeleteAuthorityEndpoint(res http.ResponseWriter, req *http.Request) {
-	result := &common.EndpointResult{}
+	result := &casCommon.EndpointResult{}
 	for {
-		_, value := fn.SplitRESTURL(req.URL.Path)
-		id, err := strconv.Atoi(value)
+		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = "invalid param"
 			break
 		}
 
+		curSession := s.sessionRegistry.GetSession(res, req)
 		curNamespace := s.getCurrentNamespace(res, req)
-		endpointPtr, endpointErr := s.bizPtr.DeleteAuthorityEndpoint(id, curNamespace)
+		endpointPtr, endpointErr := s.bizPtr.DeleteAuthorityEndpoint(curSession.GetSessionInfo(), id, curNamespace)
 		if endpointErr != nil {
 			result.ErrorCode = commonDef.Failed
 			result.Reason = endpointErr.Error()
@@ -236,8 +215,7 @@ func (s *Authority) DeleteAuthorityEndpoint(res http.ResponseWriter, req *http.R
 		memo := fmt.Sprintf("删除Endpoint:%s", endpointPtr.Endpoint)
 		s.writeLog(res, req, memo)
 
-		result.Endpoint = &casCommon.EndpointView{}
-		result.Endpoint.FromEndpoint(endpointPtr)
+		result.Endpoint = endpointPtr
 		result.ErrorCode = commonDef.Success
 		break
 	}
