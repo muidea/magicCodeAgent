@@ -1,26 +1,16 @@
 package util
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
 	"strings"
-
-	"github.com/muidea/magicBatis/def"
-	commonDef "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicCommon/foundation/net"
-	"github.com/muidea/magicToolkit/model"
-
-	"github.com/muidea/magicOrm/provider/remote"
 )
 
 const (
 	ProjectDefaultTemplatePath = "default"
 	ProjectSimpleTemplatePath  = "simple"
-	UnitTemplatePath           = "unit"
 )
 
 const (
@@ -184,11 +174,6 @@ func FormatResult(serviceName, modelName, actionUrl string) string {
 	return ""
 }
 
-func GetModelName(modelPtr *remote.Object) string {
-	items := strings.Split(modelPtr.GetName(), ".")
-	return items[1]
-}
-
 func GetTemplatePath(typeVal string) (ret string, err error) {
 	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
 	if toolKitPath == "" {
@@ -228,72 +213,5 @@ func GetTemplateContent(templatePath, filePath, fileName string) (ret string, er
 	}
 
 	ret = string(contentVal)
-	return
-}
-
-func GetTemplateFileContent(filePath, fileName string) (ret string, err error) {
-	templatePath, templateErr := GetTemplatePath(ProjectSimpleTemplatePath)
-	if templateErr != nil {
-		err = templateErr
-		return
-	}
-
-	ret, err = GetTemplateContent(templatePath, filePath, fileName)
-	return
-}
-
-func GetTemplateUnitContent(filePath, unitName string) (ret string, err error) {
-	templatePath, templateErr := GetTemplatePath(UnitTemplatePath)
-	if templateErr != nil {
-		err = templateErr
-		return
-	}
-
-	ret, err = GetTemplateContent(templatePath, filePath, unitName)
-	return
-}
-
-func GetModelDefine(projectName, definePath string) (ret *model.Define, err error) {
-	defineFile, defineErr := os.Open(definePath)
-	if defineErr != nil {
-		return
-	}
-	defer defineFile.Close()
-
-	byteContent, byteErr := ioutil.ReadAll(defineFile)
-	if byteErr != nil {
-		err = byteErr
-		return
-	}
-
-	contentDefine := &model.Define{}
-	err = json.Unmarshal(byteContent, contentDefine)
-	if err != nil {
-		return
-	}
-
-	contentDefine.ProjectName = projectName
-
-	ret = contentDefine
-	return
-}
-
-func QueryObject(projectName, batisService string) (ret []*remote.Object, err error) {
-	result := &def.QueryModelResult{}
-	url := strings.Join([]string{batisService, "/model/query/"}, "")
-	url = fmt.Sprintf("%s?source=%s", url, projectName)
-
-	httpClient := &http.Client{}
-	_, err = net.HTTPGet(httpClient, url, result)
-	if err != nil {
-		return
-	}
-
-	if result.ErrorCode != commonDef.Success {
-		err = fmt.Errorf("query project objects failed, reason:%s", result.Reason)
-		return
-	}
-
-	ret = result.Model
 	return
 }

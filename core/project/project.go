@@ -2,68 +2,20 @@ package project
 
 import (
 	"fmt"
-	"github.com/muidea/magicToolkit/core/content"
-	"github.com/muidea/magicToolkit/factory"
-	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"strings"
 
-	"github.com/muidea/magicOrm/provider/remote"
 	"github.com/muidea/magicToolkit/core/util"
+	"github.com/muidea/magicToolkit/factory"
 )
 
 // Project core define
 type Project struct {
 	projectName string
 	rootPath    string
-	modelDefine *model.Define
-	objectList  []*remote.Object
-}
-
-var objectMap map[string]*remote.Object
-
-func init() {
-	objectMap = map[string]*remote.Object{}
-
-	factory.RegisterFunc("isEntity", IsEntity)
-}
-
-func updateObjectMap(objectList []*remote.Object) {
-	oMap := map[string]*remote.Object{}
-	for _, val := range objectList {
-		log.Printf("object:%s", val.Name)
-		oMap[util.GetModelName(val)] = val
-	}
-
-	objectMap = oMap
-}
-
-func findObject(name string) *remote.Object {
-	ptr, ok := objectMap[name]
-	if !ok {
-		return nil
-	}
-
-	return ptr
-}
-
-func IsEntity(ptr *model.Module) bool {
-	findObjectFlag := false
-	for _, val := range ptr.Child {
-		if len(val.Action) == 0 {
-			continue
-		}
-
-		if findObject(val.Name) != nil {
-			findObjectFlag = true
-			break
-		}
-	}
-
-	return findObjectFlag
 }
 
 // New new core
@@ -101,8 +53,6 @@ func (s *Project) cloneContent(templatePath, filePath, fileName string) (err err
 // Create create
 func (s *Project) Create(projectName, projectType string) (err error) {
 	s.projectName = projectName
-
-	updateObjectMap(s.objectList)
 
 	err = s.walkTemplate("", projectType)
 	return
@@ -152,16 +102,6 @@ func (s *Project) walkTemplate(relativePath, projectType string) (err error) {
 		extName := items[len(items)-1]
 		if extName == "template" {
 			err = s.cloneContent(baseTemplatePath, relativePath, fd.Name())
-			if err != nil {
-				return
-			}
-
-			continue
-		}
-
-		if fileName == factory.PackageTemplateFile {
-			packagePtr := content.NewPackage(baseTemplatePath, s.rootPath, s.projectName, s.modelDefine.ApiVersion, s.modelDefine.Module)
-			err = packagePtr.Create(relativePath, factory.PackageTemplateFile)
 			if err != nil {
 				return
 			}

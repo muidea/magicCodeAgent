@@ -1,7 +1,6 @@
 package factory
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -118,52 +117,5 @@ func (s *FileFactory) Create(relativePath, fileName string, forceFlag bool) (err
 		err = cmd.Run()
 	}
 
-	return
-}
-
-type ValueFactory struct {
-	templateName string
-	contentData  map[string]interface{}
-}
-
-func NewValueFactory(templateName string, contentData map[string]interface{}) *ValueFactory {
-	return &ValueFactory{templateName: templateName, contentData: contentData}
-}
-
-func (s *ValueFactory) getTemplateName(relativePath string) string {
-	return fmt.Sprintf("%s/%s", relativePath, s.templateName)
-}
-
-func (s *ValueFactory) getTemplateContent(relativePath string) (ret string, err error) {
-	contentVal, contentErr := util.GetTemplateUnitContent(relativePath, s.templateName)
-	if contentErr != nil {
-		err = contentErr
-		return
-	}
-
-	ret = contentVal
-	return
-}
-
-func (s *ValueFactory) Create(relativePath string) (ret string, err error) {
-	byteBuffer := bytes.NewBufferString("")
-	contentVal, contentErr := s.getTemplateContent(relativePath)
-	if contentErr != nil {
-		err = contentErr
-		return
-	}
-
-	templateHandle, templateErr := template.New(s.getTemplateName(relativePath)).Funcs(functionMap).Parse(contentVal)
-	if templateErr != nil {
-		err = templateErr
-		return
-	}
-
-	err = templateHandle.Execute(byteBuffer, s.contentData)
-	if err != nil {
-		return
-	}
-
-	ret = byteBuffer.String()
 	return
 }
