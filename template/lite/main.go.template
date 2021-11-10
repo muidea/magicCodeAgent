@@ -1,0 +1,49 @@
+package main
+
+import (
+	"flag"
+	log "github.com/cihub/seelog"
+	engine "github.com/muidea/magicEngine"
+
+	"github.com/muidea/{{.ProjectName}}/core"
+)
+
+var listenPort = "8880"
+var endpointName = "{{.ProjectName}}"
+
+var logConfig = `
+<seelog type="sync">
+	<outputs formatid="main">
+		<console/>
+	</outputs>
+	<formats>
+		<format id="main" format="%Date %Time [%LEV] %Msg%n"/>
+	</formats>
+</seelog>`
+
+func main() {
+	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
+	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")
+	flag.Parse()
+
+	logger, _ := log.LoggerFromConfigAsBytes([]byte(logConfig))
+	log.ReplaceLogger(logger)
+
+	log.Info("{{.ProjectName}} V1.0")
+
+	router := engine.NewRouter()
+	core, err := core.New(endpointName)
+
+	if err == nil {
+		core.Startup(router)
+
+		svr := engine.NewHTTPServer(listenPort)
+		svr.Bind(router)
+
+		svr.Run()
+	} else {
+		log.Critical("start {{.ProjectName}} failed.")
+	}
+
+	core.Teardown()
+}
