@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"net/http"
+
 	log "github.com/cihub/seelog"
 	engine "github.com/muidea/magicEngine"
 
@@ -21,10 +23,28 @@ var logConfig = `
 	</formats>
 </seelog>`
 
+func initPprofMonitor(listenPort string) error {
+	var err error
+	addr := ":1" + listenPort
+
+	go func() {
+		err = http.ListenAndServe(addr, nil)
+		if err != nil {
+			log.Critical("funcRetErr=http.ListenAndServe||err=%s", err.Error())
+		}
+	}()
+
+	return err
+}
+
+
+
 func main() {
 	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
 	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")
 	flag.Parse()
+
+	initPprofMonitor(listenPort)
 
 	logger, _ := log.LoggerFromConfigAsBytes([]byte(logConfig))
 	log.ReplaceLogger(logger)
