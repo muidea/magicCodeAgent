@@ -38,8 +38,6 @@ func initPprofMonitor(listenPort string) error {
 	return err
 }
 
-
-
 func main() {
 	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
 	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")

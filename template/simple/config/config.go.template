@@ -13,7 +13,6 @@ func init() {
 	cfg := &CfgItem{}
 	err := fu.LoadConfig(cfgPath, cfg)
 	if err != nil {
-		log.Errorf("load config failed, err:%s", err.Error())
 		return
 	}
 

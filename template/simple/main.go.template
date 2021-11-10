@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"net/http"
+	_ "net/http/pprof"
 
 	log "github.com/cihub/seelog"
 	"github.com/muidea/magicBatis/client"
@@ -9,7 +11,7 @@ import (
 
 	engine "github.com/muidea/magicEngine"
 
-"github.com/muidea/{{.ProjectName}}/core"
+	"github.com/muidea/{{.ProjectName}}/core"
 )
 
 var listenPort = "8880"
@@ -30,6 +32,20 @@ var logConfig = `
 	</formats>
 </seelog>`
 
+func initPprofMonitor(listenPort string) error {
+	var err error
+	addr := ":1" + listenPort
+
+	go func() {
+		err = http.ListenAndServe(addr, nil)
+		if err != nil {
+			log.Critical("funcRetErr=http.ListenAndServe||err=%s", err.Error())
+		}
+	}()
+
+	return err
+}
+
 func main() {
 	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
 	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")
@@ -39,6 +55,8 @@ func main() {
 	flag.StringVar(&databasePassword, "DBPassword", databasePassword, "database password.")
 	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis service address.")
 	flag.Parse()
+
+	initPprofMonitor(listenPort)
 
 	logger, _ := log.LoggerFromConfigAsBytes([]byte(logConfig))
 	log.ReplaceLogger(logger)
