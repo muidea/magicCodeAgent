@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"net/http"
+	_ "net/http/pprof"
 
 	log "github.com/cihub/seelog"
 	engine "github.com/muidea/magicEngine"
