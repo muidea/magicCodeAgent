@@ -8,6 +8,7 @@ import (
 	log "github.com/cihub/seelog"
 	engine "github.com/muidea/magicEngine"
 
+	_ "github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core"
 )
 
