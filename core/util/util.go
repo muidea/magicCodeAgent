@@ -140,7 +140,7 @@ func FormatParam(serviceName, modelName, actionUrl string) string {
 	_, action := validAction(actionUrl)
 	switch action {
 	case filterAction:
-		return "filter *def.QueryFilter"
+		return "filter *bc.QueryFilter"
 	case queryAction:
 		return "id int"
 	case createAction:

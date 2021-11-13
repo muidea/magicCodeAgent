@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/muidea/magicBatis/client"
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 type Totalizer interface {
-	FilterTotalizer(filter *def.QueryFilter, namespace string) (ret []*model.Totalizer, total int64, err error)
+	FilterTotalizer(filter *bc.QueryFilter, namespace string) (ret []*model.Totalizer, total int64, err error)
 	QueryTotalizer(name string, typeVal, catalog int, namespace string) (ret *model.Totalizer, err error)
 	CreateTotalizer(totalizer *model.Totalizer, namespace string) (ret *model.Totalizer, err error)
 	DestroyTotalizer(id int, namespace string) (ret *model.Totalizer, err error)
@@ -25,10 +25,10 @@ type totalizer struct {
 	batisClient client.Client
 }
 
-func (s *totalizer) FilterTotalizer(filter *def.QueryFilter, namespace string) (ret []*model.Totalizer, total int64, err error) {
+func (s *totalizer) FilterTotalizer(filter *bc.QueryFilter, namespace string) (ret []*model.Totalizer, total int64, err error) {
 	ret = []*model.Totalizer{}
 	if filter == nil {
-		filter = def.NewFilter()
+		filter = bc.NewFilter()
 	}
 
 	filter.Equal("Namespace", namespace)

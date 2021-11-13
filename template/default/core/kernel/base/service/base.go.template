@@ -10,7 +10,7 @@ import (
 
 	log "github.com/cihub/seelog"
 
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 	fn "github.com/muidea/magicCommon/foundation/net"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
@@ -332,7 +332,7 @@ func (s *Base) QueryOperateLog(res http.ResponseWriter, req *http.Request) {
 	pageFilter := fu.NewPageFilter()
 	pageFilter.Decode(req)
 
-	filter := def.NewFilter()
+	filter := bc.NewFilter()
 	filter.Page(pageFilter)
 	result := &common.OperateLogListResult{}
 	for {

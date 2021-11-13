@@ -7,7 +7,7 @@ import (
 
 	log "github.com/cihub/seelog"
 	"github.com/muidea/magicBatis/client"
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	engine "github.com/muidea/magicEngine"
 
@@ -72,8 +72,8 @@ func main() {
 		}
 	}()
 
-	instancePtr := def.NewInstance(databaseServer, databaseName, databaseUsername, databasePassword, 10)
-	err = clnt.RegisterInstance(instancePtr)
+	servicePtr := bc.NewService(databaseServer, databaseName, databaseUsername, databasePassword, 10)
+	err = clnt.RegisterService(servicePtr)
 	if err != nil {
 		log.Errorf("register instance failed, err:%s", err.Error())
 		return

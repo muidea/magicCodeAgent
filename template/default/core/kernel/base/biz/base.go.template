@@ -4,7 +4,7 @@ import (
 	log "github.com/cihub/seelog"
 
 	"github.com/muidea/magicBatis/client"
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	casClient "github.com/muidea/magicCas/client"
 	casCommon "github.com/muidea/magicCas/common"
@@ -69,7 +69,7 @@ func (s *Base) Notify(event event.Event, result event.Result) {
 		return
 	}
 	if event.Match(common.QueryOperateLog) {
-		filterPtr, filterOK := event.Data().(*def.QueryFilter)
+		filterPtr, filterOK := event.Data().(*bc.QueryFilter)
 		if !filterOK {
 			return
 		}
@@ -214,7 +214,7 @@ func (s *Base) WriteOperateLog(log *model.Log, namespace string) (ret *model.Log
 	return
 }
 
-func (s *Base) QueryOperateLog(filter *def.QueryFilter, namespace string) (ret []*model.Log, total int64, err error) {
+func (s *Base) QueryOperateLog(filter *bc.QueryFilter, namespace string) (ret []*model.Log, total int64, err error) {
 	ret, total, err = s.baseDao.QueryLog(filter, namespace)
 
 	return

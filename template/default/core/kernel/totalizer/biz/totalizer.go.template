@@ -5,7 +5,7 @@ import (
 	casCommon "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/magicBatis/client"
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
@@ -84,7 +84,7 @@ func (s *Totalizer) Notify(event event.Event, result event.Result) {
 		return
 	}
 	if event.Match(common.QueryTotalizer) {
-		filterPtr, filterOK := event.Data().(*def.QueryFilter)
+		filterPtr, filterOK := event.Data().(*bc.QueryFilter)
 		if !filterOK {
 			return
 		}

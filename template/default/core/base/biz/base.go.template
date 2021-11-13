@@ -10,7 +10,7 @@ import (
 	commonSession "github.com/muidea/magicCommon/session"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	casCommon "github.com/muidea/magicCas/common"
 
@@ -176,7 +176,7 @@ func (s *Base) QuerySummary(feature, namespace string) (ret []*model.Totalizer) 
 	header.Set("namespace", namespace)
 	header.Set("owner", owner)
 
-	filter := def.NewFilter()
+	filter := bc.NewFilter()
 	filter.Equal("Owner", owner)
 	filter.Equal("Catalog", model.TotalizeCurrent)
 

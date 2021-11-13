@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	commonDef "github.com/muidea/magicCommon/def"
 	fu "github.com/muidea/magicCommon/foundation/util"
@@ -16,7 +16,7 @@ func (s *Setting) ViewSettingProfile(res http.ResponseWriter, req *http.Request)
 	pageFilter := fu.NewPageFilter()
 	pageFilter.Decode(req)
 
-	filter := def.NewFilter()
+	filter := bc.NewFilter()
 	filter.Page(pageFilter)
 
 	result := &common.ProfileResult{}

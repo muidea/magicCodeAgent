@@ -4,7 +4,7 @@ import (
 	"fmt"
 	commonSession "github.com/muidea/magicCommon/session"
 
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	"github.com/muidea/magicCommon/event"
 	fn "github.com/muidea/magicCommon/foundation/net"
@@ -41,7 +41,7 @@ func (s *Setting) QuerySettingProfile(sessionInfo *commonSession.SessionInfo, en
 	return
 }
 
-func (s *Setting) QueryOperateLog(sessionInfo *commonSession.SessionInfo, filter *def.QueryFilter, namespace string) (ret []*model.Log, err error) {
+func (s *Setting) QueryOperateLog(sessionInfo *commonSession.SessionInfo, filter *bc.QueryFilter, namespace string) (ret []*model.Log, err error) {
 	eid := common.QueryOperateLog
 	header := event.NewValues()
 	header.Set("namespace", namespace)

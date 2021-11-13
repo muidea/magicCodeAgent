@@ -2,7 +2,7 @@ package dao
 
 import (
 	"github.com/muidea/magicBatis/client"
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	fu "github.com/muidea/magicCommon/foundation/util"
 
@@ -10,7 +10,7 @@ import (
 )
 
 type Base interface {
-	QueryLog(filter *def.QueryFilter, namespace string) (ret []*model.Log, total int64, err error)
+	QueryLog(filter *bc.QueryFilter, namespace string) (ret []*model.Log, total int64, err error)
 	WriteLog(log *model.Log, namespace string) (ret *model.Log, err error)
 }
 
@@ -23,10 +23,10 @@ type base struct {
 	batisClient client.Client
 }
 
-func (s *base) QueryLog(filter *def.QueryFilter, namespace string) (ret []*model.Log, total int64, err error) {
+func (s *base) QueryLog(filter *bc.QueryFilter, namespace string) (ret []*model.Log, total int64, err error) {
 	ret = []*model.Log{}
 	if filter == nil {
-		filter = def.NewFilter()
+		filter = bc.NewFilter()
 	}
 	filter.SortFilter = &fu.SortFilter{AscSort: false, FieldName: "CreateTime"}
 	filter.Equal("Namespace", namespace)

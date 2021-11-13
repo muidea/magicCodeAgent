@@ -14,7 +14,7 @@ func (s *Setting) queryNamespace(sessionInfo *commonSession.SessionInfo, namespa
 	header.Set("namespace", namespace)
 	header.Set("sessionInfo", sessionInfo)
 
-	filter := def.NewFilter()
+	filter := bc.NewFilter()
 	filter.Set("name", namespace)
 	eventPtr := event.NewEvent(eid, s.ID(), common.AuthorityModule, header, filter)
 	result := s.CallEvent(eventPtr)

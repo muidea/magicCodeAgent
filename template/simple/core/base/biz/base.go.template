@@ -3,7 +3,7 @@ package biz
 import (
 	"path"
 
-	"github.com/muidea/magicBatis/def"
+	bc "github.com/muidea/magicBatis/common"
 
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
@@ -127,7 +127,7 @@ func (s *Base) QuerySummary(feature, namespace string) (ret []*model.Totalizer) 
 	header.Set("namespace", namespace)
 	header.Set("owner", owner)
 
-	filter := def.NewFilter()
+	filter := bc.NewFilter()
 	filter.Equal("Owner", owner)
 	filter.Equal("Catalog", model.TotalizeCurrent)
 
