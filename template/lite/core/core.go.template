@@ -5,9 +5,9 @@ import (
 	"github.com/muidea/magicCommon/session"
 	"github.com/muidea/magicCommon/task"
 	engine "github.com/muidea/magicEngine"
-	"github.com/muidea/{{.ProjectName}}/module"
 
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/base"
+	"github.com/muidea/{{.ProjectName}}/module"
 )
 
 // New 新建Core
