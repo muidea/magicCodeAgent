@@ -12,7 +12,7 @@ import (
 	"github.com/muidea/{{.ProjectName}}/core"
 )
 
-var listenPort = "8880"
+var listenPort = "8080"
 var endpointName = "{{.ProjectName}}"
 
 var logConfig = `

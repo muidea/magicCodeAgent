@@ -2,11 +2,15 @@ package authority
 
 import (
 	"github.com/muidea/magicBatis/client"
-	"github.com/muidea/magicCas/toolkit"
+
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/session"
 	"github.com/muidea/magicCommon/task"
+
 	engine "github.com/muidea/magicEngine"
+
+	"github.com/muidea/magicCas/toolkit"
+
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core/module/image/biz"

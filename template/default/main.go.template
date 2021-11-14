@@ -6,22 +6,18 @@ import (
 	_ "net/http/pprof"
 
 	log "github.com/cihub/seelog"
+
 	"github.com/muidea/magicBatis/client"
 	bc "github.com/muidea/magicBatis/common"
 
 	engine "github.com/muidea/magicEngine"
 
-	_ "github.com/muidea/{{.ProjectName}}/config"
+	 "github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core"
 )
 
-var listenPort = "8880"
+var listenPort = "8080"
 var endpointName = "{{.ProjectName}}"
-var databaseServer = ""
-var databaseName = "{{toLower .ProjectName}}_db"
-var databaseUsername = "{{toLower .ProjectName}}"
-var databasePassword = "{{toLower .ProjectName}}"
-var batisService = "http://localhost:8080"
 
 var logConfig = `
 <seelog type="sync">
@@ -50,11 +46,6 @@ func initPprofMonitor(listenPort string) error {
 func main() {
 	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
 	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")
-	flag.StringVar(&databaseServer, "DBServer", databaseServer, "database server address.")
-	flag.StringVar(&databaseName, "DBName", databaseName, "database name.")
-	flag.StringVar(&databaseUsername, "DBUsername", databaseUsername, "database username.")
-	flag.StringVar(&databasePassword, "DBPassword", databasePassword, "database password.")
-	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis service address.")
 	flag.Parse()
 
 	initPprofMonitor(listenPort)
@@ -65,14 +56,20 @@ func main() {
 	log.Info("{{.ProjectName}} V1.0")
 
 	var err error
-	clnt := client.NewClient(batisService, endpointName)
+	clnt := client.NewClient(config.BatisService(), endpointName)
 	defer func() {
 		if err != nil {
 			clnt.Release()
 		}
 	}()
 
-	servicePtr := bc.NewService(databaseServer, databaseName, databaseUsername, databasePassword, 10)
+	servicePtr := bc.NewService(
+		config.DatabaseServer(),
+		config.DatabaseName(),
+		config.DatabaseUsername(),
+		config.DatabaseUserPassword(),
+		config.DatabaseMaxConnection(),
+	)
 	err = clnt.RegisterService(servicePtr)
 	if err != nil {
 		log.Errorf("register instance failed, err:%s", err.Error())

@@ -41,7 +41,7 @@ func (s *loadNamespaceTask) Run() {
 	header := event.NewValues()
 	header.Set("namespace", config.SuperNamespace())
 
-	filter := bc.NewFilter()
+	filter := def.NewFilter()
 	eventPtr := event.NewEvent(eid, "/", common.AuthorityModule, header, filter)
 	result := s.eventHub.Call(eventPtr)
 	resultVal, resultErr := result.Get()

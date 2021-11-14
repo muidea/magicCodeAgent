@@ -1,0 +1,11 @@
+{
+  "batisService": "http://magicbatis:8080",
+  "casService": "http://magiccas:8080",
+  "fileService": "http://magicfile:8080",
+  "defaultNamespace": "super",
+  "databaseServer": "mysql:3306",
+  "databaseName": "magicvmi_db",
+  "databaseUsername": "magicvmi",
+  "databasePassword": "magicvmi",
+  "databaseMaxConnection": 10
+}
