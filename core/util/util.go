@@ -10,7 +10,6 @@ import (
 
 const (
 	ProjectDefaultTemplatePath = "default"
-	ProjectSimpleTemplatePath  = "simple"
 )
 
 const (

@@ -12,7 +12,7 @@ import (
 
 	engine "github.com/muidea/magicEngine"
 
-	 "github.com/muidea/{{.ProjectName}}/config"
+	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core"
 )
 

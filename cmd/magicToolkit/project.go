@@ -18,7 +18,7 @@ func init() {
 		funcPtr:      createProject,
 	})
 
-	flag.StringVar(&projectType, "projectType", projectType, "project type")
+	flag.StringVar(&projectType, "projectType", projectType, "project type,[default,lite]")
 }
 
 func createProject(curPath string) {
