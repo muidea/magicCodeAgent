@@ -63,7 +63,7 @@ func (s *Project) walkTemplate(relativePath, projectType string) (err error) {
 		projectType = util.ProjectDefaultTemplatePath
 	}
 
-	baseTemplatePath, baseTemplateErr := util.GetTemplatePath(projectType)
+	baseTemplatePath, baseTemplateErr := util.GetProjectTemplatePath(projectType)
 	if baseTemplateErr != nil {
 		err = baseTemplateErr
 		return
