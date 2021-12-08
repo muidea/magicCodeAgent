@@ -1,0 +1,14 @@
+package dao
+
+import "github.com/muidea/magicBatis/client"
+
+type {{.ModuleName}} interface {
+}
+
+func New(clnt client.Client) {{.ModuleName}} {
+	return &{{.ModulePath}}{batisClient: clnt}
+}
+
+type {{.ModulePath}} struct {
+	batisClient client.Client
+}

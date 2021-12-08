@@ -1,0 +1,36 @@
+package biz
+
+import (
+	"github.com/muidea/magicBatis/client"
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/task"
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/core/base/biz"
+	"github.com/muidea/{{.ProjectName}}/core/module/{{.ModulePath}}/dao"
+)
+
+type {{.ModuleName}} struct {
+	biz.Base
+
+	{{.ModulePath}}Dao dao.{{.ModuleName}}
+
+	endpointName string
+}
+
+func New(
+	endpointName string,
+	batisClient client.Client,
+	eventHub event.Hub,
+	backgroundRoutine *task.BackgroundRoutine) *{{.ModuleName}} {
+	ptr := &{{.ModuleName}}{
+		Base:         biz.New(common.{{.ModuleName}}Module, eventHub, backgroundRoutine),
+		{{.ModulePath}}Dao: dao.New(batisClient),
+		endpointName: endpointName,
+	}
+
+	return ptr
+}
+
+func (s *{{.ModuleName}}) Notify(event event.Event, result event.Result) {
+	return
+}

@@ -1,0 +1,119 @@
+package service
+
+import (
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
+	"time"
+
+	fn "github.com/muidea/magicCommon/foundation/net"
+	fu "github.com/muidea/magicCommon/foundation/util"
+	commonSession "github.com/muidea/magicCommon/session"
+	engine "github.com/muidea/magicEngine"
+
+	casCommon "github.com/muidea/magicCas/common"
+	casToolkit "github.com/muidea/magicCas/toolkit"
+
+	"github.com/muidea/{{.ProjectName}}/core/module/{{.ModulePath}}/biz"
+	"github.com/muidea/{{.ProjectName}}/model"
+)
+
+type {{.ModuleName}} struct {
+	sessionRegistry   commonSession.Registry
+	casRouteRegistry  casToolkit.CasRegistry
+	roleRouteRegistry casToolkit.RoleRegistry
+	validator         fu.Validator
+
+	bizPtr *biz.{{.ModuleName}}
+
+	endpointName string
+}
+
+func New(
+	endpointName string,
+	bizPtr *biz.{{.ModuleName}},
+) *{{.ModuleName}} {
+	ptr := &{{.ModuleName}}{
+		bizPtr:       bizPtr,
+		endpointName: endpointName,
+		validator:    fu.NewFormValidator(),
+	}
+
+	return ptr
+}
+
+func (s *{{.ModuleName}}) BindRegistry(
+	sessionRegistry commonSession.Registry,
+	casRouteRegistry casToolkit.CasRegistry,
+	roleRouteRegistry casToolkit.RoleRegistry) {
+
+	s.sessionRegistry = sessionRegistry
+	s.casRouteRegistry = casRouteRegistry
+	s.roleRouteRegistry = roleRouteRegistry
+}
+
+// Handle middleware handler
+func (s *{{.ModuleName}}) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+
+	sessionInfo := curSession.GetSessionInfo()
+	sessionInfo.Scope = commonSession.ShareSession
+
+	values := req.URL.Query()
+	values = sessionInfo.Encode(values)
+	req.URL.RawQuery = values.Encode()
+
+	ctx.Next()
+}
+
+// RegisterRoute 注册路由
+func (s *{{.ModuleName}}) RegisterRoute(roleRouteRegistry casToolkit.RoleRegistry) {
+}
+
+func (s *{{.ModuleName}}) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casCommon.EntityView, err error) {
+	curSession := s.sessionRegistry.GetSession(res, req)
+	authVal, ok := curSession.GetOption(commonSession.AuthAccount)
+	if !ok {
+		err = fmt.Errorf("无效权限,未通过验证")
+		return
+	}
+	ret = authVal.(*casCommon.EntityView)
+	return
+}
+
+func (s *{{.ModuleName}}) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string) {
+	namespace := req.Header.Get(casCommon.NamespaceID)
+	if namespace != "" {
+		ret = namespace
+		return
+	}
+
+	items := strings.Split(req.Host, ":")
+	if nil != net.ParseIP(items[0]) {
+		ret = "default"
+		return
+	}
+
+	items = strings.Split(items[0], ".")
+	if len(items) <= 1 {
+		ret = "default"
+		return
+	}
+
+	ret = items[0]
+	return
+}
+
+func (s *{{.ModuleName}}) queryEntity(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.EntityView) {
+	ret = s.bizPtr.QueryEntity(sessionInfo, id, namespace)
+	return
+}
+
+func (s *{{.ModuleName}}) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
+	address := fn.GetHTTPRemoteAddress(req)
+	curEntity, _ := s.getCurrentEntity(res, req)
+	curNamespace := s.getCurrentNamespace(res, req)
+	logPtr := &model.Log{Address: address, Memo: memo, Creater: curEntity.ID, CreateTime: time.Now().UTC().Unix()}
+	s.bizPtr.WriteLog(logPtr, curNamespace)
+}

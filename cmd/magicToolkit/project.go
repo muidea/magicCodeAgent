@@ -8,6 +8,7 @@ import (
 	"github.com/muidea/magicToolkit/core/project"
 )
 
+var projectName = ""
 var projectType = ""
 
 func init() {
@@ -18,6 +19,7 @@ func init() {
 		funcPtr:      createProject,
 	})
 
+	flag.StringVar(&projectName, "projectName", projectName, "project name")
 	flag.StringVar(&projectType, "projectType", projectType, "project type,[default,lite]")
 }
 

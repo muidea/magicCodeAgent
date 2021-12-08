@@ -1,0 +1,73 @@
+package {{.ModulePath}}
+
+import (
+	"github.com/muidea/magicBatis/client"
+	"github.com/muidea/magicCas/toolkit"
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/task"
+	engine "github.com/muidea/magicEngine"
+
+	"github.com/muidea/{{.ProjectName}}/common"
+	"github.com/muidea/{{.ProjectName}}/core/module/{{.ModulePath}}/biz"
+	"github.com/muidea/{{.ProjectName}}/core/module/{{.ModulePath}}/service"
+	"github.com/muidea/{{.ProjectName}}/module"
+)
+
+func init() {
+	module.Register(New())
+}
+
+type {{.ModuleName}} struct {
+	batisClient       client.Client
+	sessionRegistry   session.Registry
+	roleRouteRegistry toolkit.RoleRegistry
+	casRouteRegistry  toolkit.CasRegistry
+	eventHub          event.Hub
+	backgroundRoutine *task.BackgroundRoutine
+
+	service *service.{{.ModuleName}}
+	biz     *biz.{{.ModuleName}}
+}
+
+func New() module.Module {
+	return &{{.ModuleName}}{}
+}
+
+func (s *{{.ModuleName}}) ID() string {
+	return common.{{.ModuleName}}Module
+}
+
+func (s *{{.ModuleName}}) BindBatisClient(clnt client.Client) {
+	s.batisClient = clnt
+}
+
+func (s *{{.ModuleName}}) BindEventHub(eventHub event.Hub) {
+	s.eventHub = eventHub
+}
+
+func (s *{{.ModuleName}}) BindBackgroundRoutine(backgroundRoutine *task.BackgroundRoutine) {
+	s.backgroundRoutine = backgroundRoutine
+}
+
+func (s *{{.ModuleName}}) BindRegistry(
+	sessionRegistry session.Registry,
+	casRouteRegistry toolkit.CasRegistry,
+	roleRouteRegistry toolkit.RoleRegistry) {
+
+	s.sessionRegistry = sessionRegistry
+	s.casRouteRegistry = casRouteRegistry
+	s.roleRouteRegistry = roleRouteRegistry
+}
+
+func (s *{{.ModuleName}}) Startup(endpointName string, router engine.Router) {
+	s.biz = biz.New(endpointName, s.batisClient, s.eventHub, s.backgroundRoutine)
+
+	s.service = service.New(endpointName, s.biz)
+	s.service.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
+	s.service.RegisterRoute(s.roleRouteRegistry)
+}
+
+func (s *{{.ModuleName}}) Shutdown() {
+
+}

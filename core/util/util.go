@@ -183,7 +183,25 @@ func GetProjectTemplatePath(typeVal string) (ret string, err error) {
 	templatePath := path.Join(toolKitPath, "template", "project", typeVal)
 	existsFlag := Exists(templatePath)
 	if !existsFlag {
-		err = fmt.Errorf("toolkit template does not exist")
+		err = fmt.Errorf("toolkit project template does not exist")
+		return
+	}
+
+	ret = templatePath
+	return
+}
+
+func GetModuleTemplatePath() (ret string, err error) {
+	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
+	if toolKitPath == "" {
+		err = fmt.Errorf("no found toolkitPath")
+		return
+	}
+
+	templatePath := path.Join(toolKitPath, "template", "module")
+	existsFlag := Exists(templatePath)
+	if !existsFlag {
+		err = fmt.Errorf("toolkit module template does not exist")
 		return
 	}
 

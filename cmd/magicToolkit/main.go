@@ -16,8 +16,6 @@ type action struct {
 
 var actionList = []*action{}
 var help = false
-var projectName = ""
-var batisService = "http://localhost:8080"
 var forceFlag = false
 
 func main() {
@@ -25,8 +23,6 @@ func main() {
 		val := actionList[idx]
 		flag.BoolVar(&val.value, val.name, val.defaultValue, val.description)
 	}
-	flag.StringVar(&projectName, "projectName", projectName, "project name")
-	flag.StringVar(&batisService, "BatisService", batisService, "magicBatis service address.")
 	flag.BoolVar(&forceFlag, "force", forceFlag, "force update")
 
 	flag.Parse()
