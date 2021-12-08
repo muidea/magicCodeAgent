@@ -27,10 +27,23 @@ func createModule(curPath string) {
 		return
 	}
 
+	projectDefine, projectErr := loadProjectDefine(curPath)
+	if projectErr != nil {
+		fmt.Printf("load project define failed, err:%s", projectErr.Error())
+		return
+	}
+
 	module := module.New(curPath)
-	curErr := module.Create("", moduleName)
+	curModule, curErr := module.Create(projectDefine.ProjectName, moduleName)
 	if curErr != nil {
 		log.Printf("Create module failed, err:%s", curErr.Error())
+		return
+	}
+
+	projectDefine.Module = append(projectDefine.Module, curModule)
+	projectErr = saveProjectDefine(curPath, projectDefine)
+	if projectErr != nil {
+		fmt.Printf("save project define failed, err:%s", projectErr.Error())
 		return
 	}
 }

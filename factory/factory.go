@@ -50,12 +50,13 @@ func RegisterFunc(name string, funcPtr interface{}) {
 type FileFactory struct {
 	templatePath string
 	rootPath     string
+	relativePath string
 	templateName string
 	contentData  map[string]interface{}
 }
 
-func NewFileFactory(templatePath, rootPath, templateName string, contentData map[string]interface{}) *FileFactory {
-	return &FileFactory{templatePath: templatePath, rootPath: rootPath, templateName: templateName, contentData: contentData}
+func NewFileFactory(templatePath, rootPath, relativePath, templateName string, contentData map[string]interface{}) *FileFactory {
+	return &FileFactory{templatePath: templatePath, rootPath: rootPath, relativePath: relativePath, templateName: templateName, contentData: contentData}
 }
 
 func (s *FileFactory) getTemplateName(relativePath string) string {
@@ -95,7 +96,7 @@ func (s *FileFactory) Create(relativePath, fileName string, forceFlag bool) (err
 			}
 			defer fileHandle.Close()
 
-			templateVal, templateErr := s.getTemplateContent(relativePath)
+			templateVal, templateErr := s.getTemplateContent(s.relativePath)
 			if templateErr != nil {
 				err = templateErr
 				return

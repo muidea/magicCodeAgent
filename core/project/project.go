@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
 	"log"
 	"os"
@@ -38,7 +39,7 @@ func (s *Project) cloneContent(templatePath, filePath, fileName string) (err err
 	log.Print(fileName)
 
 	contentVal := map[string]interface{}{"ProjectName": s.projectName}
-	factoryPtr := factory.NewFileFactory(templatePath, s.rootPath, fileName, contentVal)
+	factoryPtr := factory.NewFileFactory(templatePath, s.rootPath, filePath, fileName, contentVal)
 
 	items := strings.Split(fileName, ".")
 	fileName = strings.Join(items[:len(items)-1], ".")
@@ -51,10 +52,19 @@ func (s *Project) cloneContent(templatePath, filePath, fileName string) (err err
 }
 
 // Create create
-func (s *Project) Create(projectName, projectType string) (err error) {
+func (s *Project) Create(projectName, projectType string) (ret *model.Define, err error) {
 	s.projectName = projectName
 
 	err = s.walkTemplate("", projectType)
+	if err != nil {
+		return
+	}
+
+	ret = &model.Define{
+		ProjectName: projectName,
+		ProjectType: projectType,
+		Module:      []*model.Module{},
+	}
 	return
 }
 

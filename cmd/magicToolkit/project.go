@@ -30,9 +30,14 @@ func createProject(curPath string) {
 	}
 
 	project := project.New(curPath)
-	curErr := project.Create(projectName, projectType)
+	curProject, curErr := project.Create(projectName, projectType)
 	if curErr != nil {
 		log.Printf("Create project failed, err:%s", curErr.Error())
+		return
+	}
+	curErr = saveProjectDefine(curPath, curProject)
+	if curErr != nil {
+		log.Printf("save project define failed, err:%s", curErr.Error())
 		return
 	}
 }

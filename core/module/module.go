@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
+	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
 	"log"
 	"path"
@@ -20,9 +21,19 @@ func New(rootPath string) *Module {
 	return &Module{rootPath: rootPath}
 }
 
-func (s *Module) Create(projectName, moduleName string) (err error) {
+func (s *Module) Create(projectName, moduleName string) (ret *model.Module, err error) {
 	s.projectName = projectName
 	s.moduleName = moduleName
+
+	err = s.walkTemplate("")
+	if err != nil {
+		log.Printf("walkTemplate failed, err:%s", err.Error())
+		return
+	}
+
+	ret = &model.Module{
+		Name: moduleName,
+	}
 	return
 }
 
@@ -65,7 +76,7 @@ func (s *Module) walkTemplate(relativePath string) (err error) {
 		items := strings.Split(fileName, ".")
 		extName := items[len(items)-1]
 		if extName == "template" {
-			err = s.cloneContent(baseTemplatePath, relativePath, fd.Name())
+			err = s.cloneModuleContent(baseTemplatePath, relativePath, fd.Name())
 			if err != nil {
 				return
 			}
@@ -77,7 +88,7 @@ func (s *Module) walkTemplate(relativePath string) (err error) {
 	return
 }
 
-func (s *Module) cloneContent(templatePath, filePath, fileName string) (err error) {
+func (s *Module) cloneModuleContent(templatePath, filePath, fileName string) (err error) {
 	log.Print(fileName)
 
 	contentVal := map[string]interface{}{
@@ -85,14 +96,17 @@ func (s *Module) cloneContent(templatePath, filePath, fileName string) (err erro
 		"ModuleName":  s.moduleName,
 		"ModulePath":  util.ToCamelCase(s.moduleName),
 	}
-	factoryPtr := factory.NewFileFactory(templatePath, s.rootPath, fileName, contentVal)
+	factoryPtr := factory.NewFileFactory(templatePath, s.rootPath, filePath, fileName, contentVal)
 
 	items := strings.Split(fileName, ".")
 	fileName = strings.Join(items[:len(items)-1], ".")
 	if fileName == "common.go" {
-		fileName = path.Join("common", util.ToCamelCase(s.moduleName)+".go")
+		fileName = util.ToCamelCase(s.moduleName) + ".go"
+		err = factoryPtr.Create("common", fileName, true)
+		return
 	}
 
+	filePath = path.Join("core", "module", util.ToCamelCase(s.moduleName), filePath)
 	err = factoryPtr.Create(filePath, fileName, true)
 	return
 }
