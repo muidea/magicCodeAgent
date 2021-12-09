@@ -11,8 +11,8 @@ github.com/go-playground/validator/v10 v10.5.0/go.mod h1:xm76BBt941f7yWdGnI2DVPF
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/leodido/go-urn v1.2.0 h1:hpXL4XnriNwQ/ABnpepYM/1vCLWNDfUNts8dX3xTG6Y=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
-github.com/muidea/magicCommon v0.0.0-20211208160440-c71fff320dc3 h1:inET57s6b3h8ZVUJu5BHr2xJeD7azcH3VmSID1NoIXI=
-github.com/muidea/magicCommon v0.0.0-20211208160440-c71fff320dc3/go.mod h1:p99y9gtXS71t8QkZRCVaNjV6tDPI6kNrzE5ls2BNiwA=
+github.com/muidea/magicCommon v0.0.0-20211209010810-ea3622b91138 h1:/qy/q2rC9A9ix7nhIg9jekJLaIK6v7DnHcDI63uAe8I=
+github.com/muidea/magicCommon v0.0.0-20211209010810-ea3622b91138/go.mod h1:p99y9gtXS71t8QkZRCVaNjV6tDPI6kNrzE5ls2BNiwA=
 github.com/muidea/magicEngine v0.0.0-20200620092726-660b2483d050/go.mod h1:pfFI5o05gCTQHrjHxwrhLd4uAAIfaTAGxymsy1fj5YA=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

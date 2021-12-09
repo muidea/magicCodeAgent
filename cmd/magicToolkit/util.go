@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path"
+
+	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 	"github.com/muidea/magicToolkit/model"
-	"path"
 )
 
 func loadProjectDefine(rootPath string) (ret *model.Define, err error) {
@@ -25,7 +28,15 @@ func saveProjectDefine(rootPath string, cfg *model.Define) (err error) {
 		return
 	}
 
-	defineFile := path.Join(rootPath, ".project", "define.json")
+	filePath := path.Join(rootPath, ".project")
+	if !fp.Exist(filePath) {
+		err = os.MkdirAll(filePath, os.ModePerm)
+	}
+	if err != nil {
+		return
+	}
+
+	defineFile := path.Join(filePath, "define.json")
 	err = fu.SaveConfig(defineFile, cfg)
 	return
 }
