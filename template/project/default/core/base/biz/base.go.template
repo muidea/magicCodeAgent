@@ -48,6 +48,14 @@ func (s *Base) ID() string {
 	return s.id
 }
 
+func (s *Base) Subscribe(eventID string, observer event.Observer) {
+	s.eventHub.Subscribe(eventID,observer)
+}
+
+func (s *Base) Unsubscribe(eventID string, observer event.Observer){
+	s.eventHub.Unsubscribe(eventID,observer)
+}
+
 func (s *Base) PostEvent(event event.Event) {
 	s.eventHub.Post(event)
 }
