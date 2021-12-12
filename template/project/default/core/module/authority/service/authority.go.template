@@ -66,30 +66,30 @@ func (s *Authority) Handle(ctx engine.RequestContext, res http.ResponseWriter, r
 }
 
 // RegisterRoute 注册路由
-func (s *Authority) RegisterRoute(roleRouteRegistry casToolkit.RoleRegistry) {
-	roleRouteRegistry.AddHandler(common.FilterAuthorityAccount, "GET", casCommon.ReadPrivate, s.FilterAuthorityAccount)
-	roleRouteRegistry.AddHandler(common.QueryAuthorityAccount, "GET", casCommon.ReadPrivate, s.QueryAuthorityAccount)
-	roleRouteRegistry.AddHandler(common.CreateAuthorityAccount, "POST", casCommon.WritePrivate, s.CreateAuthorityAccount)
-	roleRouteRegistry.AddHandler(common.UpdateAuthorityAccount, "PUT", casCommon.WritePrivate, s.UpdateAuthorityAccount)
-	roleRouteRegistry.AddHandler(common.DeleteAuthorityAccount, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityAccount)
+func (s *Authority) RegisterRoute(router engine.Router) {
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityAccount, "GET", casCommon.ReadPrivate, s.FilterAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityAccount, "GET", casCommon.ReadPrivate, s.QueryAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityAccount, "POST", casCommon.WritePrivate, s.CreateAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityAccount, "PUT", casCommon.WritePrivate, s.UpdateAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityAccount, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityAccount)
 
-	roleRouteRegistry.AddHandler(common.FilterAuthorityEndpoint, "GET", casCommon.ReadPrivate, s.FilterAuthorityEndpoint)
-	roleRouteRegistry.AddHandler(common.QueryAuthorityEndpoint, "GET", casCommon.ReadPrivate, s.QueryAuthorityEndpoint)
-	roleRouteRegistry.AddHandler(common.CreateAuthorityEndpoint, "POST", casCommon.WritePrivate, s.CreateAuthorityEndpoint)
-	roleRouteRegistry.AddHandler(common.UpdateAuthorityEndpoint, "PUT", casCommon.WritePrivate, s.UpdateAuthorityEndpoint)
-	roleRouteRegistry.AddHandler(common.DeleteAuthorityEndpoint, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityEndpoint, "GET", casCommon.ReadPrivate, s.FilterAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityEndpoint, "GET", casCommon.ReadPrivate, s.QueryAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityEndpoint, "POST", casCommon.WritePrivate, s.CreateAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityEndpoint, "PUT", casCommon.WritePrivate, s.UpdateAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityEndpoint, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityEndpoint)
 
-	roleRouteRegistry.AddHandler(common.FilterAuthorityRole, "GET", casCommon.ReadPrivate, s.FilterAuthorityRole)
-	roleRouteRegistry.AddHandler(common.QueryAuthorityRole, "GET", casCommon.ReadPrivate, s.QueryAuthorityRole)
-	roleRouteRegistry.AddHandler(common.CreateAuthorityRole, "POST", casCommon.WritePrivate, s.CreateAuthorityRole)
-	roleRouteRegistry.AddHandler(common.UpdateAuthorityRole, "PUT", casCommon.WritePrivate, s.UpdateAuthorityRole)
-	roleRouteRegistry.AddHandler(common.DeleteAuthorityRole, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityRole, "GET", casCommon.ReadPrivate, s.FilterAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityRole, "GET", casCommon.ReadPrivate, s.QueryAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityRole, "POST", casCommon.WritePrivate, s.CreateAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityRole, "PUT", casCommon.WritePrivate, s.UpdateAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityRole, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityRole)
 
-	roleRouteRegistry.AddHandler(common.FilterAuthorityNamespace, "GET", casCommon.ReadPrivate, s.FilterAuthorityNamespace)
-	roleRouteRegistry.AddHandler(common.QueryAuthorityNamespace, "GET", casCommon.ReadPrivate, s.QueryAuthorityNamespace)
-	roleRouteRegistry.AddHandler(common.CreateAuthorityNamespace, "POST", casCommon.WritePrivate, s.CreateAuthorityNamespace)
-	roleRouteRegistry.AddHandler(common.UpdateAuthorityNamespace, "PUT", casCommon.WritePrivate, s.UpdateAuthorityNamespace)
-	roleRouteRegistry.AddHandler(common.DeleteAuthorityNamespace, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityNamespace, "GET", casCommon.ReadPrivate, s.FilterAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityNamespace, "GET", casCommon.ReadPrivate, s.QueryAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityNamespace, "POST", casCommon.WritePrivate, s.CreateAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityNamespace, "PUT", casCommon.WritePrivate, s.UpdateAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityNamespace, "DELETE", casCommon.DeletePrivate, s.DeleteAuthorityNamespace)
 }
 
 func (s *Authority) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casCommon.EntityView, err error) {

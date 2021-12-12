@@ -70,11 +70,11 @@ func (s *Image) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *
 }
 
 // RegisterRoute 注册路由
-func (s *Image) RegisterRoute(roleRouteRegistry casToolkit.RoleRegistry) {
-	roleRouteRegistry.AddHandler(common.FilterImage, "GET", casCommon.ReadPrivate, s.FilterImage)
-	roleRouteRegistry.AddHandler(common.QueryImage, "GET", casCommon.ReadPrivate, s.QueryImage)
-	roleRouteRegistry.AddHandler(common.UpdateImage, "PUT", casCommon.WritePrivate, s.UpdateImage)
-	roleRouteRegistry.AddHandler(common.DeleteImage, "DELETE", casCommon.DeletePrivate, s.DeleteImage)
+func (s *Image) RegisterRoute(router engine.Router) {
+	s.roleRouteRegistry.AddHandler(common.FilterImage, "GET", casCommon.ReadPrivate, s.FilterImage)
+	s.roleRouteRegistry.AddHandler(common.QueryImage, "GET", casCommon.ReadPrivate, s.QueryImage)
+	s.roleRouteRegistry.AddHandler(common.UpdateImage, "PUT", casCommon.WritePrivate, s.UpdateImage)
+	s.roleRouteRegistry.AddHandler(common.DeleteImage, "DELETE", casCommon.DeletePrivate, s.DeleteImage)
 }
 
 func (s *Image) FilterImage(res http.ResponseWriter, req *http.Request) {

@@ -69,7 +69,7 @@ func (s *Image) Startup(endpointName string, router engine.Router) {
 
 	s.service = service.New(s.biz)
 	s.service.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
-	s.service.RegisterRoute(s.roleRouteRegistry)
+	s.service.RegisterRoute(router)
 }
 
 func (s *Image) Shutdown() {

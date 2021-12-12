@@ -68,7 +68,7 @@ func (s *{{.ModuleName}}) Handle(ctx engine.RequestContext, res http.ResponseWri
 }
 
 // RegisterRoute 注册路由
-func (s *{{.ModuleName}}) RegisterRoute(roleRouteRegistry casToolkit.RoleRegistry) {
+func (s *{{.ModuleName}}) RegisterRoute(router engine.Router) {
 }
 
 func (s *{{.ModuleName}}) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casCommon.EntityView, err error) {

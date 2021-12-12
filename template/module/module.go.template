@@ -65,7 +65,7 @@ func (s *{{.ModuleName}}) Startup(endpointName string, router engine.Router) {
 
 	s.service = service.New(endpointName, s.biz)
 	s.service.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
-	s.service.RegisterRoute(s.roleRouteRegistry)
+	s.service.RegisterRoute(router)
 }
 
 func (s *{{.ModuleName}}) Shutdown() {
