@@ -8,7 +8,7 @@ import (
 type Base struct {
 	id                string
 	eventHub          event.Hub
-	backgroundRoutine *task.BackgroundRoutine
+	backgroundRoutine task.BackgroundRoutine
 }
 
 type invokeTask struct {
@@ -22,7 +22,7 @@ func (s *invokeTask) Run() {
 func New(
 	id string,
 	eventHub event.Hub,
-	backgroundRoutine *task.BackgroundRoutine) Base {
+	backgroundRoutine task.BackgroundRoutine) Base {
 	return Base{
 		id:                id,
 		eventHub:          eventHub,

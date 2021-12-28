@@ -2,13 +2,13 @@ package base
 
 import (
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/module"
 	"github.com/muidea/magicCommon/task"
-	engine "github.com/muidea/magicEngine"
+
+	"github.com/muidea/magicCas/toolkit"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/base/biz"
-	"github.com/muidea/{{.ProjectName}}/module"
 )
 
 func init() {
@@ -16,9 +16,7 @@ func init() {
 }
 
 type Base struct {
-	sessionRegistry   session.Registry
-	eventHub          event.Hub
-	backgroundRoutine *task.BackgroundRoutine
+	routeRegistry toolkit.RouteRegistry
 
 	biz *biz.Base
 }
@@ -31,24 +29,20 @@ func (s *Base) ID() string {
 	return common.BaseModule
 }
 
-func (s *Base) BindEventHub(eventHub event.Hub) {
-	s.eventHub = eventHub
+func (s *Base) BindRegistry(routeRegistry toolkit.RouteRegistry) {
+	s.routeRegistry = routeRegistry
 }
 
-func (s *Base) BindBackgroundRoutine(backgroundRoutine *task.BackgroundRoutine) {
-	s.backgroundRoutine = backgroundRoutine
+func (s *Base) Setup(
+	endpointName string,
+	eventHub event.Hub,
+	backgroundRoutine task.BackgroundRoutine) {
+	s.biz = biz.New(
+		eventHub,
+		backgroundRoutine,
+	)
 }
 
-func (s *Base) BindRegistry(sessionRegistry session.Registry) {
-	s.sessionRegistry = sessionRegistry
-}
-
-func (s *Base) Startup(endpointName string, router engine.Router) {
-	router.SetApiVersion(common.ApiVersion)
-
-	s.biz = biz.New(s.eventHub, s.backgroundRoutine)
-}
-
-func (s *Base) Shutdown() {
+func (s *Base) Teardown() {
 
 }

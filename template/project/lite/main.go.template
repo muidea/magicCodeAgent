@@ -2,11 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 
 	log "github.com/cihub/seelog"
-	engine "github.com/muidea/magicEngine"
+
+	"github.com/muidea/magicCommon/application"
 
 	_ "github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core"
@@ -14,16 +16,6 @@ import (
 
 var listenPort = "8080"
 var endpointName = "{{.ProjectName}}"
-
-var logConfig = `
-<seelog type="sync">
-	<outputs formatid="main">
-		<console/>
-	</outputs>
-	<formats>
-		<format id="main" format="%Date %Time [%LEV] %Msg%n"/>
-	</formats>
-</seelog>`
 
 func initPprofMonitor(listenPort string) error {
 	var err error
@@ -41,29 +33,20 @@ func initPprofMonitor(listenPort string) error {
 
 func main() {
 	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
-	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")
+	flag.StringVar(&endpointName, "EndpointName", endpointName, "application endpoint name.")
 	flag.Parse()
 
 	initPprofMonitor(listenPort)
 
-	logger, _ := log.LoggerFromConfigAsBytes([]byte(logConfig))
-	log.ReplaceLogger(logger)
+	fmt.Printf("{{.ProjectName}} V1.0\n")
 
-	log.Info("{{.ProjectName}} V1.0")
-
-	router := engine.NewRouter()
-	core, err := core.New(endpointName)
-
-	if err == nil {
-		core.Startup(router)
-
-		svr := engine.NewHTTPServer(listenPort)
-		svr.Bind(router)
-
-		svr.Run()
-	} else {
-		log.Critical("start {{.ProjectName}} failed.")
+	core, err := core.New(endpointName, listenPort)
+	if err != nil {
+		log.Errorf("create core service failed, err:%s", err.Error())
+		return
 	}
 
-	core.Teardown()
+	application.Startup(core)
+	application.Run()
+	application.Shutdown()
 }
