@@ -58,6 +58,7 @@ func (s *Image) Setup(
 	)
 
 	s.service = service.New(s.biz)
+	s.service.BindRegistry(s.routeRegistry, s.casRouteRegistry, s.roleRouteRegistry)
 	s.service.RegisterRoute()
 }
 
