@@ -54,6 +54,9 @@ func (s *Project) cloneContent(templatePath, filePath, fileName string) (err err
 // Create create
 func (s *Project) Create(projectName, projectType string) (ret *model.Define, err error) {
 	s.projectName = projectName
+	if projectType == "" {
+		projectType = util.ProjectDefaultTemplatePath
+	}
 
 	err = s.walkTemplate("", projectType)
 	if err != nil {
@@ -69,10 +72,6 @@ func (s *Project) Create(projectName, projectType string) (ret *model.Define, er
 }
 
 func (s *Project) walkTemplate(relativePath, projectType string) (err error) {
-	if projectType == "" {
-		projectType = util.ProjectDefaultTemplatePath
-	}
-
 	baseTemplatePath, baseTemplateErr := util.GetProjectTemplatePath(projectType)
 	if baseTemplateErr != nil {
 		err = baseTemplateErr

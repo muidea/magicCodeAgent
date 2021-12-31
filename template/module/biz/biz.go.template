@@ -21,7 +21,8 @@ func New(
 	endpointName string,
 	batisClient client.Client,
 	eventHub event.Hub,
-	backgroundRoutine *task.BackgroundRoutine) *{{.ModuleName}} {
+	backgroundRoutine task.BackgroundRoutine) *{{.ModuleName}} {
+
 	ptr := &{{.ModuleName}}{
 		Base:         biz.New(common.{{.ModuleName}}Module, eventHub, backgroundRoutine),
 		{{.ModulePath}}Dao: dao.New(batisClient),
