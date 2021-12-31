@@ -1,13 +1,9 @@
 package authority
 
 import (
-	"github.com/muidea/magicBatis/client"
-
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/module"
 	"github.com/muidea/magicCommon/task"
-
-	engine "github.com/muidea/magicEngine"
 
 	"github.com/muidea/magicCas/toolkit"
 
@@ -15,7 +11,6 @@ import (
 	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core/module/image/biz"
 	"github.com/muidea/{{.ProjectName}}/core/module/image/service"
-	"github.com/muidea/{{.ProjectName}}/module"
 )
 
 func init() {
@@ -23,12 +18,9 @@ func init() {
 }
 
 type Image struct {
-	batisClient       client.Client
-	sessionRegistry   session.Registry
-	roleRouteRegistry toolkit.RoleRegistry
+	routeRegistry     toolkit.RouteRegistry
 	casRouteRegistry  toolkit.CasRegistry
-	eventHub          event.Hub
-	backgroundRoutine *task.BackgroundRoutine
+	roleRouteRegistry toolkit.RoleRegistry
 
 	service *service.Image
 	biz     *biz.Image
@@ -42,36 +34,32 @@ func (s *Image) ID() string {
 	return common.ImageModule
 }
 
-func (s *Image) BindBatisClient(clnt client.Client) {
-	s.batisClient = clnt
-}
-
-func (s *Image) BindEventHub(eventHub event.Hub) {
-	s.eventHub = eventHub
-}
-
-func (s *Image) BindBackgroundRoutine(backgroundRoutine *task.BackgroundRoutine) {
-	s.backgroundRoutine = backgroundRoutine
-}
-
 func (s *Image) BindRegistry(
-	sessionRegistry session.Registry,
+	routeRegistry toolkit.RouteRegistry,
 	casRouteRegistry toolkit.CasRegistry,
 	roleRouteRegistry toolkit.RoleRegistry) {
 
-	s.sessionRegistry = sessionRegistry
+	s.routeRegistry = routeRegistry
 	s.casRouteRegistry = casRouteRegistry
 	s.roleRouteRegistry = roleRouteRegistry
+
+	s.routeRegistry.SetApiVersion(common.ApiVersion)
+	s.casRouteRegistry.SetApiVersion(common.ApiVersion)
+	s.roleRouteRegistry.SetApiVersion(common.ApiVersion)
 }
 
-func (s *Image) Startup(endpointName string, router engine.Router) {
-	s.biz = biz.New(endpointName, config.FileService(), s.batisClient, s.eventHub, s.backgroundRoutine)
+func (s *Image) Setup(
+	endpointName string,
+	eventHub event.Hub,
+	backgroundRoutine task.BackgroundRoutine) {
+	s.biz = biz.New(endpointName, config.FileService(),
+		eventHub,
+		backgroundRoutine,
+	)
 
 	s.service = service.New(s.biz)
-	s.service.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
-	s.service.RegisterRoute(router)
+	s.service.RegisterRoute()
 }
 
-func (s *Image) Shutdown() {
-
+func (s *Image) Teardown() {
 }

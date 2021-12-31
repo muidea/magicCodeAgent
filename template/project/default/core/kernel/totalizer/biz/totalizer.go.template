@@ -2,13 +2,13 @@ package biz
 
 import (
 	log "github.com/cihub/seelog"
-	casCommon "github.com/muidea/magicCas/common"
-
 	"github.com/muidea/magicBatis/client"
 	bc "github.com/muidea/magicBatis/common"
 
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
+
+	cc "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
@@ -27,7 +27,7 @@ type Totalizer struct {
 func New(
 	batisClient client.Client,
 	eventHub event.Hub,
-	backgroundRoutine *task.BackgroundRoutine,
+	backgroundRoutine task.BackgroundRoutine,
 ) *Totalizer {
 	totalizer := &Totalizer{
 		Base:                biz.New(common.TotalizerModule, eventHub, backgroundRoutine),
@@ -54,7 +54,7 @@ func (s *Totalizer) Notify(event event.Event, result event.Result) {
 	owner := event.Header().GetString("owner")
 	log.Infof("notify event, id:%s,source:%s,destination:%s, namespace:%s, owner:%s", event.ID(), event.Source(), event.Destination(), namespace, owner)
 	if event.Match(common.InitializeAuthorityNamespace) {
-		namespaceLite, namespaceOK := event.Data().(*casCommon.NamespaceView)
+		namespaceLite, namespaceOK := event.Data().(*cc.NamespaceView)
 		if !namespaceOK {
 			return
 		}

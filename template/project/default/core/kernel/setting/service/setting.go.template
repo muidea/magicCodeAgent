@@ -1,29 +1,30 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"strings"
 
-	commonDef "github.com/muidea/magicCommon/def"
+	cd "github.com/muidea/magicCommon/def"
 	fu "github.com/muidea/magicCommon/foundation/util"
-	commonSession "github.com/muidea/magicCommon/session"
-	engine "github.com/muidea/magicEngine"
+	"github.com/muidea/magicCommon/session"
 
-	casCommon "github.com/muidea/magicCas/common"
-	casToolkit "github.com/muidea/magicCas/toolkit"
+	cc "github.com/muidea/magicCas/common"
+	"github.com/muidea/magicCas/toolkit"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/setting/biz"
 )
 
 type Setting struct {
-	sessionRegistry   commonSession.Registry
-	casRouteRegistry  casToolkit.CasRegistry
-	roleRouteRegistry casToolkit.RoleRegistry
-	validator         fu.Validator
+	routeRegistry     toolkit.RouteRegistry
+	casRouteRegistry  toolkit.CasRegistry
+	roleRouteRegistry toolkit.RoleRegistry
+
+	validator fu.Validator
 
 	settingBiz *biz.Setting
 }
@@ -40,49 +41,35 @@ func New(
 }
 
 func (s *Setting) BindRegistry(
-	sessionRegistry commonSession.Registry,
-	casRouteRegistry casToolkit.CasRegistry,
-	roleRouteRegistry casToolkit.RoleRegistry) {
+	routeRegistry toolkit.RouteRegistry,
+	casRouteRegistry toolkit.CasRegistry,
+	roleRouteRegistry toolkit.RoleRegistry) {
 
-	s.sessionRegistry = sessionRegistry
+	s.routeRegistry = routeRegistry
 	s.casRouteRegistry = casRouteRegistry
 	s.roleRouteRegistry = roleRouteRegistry
 }
 
-// Handle middleware handler
-func (s *Setting) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
-	curSession := s.sessionRegistry.GetSession(res, req)
-
-	sessionInfo := curSession.GetSessionInfo()
-	sessionInfo.Scope = commonSession.ShareSession
-
-	values := req.URL.Query()
-	values = sessionInfo.Encode(values)
-	req.URL.RawQuery = values.Encode()
-
-	ctx.Next()
-}
-
 // RegisterRoute 注册路由
-func (s *Setting) RegisterRoute(router engine.Router) {
-	s.roleRouteRegistry.AddHandler(common.ViewSetting, "GET", casCommon.ReadPrivate, s.ViewSetting)
+func (s *Setting) RegisterRoute() {
+	s.roleRouteRegistry.AddHandler(common.ViewSetting, "GET", cc.ReadPrivate, s.ViewSetting)
 
-	s.roleRouteRegistry.AddHandler(common.ViewSettingProfile, "GET", casCommon.ReadPrivate, s.ViewSettingProfile)
+	s.roleRouteRegistry.AddHandler(common.ViewSettingProfile, "GET", cc.ReadPrivate, s.ViewSettingProfile)
 }
 
-func (s *Setting) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casCommon.EntityView, err error) {
-	curSession := s.sessionRegistry.GetSession(res, req)
-	authVal, ok := curSession.GetOption(commonSession.AuthAccount)
+func (s *Setting) getCurrentEntity(ctx context.Context, res http.ResponseWriter, req *http.Request) (ret *cc.EntityView, err error) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
+	authVal, ok := curSession.GetOption(session.AuthAccount)
 	if !ok {
 		err = fmt.Errorf("无效权限,未通过验证")
 		return
 	}
-	ret = authVal.(*casCommon.EntityView)
+	ret = authVal.(*cc.EntityView)
 	return
 }
 
-func (s *Setting) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string) {
-	namespace := req.Header.Get(casCommon.NamespaceID)
+func (s *Setting) getCurrentNamespace(ctx context.Context, res http.ResponseWriter, req *http.Request) (ret string) {
+	namespace := req.Header.Get(cc.NamespaceID)
 	if namespace != "" {
 		ret = namespace
 		return
@@ -104,29 +91,29 @@ func (s *Setting) getCurrentNamespace(res http.ResponseWriter, req *http.Request
 	return
 }
 
-func (s *Setting) ViewSetting(res http.ResponseWriter, req *http.Request) {
+func (s *Setting) ViewSetting(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
 	result := &common.SettingResult{Item: []*common.Content{}}
 	for {
-		curSession := s.sessionRegistry.GetSession(res, req)
-		curNamespace := s.getCurrentNamespace(res, req)
-		curEntity, curErr := s.getCurrentEntity(res, req)
+		curNamespace := s.getCurrentNamespace(ctx, res, req)
+		_, curErr := s.getCurrentEntity(ctx, res, req)
 		if curErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = "查询用户失败"
 			break
 		}
 
 		itemList, itemErr := s.settingBiz.QuerySetting(curSession.GetSessionInfo(), curNamespace)
 		if itemErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = "查询数据失败"
 			break
 		}
 
-		if curEntity.IsAdmin() {
-			onlineItem := &common.Content{Name: "在线人数", Content: fmt.Sprintf("%d", s.sessionRegistry.CountSession(&namespaceFilter{namespace: curNamespace}))}
-			itemList = append(itemList, onlineItem)
-		}
+		//if curEntity.IsAdmin() {
+		//	onlineItem := &common.Content{Name: "在线人数", Content: fmt.Sprintf("%d", s.sessionRegistry.CountSession(&namespaceFilter{namespace: curNamespace}))}
+		//	itemList = append(itemList, onlineItem)
+		//}
 
 		result.Item = itemList
 		break
@@ -146,11 +133,11 @@ type namespaceFilter struct {
 }
 
 func (s *namespaceFilter) Enable(val interface{}) bool {
-	session := val.(commonSession.Session)
-	if session == nil {
+	curSession := val.(session.Session)
+	if curSession == nil {
 		return false
 	}
-	nVal, nOK := session.GetOption(commonSession.AuthNamespace)
+	nVal, nOK := curSession.GetOption(session.AuthNamespace)
 	if !nOK {
 		return false
 	}

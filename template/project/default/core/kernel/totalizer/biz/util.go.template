@@ -1,20 +1,21 @@
 package biz
 
 import (
-	casCommon "github.com/muidea/magicCas/common"
-	"github.com/muidea/{{.ProjectName}}/common"
 	"time"
 
 	log "github.com/cihub/seelog"
 	bc "github.com/muidea/magicBatis/common"
 
+	cc "github.com/muidea/magicCas/common"
+
+	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 /*
 namespace  -> type -> owner -> totalizer
 */
-func (s *Totalizer) onInitializeNamespace(namespacePtr *casCommon.NamespaceView) {
+func (s *Totalizer) onInitializeNamespace(namespacePtr *cc.NamespaceView) {
 	s.Invoke(func() {
 		totalizerList, _, totalizerErr := s.totalizerDao.FilterTotalizer(nil, namespacePtr.Name)
 		if totalizerErr != nil {

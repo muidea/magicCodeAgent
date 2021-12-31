@@ -1,20 +1,16 @@
 package setting
 
 import (
-	"github.com/muidea/magicBatis/client"
-
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/module"
 	"github.com/muidea/magicCommon/task"
-
-	engine "github.com/muidea/magicEngine"
 
 	"github.com/muidea/magicCas/toolkit"
 
+	"github.com/muidea/{{.ProjectName}}/assist/persistence"
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/setting/biz"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/setting/service"
-	"github.com/muidea/{{.ProjectName}}/module"
 )
 
 func init() {
@@ -22,12 +18,9 @@ func init() {
 }
 
 type Setting struct {
-	batisClient       client.Client
-	sessionRegistry   session.Registry
-	roleRouteRegistry toolkit.RoleRegistry
+	routeRegistry     toolkit.RouteRegistry
 	casRouteRegistry  toolkit.CasRegistry
-	eventHub          event.Hub
-	backgroundRoutine *task.BackgroundRoutine
+	roleRouteRegistry toolkit.RoleRegistry
 
 	service *service.Setting
 	biz     *biz.Setting
@@ -41,36 +34,35 @@ func (s *Setting) ID() string {
 	return common.SettingModule
 }
 
-func (s *Setting) BindBatisClient(clnt client.Client) {
-	s.batisClient = clnt
-}
-
-func (s *Setting) BindEventHub(eventHub event.Hub) {
-	s.eventHub = eventHub
-}
-
-func (s *Setting) BindBackgroundRoutine(backgroundRoutine *task.BackgroundRoutine) {
-	s.backgroundRoutine = backgroundRoutine
-}
-
 func (s *Setting) BindRegistry(
-	sessionRegistry session.Registry,
+	routeRegistry toolkit.RouteRegistry,
 	casRouteRegistry toolkit.CasRegistry,
 	roleRouteRegistry toolkit.RoleRegistry) {
 
-	s.sessionRegistry = sessionRegistry
+	s.routeRegistry = routeRegistry
 	s.casRouteRegistry = casRouteRegistry
 	s.roleRouteRegistry = roleRouteRegistry
+
+	s.routeRegistry.SetApiVersion(common.ApiVersion)
+	s.casRouteRegistry.SetApiVersion(common.ApiVersion)
+	s.roleRouteRegistry.SetApiVersion(common.ApiVersion)
 }
 
-func (s *Setting) Startup(endpointName string, router engine.Router) {
-	s.biz = biz.New(s.batisClient, s.eventHub, s.backgroundRoutine)
+func (s *Setting) Setup(
+	endpointName string,
+	eventHub event.Hub,
+	backgroundRoutine task.BackgroundRoutine) {
+	s.biz = biz.New(
+		persistence.GetBatisClient(),
+		eventHub,
+		backgroundRoutine,
+	)
 
 	s.service = service.New(s.biz)
-	s.service.BindRegistry(s.sessionRegistry, s.casRouteRegistry, s.roleRouteRegistry)
-	s.service.RegisterRoute(router)
+	s.service.BindRegistry(s.routeRegistry, s.casRouteRegistry, s.roleRouteRegistry)
+	s.service.RegisterRoute()
 }
 
-func (s *Setting) Shutdown() {
+func (s *Setting) Teardown() {
 
 }

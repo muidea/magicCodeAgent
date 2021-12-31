@@ -10,7 +10,7 @@ import (
 
 	log "github.com/cihub/seelog"
 
-	casCommon "github.com/muidea/magicCas/common"
+	cc "github.com/muidea/magicCas/common"
 )
 
 const moduleDefine = `
@@ -406,7 +406,7 @@ func (s *System) loadDefine(strDefine string) (ret *Define, err error) {
 	return
 }
 
-func (s *System) SystemInfo(ptr *casCommon.RoleView, isSuper bool) (route []*Route, content []*Content) {
+func (s *System) SystemInfo(ptr *cc.RoleView, isSuper bool) (route []*Route, content []*Content) {
 	err := s.loadModule()
 	if err != nil {
 		log.Errorf("load module failed, err:%s", err.Error())
@@ -484,7 +484,7 @@ func (s *System) SystemInfo(ptr *casCommon.RoleView, isSuper bool) (route []*Rou
 
 var patternReg, _ = regexp.Compile("(/[a-z]+)+/(query|create|update|delete)")
 
-func (s *System) checkAuthority(prefix string, ptr *casCommon.RoleView) (ret *Authority) {
+func (s *System) checkAuthority(prefix string, ptr *cc.RoleView) (ret *Authority) {
 	if ptr == nil {
 		return
 	}
@@ -509,11 +509,11 @@ func (s *System) checkAuthority(prefix string, ptr *casCommon.RoleView) (ret *Au
 	ret = &Authority{}
 	for k, _ := range privates {
 		switch k {
-		case casCommon.ReadPrivate:
+		case cc.ReadPrivate:
 			ret.Read = true
-		case casCommon.WritePrivate:
+		case cc.WritePrivate:
 			ret.Write = true
-		case casCommon.DeletePrivate:
+		case cc.DeletePrivate:
 			ret.Delete = true
 		}
 	}

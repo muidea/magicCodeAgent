@@ -1,14 +1,13 @@
 package biz
 
 import (
-	"github.com/muidea/magicBatis/client"
-	"github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	fn "github.com/muidea/magicCommon/foundation/net"
+	fu "github.com/muidea/magicCommon/foundation/util"
 	"github.com/muidea/magicCommon/session"
 	"github.com/muidea/magicCommon/task"
 
-	casCommon "github.com/muidea/magicCas/common"
+	cc "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
@@ -22,9 +21,8 @@ type Authority struct {
 
 func New(
 	casService string,
-	batisClient client.Client,
 	eventHub event.Hub,
-	backgroundRoutine *task.BackgroundRoutine,
+	backgroundRoutine task.BackgroundRoutine,
 ) *Authority {
 	ptr := &Authority{
 		Base:       biz.New(common.AuthorityModule, eventHub, backgroundRoutine),
@@ -48,7 +46,7 @@ func (s *Authority) Notify(event event.Event, result event.Result) {
 		sessionInfo = val.(*session.SessionInfo)
 	}
 	if event.Match(common.LoadAuthorityNamespace) {
-		filter, ok := event.Data().(*def.Filter)
+		filter, ok := event.Data().(*fu.ContentFilter)
 		if !ok {
 			return
 		}
@@ -63,7 +61,7 @@ func (s *Authority) Notify(event event.Event, result event.Result) {
 		return
 	}
 	if event.Match(common.FilterAuthorityNamespace) {
-		filter, ok := event.Data().(*def.Filter)
+		filter, ok := event.Data().(*fu.ContentFilter)
 		if !ok {
 			return
 		}
@@ -94,7 +92,7 @@ func (s *Authority) Notify(event event.Event, result event.Result) {
 	}
 
 	if event.Match(common.CreateAuthorityAccount) {
-		paramPtr := event.Data().(*casCommon.AccountParam)
+		paramPtr := event.Data().(*cc.AccountParam)
 		if paramPtr == nil {
 			return
 		}

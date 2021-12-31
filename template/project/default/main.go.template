@@ -2,32 +2,19 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 
 	log "github.com/cihub/seelog"
 
-	"github.com/muidea/magicBatis/client"
-	bc "github.com/muidea/magicBatis/common"
+	"github.com/muidea/magicCommon/application"
 
-	engine "github.com/muidea/magicEngine"
-
-	"github.com/muidea/{{.ProjectName}}/config"
 	"github.com/muidea/{{.ProjectName}}/core"
 )
 
 var listenPort = "8080"
 var endpointName = "{{.ProjectName}}"
-
-var logConfig = `
-<seelog type="sync">
-	<outputs formatid="main">
-		<console/>
-	</outputs>
-	<formats>
-		<format id="main" format="%Date %Time [%LEV] %Msg%n"/>
-	</formats>
-</seelog>`
 
 func initPprofMonitor(listenPort string) error {
 	var err error
@@ -45,50 +32,20 @@ func initPprofMonitor(listenPort string) error {
 
 func main() {
 	flag.StringVar(&listenPort, "ListenPort", listenPort, "{{.ProjectName}} listen address")
-	flag.StringVar(&endpointName, "EndpointName", endpointName, "{{.ProjectName}} endpoint name.")
+	flag.StringVar(&endpointName, "EndpointName", endpointName, "application endpoint name.")
 	flag.Parse()
 
 	initPprofMonitor(listenPort)
 
-	logger, _ := log.LoggerFromConfigAsBytes([]byte(logConfig))
-	log.ReplaceLogger(logger)
+	fmt.Printf("{{.ProjectName}} V1.0\n")
 
-	log.Info("{{.ProjectName}} V1.0")
-
-	var err error
-	clnt := client.NewClient(config.BatisService(), endpointName)
-	defer func() {
-		if err != nil {
-			clnt.Release()
-		}
-	}()
-
-	servicePtr := bc.NewService(
-		config.DatabaseServer(),
-		config.DatabaseName(),
-		config.DatabaseUsername(),
-		config.DatabaseUserPassword(),
-		config.DatabaseMaxConnection(),
-	)
-	err = clnt.RegisterService(servicePtr)
+	core, err := core.New(endpointName, listenPort)
 	if err != nil {
-		log.Errorf("register instance failed, err:%s", err.Error())
+		log.Errorf("create core service failed, err:%s", err.Error())
 		return
 	}
 
-	router := engine.NewRouter()
-	core, err := core.New(clnt, endpointName)
-
-	if err == nil {
-		core.Startup(router)
-
-		svr := engine.NewHTTPServer(listenPort)
-		svr.Bind(router)
-
-		svr.Run()
-	} else {
-		log.Critical("start {{.ProjectName}} failed.")
-	}
-
-	core.Teardown()
+	application.Startup(core)
+	application.Run()
+	application.Shutdown()
 }

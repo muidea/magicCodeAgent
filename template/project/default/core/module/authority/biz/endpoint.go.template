@@ -1,15 +1,15 @@
 package biz
 
 import (
-	commonDef "github.com/muidea/magicCommon/def"
-	commonSession "github.com/muidea/magicCommon/session"
+	fu "github.com/muidea/magicCommon/foundation/util"
+	"github.com/muidea/magicCommon/session"
 
-	casClient "github.com/muidea/magicCas/client"
-	casCommon "github.com/muidea/magicCas/common"
+	cClnt "github.com/muidea/magicCas/client"
+	cc "github.com/muidea/magicCas/common"
 )
 
-func (s *Authority) FilterAuthorityEndpoint(sessionInfo *commonSession.SessionInfo, filter *commonDef.Filter, namespace string) (ret []*casCommon.EndpointView, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) FilterAuthorityEndpoint(sessionInfo *session.SessionInfo, filter *fu.ContentFilter, namespace string) (ret []*cc.EndpointView, total int64, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -19,8 +19,8 @@ func (s *Authority) FilterAuthorityEndpoint(sessionInfo *commonSession.SessionIn
 	return
 }
 
-func (s *Authority) FilterAuthorityEndpointLite(sessionInfo *commonSession.SessionInfo, filter *commonDef.Filter, namespace string) (ret []*casCommon.EndpointLite, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) FilterAuthorityEndpointLite(sessionInfo *session.SessionInfo, filter *fu.ContentFilter, namespace string) (ret []*cc.EndpointLite, total int64, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -30,8 +30,8 @@ func (s *Authority) FilterAuthorityEndpointLite(sessionInfo *commonSession.Sessi
 	return
 }
 
-func (s *Authority) QueryAuthorityEndpoint(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.EndpointView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) QueryAuthorityEndpoint(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.EndpointView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -41,8 +41,8 @@ func (s *Authority) QueryAuthorityEndpoint(sessionInfo *commonSession.SessionInf
 	return
 }
 
-func (s *Authority) CreateAuthorityEndpoint(sessionInfo *commonSession.SessionInfo, ptr *casCommon.EndpointParam, namespace string) (ret *casCommon.EndpointView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) CreateAuthorityEndpoint(sessionInfo *session.SessionInfo, ptr *cc.EndpointParam, namespace string) (ret *cc.EndpointView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -52,8 +52,8 @@ func (s *Authority) CreateAuthorityEndpoint(sessionInfo *commonSession.SessionIn
 	return
 }
 
-func (s *Authority) UpdateAuthorityEndpoint(sessionInfo *commonSession.SessionInfo, id int, ptr *casCommon.EndpointParam, namespace string) (ret *casCommon.EndpointView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) UpdateAuthorityEndpoint(sessionInfo *session.SessionInfo, id int, ptr *cc.EndpointParam, namespace string) (ret *cc.EndpointView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -65,8 +65,8 @@ func (s *Authority) UpdateAuthorityEndpoint(sessionInfo *commonSession.SessionIn
 	return
 }
 
-func (s *Authority) DeleteAuthorityEndpoint(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.EndpointView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) DeleteAuthorityEndpoint(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.EndpointView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)

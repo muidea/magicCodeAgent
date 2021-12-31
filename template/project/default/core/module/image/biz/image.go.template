@@ -2,15 +2,14 @@ package biz
 
 import (
 	"fmt"
-	commonDef "github.com/muidea/magicCommon/def"
-	fileClient "github.com/muidea/magicFile/client"
-	fileCommon "github.com/muidea/magicFile/common"
-	fileModel "github.com/muidea/magicFile/model"
-
-	"github.com/muidea/magicBatis/client"
 
 	"github.com/muidea/magicCommon/event"
+	fu "github.com/muidea/magicCommon/foundation/util"
 	"github.com/muidea/magicCommon/task"
+
+	fClnt "github.com/muidea/magicFile/client"
+	fc "github.com/muidea/magicFile/common"
+	fm "github.com/muidea/magicFile/model"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
@@ -26,9 +25,8 @@ type Image struct {
 func New(
 	endpointName string,
 	fileService string,
-	batisClient client.Client,
 	eventHub event.Hub,
-	backgroundRoutine *task.BackgroundRoutine,
+	backgroundRoutine task.BackgroundRoutine,
 ) *Image {
 	ptr := &Image{
 		Base:         biz.New(common.ImageModule, eventHub, backgroundRoutine),
@@ -39,8 +37,8 @@ func New(
 	return ptr
 }
 
-func (s *Image) FilterImage(filter *commonDef.Filter, namespace string) (ret []*fileModel.FileDetail, total int64, err error) {
-	clnt := fileClient.NewClient(s.fileService)
+func (s *Image) FilterImage(filter *fu.ContentFilter, namespace string) (ret []*fm.FileDetail, total int64, err error) {
+	clnt := fClnt.NewClient(s.fileService)
 	defer clnt.Release()
 
 	clnt.AttachSource(fmt.Sprintf("%s_%s", s.endpointName, namespace))
@@ -50,8 +48,8 @@ func (s *Image) FilterImage(filter *commonDef.Filter, namespace string) (ret []*
 	return
 }
 
-func (s *Image) UpdateImage(id int, param *fileCommon.FileParam, namespace string) (ret *fileModel.FileDetail, err error) {
-	clnt := fileClient.NewClient(s.fileService)
+func (s *Image) UpdateImage(id int, param *fc.FileParam, namespace string) (ret *fm.FileDetail, err error) {
+	clnt := fClnt.NewClient(s.fileService)
 	defer clnt.Release()
 
 	clnt.AttachSource(fmt.Sprintf("%s_%s", s.endpointName, namespace))
@@ -60,8 +58,8 @@ func (s *Image) UpdateImage(id int, param *fileCommon.FileParam, namespace strin
 	return
 }
 
-func (s *Image) DeleteImage(id int, namespace string) (ret *fileModel.FileDetail, err error) {
-	clnt := fileClient.NewClient(s.fileService)
+func (s *Image) DeleteImage(id int, namespace string) (ret *fm.FileDetail, err error) {
+	clnt := fClnt.NewClient(s.fileService)
 	defer clnt.Release()
 
 	clnt.AttachSource(fmt.Sprintf("%s_%s", s.endpointName, namespace))
@@ -71,8 +69,8 @@ func (s *Image) DeleteImage(id int, namespace string) (ret *fileModel.FileDetail
 	return
 }
 
-func (s *Image) QueryImage(id int, namespace string) (ret *fileModel.FileDetail, err error) {
-	clnt := fileClient.NewClient(s.fileService)
+func (s *Image) QueryImage(id int, namespace string) (ret *fm.FileDetail, err error) {
+	clnt := fClnt.NewClient(s.fileService)
 	defer clnt.Release()
 
 	clnt.AttachSource(fmt.Sprintf("%s_%s", s.endpointName, namespace))

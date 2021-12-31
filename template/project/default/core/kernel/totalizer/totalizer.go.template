@@ -1,19 +1,13 @@
 package totalizer
 
 import (
-	"github.com/muidea/magicBatis/client"
-
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/module"
 	"github.com/muidea/magicCommon/task"
 
-	engine "github.com/muidea/magicEngine"
-
-	"github.com/muidea/magicCas/toolkit"
-
+	"github.com/muidea/{{.ProjectName}}/assist/persistence"
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/totalizer/biz"
-	"github.com/muidea/{{.ProjectName}}/module"
 )
 
 func init() {
@@ -21,13 +15,6 @@ func init() {
 }
 
 type Totalizer struct {
-	batisClient       client.Client
-	sessionRegistry   session.Registry
-	roleRouteRegistry toolkit.RoleRegistry
-	casRouteRegistry  toolkit.CasRegistry
-	eventHub          event.Hub
-	backgroundRoutine *task.BackgroundRoutine
-
 	biz *biz.Totalizer
 }
 
@@ -39,32 +26,14 @@ func (s *Totalizer) ID() string {
 	return common.TotalizerModule
 }
 
-func (s *Totalizer) BindBatisClient(clnt client.Client) {
-	s.batisClient = clnt
+func (s *Totalizer) Setup(endpointName string, eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) {
+	s.biz = biz.New(
+		persistence.GetBatisClient(),
+		eventHub,
+		backgroundRoutine,
+	)
 }
 
-func (s *Totalizer) BindEventHub(eventHub event.Hub) {
-	s.eventHub = eventHub
-}
-
-func (s *Totalizer) BindBackgroundRoutine(backgroundRoutine *task.BackgroundRoutine) {
-	s.backgroundRoutine = backgroundRoutine
-}
-
-func (s *Totalizer) BindRegistry(
-	sessionRegistry session.Registry,
-	casRouteRegistry toolkit.CasRegistry,
-	roleRouteRegistry toolkit.RoleRegistry) {
-
-	s.sessionRegistry = sessionRegistry
-	s.casRouteRegistry = casRouteRegistry
-	s.roleRouteRegistry = roleRouteRegistry
-}
-
-func (s *Totalizer) Startup(endpointName string, router engine.Router) {
-	s.biz = biz.New(s.batisClient, s.eventHub, s.backgroundRoutine)
-}
-
-func (s *Totalizer) Shutdown() {
+func (s *Totalizer) Teardown() {
 
 }

@@ -1,8 +1,8 @@
 package common
 
 import (
-	casCommon "github.com/muidea/magicCas/common"
-	commonDef "github.com/muidea/magicCommon/def"
+	cc "github.com/muidea/magicCas/common"
+	cd "github.com/muidea/magicCommon/def"
 )
 
 const (
@@ -19,13 +19,13 @@ type Content struct {
 }
 
 type ProfileResult struct {
-	commonDef.Result
-	Profile    *casCommon.AccountView `json:"profile"`
-	Total      int64                  `json:"total"`
-	OperateLog []*LogView             `json:"operateLog"`
+	cd.Result
+	Profile    *cc.AccountView `json:"profile"`
+	Total      int64           `json:"total"`
+	OperateLog []*LogView      `json:"operateLog"`
 }
 
 type SettingResult struct {
-	commonDef.Result
+	cd.Result
 	Item []*Content `json:"item"`
 }

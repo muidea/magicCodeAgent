@@ -1,15 +1,15 @@
 package biz
 
 import (
-	casCommon "github.com/muidea/magicCas/common"
-	commonDef "github.com/muidea/magicCommon/def"
-	commonSession "github.com/muidea/magicCommon/session"
+	fu "github.com/muidea/magicCommon/foundation/util"
+	"github.com/muidea/magicCommon/session"
 
-	casClient "github.com/muidea/magicCas/client"
+	cClnt "github.com/muidea/magicCas/client"
+	cc "github.com/muidea/magicCas/common"
 )
 
-func (s *Authority) FilterAuthorityNamespace(sessionInfo *commonSession.SessionInfo, filter *commonDef.Filter, namespace string) (ret []*casCommon.NamespaceView, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) FilterAuthorityNamespace(sessionInfo *session.SessionInfo, filter *fu.ContentFilter, namespace string) (ret []*cc.NamespaceView, total int64, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -19,8 +19,8 @@ func (s *Authority) FilterAuthorityNamespace(sessionInfo *commonSession.SessionI
 	return
 }
 
-func (s *Authority) FilterAuthorityNamespaceLite(sessionInfo *commonSession.SessionInfo, filter *commonDef.Filter, namespace string) (ret []*casCommon.NamespaceLite, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) FilterAuthorityNamespaceLite(sessionInfo *session.SessionInfo, filter *fu.ContentFilter, namespace string) (ret []*cc.NamespaceLite, total int64, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -30,8 +30,8 @@ func (s *Authority) FilterAuthorityNamespaceLite(sessionInfo *commonSession.Sess
 	return
 }
 
-func (s *Authority) QueryAuthorityNamespace(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.NamespaceView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) QueryAuthorityNamespace(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.NamespaceView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -41,8 +41,8 @@ func (s *Authority) QueryAuthorityNamespace(sessionInfo *commonSession.SessionIn
 	return
 }
 
-func (s *Authority) CreateAuthorityNamespace(sessionInfo *commonSession.SessionInfo, ptr *casCommon.NamespaceParam, namespace string) (ret *casCommon.NamespaceView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) CreateAuthorityNamespace(sessionInfo *session.SessionInfo, ptr *cc.NamespaceParam, namespace string) (ret *cc.NamespaceView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -52,8 +52,8 @@ func (s *Authority) CreateAuthorityNamespace(sessionInfo *commonSession.SessionI
 	return
 }
 
-func (s *Authority) UpdateAuthorityNamespace(sessionInfo *commonSession.SessionInfo, id int, ptr *casCommon.NamespaceParam, namespace string) (ret *casCommon.NamespaceView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) UpdateAuthorityNamespace(sessionInfo *session.SessionInfo, id int, ptr *cc.NamespaceParam, namespace string) (ret *cc.NamespaceView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -63,8 +63,8 @@ func (s *Authority) UpdateAuthorityNamespace(sessionInfo *commonSession.SessionI
 	return
 }
 
-func (s *Authority) DeleteAuthorityNamespace(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.NamespaceView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) DeleteAuthorityNamespace(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.NamespaceView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)

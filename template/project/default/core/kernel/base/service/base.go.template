@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -11,17 +12,16 @@ import (
 	log "github.com/cihub/seelog"
 
 	bc "github.com/muidea/magicBatis/common"
+	cd "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
 	fu "github.com/muidea/magicCommon/foundation/util"
-
-	commonDef "github.com/muidea/magicCommon/def"
-	commonSession "github.com/muidea/magicCommon/session"
+	"github.com/muidea/magicCommon/session"
 	engine "github.com/muidea/magicEngine"
 
-	casCommon "github.com/muidea/magicCas/common"
-	casToolkit "github.com/muidea/magicCas/toolkit"
+	cc "github.com/muidea/magicCas/common"
+	"github.com/muidea/magicCas/toolkit"
 
-	fileCommon "github.com/muidea/magicFile/common"
+	fc "github.com/muidea/magicFile/common"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/config"
@@ -31,10 +31,11 @@ import (
 
 // Base BaseService
 type Base struct {
-	sessionRegistry   commonSession.Registry
-	casRouteRegistry  casToolkit.CasRegistry
-	roleRouteRegistry casToolkit.RoleRegistry
-	validator         fu.Validator
+	routeRegistry     toolkit.RouteRegistry
+	casRouteRegistry  toolkit.CasRegistry
+	roleRouteRegistry toolkit.RoleRegistry
+
+	validator fu.Validator
 
 	bizPtr    *biz.Base
 	systemBiz biz.System
@@ -56,54 +57,53 @@ func New(endpointName, fileService string, bizPtr *biz.Base) *Base {
 }
 
 func (s *Base) BindRegistry(
-	sessionRegistry commonSession.Registry,
-	casRouteRegistry casToolkit.CasRegistry,
-	roleRouteRegistry casToolkit.RoleRegistry) {
+	routeRegistry toolkit.RouteRegistry,
+	casRouteRegistry toolkit.CasRegistry,
+	roleRouteRegistry toolkit.RoleRegistry) {
 
-	s.sessionRegistry = sessionRegistry
+	s.routeRegistry = routeRegistry
 	s.casRouteRegistry = casRouteRegistry
 	s.roleRouteRegistry = roleRouteRegistry
 }
 
 // LoginAccount login account
-func (s *Base) LoginAccount(res http.ResponseWriter, req *http.Request) {
-	curSession := s.sessionRegistry.GetSession(res, req)
-
-	result := &casCommon.LoginResult{}
+func (s *Base) LoginAccount(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
+	result := &cc.LoginResult{}
 	for {
-		param := &casCommon.LoginParam{}
+		param := &cc.LoginParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = "非法参数"
 			break
 		}
 
 		if param.Account == "" || param.Password == "" {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = "非法参数,输入参数为空"
 			break
 		}
-		curNamespace := s.getCurrentNamespace(res, req)
+		curNamespace := s.getCurrentNamespace(ctx, res, req)
 		loginEntity, loginSession, loginErr := s.bizPtr.LoginAccount(curSession.GetSessionInfo(), param.Account, param.Password, curNamespace)
 		if loginErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = loginErr.Error()
 			break
 		}
 
 		entityRole, entityErr := s.bizPtr.VerifyEntityRole(loginSession, loginEntity, curNamespace)
 		if entityErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = entityErr.Error()
 			break
 		}
 
 		curSession.SetSessionInfo(loginSession)
-		curSession.SetOption(commonSession.AuthAccount, loginEntity)
-		curSession.SetOption(commonSession.AuthRole, entityRole)
-		curSession.SetOption(commonSession.AuthNamespace, curNamespace)
-		curSession.SetOption(commonSession.AuthRemoteAddress, fn.GetHTTPRemoteAddress(req))
+		curSession.SetOption(session.AuthAccount, loginEntity)
+		curSession.SetOption(session.AuthRole, entityRole)
+		curSession.SetOption(session.AuthNamespace, curNamespace)
+		curSession.SetOption(session.AuthRemoteAddress, fn.GetHTTPRemoteAddress(req))
 		curSession.Flush(res, req)
 
 		result.Entity = loginEntity
@@ -123,27 +123,27 @@ func (s *Base) LoginAccount(res http.ResponseWriter, req *http.Request) {
 }
 
 // LogoutAccount logout account
-func (s *Base) LogoutAccount(res http.ResponseWriter, req *http.Request) {
-	curSession := s.sessionRegistry.GetSession(res, req)
+func (s *Base) LogoutAccount(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
 
-	result := &casCommon.LogoutResult{}
+	result := &cc.LogoutResult{}
 	for {
-		namespace := s.getCurrentNamespace(res, req)
+		namespace := s.getCurrentNamespace(ctx, res, req)
 		logoutSession, logoutErr := s.bizPtr.LogoutAccount(curSession.GetSessionInfo(), namespace)
 		if logoutErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = logoutErr.Error()
 			break
 		}
 
 		curSession.SetSessionInfo(logoutSession)
-		curSession.RemoveOption(commonSession.AuthAccount)
-		curSession.RemoveOption(commonSession.AuthRole)
-		curSession.RemoveOption(commonSession.AuthRemoteAddress)
+		curSession.RemoveOption(session.AuthAccount)
+		curSession.RemoveOption(session.AuthRole)
+		curSession.RemoveOption(session.AuthRemoteAddress)
 		curSession.Flush(res, req)
 
 		result.SessionInfo = logoutSession
-		result.ErrorCode = commonDef.Success
+		result.ErrorCode = cd.Success
 		break
 	}
 
@@ -158,28 +158,29 @@ func (s *Base) LogoutAccount(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func (s *Base) UpdateAccountPassword(res http.ResponseWriter, req *http.Request) {
-	curSession := s.sessionRegistry.GetSession(res, req)
-	result := &casCommon.AccountResult{}
+func (s *Base) UpdateAccountPassword(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
+
+	result := &cc.AccountResult{}
 	for {
-		param := &casCommon.UpdatePasswordParam{}
+		param := &cc.UpdatePasswordParam{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = "非法参数"
 			break
 		}
 
-		namespace := s.getCurrentNamespace(res, req)
+		namespace := s.getCurrentNamespace(ctx, res, req)
 		accountPtr, accountErr := s.bizPtr.UpdateAccountPassword(curSession.GetSessionInfo(), param, namespace)
 		if accountErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = "非法参数"
 			break
 		}
 
 		result.Account = accountPtr
-		result.ErrorCode = commonDef.Success
+		result.ErrorCode = cd.Success
 		break
 	}
 	block, err := json.Marshal(result)
@@ -194,38 +195,38 @@ func (s *Base) UpdateAccountPassword(res http.ResponseWriter, req *http.Request)
 }
 
 // VerifyEndpoint verify endpoint
-func (s *Base) VerifyEndpoint(res http.ResponseWriter, req *http.Request) {
-	curSession := s.sessionRegistry.GetSession(res, req)
+func (s *Base) VerifyEndpoint(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
 
-	result := &casCommon.VerifyEndpointResult{}
+	result := &cc.VerifyEndpointResult{}
 	for {
-		ptr := &casCommon.VerifyEndpointParam{}
+		ptr := &cc.VerifyEndpointParam{}
 		err := fn.ParseJSONBody(req, s.validator, ptr)
 		if err != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = "非法参数"
 			break
 		}
-		curNamespace := s.getCurrentNamespace(res, req)
+		curNamespace := s.getCurrentNamespace(ctx, res, req)
 		verifyEntity, verifySession, verifyErr := s.bizPtr.VerifyEndpoint(curSession.GetSessionInfo(), ptr.Endpoint, ptr.IdentifyID, ptr.AuthToken, curNamespace)
 		if verifyErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = verifyErr.Error()
 			break
 		}
 
 		entityRole, entityErr := s.bizPtr.VerifyEntityRole(verifySession, verifyEntity, curNamespace)
 		if entityErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = entityErr.Error()
 			break
 		}
 
 		curSession.SetSessionInfo(verifySession)
-		curSession.SetOption(commonSession.AuthAccount, verifyEntity)
-		curSession.SetOption(commonSession.AuthRole, entityRole)
-		curSession.SetOption(commonSession.AuthNamespace, curNamespace)
-		curSession.SetOption(commonSession.AuthRemoteAddress, fn.GetHTTPRemoteAddress(req))
+		curSession.SetOption(session.AuthAccount, verifyEntity)
+		curSession.SetOption(session.AuthRole, entityRole)
+		curSession.SetOption(session.AuthNamespace, curNamespace)
+		curSession.SetOption(session.AuthRemoteAddress, fn.GetHTTPRemoteAddress(req))
 		curSession.Flush(res, req)
 
 		result.Entity = verifyEntity
@@ -244,32 +245,32 @@ func (s *Base) VerifyEndpoint(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
-// RefreshSession refresh commonSession status
-func (s *Base) RefreshSession(res http.ResponseWriter, req *http.Request) {
-	curSession := s.sessionRegistry.GetSession(res, req)
+// RefreshSession refresh session status
+func (s *Base) RefreshSession(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
 
-	result := &casCommon.RefreshResult{}
+	result := &cc.RefreshResult{}
 	for {
-		curNamespace := s.getCurrentNamespace(res, req)
+		curNamespace := s.getCurrentNamespace(ctx, res, req)
 		refreshEntity, refreshSession, refreshErr := s.bizPtr.RefreshSession(curSession.GetSessionInfo(), curNamespace)
 		if refreshErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = refreshErr.Error()
 			break
 		}
 
 		entityRole, entityErr := s.bizPtr.VerifyEntityRole(refreshSession, refreshEntity, curNamespace)
 		if entityErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = entityErr.Error()
 			break
 		}
 
 		curSession.SetSessionInfo(refreshSession)
-		curSession.SetOption(commonSession.AuthAccount, refreshEntity)
-		curSession.SetOption(commonSession.AuthRole, entityRole)
-		curSession.SetOption(commonSession.AuthNamespace, curNamespace)
-		curSession.SetOption(commonSession.AuthRemoteAddress, fn.GetHTTPRemoteAddress(req))
+		curSession.SetOption(session.AuthAccount, refreshEntity)
+		curSession.SetOption(session.AuthRole, entityRole)
+		curSession.SetOption(session.AuthNamespace, curNamespace)
+		curSession.SetOption(session.AuthRemoteAddress, fn.GetHTTPRemoteAddress(req))
 		curSession.Flush(res, req)
 
 		result.SessionInfo = refreshSession
@@ -289,31 +290,32 @@ func (s *Base) RefreshSession(res http.ResponseWriter, req *http.Request) {
 }
 
 // QueryAccessLog query access log
-func (s *Base) QueryAccessLog(res http.ResponseWriter, req *http.Request) {
-	filter := fu.NewPageFilter()
+func (s *Base) QueryAccessLog(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
+
+	filter := fu.NewPagination()
 	filter.Decode(req)
 
-	result := &casCommon.AccessLogListResult{}
+	result := &cc.AccessLogListResult{}
 	for {
-		curSession := s.sessionRegistry.GetSession(res, req)
-		curEntity, curErr := s.getCurrentEntity(res, req)
+		curEntity, curErr := s.getCurrentEntity(ctx, res, req)
 		if curErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = "查询访问日志失败"
 			break
 		}
 
-		namespace := s.getCurrentNamespace(res, req)
+		namespace := s.getCurrentNamespace(ctx, res, req)
 		logList, logCount, logErr := s.bizPtr.QueryAccessLog(curSession.GetSessionInfo(), curEntity, filter, namespace)
 		if logErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = logErr.Error()
 			break
 		}
 
 		result.AccessLog = logList
 		result.Total = logCount
-		result.ErrorCode = commonDef.Success
+		result.ErrorCode = cd.Success
 		break
 	}
 
@@ -328,26 +330,26 @@ func (s *Base) QueryAccessLog(res http.ResponseWriter, req *http.Request) {
 }
 
 // QueryOperateLog query operate log
-func (s *Base) QueryOperateLog(res http.ResponseWriter, req *http.Request) {
-	pageFilter := fu.NewPageFilter()
-	pageFilter.Decode(req)
+func (s *Base) QueryOperateLog(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	filter := fu.NewFilter()
+	filter.Decode(req)
 
-	filter := bc.NewFilter()
-	filter.Page(pageFilter)
+	queryFilter := bc.NewFilter()
+	queryFilter.Page(filter.Pagination)
 	result := &common.OperateLogListResult{}
 	for {
-		namespace := s.getCurrentNamespace(res, req)
-		curEntity, curErr := s.getCurrentEntity(res, req)
+		namespace := s.getCurrentNamespace(ctx, res, req)
+		curEntity, curErr := s.getCurrentEntity(ctx, res, req)
 		if curErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = curErr.Error()
 			break
 		}
 
-		filter.Equal("Creater", curEntity.ID)
-		logList, logCount, logErr := s.bizPtr.QueryOperateLog(filter, namespace)
+		queryFilter.Equal("Creater", curEntity.ID)
+		logList, logCount, logErr := s.bizPtr.QueryOperateLog(queryFilter, namespace)
 		if logErr != nil {
-			result.ErrorCode = commonDef.Failed
+			result.ErrorCode = cd.Failed
 			result.Reason = logErr.Error()
 			break
 		}
@@ -359,7 +361,7 @@ func (s *Base) QueryOperateLog(res http.ResponseWriter, req *http.Request) {
 		}
 
 		result.Total = logCount
-		result.ErrorCode = commonDef.Success
+		result.ErrorCode = cd.Success
 		break
 	}
 
@@ -374,9 +376,9 @@ func (s *Base) QueryOperateLog(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func (s *Base) EnumPrivate(res http.ResponseWriter, req *http.Request) {
-	namespace := s.getCurrentNamespace(res, req)
-	result := &common.EnumPrivateItemResult{Private: []*casCommon.PrivateItem{}}
+func (s *Base) EnumPrivate(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	namespace := s.getCurrentNamespace(ctx, res, req)
+	result := &common.EnumPrivateItemResult{Private: []*cc.PrivateItem{}}
 	for {
 		items := s.roleRouteRegistry.GetAllPrivateItem()
 		for _, val := range items {
@@ -392,7 +394,7 @@ func (s *Base) EnumPrivate(res http.ResponseWriter, req *http.Request) {
 
 			result.Private = append(result.Private, val)
 		}
-		result.ErrorCode = commonDef.Success
+		result.ErrorCode = cd.Success
 		break
 	}
 
@@ -406,27 +408,28 @@ func (s *Base) EnumPrivate(res http.ResponseWriter, req *http.Request) {
 }
 
 // QueryBaseInfo get system info
-func (s *Base) QueryBaseInfo(res http.ResponseWriter, req *http.Request) {
+func (s *Base) QueryBaseInfo(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
+
 	type getResult struct {
-		commonDef.Result
+		cd.Result
 		Route   []*biz.Route   `json:"route"`
 		Content []*biz.Content `json:"content"`
 	}
 
 	result := &getResult{}
 	for {
-		curSession := s.sessionRegistry.GetSession(res, req)
-		curEntity, curErr := s.getCurrentEntity(res, req)
+		curEntity, curErr := s.getCurrentEntity(ctx, res, req)
 		if curErr != nil {
-			result.ErrorCode = commonDef.InvalidAuthority
+			result.ErrorCode = cd.InvalidAuthority
 			result.Reason = "无效账号"
 			break
 		}
 
-		curNamespace := s.getCurrentNamespace(res, req)
+		curNamespace := s.getCurrentNamespace(ctx, res, req)
 		entityRole, entityErr := s.bizPtr.VerifyEntityRole(curSession.GetSessionInfo(), curEntity, curNamespace)
 		if entityErr != nil {
-			result.ErrorCode = commonDef.InvalidAuthority
+			result.ErrorCode = cd.InvalidAuthority
 			result.Reason = "无效权限"
 			break
 		}
@@ -446,10 +449,10 @@ func (s *Base) QueryBaseInfo(res http.ResponseWriter, req *http.Request) {
 
 // Handle middleware handler
 func (s *Base) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
-	curSession := s.sessionRegistry.GetSession(res, req)
+	curSession := ctx.Context().Value(session.AuthSession).(session.Session)
 
 	sessionInfo := curSession.GetSessionInfo()
-	sessionInfo.Scope = commonSession.ShareSession
+	sessionInfo.Scope = session.ShareSession
 
 	values := req.URL.Query()
 	values = sessionInfo.Encode(values)
@@ -459,7 +462,7 @@ func (s *Base) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *h
 		urlPath = urlPath[len(common.ApiVersion):]
 	}
 
-	curNamespace := s.getCurrentNamespace(res, req)
+	curNamespace := s.getCurrentNamespace(ctx.Context(), res, req)
 	switch urlPath {
 	case common.UploadFile, common.ViewFile:
 		req.Header.Set("source", fmt.Sprintf("%s_%s", s.endpointName, curNamespace))
@@ -471,11 +474,11 @@ func (s *Base) Handle(ctx engine.RequestContext, res http.ResponseWriter, req *h
 }
 
 // RegisterRoute 注册路由
-func (s *Base) RegisterRoute(router engine.Router) {
+func (s *Base) RegisterRoute() {
 	// account login,logout, confirm, refresh
 	//---------------------------------------------------------------------------------------
 	loginRoute := engine.CreateRoute(common.LoginAccount, "POST", s.LoginAccount)
-	router.AddRoute(loginRoute, s)
+	s.routeRegistry.AddRoute(loginRoute, s)
 
 	logoutRoute := engine.CreateRoute(common.LogoutAccount, "DELETE", s.LogoutAccount)
 	s.casRouteRegistry.AddRoute(logoutRoute, s)
@@ -484,7 +487,7 @@ func (s *Base) RegisterRoute(router engine.Router) {
 	s.casRouteRegistry.AddRoute(changePasswordRoute, s)
 
 	verifyEndpointRoute := engine.CreateRoute(common.VerifyEndpoint, "POST", s.VerifyEndpoint)
-	router.AddRoute(verifyEndpointRoute, s)
+	s.routeRegistry.AddRoute(verifyEndpointRoute, s)
 
 	s.casRouteRegistry.AddHandler(common.RefreshSession, "GET", s.RefreshSession)
 
@@ -494,22 +497,22 @@ func (s *Base) RegisterRoute(router engine.Router) {
 
 	// upload file
 	//---------------------------------------------------------------------------------------
-	uploadFileURL := fn.JoinSuffix(s.fileService, strings.Join([]string{fileCommon.ApiVersion, fileCommon.UploadFileURL}, ""))
+	uploadFileURL := fn.JoinSuffix(s.fileService, strings.Join([]string{fc.ApiVersion, fc.UploadFileURL}, ""))
 	uploadFileRoute := engine.CreateProxyRoute(common.UploadFile, "POST", uploadFileURL, true)
-	router.AddRoute(uploadFileRoute, s)
+	s.routeRegistry.AddRoute(uploadFileRoute, s)
 
-	viewFileURL := fn.JoinSuffix(s.fileService, strings.Join([]string{fileCommon.ApiVersion, fileCommon.DownloadFileURL}, ""))
+	viewFileURL := fn.JoinSuffix(s.fileService, strings.Join([]string{fc.ApiVersion, fc.DownloadFileURL}, ""))
 	viewFileRoute := engine.CreateProxyRoute(common.ViewFile, "GET", viewFileURL, true)
-	router.AddRoute(viewFileRoute, s)
+	s.routeRegistry.AddRoute(viewFileRoute, s)
 
 	s.casRouteRegistry.AddHandler(common.EnumPrivate, "GET", s.EnumPrivate)
 	s.casRouteRegistry.AddHandler(common.QueryBaseInfo, "GET", s.QueryBaseInfo)
 }
 
-func (s *Base) writeLog(res http.ResponseWriter, req *http.Request, memo string) {
+func (s *Base) writeLog(ctx context.Context, res http.ResponseWriter, req *http.Request, memo string) {
 	address := fn.GetHTTPRemoteAddress(req)
-	curEntity, _ := s.getCurrentEntity(res, req)
-	curNamespace := s.getCurrentNamespace(res, req)
+	curEntity, _ := s.getCurrentEntity(ctx, res, req)
+	curNamespace := s.getCurrentNamespace(ctx, res, req)
 	logPtr := &model.Log{Address: address, Memo: memo, Creater: curEntity.ID, CreateTime: time.Now().UTC().Unix()}
 	_, logErr := s.bizPtr.WriteOperateLog(logPtr, curNamespace)
 	if logErr != nil {
@@ -517,19 +520,19 @@ func (s *Base) writeLog(res http.ResponseWriter, req *http.Request, memo string)
 	}
 }
 
-func (s *Base) getCurrentEntity(res http.ResponseWriter, req *http.Request) (ret *casCommon.EntityView, err error) {
-	curSession := s.sessionRegistry.GetSession(res, req)
-	authVal, ok := curSession.GetOption(commonSession.AuthAccount)
+func (s *Base) getCurrentEntity(ctx context.Context, res http.ResponseWriter, req *http.Request) (ret *cc.EntityView, err error) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
+	authVal, ok := curSession.GetOption(session.AuthAccount)
 	if !ok {
 		err = fmt.Errorf("无效权限,未通过验证")
 		return
 	}
-	ret = authVal.(*casCommon.EntityView)
+	ret = authVal.(*cc.EntityView)
 	return
 }
 
-func (s *Base) getCurrentNamespace(res http.ResponseWriter, req *http.Request) (ret string) {
-	namespace := req.Header.Get(casCommon.NamespaceID)
+func (s *Base) getCurrentNamespace(ctx context.Context, res http.ResponseWriter, req *http.Request) (ret string) {
+	namespace := req.Header.Get(cc.NamespaceID)
 	if namespace != "" {
 		ret = namespace
 		return

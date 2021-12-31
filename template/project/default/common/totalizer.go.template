@@ -4,7 +4,7 @@ import "github.com/muidea/{{.ProjectName}}/model"
 
 const (
 	CreateTotalizer = "/base/totalizer/create/"
-	DeleteTotalizer = "/base/totalizer/delete/:id"
+	DeleteTotalizer = "/base/totalizer/destroy/:id"
 	UpdateTotalizer = "/base/totalizer/update/:id"
 	QueryTotalizer  = "/base/totalizer/query/"
 )

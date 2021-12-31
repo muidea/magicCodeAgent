@@ -9,31 +9,31 @@ import (
 	"github.com/muidea/magicCommon/foundation/net"
 	"github.com/muidea/magicCommon/foundation/util"
 
-	commonDef "github.com/muidea/magicCommon/def"
-	commonSession "github.com/muidea/magicCommon/session"
+	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/session"
 
-	casCommon "github.com/muidea/magicCas/common"
+	cc "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 )
 
 // Client client interface
 type Client interface {
-	RefreshAccessSession() (*casCommon.EntityView, *commonSession.SessionInfo, error)
-	LoginAccessAccount(account, password string) (*casCommon.EntityView, *commonSession.SessionInfo, error)
-	LogoutAccessAccount() (*commonSession.SessionInfo, error)
-	UpdateAccountPassword(ptr *casCommon.UpdatePasswordParam) (ret *casCommon.AccountView, err error)
-	VerifyAccessEndpoint(endpointName, identifyID, authToken string) (*casCommon.EntityView, *commonSession.SessionInfo, error)
-	VerifyEntityRole(ptr *casCommon.EntityView) (*casCommon.RoleView, error)
-	QueryAccessEntity(id int) (*casCommon.EntityView, error)
-	FilterAccessLog(ptr *casCommon.EntityView, filter *util.PageFilter) ([]*casCommon.LogView, int64, error)
+	RefreshAccessSession() (*cc.EntityView, *session.SessionInfo, error)
+	LoginAccessAccount(account, password string) (*cc.EntityView, *session.SessionInfo, error)
+	LogoutAccessAccount() (*session.SessionInfo, error)
+	UpdateAccountPassword(ptr *cc.UpdatePasswordParam) (ret *cc.AccountView, err error)
+	VerifyAccessEndpoint(endpointName, identifyID, authToken string) (*cc.EntityView, *session.SessionInfo, error)
+	VerifyEntityRole(ptr *cc.EntityView) (*cc.RoleView, error)
+	QueryAccessEntity(id int) (*cc.EntityView, error)
+	FilterAccessLog(ptr *cc.EntityView, filter *util.Pagination) ([]*cc.LogView, int64, error)
 
-	AttachContext(ctx commonSession.ContextInfo)
+	AttachContext(ctx session.ContextInfo)
 	DetachContext()
 
 	AttachNameSpace(namespace string)
 
-	BindSession(sessionInfo *commonSession.SessionInfo)
+	BindSession(sessionInfo *session.SessionInfo)
 	UnBindSession()
 
 	Release()
@@ -48,14 +48,14 @@ func NewClient(serverURL string) Client {
 
 type client struct {
 	serverURL   string
-	sessionInfo *commonSession.SessionInfo
-	contextInfo commonSession.ContextInfo
+	sessionInfo *session.SessionInfo
+	contextInfo session.ContextInfo
 	namespace   string
 	httpClient  *http.Client
 }
 
-func (s *client) RefreshAccessSession() (*casCommon.EntityView, *commonSession.SessionInfo, error) {
-	result := &casCommon.RefreshResult{}
+func (s *client) RefreshAccessSession() (*cc.EntityView, *session.SessionInfo, error) {
+	result := &cc.RefreshResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {
@@ -69,7 +69,7 @@ func (s *client) RefreshAccessSession() (*casCommon.EntityView, *commonSession.S
 		return nil, nil, err
 	}
 
-	if result.ErrorCode != commonDef.Success {
+	if result.ErrorCode != cd.Success {
 		err = fmt.Errorf("刷新会话失败，%s", result.Reason)
 		return nil, nil, err
 	}
@@ -77,8 +77,8 @@ func (s *client) RefreshAccessSession() (*casCommon.EntityView, *commonSession.S
 	return result.Entity, result.SessionInfo, nil
 }
 
-func (s *client) LoginAccessAccount(account, password string) (*casCommon.EntityView, *commonSession.SessionInfo, error) {
-	result := &casCommon.LoginResult{}
+func (s *client) LoginAccessAccount(account, password string) (*cc.EntityView, *session.SessionInfo, error) {
+	result := &cc.LoginResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {
@@ -87,21 +87,21 @@ func (s *client) LoginAccessAccount(account, password string) (*casCommon.Entity
 	url, _ := url.ParseRequestURI(s.serverURL)
 	url.Path = strings.Join([]string{url.Path, common.ApiVersion, common.LoginAccount}, "")
 	url.RawQuery = vals.Encode()
-	param := &casCommon.LoginParam{Account: account, Password: password}
+	param := &cc.LoginParam{Account: account, Password: password}
 	_, err := net.HTTPPost(s.httpClient, url.String(), param, result, s.getContextValues())
 	if err != nil {
 		return nil, s.sessionInfo, err
 	}
 
-	if result.ErrorCode != commonDef.Success {
+	if result.ErrorCode != cd.Success {
 		err = fmt.Errorf("登录失败，%s", result.Reason)
 	}
 
 	return result.Entity, result.SessionInfo, err
 }
 
-func (s *client) LogoutAccessAccount() (*commonSession.SessionInfo, error) {
-	result := &casCommon.LogoutResult{}
+func (s *client) LogoutAccessAccount() (*session.SessionInfo, error) {
+	result := &cc.LogoutResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {
@@ -115,15 +115,15 @@ func (s *client) LogoutAccessAccount() (*commonSession.SessionInfo, error) {
 		return s.sessionInfo, err
 	}
 
-	if result.ErrorCode != commonDef.Success {
+	if result.ErrorCode != cd.Success {
 		err = fmt.Errorf("登出失败，%s", result.Reason)
 	}
 
 	return result.SessionInfo, err
 }
 
-func (s *client) UpdateAccountPassword(ptr *casCommon.UpdatePasswordParam) (ret *casCommon.AccountView, err error) {
-	result := &casCommon.AccountResult{}
+func (s *client) UpdateAccountPassword(ptr *cc.UpdatePasswordParam) (ret *cc.AccountView, err error) {
+	result := &cc.AccountResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {
@@ -137,7 +137,7 @@ func (s *client) UpdateAccountPassword(ptr *casCommon.UpdatePasswordParam) (ret 
 		return
 	}
 
-	if result.ErrorCode != commonDef.Success {
+	if result.ErrorCode != cd.Success {
 		err = fmt.Errorf("修改账号密码失败，%s", result.Reason)
 		return
 	}
@@ -146,8 +146,8 @@ func (s *client) UpdateAccountPassword(ptr *casCommon.UpdatePasswordParam) (ret 
 	return
 }
 
-func (s *client) VerifyAccessEndpoint(endpointName, identifyID, authToken string) (*casCommon.EntityView, *commonSession.SessionInfo, error) {
-	result := &casCommon.VerifyEndpointResult{}
+func (s *client) VerifyAccessEndpoint(endpointName, identifyID, authToken string) (*cc.EntityView, *session.SessionInfo, error) {
+	result := &cc.VerifyEndpointResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {
@@ -156,21 +156,21 @@ func (s *client) VerifyAccessEndpoint(endpointName, identifyID, authToken string
 	url, _ := url.ParseRequestURI(s.serverURL)
 	url.Path = strings.Join([]string{url.Path, common.ApiVersion, common.VerifyEndpoint}, "")
 	url.RawQuery = vals.Encode()
-	param := &casCommon.VerifyEndpointParam{Endpoint: endpointName, IdentifyID: identifyID, AuthToken: authToken}
+	param := &cc.VerifyEndpointParam{Endpoint: endpointName, IdentifyID: identifyID, AuthToken: authToken}
 	_, err := net.HTTPPost(s.httpClient, url.String(), param, result, s.getContextValues())
 	if err != nil {
 		return nil, s.sessionInfo, err
 	}
 
-	if result.ErrorCode != commonDef.Success {
+	if result.ErrorCode != cd.Success {
 		err = fmt.Errorf("校验终端失败，%s", result.Reason)
 	}
 
 	return result.Entity, result.SessionInfo, err
 }
 
-func (s *client) VerifyEntityRole(ptr *casCommon.EntityView) (*casCommon.RoleView, error) {
-	result := &casCommon.EntityRoleResult{}
+func (s *client) VerifyEntityRole(ptr *cc.EntityView) (*cc.RoleView, error) {
+	result := &cc.EntityRoleResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {
@@ -185,7 +185,7 @@ func (s *client) VerifyEntityRole(ptr *casCommon.EntityView) (*casCommon.RoleVie
 		return nil, err
 	}
 
-	if result.ErrorCode != commonDef.Success {
+	if result.ErrorCode != cd.Success {
 		err = fmt.Errorf("校验访问对象失败，%s", result.Reason)
 		return nil, err
 	}
@@ -193,8 +193,8 @@ func (s *client) VerifyEntityRole(ptr *casCommon.EntityView) (*casCommon.RoleVie
 	return result.Role, nil
 }
 
-func (s *client) QueryAccessEntity(id int) (ret *casCommon.EntityView, err error) {
-	result := &casCommon.QueryEntityResult{}
+func (s *client) QueryAccessEntity(id int) (ret *cc.EntityView, err error) {
+	result := &cc.QueryEntityResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {
@@ -210,7 +210,7 @@ func (s *client) QueryAccessEntity(id int) (ret *casCommon.EntityView, err error
 		return
 	}
 
-	if result.ErrorCode != commonDef.Success {
+	if result.ErrorCode != cd.Success {
 		err = fmt.Errorf("查询失败，%s", result.Reason)
 		return
 	}
@@ -219,8 +219,8 @@ func (s *client) QueryAccessEntity(id int) (ret *casCommon.EntityView, err error
 	return
 }
 
-func (s *client) FilterAccessLog(entityPtr *casCommon.EntityView, filter *util.PageFilter) (ret []*casCommon.LogView, total int64, err error) {
-	result := &casCommon.AccessLogListResult{}
+func (s *client) FilterAccessLog(entityPtr *cc.EntityView, filter *util.Pagination) (ret []*cc.LogView, total int64, err error) {
+	result := &cc.AccessLogListResult{}
 
 	vals := url.Values{}
 	if s.sessionInfo != nil {
@@ -241,7 +241,7 @@ func (s *client) FilterAccessLog(entityPtr *casCommon.EntityView, filter *util.P
 		return
 	}
 
-	if result.ErrorCode != commonDef.Success {
+	if result.ErrorCode != cd.Success {
 		err = fmt.Errorf("查询日志失败，%s", result.Reason)
 		return
 	}
@@ -251,7 +251,7 @@ func (s *client) FilterAccessLog(entityPtr *casCommon.EntityView, filter *util.P
 	return
 }
 
-func (s *client) AttachContext(ctx commonSession.ContextInfo) {
+func (s *client) AttachContext(ctx session.ContextInfo) {
 	s.contextInfo = ctx
 }
 
@@ -265,7 +265,7 @@ func (s *client) getContextValues() url.Values {
 		ret = s.contextInfo.Encode(ret)
 	}
 	if s.namespace != "" {
-		ret.Set(casCommon.NamespaceID, s.namespace)
+		ret.Set(cc.NamespaceID, s.namespace)
 	}
 
 	return ret
@@ -275,7 +275,7 @@ func (s *client) AttachNameSpace(namespace string) {
 	s.namespace = namespace
 }
 
-func (s *client) BindSession(sessionInfo *commonSession.SessionInfo) {
+func (s *client) BindSession(sessionInfo *session.SessionInfo) {
 	s.sessionInfo = sessionInfo
 }
 

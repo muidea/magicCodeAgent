@@ -2,19 +2,20 @@ package biz
 
 import (
 	"fmt"
-	commonSession "github.com/muidea/magicCommon/session"
 
 	bc "github.com/muidea/magicBatis/common"
 
 	"github.com/muidea/magicCommon/event"
 	fn "github.com/muidea/magicCommon/foundation/net"
+	"github.com/muidea/magicCommon/session"
 
-	casCommon "github.com/muidea/magicCas/common"
+	cc "github.com/muidea/magicCas/common"
+
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
-func (s *Setting) QuerySettingProfile(sessionInfo *commonSession.SessionInfo, entityPtr *casCommon.EntityView, namespace string) (ret *casCommon.AccountView, err error) {
+func (s *Setting) QuerySettingProfile(sessionInfo *session.SessionInfo, entityPtr *cc.EntityView, namespace string) (ret *cc.AccountView, err error) {
 	eid := fn.FormatID(common.QueryAuthorityAccount, entityPtr.EID)
 	header := event.NewValues()
 	header.Set("namespace", namespace)
@@ -31,7 +32,7 @@ func (s *Setting) QuerySettingProfile(sessionInfo *commonSession.SessionInfo, en
 		err = resultErr
 		return
 	}
-	accountPtr := resultVal.(*casCommon.AccountView)
+	accountPtr := resultVal.(*cc.AccountView)
 	if accountPtr == nil {
 		err = fmt.Errorf("illegal account value")
 		return
@@ -41,7 +42,7 @@ func (s *Setting) QuerySettingProfile(sessionInfo *commonSession.SessionInfo, en
 	return
 }
 
-func (s *Setting) QueryOperateLog(sessionInfo *commonSession.SessionInfo, filter *bc.QueryFilter, namespace string) (ret []*model.Log, err error) {
+func (s *Setting) QueryOperateLog(sessionInfo *session.SessionInfo, filter *bc.QueryFilter, namespace string) (ret []*model.Log, err error) {
 	eid := common.QueryOperateLog
 	header := event.NewValues()
 	header.Set("namespace", namespace)

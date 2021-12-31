@@ -1,15 +1,15 @@
 package biz
 
 import (
-	commonDef "github.com/muidea/magicCommon/def"
-	commonSession "github.com/muidea/magicCommon/session"
+	fu "github.com/muidea/magicCommon/foundation/util"
+	"github.com/muidea/magicCommon/session"
 
-	casClient "github.com/muidea/magicCas/client"
-	casCommon "github.com/muidea/magicCas/common"
+	cClnt "github.com/muidea/magicCas/client"
+	cc "github.com/muidea/magicCas/common"
 )
 
-func (s *Authority) FilterAuthorityAccount(sessionInfo *commonSession.SessionInfo, filter *commonDef.Filter, namespace string) (ret []*casCommon.AccountView, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) FilterAuthorityAccount(sessionInfo *session.SessionInfo, filter *fu.ContentFilter, namespace string) (ret []*cc.AccountView, total int64, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -19,8 +19,8 @@ func (s *Authority) FilterAuthorityAccount(sessionInfo *commonSession.SessionInf
 	return
 }
 
-func (s *Authority) FilterAuthorityAccountLite(sessionInfo *commonSession.SessionInfo, filter *commonDef.Filter, namespace string) (ret []*casCommon.AccountLite, total int64, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) FilterAuthorityAccountLite(sessionInfo *session.SessionInfo, filter *fu.ContentFilter, namespace string) (ret []*cc.AccountLite, total int64, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -30,8 +30,8 @@ func (s *Authority) FilterAuthorityAccountLite(sessionInfo *commonSession.Sessio
 	return
 }
 
-func (s *Authority) QueryAuthorityAccount(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.AccountView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) QueryAuthorityAccount(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.AccountView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -41,20 +41,20 @@ func (s *Authority) QueryAuthorityAccount(sessionInfo *commonSession.SessionInfo
 	return
 }
 
-func (s *Authority) CreateAuthorityAccount(sessionInfo *commonSession.SessionInfo, ptr *casCommon.AccountParam, namespace string) (ret *casCommon.AccountView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) CreateAuthorityAccount(sessionInfo *session.SessionInfo, ptr *cc.AccountParam, namespace string) (ret *cc.AccountView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
 	clnt.AttachNameSpace(namespace)
 
-	param := &casCommon.AccountParam{Account: ptr.Account, Password: ptr.Password, EMail: ptr.EMail, Description: ptr.Description}
+	param := &cc.AccountParam{Account: ptr.Account, Password: ptr.Password, EMail: ptr.EMail, Description: ptr.Description}
 	ret, err = clnt.CreateAccount(param)
 	return
 }
 
-func (s *Authority) UpdateAuthorityAccount(sessionInfo *commonSession.SessionInfo, id int, ptr *casCommon.AccountParam, namespace string) (ret *casCommon.AccountView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) UpdateAuthorityAccount(sessionInfo *session.SessionInfo, id int, ptr *cc.AccountParam, namespace string) (ret *cc.AccountView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
@@ -64,8 +64,8 @@ func (s *Authority) UpdateAuthorityAccount(sessionInfo *commonSession.SessionInf
 	return
 }
 
-func (s *Authority) DeleteAuthorityAccount(sessionInfo *commonSession.SessionInfo, id int, namespace string) (ret *casCommon.AccountView, err error) {
-	clnt := casClient.NewClient(s.casService)
+func (s *Authority) DeleteAuthorityAccount(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.AccountView, err error) {
+	clnt := cClnt.NewClient(s.casService)
 	defer clnt.Release()
 
 	clnt.BindSession(sessionInfo)
