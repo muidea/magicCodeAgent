@@ -89,10 +89,13 @@ func (s *Core) Startup(
 	casRegistry := toolkit.NewCasRegistry(s, router)
 	roleRegistry := toolkit.NewRoleRegistry(s, router)
 
+	s.sessionRegistry = session.CreateRegistry(s)
+
 	persistence.Initialize(s.endpointName)
 
 	s.httpServer = engine.NewHTTPServer(s.listenPort)
 	s.httpServer.Bind(router)
+	s.httpServer.Use(s)
 
 	modules := module.GetModules()
 	for _, val := range modules {
