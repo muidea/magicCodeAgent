@@ -10,7 +10,6 @@ WORKDIR /var/app
 
 ADD {{.ProjectName}} /var/app/{{.ProjectName}}
 ADD bootstrap.sh /var/app/bootstrap.sh
-ADD cfg.json /var/app/config/cfg.json
 
 RUN chmod +x /var/app/{{.ProjectName}}
 RUN chmod +x /var/app/bootstrap.sh

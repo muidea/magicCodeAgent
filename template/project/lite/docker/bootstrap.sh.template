@@ -9,8 +9,4 @@ if [ $ENDPOINTNAME ]; then
     EXTRA_ARGS=$EXTRA_ARGS' -EndpointName='$ENDPOINTNAME
 fi
 
-if [ $DEV ]; then
-    echo $EXTRA_ARGS
-fi
-
 /var/app/{{.ProjectName}} $EXTRA_ARGS "$@"
