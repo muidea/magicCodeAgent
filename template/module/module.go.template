@@ -27,7 +27,7 @@ type {{.ModuleName}} struct {
 	biz     *biz.{{.ModuleName}}
 }
 
-func New() module.Module {
+func New() *{{.ModuleName}} {
 	return &{{.ModuleName}}{}
 }
 

@@ -9,9 +9,9 @@ var casService = "http://127.0.0.1:8081"
 var fileService = "http://127.0.0.1:8083"
 var superNamespace = "super"
 var databaseServer = ""
-var databaseName = "magicvmi_db"
-var databaseUsername = "magicvmi"
-var databasePassword = "magicvmi"
+var databaseName = "{{toLower .ProjectName}}_db"
+var databaseUsername = "{{toLower .ProjectName}}"
+var databasePassword = "{{toLower .ProjectName}}"
 var databaseMaxConnection = 10
 
 var configItem *CfgItem

@@ -14,7 +14,7 @@ import (
 )
 
 var listenPort = "8080"
-var endpointName = "{{.ProjectName}}"
+var endpointName = "{{toLower .ProjectName}}"
 
 func initPprofMonitor(listenPort string) error {
 	var err error
