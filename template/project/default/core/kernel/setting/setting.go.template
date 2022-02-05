@@ -26,7 +26,7 @@ type Setting struct {
 	biz     *biz.Setting
 }
 
-func New() module.Module {
+func New() *Setting {
 	return &Setting{}
 }
 

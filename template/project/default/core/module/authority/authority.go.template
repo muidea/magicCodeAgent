@@ -26,7 +26,7 @@ type Authority struct {
 	biz     *biz.Authority
 }
 
-func New() module.Module {
+func New() *Authority {
 	return &Authority{}
 }
 

@@ -18,7 +18,7 @@ type Totalizer struct {
 	biz *biz.Totalizer
 }
 
-func New() module.Module {
+func New() *Totalizer {
 	return &Totalizer{}
 }
 

@@ -26,7 +26,7 @@ type Image struct {
 	biz     *biz.Image
 }
 
-func New() module.Module {
+func New() *Image {
 	return &Image{}
 }
 
