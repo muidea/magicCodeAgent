@@ -1,4 +1,4 @@
-package model
+package common
 
 import (
 	"bytes"
@@ -14,7 +14,16 @@ import (
 	"github.com/muidea/magicToolkit/parser"
 )
 
-func (s *Model) declarePackage(ptr *parser.Package) (ret string) {
+type Common struct {
+	rootPath    string
+	projectName string
+}
+
+func New(rootPath, projectName string) *Common {
+	return &Common{rootPath: rootPath, projectName: projectName}
+}
+
+func (s *Common) declarePackage(ptr *parser.Package) (ret string) {
 	packageDeclare := `
 package common
 `
@@ -24,7 +33,7 @@ package common
 	return
 }
 
-func (s *Model) declareImport(ptr *parser.Package) (ret string) {
+func (s *Common) declareImport(ptr *parser.Package) (ret string) {
 	importDeclare := `
 import (
 	cc "github.com/muidea/magicCas/common"
@@ -43,7 +52,7 @@ import (
 	return
 }
 
-func (s *Model) declareModule(ptr *parser.Package) (ret string) {
+func (s *Common) declareModule(ptr *parser.Package) (ret string) {
 	moduleDeclare := `
 const {{.ModuleName}}Module = "/module/{{toLower .ModuleName}}"
 `
@@ -60,7 +69,7 @@ const {{.ModuleName}}Module = "/module/{{toLower .ModuleName}}"
 	return
 }
 
-func (s *Model) declareAction(ptr *parser.Package) (ret string) {
+func (s *Common) declareAction(ptr *parser.Package) (ret string) {
 	actionDeclare := `
 const (
 {{range .ItemsList}}
@@ -105,7 +114,7 @@ const (
 	return
 }
 
-func (s *Model) declareMessage(ptr *parser.Package) (ret string) {
+func (s *Common) declareMessage(ptr *parser.Package) (ret string) {
 	messageDeclare := `{{$BackQuote := .BackQuote}}
 {{range .ItemsList}}
 type {{.NameVal}}View struct {
@@ -177,7 +186,7 @@ type {{.NameVal}}ListResult struct {
 	return
 }
 
-func (s *Model) createCommon(ptr *parser.Package) (err error) {
+func (s *Common) Create(ptr *parser.Package) (err error) {
 	if len(ptr.Objects) == 0 {
 		return
 	}

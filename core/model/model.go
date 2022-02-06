@@ -6,6 +6,7 @@ import (
 
 	log "github.com/cihub/seelog"
 
+	"github.com/muidea/magicToolkit/core/model/common"
 	"github.com/muidea/magicToolkit/core/module"
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
@@ -54,7 +55,8 @@ func (s *Model) Create(projectName string) (err error) {
 			return
 		}
 
-		commonErr := s.createCommon(packagePtr)
+		commonPtr := common.New(s.rootPath, s.projectName)
+		commonErr := commonPtr.Create(packagePtr)
 		if commonErr != nil {
 			log.Errorf("create common file failed, name:%s, err:%s", packagePtr.Name, commonErr.Error())
 			return
