@@ -2,11 +2,12 @@ package factory
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path"
 	"text/template"
+
+	log "github.com/cihub/seelog"
 
 	fu "github.com/muidea/magicCommon/foundation/util"
 	"github.com/muidea/magicToolkit/core/util"
@@ -41,7 +42,7 @@ func RegisterFunc(name string, funcPtr interface{}) {
 
 	_, curOK := functionMap[name]
 	if curOK {
-		log.Panicf("duplicate function,name:%s", name)
+		log.Criticalf("duplicate function,name:%s", name)
 	}
 
 	functionMap[name] = funcPtr

@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/muidea/magicToolkit/core/project"
 )
@@ -29,15 +30,15 @@ func createProject(curPath string) {
 		return
 	}
 
-	project := project.New(curPath)
-	curProject, curErr := project.Create(projectName, projectType)
+	ptr := project.New(curPath)
+	curProject, curErr := ptr.Create(projectName, projectType)
 	if curErr != nil {
-		log.Printf("Create project failed, err:%s", curErr.Error())
+		log.Errorf("Create project failed, err:%s", curErr.Error())
 		return
 	}
 	curErr = saveProjectDefine(curPath, curProject)
 	if curErr != nil {
-		log.Printf("save project define failed, err:%s", curErr.Error())
+		log.Errorf("save project define failed, err:%s", curErr.Error())
 		return
 	}
 }

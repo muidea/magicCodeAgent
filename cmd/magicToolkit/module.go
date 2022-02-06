@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+
+	log "github.com/cihub/seelog"
 
 	"github.com/muidea/magicToolkit/core/module"
 )
@@ -33,14 +34,22 @@ func createModule(curPath string) {
 		return
 	}
 
-	module := module.New(curPath)
-	curModule, curErr := module.Create(projectDefine.ProjectName, moduleName)
+	ptr := module.New(curPath)
+	curModule, curErr := ptr.Create(projectDefine.ProjectName, moduleName)
 	if curErr != nil {
-		log.Printf("Create module failed, err:%s", curErr.Error())
+		log.Errorf("Create module failed, err:%s", curErr.Error())
 		return
 	}
 
-	projectDefine.Module = append(projectDefine.Module, curModule)
+	found := false
+	for _, val := range projectDefine.Module {
+		if val.Name == curModule.Name {
+			found = true
+		}
+	}
+	if !found {
+		projectDefine.Module = append(projectDefine.Module, curModule)
+	}
 	projectErr = saveProjectDefine(curPath, projectDefine)
 	if projectErr != nil {
 		fmt.Printf("save project define failed, err:%s", projectErr.Error())

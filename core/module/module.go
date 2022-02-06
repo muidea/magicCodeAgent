@@ -2,13 +2,15 @@ package module
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path"
+	"strings"
+
+	log "github.com/cihub/seelog"
+
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/model"
-	"io/ioutil"
-	"log"
-	"path"
-	"strings"
 )
 
 type Module struct {
@@ -27,7 +29,7 @@ func (s *Module) Create(projectName, moduleName string) (ret *model.Module, err 
 
 	err = s.walkTemplate("")
 	if err != nil {
-		log.Printf("walkTemplate failed, err:%s", err.Error())
+		log.Errorf("walkTemplate failed, err:%s", err.Error())
 		return
 	}
 
@@ -59,11 +61,6 @@ func (s *Module) walkTemplate(relativePath string) (err error) {
 
 	for _, fd := range fdList {
 		fileName := fd.Name()
-		func() {
-			if err != nil {
-				log.Printf("init project failed, relativePath:%s,file:%s", relativePath, fileName)
-			}
-		}()
 		if fd.IsDir() {
 			err = s.walkTemplate(path.Join(relativePath, fileName))
 			if err != nil {
@@ -89,7 +86,7 @@ func (s *Module) walkTemplate(relativePath string) (err error) {
 }
 
 func (s *Module) cloneModuleContent(templatePath, filePath, fileName string) (err error) {
-	log.Print(fileName)
+	log.Infof(fileName)
 
 	contentVal := map[string]interface{}{
 		"ProjectName": s.projectName,

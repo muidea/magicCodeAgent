@@ -2,15 +2,16 @@ package project
 
 import (
 	"fmt"
-	"github.com/muidea/magicToolkit/model"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strings"
 
+	log "github.com/cihub/seelog"
+
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
+	"github.com/muidea/magicToolkit/model"
 )
 
 // Project core define
@@ -19,7 +20,7 @@ type Project struct {
 	rootPath    string
 }
 
-// New new core
+// New Project
 func New(rootPath string) *Project {
 	return &Project{rootPath: rootPath}
 }
@@ -36,7 +37,7 @@ func (s *Project) getFile(filePath string) (ret *os.File, err error) {
 }
 
 func (s *Project) cloneContent(templatePath, filePath, fileName string) (err error) {
-	log.Print(fileName)
+	log.Infof(fileName)
 
 	contentVal := map[string]interface{}{"ProjectName": s.projectName}
 	factoryPtr := factory.NewFileFactory(templatePath, s.rootPath, filePath, fileName, contentVal)
@@ -93,11 +94,6 @@ func (s *Project) walkTemplate(relativePath, projectType string) (err error) {
 
 	for _, fd := range fdList {
 		fileName := fd.Name()
-		func() {
-			if err != nil {
-				log.Printf("init project failed, relativePath:%s,file:%s", relativePath, fileName)
-			}
-		}()
 		if fd.IsDir() {
 			err = s.walkTemplate(path.Join(relativePath, fileName), projectType)
 			if err != nil {

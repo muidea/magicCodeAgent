@@ -5,6 +5,8 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"path"
+	"strings"
 )
 
 type Item struct {
@@ -20,8 +22,9 @@ type Object struct {
 }
 
 type Package struct {
-	Name    string    `json:"name"`
-	Objects []*Object `json:"objects"`
+	Name     string    `json:"packageName"`
+	FileName string    `json:"fileName"`
+	Objects  []*Object `json:"objects"`
 }
 
 func parseIdent(ptr *ast.Ident) (ret string, err error) {
@@ -87,14 +90,25 @@ func parseField(ptr *ast.Field) (ret *Item, err error) {
 		ret.Type, err = parseArray(t)
 		return
 	case *ast.StarExpr:
+		strVal, bVal, errVal := parseStart(t)
+		if errVal != nil {
+			err = errVal
+			return
+		}
+		if bVal {
+			err = fmt.Errorf("illegal field define,name:%v, pos:%v, end:%v", ptr.Names[0].Name, ptr.Pos(), ptr.End())
+			return
+		}
+
 		ret.IsPtr = true
-		ret.Type, ret.IsArray, err = parseStart(t)
+		ret.IsArray = bVal
+		ret.Type = strVal
 		return
 	default:
-		err = fmt.Errorf("illegal field, pos:%v, end:%v", t.Pos(), t.End())
+		err = fmt.Errorf("illegal field define,name:%v, pos:%v, end:%v", ptr.Names[0].Name, ptr.Pos(), ptr.End())
 	}
 
-	err = fmt.Errorf("illegal field, pos:%v, end:%v", ptr.Pos(), ptr.End())
+	err = fmt.Errorf("illegal field define,name:%v, pos:%v, end:%v", ptr.Names[0].Name, ptr.Pos(), ptr.End())
 	return
 }
 
@@ -129,9 +143,17 @@ func parseObject(ptr *ast.Object) (ret *Object, err error) {
 	return
 }
 
-func Parse(fileName string) (ret *Package, err error) {
+func Parse(fullFileName string) (ret *Package, err error) {
+	_, fileName := path.Split(fullFileName)
+	strItems := strings.Split(fileName, ".")
+	if len(strItems) != 2 || strItems[1] != "go" {
+		err = fmt.Errorf("illegal file, fileName:%s", fullFileName)
+		return
+	}
+	fileName = strItems[0]
+
 	fSet := token.NewFileSet() // positions are relative to fSet
-	astFile, astErr := parser.ParseFile(fSet, fileName, nil, parser.AllErrors)
+	astFile, astErr := parser.ParseFile(fSet, fullFileName, nil, parser.AllErrors)
 	if astErr != nil {
 		err = astErr
 		return
@@ -139,10 +161,12 @@ func Parse(fileName string) (ret *Package, err error) {
 
 	ret = &Package{}
 	ret.Name = astFile.Name.Name
+	ret.FileName = fileName
+
 	for _, val := range astFile.Scope.Objects {
 		objPtr, objErr := parseObject(val)
 		if objErr != nil {
-			err = objErr
+			err = fmt.Errorf("illegal object, name:%s, reason:[%s]", objPtr.Name, objErr.Error())
 			return
 		}
 

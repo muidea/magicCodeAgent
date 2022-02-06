@@ -4,7 +4,7 @@ type Define struct {
 	ApiVersion  string    `json:"apiVersion"`
 	ProjectName *string   `json:"projectName"`
 	Module      []*Module `json:"module"`
-	Model       *[]*Model `json:"model"`
+	Model       []*Model  `json:"model"`
 }
 
 type Module struct {
