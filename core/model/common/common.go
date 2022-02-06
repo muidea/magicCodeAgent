@@ -118,31 +118,39 @@ func (s *Common) declareMessage(ptr *parser.Package) (ret string) {
 	messageDeclare := `{{$BackQuote := .BackQuote}}
 {{range .ItemsList}}
 type {{.NameVal}}View struct {
+// TODO
 }
 
 func (s *{{.NameVal}}View) From{{.NameVal}}(ptr *model.{{.NameVal}}) {
+// TODO
 	return
 }
 
 type {{.NameVal}}Lite struct {
+// TODO
 }
 
 func (s *{{.NameVal}}Lite) From{{.NameVal}}(ptr *model.{{.NameVal}}) {
+// TODO
 	return
 }
 
 func (s *{{.NameVal}}Lite) FromView(ptr *{{.NameVal}}View) {
+// TODO
 	return
 }
 
 func (s *{{.NameVal}}Lite) To{{.NameVal}}() (ret *model.{{.NameVal}}) {
+// TODO
 	return
 }
 
 type {{.NameVal}}Param struct {
+// TODO
 }
 
 func (s *{{.NameVal}}Param) To{{.NameVal}}() (ret *model.{{.NameVal}}) {
+// TODO
 	return
 }
 
