@@ -8,6 +8,7 @@ import (
 
 	"github.com/muidea/magicToolkit/core/module"
 	"github.com/muidea/magicToolkit/core/util"
+	"github.com/muidea/magicToolkit/model"
 	"github.com/muidea/magicToolkit/parser"
 )
 
@@ -47,9 +48,24 @@ func (s *Model) Create(projectName string) (err error) {
 			log.Errorf("parse failed, file:%s, err:%s", fullPath, packageErr)
 		}
 
-		modulePtr := module.New(s.rootPath)
-		modulePtr.Create(s.projectName, util.ToTitle(packagePtr.FileName))
+		_, moduleErr := s.createModule(packagePtr)
+		if moduleErr != nil {
+			log.Errorf("create module failed, name:%s, err:%s", packagePtr.Name, moduleErr.Error())
+			return
+		}
+
+		commonErr := s.createCommon(packagePtr)
+		if commonErr != nil {
+			log.Errorf("create common file failed, name:%s, err:%s", packagePtr.Name, commonErr.Error())
+			return
+		}
 	}
 
+	return
+}
+
+func (s *Model) createModule(ptr *parser.Package) (ret *model.Module, err error) {
+	modulePtr := module.New(s.rootPath)
+	ret, err = modulePtr.Create(s.projectName, util.ToTitle(ptr.FileName))
 	return
 }

@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,12 +14,6 @@ import (
 	"github.com/muidea/magicToolkit/core/util"
 )
 
-const (
-	PackageTemplateFile = "package.tpl"
-	ServiceTemplateFile = "service.tpl"
-	ModelTemplateFile   = "model.tpl"
-)
-
 var functionMap template.FuncMap
 
 func init() {
@@ -27,14 +22,6 @@ func init() {
 	RegisterFunc("toLower", util.ToLower)
 	RegisterFunc("toTitle", util.ToTitle)
 	RegisterFunc("toCamelCase", util.ToCamelCase)
-	RegisterFunc("mergeArgs", util.MergeArgs)
-	RegisterFunc("extractAction", util.ExtractActionVal)
-	RegisterFunc("getActionMethod", util.GetActionMethod)
-	RegisterFunc("getActionPrivate", util.GetActionPrivate)
-	RegisterFunc("formatAction", util.FormatAction)
-	RegisterFunc("formatUrl", util.FormatURL)
-	RegisterFunc("formatParam", util.FormatParam)
-	RegisterFunc("formatResult", util.FormatResult)
 }
 
 func RegisterFunc(name string, funcPtr interface{}) {
@@ -119,5 +106,30 @@ func (s *FileFactory) Create(relativePath, fileName string, forceFlag bool) (err
 		err = cmd.Run()
 	}
 
+	return
+}
+
+type MemoryFactory struct {
+	templateVal string
+}
+
+func NewMemoryFactor(templateVal string) *MemoryFactory {
+	return &MemoryFactory{templateVal: templateVal}
+}
+
+func (s *MemoryFactory) Create(data map[string]interface{}) (ret string, err error) {
+	templateHandle, templateErr := template.New("").Funcs(functionMap).Parse(s.templateVal)
+	if templateErr != nil {
+		err = templateErr
+		return
+	}
+
+	byteBuff := &bytes.Buffer{}
+	err = templateHandle.Execute(byteBuff, data)
+	if err != nil {
+		return
+	}
+
+	ret = byteBuff.String()
 	return
 }
