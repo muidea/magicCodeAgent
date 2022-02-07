@@ -23,7 +23,7 @@ func New(rootPath, projectName string) *Common {
 	return &Common{rootPath: rootPath, projectName: projectName}
 }
 
-func (s *Common) declarePackage(ptr *parser.Package) (ret string) {
+func (s *Common) declarePackage() (ret string) {
 	packageDeclare := `
 package common
 `
@@ -33,7 +33,7 @@ package common
 	return
 }
 
-func (s *Common) declareImport(ptr *parser.Package) (ret string) {
+func (s *Common) declareImport() (ret string) {
 	importDeclare := `
 import (
 	cc "github.com/muidea/magicCas/common"
@@ -121,7 +121,7 @@ type {{.NameVal}}View struct {
 // TODO
 }
 
-func (s *{{.NameVal}}View) From{{.NameVal}}(ptr *model.{{.NameVal}}) {
+func (s *{{.NameVal}}View) From{{.NameVal}}(ptr *model.{{.NameVal}}, entityPtr *cc.EntityView) {
 // TODO
 	return
 }
@@ -171,6 +171,10 @@ type {{.NameVal}}ListResult struct {
 	{{.NameVal}}  []*{{.NameVal}}View {{$BackQuote}}json:"{{ toLower .NameVal }}"{{$BackQuote}}
 }
 
+type {{.NameVal}}StatisticResult struct {
+	{{.NameVal}}ListResult
+	Summary []*TotalizerView {{$BackQuote}}json:"summary"{{$BackQuote}}
+}
 {{end}}
 `
 	type Item struct {
@@ -216,12 +220,12 @@ func (s *Common) Create(ptr *parser.Package) (err error) {
 		}
 		defer fileHandle.Close()
 
-		_, err = fileHandle.WriteString(s.declarePackage(ptr))
+		_, err = fileHandle.WriteString(s.declarePackage())
 		if err != nil {
 			return
 		}
 
-		_, err = fileHandle.WriteString(s.declareImport(ptr))
+		_, err = fileHandle.WriteString(s.declareImport())
 		if err != nil {
 			return
 		}

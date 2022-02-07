@@ -9,6 +9,7 @@ import (
 	"github.com/muidea/magicToolkit/core/model/biz"
 	"github.com/muidea/magicToolkit/core/model/common"
 	"github.com/muidea/magicToolkit/core/model/dao"
+	"github.com/muidea/magicToolkit/core/model/service"
 	"github.com/muidea/magicToolkit/core/module"
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
@@ -75,6 +76,13 @@ func (s *Model) Create(projectName string) (err error) {
 		bizErr := bizPtr.Create(packagePtr)
 		if bizErr != nil {
 			log.Errorf("create biz file failed, name:%s, err:%s", packagePtr.Name, bizErr.Error())
+			return
+		}
+
+		servicePtr := service.New(s.rootPath, s.projectName)
+		serviceErr := servicePtr.Create(packagePtr)
+		if serviceErr != nil {
+			log.Errorf("create service file failed, name:%s, err:%s", packagePtr.Name, bizErr.Error())
 			return
 		}
 	}

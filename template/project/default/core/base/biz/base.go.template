@@ -98,12 +98,13 @@ func (s *Base) QueryEntity(sessionInfo *session.SessionInfo, id int, namespace s
 	return
 }
 
-func (s *Base) WriteLog(ptr *model.Log, namespace string) {
+func (s *Base) WriteLog(memo, address string, entityPtr *cc.EntityView, namespace string) {
 	eid := common.WriteOperateLog
 	header := event.NewValues()
 	header.Set("namespace", namespace)
 
-	writeEvent := event.NewEvent(eid, s.ID(), common.BaseModule, header, ptr)
+	logPtr := &model.Log{Address: address, Memo: memo, Creater: entityPtr.ID, CreateTime: time.Now().UTC().Unix()}
+	writeEvent := event.NewEvent(eid, s.ID(), common.BaseModule, header, logPtr)
 	s.PostEvent(writeEvent)
 	return
 }
