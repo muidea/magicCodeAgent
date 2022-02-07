@@ -58,7 +58,6 @@ import (
 func (s *Biz) declareObjectImport(moduleName string) (ret string) {
 	importDeclare := `
 import (
-	"path"
 	"time"
 
 	bc "github.com/muidea/magicBatis/common"
@@ -121,102 +120,6 @@ func (s *{{.ModuleName}}) Notify(event event.Event, result event.Result) {
 	return
 }
 
-func (s *Biz) declareFunc(ptr *parser.Package) (ret string) {
-	funcDeclare := `{{$ModuleName := .ModuleName}}
-{{range .ItemsList}}
-func (s *{{$ModuleName}}) Filter{{.NameVal}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{.NameVal}}, total int64, err error) {
-	ret = []*model.{{.NameVal}}{}
-	if filter == nil {
-		filter = bc.NewFilter()
-	}
-	filter.Equal("Namespace", namespace)
-	total, err = s.batisClient.BatchQueryEntity(&ret, filter)
-	return
-}
-
-func (s *{{$ModuleName}}) Query{{.NameVal}}(id int, namespace string) (ret *model.{{.NameVal}}, err error) {
-	if id <= 0 {
-		err = fmt.Errorf("illegal id value, id:%d", id)
-		return
-	}
-	ptr := &model.{{.NameVal}}{ID: id, Namespace: namespace}
-	err = s.batisClient.QueryEntity(ptr)
-	if err != nil {
-		return
-	}
-	ret = ptr
-	return
-}
-
-func (s *{{$ModuleName}}) Create{{.NameVal}}(ptr *model.{{.NameVal}}, namespace string) (ret *model.{{.NameVal}}, err error) {
-	if ptr == nil {
-		err = fmt.Errorf("illegal ptr value")
-		return
-	}
-	ptr.Namespace = namespace
-	err = s.batisClient.InsertEntity(ptr)
-	if err != nil {
-		return
-	}
-	ret = ptr
-	return
-}
-
-func (s *{{$ModuleName}}) Update{{.NameVal}}(ptr *model.{{.NameVal}}, namespace string) (ret *model.{{.NameVal}}, err error) {
-	if ptr == nil || ptr.ID <= 0 {
-		err = fmt.Errorf("illegal update ptr")
-		return
-	}
-	ptr.Namespace = namespace
-	err = s.batisClient.UpdateEntity(ptr)
-	if err != nil {
-		return
-	}
-	ret = ptr
-	return
-}
-
-func (s *{{$ModuleName}}) Delete{{.NameVal}}(id int, namespace string) (ret *model.{{.NameVal}}, err error) {
-	if id <= 0 {
-		err = fmt.Errorf("illegal id value, id:%d", id)
-		return
-	}
-	ptr := &model.{{.NameVal}}{ID: id, Namespace: namespace}
-	err = s.batisClient.QueryEntity(ptr)
-	if err != nil {
-		return
-	}
-	err = s.batisClient.DeleteEntity(ptr)
-	if err != nil {
-		return
-	}
-	ret = ptr
-	return
-}
-{{end}}`
-
-	type Item struct {
-		NameVal string
-	}
-
-	itemList := []*Item{}
-	moduleName := util.ToTitle(ptr.FileName)
-	//for _, val := range ptr.Objects {
-	//	nameVal := val.Name
-	//  itemList = append(itemList, &Item{nameVal})
-	//}
-
-	factoryPtr := factory.NewMemoryFactor(funcDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemsList": itemList, "ModuleName": moduleName})
-	if contentErr != nil {
-		log.Errorf("create content failed, err:%s", contentErr.Error())
-		return
-	}
-
-	ret = contentVal
-	return
-}
-
 func (s *Biz) declareObjectFunc(moduleName string, ptr *parser.Object) (ret string) {
 	funcDeclare := `{{$ModuleName := .ModuleName}}
 {{range .ItemsList}}
@@ -239,11 +142,10 @@ func (s *{{$ModuleName}}) Create{{.NameVal}}(ptr *common.{{.NameVal}}Param, crea
 		return
 	}
 
-	eid := fn.FormatID(common.Notify{{.NameVal}}, ret.ID)
+	eid := fn.FormatID(common.Notify{{$ModuleName}}{{.NameVal}}, ret.ID)
 	header := event.NewValues()
 	header.Set("action", common.Create)
 	header.Set("namespace", namespace)
-	header.Set("owner", path.Join(s.ID(), common.{{.NameVal}}))
 	s.BroadCast(eid, header, ret)
 	return
 }
@@ -262,11 +164,10 @@ func (s *{{$ModuleName}}) Update{{.NameVal}}(id int, ptr *common.{{.NameVal}}Par
 		return
 	}
 
-	eid := fn.FormatID(common.Notify{{.NameVal}}, ret.ID)
+	eid := fn.FormatID(common.Notify{{$ModuleName}}{{.NameVal}}, ret.ID)
 	header := event.NewValues()
 	header.Set("action", common.Update)
 	header.Set("namespace", namespace)
-	header.Set("owner", path.Join(s.ID(), common.{{.NameVal}}))
 	s.BroadCast(eid, header, ret)
 	return
 }
@@ -277,11 +178,10 @@ func (s *{{$ModuleName}}) Delete{{.NameVal}}(id int, namespace string) (ret *mod
 		return
 	}
 
-	eid := fn.FormatID(common.Notify{{.NameVal}}, ret.ID)
+	eid := fn.FormatID(common.Notify{{$ModuleName}}{{.NameVal}}, ret.ID)
 	header := event.NewValues()
 	header.Set("action", common.Delete)
 	header.Set("namespace", namespace)
-	header.Set("owner", path.Join(s.ID(), common.{{.NameVal}}))
 	s.BroadCast(eid, header, ret)
 	return
 }
@@ -335,11 +235,6 @@ func (s *Biz) Create(ptr *parser.Package) (err error) {
 		}
 
 		_, err = fileHandle.WriteString(s.declareDefine(ptr))
-		if err != nil {
-			return
-		}
-
-		_, err = fileHandle.WriteString(s.declareFunc(ptr))
 		if err != nil {
 			return
 		}
