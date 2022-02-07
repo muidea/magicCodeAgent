@@ -498,7 +498,7 @@ func (s *{{$.ModuleName}}) Delete{{.NameVal}}(ctx context.Context, res http.Resp
 
 		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{toLower .NameVal}}Ptr.Creater, curNamespace)
 		result.{{.NameVal}} = &common.{{.NameVal}}View{}
-		result.{{.NameVal}}.FromArticle({{toLower .NameVal}}Ptr, entityPtr)
+		result.{{.NameVal}}.From{{.NameVal}}({{toLower .NameVal}}Ptr, entityPtr)
 		result.ErrorCode = cd.Success
 		break
 	}
