@@ -199,7 +199,8 @@ func (s *Common) Create(ptr *parser.Package) (err error) {
 		return
 	}
 
-	commonFile := fmt.Sprintf("%s.go", ptr.FileName)
+	moduleName := ptr.FileName
+	commonFile := fmt.Sprintf("%s.go", moduleName)
 	commonFilePath := path.Join(s.rootPath, "common", commonFile)
 	if !util.Exists(commonFilePath) {
 		err = fmt.Errorf("%s not exists", commonFile)

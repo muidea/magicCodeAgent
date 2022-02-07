@@ -7,6 +7,7 @@ import (
 	log "github.com/cihub/seelog"
 
 	"github.com/muidea/magicToolkit/core/model/common"
+	"github.com/muidea/magicToolkit/core/model/dao"
 	"github.com/muidea/magicToolkit/core/module"
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/model"
@@ -59,6 +60,13 @@ func (s *Model) Create(projectName string) (err error) {
 		commonErr := commonPtr.Create(packagePtr)
 		if commonErr != nil {
 			log.Errorf("create common file failed, name:%s, err:%s", packagePtr.Name, commonErr.Error())
+			return
+		}
+
+		daoPtr := dao.New(s.rootPath, s.projectName)
+		daoErr := daoPtr.Create(packagePtr)
+		if daoErr != nil {
+			log.Errorf("create dao file failed, name:%s, err:%s", packagePtr.Name, daoErr.Error())
 			return
 		}
 	}
