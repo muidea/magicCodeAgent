@@ -12,3 +12,9 @@ const (
 	DeleteEventMask = "/#/delete/+"
 	UpdateEventMask = "/#/update/+"
 )
+
+const (
+	Create = iota
+	Delete
+	Update
+)

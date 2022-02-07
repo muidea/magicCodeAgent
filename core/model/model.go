@@ -6,6 +6,7 @@ import (
 
 	log "github.com/cihub/seelog"
 
+	"github.com/muidea/magicToolkit/core/model/biz"
 	"github.com/muidea/magicToolkit/core/model/common"
 	"github.com/muidea/magicToolkit/core/model/dao"
 	"github.com/muidea/magicToolkit/core/module"
@@ -67,6 +68,13 @@ func (s *Model) Create(projectName string) (err error) {
 		daoErr := daoPtr.Create(packagePtr)
 		if daoErr != nil {
 			log.Errorf("create dao file failed, name:%s, err:%s", packagePtr.Name, daoErr.Error())
+			return
+		}
+
+		bizPtr := biz.New(s.rootPath, s.projectName)
+		bizErr := bizPtr.Create(packagePtr)
+		if bizErr != nil {
+			log.Errorf("create biz file failed, name:%s, err:%s", packagePtr.Name, bizErr.Error())
 			return
 		}
 	}
