@@ -65,15 +65,19 @@ import (
 func (s *Service) declareObjectImport(moduleName string) (ret string) {
 	importDeclare := `
 import (
-	"time"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
 	bc "github.com/muidea/magicBatis/common"
 
-	"github.com/muidea/magicCommon/event"
+	cd "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
+	fu "github.com/muidea/magicCommon/foundation/util"
+	"github.com/muidea/magicCommon/session"
 
 	"github.com/muidea/{{.ProjectName}}/common"
-	"github.com/muidea/{{.ProjectName}}/model"
 )
 `
 	factoryPtr := factory.NewMemoryFactor(importDeclare)
@@ -175,10 +179,9 @@ func (s *{{.ModuleName}}) queryEntity(sessionInfo *session.SessionInfo, id int, 
 
 func (s *{{.ModuleName}}) writeLog(ctx context.Context, res http.ResponseWriter, req *http.Request, memo string) {
 	address := fn.GetHTTPRemoteAddress(req)
-	curEntity, _ := s.getCurrentEntity(ctx)
-	curNamespace := s.getCurrentNamespace(ctx, res, req)
-	logPtr := &model.Log{Address: address, Memo: memo, Creater: curEntity.ID, CreateTime: time.Now().UTC().Unix()}
-	s.bizPtr.WriteLog(logPtr, curNamespace)
+	entityPtr, _ := s.getCurrentEntity(ctx)
+	namespace := s.getCurrentNamespace(ctx, res, req)
+	s.bizPtr.WriteLog(memo, address, entityPtr, namespace)
 }`
 	type Item struct {
 		ActionVal string
@@ -342,6 +345,7 @@ func (s *{{$.ModuleName}}) Filter{{.NameVal}}(ctx context.Context, res http.Resp
 }
 
 func (s *{{$.ModuleName}}) Query{{.NameVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
 	result := &common.{{.NameVal}}Result{}
 	for {
 		id, err := fn.SplitRESTID(req.URL.Path)
@@ -359,7 +363,9 @@ func (s *{{$.ModuleName}}) Query{{.NameVal}}(ctx context.Context, res http.Respo
 			break
 		}
 
-		result.{{.NameVal}} = {{toLower .NameVal}}Ptr
+		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{toLower .NameVal}}Ptr.Creater, curNamespace)
+		result.{{.NameVal}} = &common.{{.NameVal}}View{}
+		result.{{.NameVal}}.From{{.NameVal}}({{toLower .NameVal}}Ptr, entityPtr)
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -402,7 +408,8 @@ func (s *{{$.ModuleName}}) Create{{.NameVal}}(ctx context.Context, res http.Resp
 		memo := fmt.Sprintf("新增{{.NameVal}}:%s", {{toLower .NameVal}}Ptr.Name)
 		s.writeLog(ctx, res, req, memo)
 
-		result.{{.NameVal}} = {{toLower .NameVal}}Ptr
+		result.{{.NameVal}} = &common.{{.NameVal}}View{}
+		result.{{.NameVal}}.From{{.NameVal}}({{toLower .NameVal}}Ptr, curEntity)
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -452,7 +459,8 @@ func (s *{{$.ModuleName}}) Update{{.NameVal}}(ctx context.Context, res http.Resp
 		memo := fmt.Sprintf("更新{{.NameVal}}:%s", {{toLower .NameVal}}Ptr.Name)
 		s.writeLog(ctx, res, req, memo)
 
-		result.{{.NameVal}} = {{toLower .NameVal}}Ptr
+		result.{{.NameVal}} = &common.{{.NameVal}}View{}
+		result.{{.NameVal}}.From{{.NameVal}}({{toLower .NameVal}}Ptr, curEntity)
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -467,6 +475,7 @@ func (s *{{$.ModuleName}}) Update{{.NameVal}}(ctx context.Context, res http.Resp
 }
 
 func (s *{{$.ModuleName}}) Delete{{.NameVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	curSession := ctx.Value(session.AuthSession).(session.Session)
 	result := &common.{{.NameVal}}Result{}
 	for {
 		id, err := fn.SplitRESTID(req.URL.Path)
@@ -487,7 +496,9 @@ func (s *{{$.ModuleName}}) Delete{{.NameVal}}(ctx context.Context, res http.Resp
 		memo := fmt.Sprintf("删除{{.NameVal}}:%s", {{toLower .NameVal}}Ptr.Name)
 		s.writeLog(ctx, res, req, memo)
 
-		result.{{.NameVal}} = {{toLower .NameVal}}Ptr
+		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{toLower .NameVal}}Ptr.Creater, curNamespace)
+		result.{{.NameVal}} = &common.{{.NameVal}}View{}
+		result.{{.NameVal}}.FromArticle({{toLower .NameVal}}Ptr, entityPtr)
 		result.ErrorCode = cd.Success
 		break
 	}
