@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -39,9 +40,23 @@ type Object struct {
 }
 
 type Package struct {
-	Name     string    `json:"packageName"`
-	FileName string    `json:"fileName"`
-	Objects  []*Object `json:"objects"`
+	Name     string      `json:"packageName"`
+	FileName string      `json:"fileName"`
+	Objects  ObjectsList `json:"objects"`
+}
+
+type ObjectsList []*Object
+
+func (s ObjectsList) Len() int {
+	return len(s)
+}
+
+func (s ObjectsList) Less(i, j int) bool {
+	return s[i].Name < s[j].Name
+}
+
+func (s ObjectsList) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
 
 func parseIdent(ptr *ast.Ident) (ret *Type, err error) {
@@ -190,5 +205,6 @@ func Parse(fullFileName string) (ret *Package, err error) {
 		}
 	}
 
+	sort.Sort(ret.Objects)
 	return
 }
