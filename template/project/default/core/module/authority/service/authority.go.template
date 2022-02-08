@@ -6,18 +6,16 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"time"
 
 	fn "github.com/muidea/magicCommon/foundation/net"
 	fu "github.com/muidea/magicCommon/foundation/util"
+	"github.com/muidea/magicCommon/session"
 
 	cc "github.com/muidea/magicCas/common"
 	"github.com/muidea/magicCas/toolkit"
-	"github.com/muidea/magicCommon/session"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/module/authority/biz"
-	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 type Authority struct {

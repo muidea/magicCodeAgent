@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"time"
 
 	cd "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
@@ -21,7 +20,6 @@ import (
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/module/image/biz"
-	"github.com/muidea/{{.ProjectName}}/model"
 )
 
 type Image struct {
