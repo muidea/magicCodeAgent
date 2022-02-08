@@ -116,79 +116,63 @@ const (
 func (s *Common) declareMessage(ptr *parser.Package) (ret string) {
 	messageDeclare := `{{$BackQuote := .BackQuote}}{{$ModuleName := .ModuleName}}
 {{range .Items}}
-type {{formatNameVal $ModuleName .}}View struct {
-// TODO
-}
 
-func (s *{{formatNameVal $ModuleName .}}View) From{{formatNameVal $ModuleName .}}(ptr *model.{{formatNameVal $ModuleName .}}, entityPtr *cc.EntityView) {
-// TODO
-	return
-}
+{{declareObjectView .}}
 
-type {{formatNameVal $ModuleName .}}Lite struct {
-// TODO
-}
+{{declareObjectViewAssign .}}
 
-func (s *{{formatNameVal $ModuleName .}}Lite) From{{formatNameVal $ModuleName .}}(ptr *model.{{formatNameVal $ModuleName .}}) {
-// TODO
-	return
-}
+{{declareObjectLite .}}
 
-func (s *{{formatNameVal $ModuleName .}}Lite) FromView(ptr *{{formatNameVal $ModuleName .}}View) {
-// TODO
-	return
-}
+{{declareObjectLiteAssign .}}
 
-func (s *{{formatNameVal $ModuleName .}}Lite) To{{formatNameVal $ModuleName .}}() (ret *model.{{formatNameVal $ModuleName .}}) {
-// TODO
-	return
-}
+{{declareObjectParam .}}
 
-type {{formatNameVal $ModuleName .}}Param struct {
-// TODO
-}
+{{declareObjectParamAssign .}}
 
-func (s *{{formatNameVal $ModuleName .}}Param) To{{formatNameVal $ModuleName .}}(ptr *model.{{formatNameVal $ModuleName .}}) (ret *model.{{formatNameVal $ModuleName .}}) {
-	if ptr == nil {
-		ptr = &{{defineObject .}}
-	}
-
-// TODO
-	ret = ptr
-	return
-}
-
-type {{formatNameVal $ModuleName .}}Result struct {
+type {{formatNameVal .}}Result struct {
 	cd.Result
-	{{formatNameVal $ModuleName .}} *{{formatNameVal $ModuleName .}}View {{$BackQuote}}json:"{{formatJsonVal $ModuleName . }}"{{$BackQuote}}
+	{{formatNameVal .}} *{{formatNameVal .}}View {{$BackQuote}}json:"{{formatJsonVal . }}"{{$BackQuote}}
 }
 
-type {{formatNameVal $ModuleName .}}LiteListResult struct {
+type {{formatNameVal .}}LiteListResult struct {
 	cd.Result
 	Total int64       {{$BackQuote}}json:"total"{{$BackQuote}}
-	{{formatNameVal $ModuleName .}}  []*{{formatNameVal $ModuleName .}}Lite {{$BackQuote}}json:"{{formatJsonVal $ModuleName . }}"{{$BackQuote}}
+	{{formatNameVal .}}  []*{{formatNameVal .}}Lite {{$BackQuote}}json:"{{formatJsonVal . }}"{{$BackQuote}}
 }
 
-type {{formatNameVal $ModuleName .}}ListResult struct {
+type {{formatNameVal .}}ListResult struct {
 	cd.Result
 	Total int64       {{$BackQuote}}json:"total"{{$BackQuote}}
-	{{formatNameVal $ModuleName .}}  []*{{formatNameVal $ModuleName .}}View {{$BackQuote}}json:"{{formatJsonVal $ModuleName . }}"{{$BackQuote}}
+	{{formatNameVal .}}  []*{{formatNameVal .}}View {{$BackQuote}}json:"{{formatJsonVal . }}"{{$BackQuote}}
 }
 
-type {{formatNameVal $ModuleName .}}StatisticResult struct {
-	{{formatNameVal $ModuleName .}}ListResult
+type {{formatNameVal .}}StatisticResult struct {
+	{{formatNameVal .}}ListResult
 	Summary []*TotalizerView {{$BackQuote}}json:"summary"{{$BackQuote}}
 }
 {{end}}
 `
-	factory.RegisterFunc("formatNameVal", func(moduleName string, ptr *parser.Object) string {
+	factory.RegisterFunc("formatNameVal", func(ptr *parser.Object) string {
 		val := ptr.Name
 		return val
 	})
-	factory.RegisterFunc("formatJsonVal", func(moduleName string, ptr *parser.Object) string {
+	factory.RegisterFunc("formatJsonVal", func(ptr *parser.Object) string {
 		val := ptr.Name
 		return util.ToCamelCase(val)
 	})
+	factory.RegisterFunc("declareObjectView", DeclareObjectView)
+	factory.RegisterFunc("declareObjectViewAssign", DeclareObjectViewAssign)
+	factory.RegisterFunc("declareObjectLite", DeclareObjectLite)
+	factory.RegisterFunc("declareObjectLiteAssign", DeclareObjectLiteAssign)
+	factory.RegisterFunc("declareObjectParam", DeclareObjectParam)
+	factory.RegisterFunc("declareObjectParamAssign", DeclareObjectParamAssign)
+
+	defer factory.UnRegisterFunc("declareObjectParam")
+	defer factory.UnRegisterFunc("declareObjectParamAssign")
+	defer factory.UnRegisterFunc("declareObjectLite")
+	defer factory.UnRegisterFunc("declareObjectLiteAssign")
+	defer factory.UnRegisterFunc("declareObjectView")
+	defer factory.UnRegisterFunc("declareObjectViewAssign")
 	defer factory.UnRegisterFunc("formatJsonVal")
 	defer factory.UnRegisterFunc("formatNameVal")
 
