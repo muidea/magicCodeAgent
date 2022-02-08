@@ -35,6 +35,10 @@ func RegisterFunc(name string, funcPtr interface{}) {
 	functionMap[name] = funcPtr
 }
 
+func UnRegisterFunc(name string) {
+	delete(functionMap, name)
+}
+
 type FileFactory struct {
 	templatePath string
 	rootPath     string

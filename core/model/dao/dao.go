@@ -129,6 +129,8 @@ func (s *{{toLower $ModuleName}}) Query{{.NameVal}}(id int, namespace string) (r
 		return
 	}
 	ptr := &model.{{.NameVal}}{ID: id, Namespace: namespace}
+	ptr.ID = id
+	ptr.Namespace = namespace
 	err = s.batisClient.QueryEntity(ptr)
 	if err != nil {
 		return
@@ -166,26 +168,23 @@ func (s *{{toLower $ModuleName}}) Update{{.NameVal}}(ptr *model.{{.NameVal}}, na
 }
 
 func (s *{{toLower $ModuleName}}) Delete{{.NameVal}}(id int, namespace string) (ret *model.{{.NameVal}}, err error) {
-	if id <= 0 {
-		err = fmt.Errorf("illegal id value, id:%d", id)
+	valPtr, valErr := s.Query{{.NameVal}}(id, namespace)
+	if valErr != nil {
+		err = valErr
 		return
 	}
-	ptr := &model.{{.NameVal}}{ID: id, Namespace: namespace}
-	err = s.batisClient.QueryEntity(ptr)
+	err = s.batisClient.DeleteEntity(valPtr)
 	if err != nil {
 		return
 	}
-	err = s.batisClient.DeleteEntity(ptr)
-	if err != nil {
-		return
-	}
-	ret = ptr
+	ret = valPtr
 	return
 }
 {{end}}`
 
 	type Item struct {
 		NameVal string
+		Object  *parser.Object
 	}
 
 	itemList := []*Item{}
@@ -193,7 +192,7 @@ func (s *{{toLower $ModuleName}}) Delete{{.NameVal}}(id int, namespace string) (
 	for _, val := range ptr.Objects {
 		nameVal := val.Name
 
-		itemList = append(itemList, &Item{nameVal})
+		itemList = append(itemList, &Item{nameVal, val})
 	}
 
 	factoryPtr := factory.NewMemoryFactor(funcDeclare)

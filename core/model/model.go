@@ -10,8 +10,10 @@ import (
 	"github.com/muidea/magicToolkit/core/model/common"
 	"github.com/muidea/magicToolkit/core/model/dao"
 	"github.com/muidea/magicToolkit/core/model/service"
+	mu "github.com/muidea/magicToolkit/core/model/util"
 	"github.com/muidea/magicToolkit/core/module"
 	"github.com/muidea/magicToolkit/core/util"
+	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/model"
 	"github.com/muidea/magicToolkit/parser"
 )
@@ -26,6 +28,13 @@ func New(rootPath string) *Model {
 }
 
 func (s *Model) Create(projectName string) (err error) {
+	factory.RegisterFunc("isSimple", mu.IsSimple)
+	factory.RegisterFunc("defineItem", mu.DefineItem)
+	factory.RegisterFunc("defineObject", mu.DefineObject)
+	defer factory.UnRegisterFunc("defineObject")
+	defer factory.UnRegisterFunc("defineItem")
+	defer factory.UnRegisterFunc("isSimple")
+
 	s.projectName = projectName
 
 	modelPath := path.Join(s.rootPath, "model")
