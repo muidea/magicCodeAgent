@@ -134,7 +134,7 @@ func (s *{{$ModuleName}}) Query{{formatNameVal $ModuleName .}}(id int, namespace
 }
 
 func (s *{{$ModuleName}}) Create{{formatNameVal $ModuleName .}}(ptr *common.{{formatNameVal $ModuleName .}}Param, creater int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
-	{{formatPtrVal $ModuleName .}}Ptr := ptr.To{{formatNameVal $ModuleName .}}()
+	{{formatPtrVal $ModuleName .}}Ptr := ptr.To{{formatNameVal $ModuleName .}}(nil)
 	{{formatPtrVal $ModuleName .}}Ptr.Creater = creater
 	{{formatPtrVal $ModuleName .}}Ptr.UpdateTime = time.Now().UTC().Unix()
 	ret, err = s.{{toCamelCase $ModuleName}}Dao.Create{{formatNameVal $ModuleName .}}({{formatPtrVal $ModuleName .}}Ptr, namespace)
@@ -156,6 +156,7 @@ func (s *{{$ModuleName}}) Update{{formatNameVal $ModuleName .}}(id int, ptr *com
 		return
 	}
 
+	current{{formatNameVal $ModuleName .}} = ptr.To{{formatNameVal $ModuleName .}}(current{{formatNameVal $ModuleName .}})
 	current{{formatNameVal $ModuleName .}}.Creater = updater
 	current{{formatNameVal $ModuleName .}}.UpdateTime = time.Now().UTC().Unix()
 

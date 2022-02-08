@@ -148,8 +148,13 @@ type {{formatNameVal $ModuleName .}}Param struct {
 // TODO
 }
 
-func (s *{{formatNameVal $ModuleName .}}Param) To{{formatNameVal $ModuleName .}}() (ret *model.{{formatNameVal $ModuleName .}}) {
+func (s *{{formatNameVal $ModuleName .}}Param) To{{formatNameVal $ModuleName .}}(ptr *model.{{formatNameVal $ModuleName .}}) (ret *model.{{formatNameVal $ModuleName .}}) {
+	if ptr == nil {
+		ptr = &{{defineObject .}}
+	}
+
 // TODO
+	ret = ptr
 	return
 }
 
