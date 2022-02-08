@@ -184,8 +184,8 @@ type {{formatNameVal $ModuleName .}}StatisticResult struct {
 		val := ptr.Name
 		return util.ToCamelCase(val)
 	})
-	defer factory.UnRegisterFunc("formatUrlVal")
 	defer factory.UnRegisterFunc("formatJsonVal")
+	defer factory.UnRegisterFunc("formatNameVal")
 
 	moduleName := util.ToTitle(ptr.FileName)
 	factoryPtr := factory.NewMemoryFactor(messageDeclare)

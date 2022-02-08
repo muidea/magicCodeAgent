@@ -85,7 +85,7 @@ func (s *Biz) declareDefine(ptr *parser.Package) (ret string) {
 type {{.ModuleName}} struct {
 	biz.Base
 
-	{{toLower .ModuleName}}Dao dao.{{.ModuleName}}
+	{{toCamelCase .ModuleName}}Dao dao.{{.ModuleName}}
 
 	endpointName string
 }
@@ -98,7 +98,7 @@ func New(
 
 	ptr := &{{.ModuleName}}{
 		Base:         biz.New(common.{{.ModuleName}}Module, eventHub, backgroundRoutine),
-		{{toLower .ModuleName}}Dao:   dao.New(batisClient),
+		{{toCamelCase .ModuleName}}Dao:   dao.New(batisClient),
 		endpointName: endpointName,
 	}
 
@@ -122,27 +122,27 @@ func (s *{{.ModuleName}}) Notify(event event.Event, result event.Result) {
 
 func (s *Biz) declareObjectFunc(moduleName string, ptr *parser.Object) (ret string) {
 	funcDeclare := `{{$ModuleName := .ModuleName}}
-{{range .ItemsList}}
-func (s *{{$ModuleName}}) Filter{{.NameVal}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{.NameVal}}, total int64, err error) {
-	ret, total, err = s.{{toLower $ModuleName}}Dao.Filter{{.NameVal}}(filter, namespace)
+{{range .Items}}
+func (s *{{$ModuleName}}) Filter{{formatNameVal $ModuleName .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatNameVal $ModuleName .}}, total int64, err error) {
+	ret, total, err = s.{{toCamelCase $ModuleName}}Dao.Filter{{formatNameVal $ModuleName .}}(filter, namespace)
 	return
 }
 
-func (s *{{$ModuleName}}) Query{{.NameVal}}(id int, namespace string) (ret *model.{{.NameVal}}, err error) {
-	ret, err = s.{{toLower $ModuleName}}Dao.Query{{.NameVal}}(id, namespace)
+func (s *{{$ModuleName}}) Query{{formatNameVal $ModuleName .}}(id int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
+	ret, err = s.{{toCamelCase $ModuleName}}Dao.Query{{formatNameVal $ModuleName .}}(id, namespace)
 	return
 }
 
-func (s *{{$ModuleName}}) Create{{.NameVal}}(ptr *common.{{.NameVal}}Param, creater int, namespace string) (ret *model.{{.NameVal}}, err error) {
-	{{toLower .NameVal}}Ptr := ptr.To{{.NameVal}}()
-	{{toLower .NameVal}}Ptr.Creater = creater
-	{{toLower .NameVal}}Ptr.UpdateTime = time.Now().UTC().Unix()
-	ret, err = s.{{toLower $ModuleName}}Dao.Create{{.NameVal}}({{toLower .NameVal}}Ptr, namespace)
+func (s *{{$ModuleName}}) Create{{formatNameVal $ModuleName .}}(ptr *common.{{formatNameVal $ModuleName .}}Param, creater int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
+	{{formatPtrVal $ModuleName .}}Ptr := ptr.To{{formatNameVal $ModuleName .}}()
+	{{formatPtrVal $ModuleName .}}Ptr.Creater = creater
+	{{formatPtrVal $ModuleName .}}Ptr.UpdateTime = time.Now().UTC().Unix()
+	ret, err = s.{{toCamelCase $ModuleName}}Dao.Create{{formatNameVal $ModuleName .}}({{formatPtrVal $ModuleName .}}Ptr, namespace)
 	if err != nil {
 		return
 	}
 
-	eid := fn.FormatID(common.Notify{{$ModuleName}}{{.NameVal}}, ret.ID)
+	eid := fn.FormatID(common.Notify{{$ModuleName}}{{formatNameVal $ModuleName .}}, ret.ID)
 	header := event.NewValues()
 	header.Set("action", common.Create)
 	header.Set("namespace", namespace)
@@ -150,21 +150,21 @@ func (s *{{$ModuleName}}) Create{{.NameVal}}(ptr *common.{{.NameVal}}Param, crea
 	return
 }
 
-func (s *{{$ModuleName}}) Update{{.NameVal}}(id int, ptr *common.{{.NameVal}}Param, updater int, namespace string) (ret *model.{{.NameVal}}, err error) {
-	current{{.NameVal}}, currentErr := s.{{toLower $ModuleName}}Dao.Query{{.NameVal}}(id, namespace)
+func (s *{{$ModuleName}}) Update{{formatNameVal $ModuleName .}}(id int, ptr *common.{{formatNameVal $ModuleName .}}Param, updater int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
+	current{{formatNameVal $ModuleName .}}, currentErr := s.{{toCamelCase $ModuleName}}Dao.Query{{formatNameVal $ModuleName .}}(id, namespace)
 	if currentErr != nil {
 		return
 	}
 
-	current{{.NameVal}}.Creater = updater
-	current{{.NameVal}}.UpdateTime = time.Now().UTC().Unix()
+	current{{formatNameVal $ModuleName .}}.Creater = updater
+	current{{formatNameVal $ModuleName .}}.UpdateTime = time.Now().UTC().Unix()
 
-	ret, err = s.{{toLower $ModuleName}}Dao.Update{{.NameVal}}(current{{.NameVal}}, namespace)
+	ret, err = s.{{toCamelCase $ModuleName}}Dao.Update{{formatNameVal $ModuleName .}}(current{{formatNameVal $ModuleName .}}, namespace)
 	if err != nil {
 		return
 	}
 
-	eid := fn.FormatID(common.Notify{{$ModuleName}}{{.NameVal}}, ret.ID)
+	eid := fn.FormatID(common.Notify{{$ModuleName}}{{formatNameVal $ModuleName .}}, ret.ID)
 	header := event.NewValues()
 	header.Set("action", common.Update)
 	header.Set("namespace", namespace)
@@ -172,13 +172,13 @@ func (s *{{$ModuleName}}) Update{{.NameVal}}(id int, ptr *common.{{.NameVal}}Par
 	return
 }
 
-func (s *{{$ModuleName}}) Delete{{.NameVal}}(id int, namespace string) (ret *model.{{.NameVal}}, err error) {
-	ret, err = s.{{toLower $ModuleName}}Dao.Delete{{.NameVal}}(id, namespace)
+func (s *{{$ModuleName}}) Delete{{formatNameVal $ModuleName .}}(id int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
+	ret, err = s.{{toCamelCase $ModuleName}}Dao.Delete{{formatNameVal $ModuleName .}}(id, namespace)
 	if err != nil {
 		return
 	}
 
-	eid := fn.FormatID(common.Notify{{$ModuleName}}{{.NameVal}}, ret.ID)
+	eid := fn.FormatID(common.Notify{{$ModuleName}}{{formatNameVal $ModuleName .}}, ret.ID)
 	header := event.NewValues()
 	header.Set("action", common.Delete)
 	header.Set("namespace", namespace)
@@ -186,17 +186,19 @@ func (s *{{$ModuleName}}) Delete{{.NameVal}}(id int, namespace string) (ret *mod
 	return
 }
 {{end}}`
-
-	type Item struct {
-		NameVal string
-	}
-
-	itemList := []*Item{}
-	nameVal := ptr.Name
-	itemList = append(itemList, &Item{nameVal})
+	factory.RegisterFunc("formatNameVal", func(moduleName string, ptr *parser.Object) string {
+		val := ptr.Name
+		return val
+	})
+	factory.RegisterFunc("formatPtrVal", func(moduleName string, ptr *parser.Object) string {
+		val := ptr.Name
+		return util.ToCamelCase(val)
+	})
+	defer factory.UnRegisterFunc("formatPtrVal")
+	defer factory.UnRegisterFunc("formatNameVal")
 
 	factoryPtr := factory.NewMemoryFactor(funcDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemsList": itemList, "ModuleName": moduleName})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName, "Items": []*parser.Object{ptr}})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
