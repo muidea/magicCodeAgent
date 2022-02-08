@@ -9,11 +9,28 @@ import (
 	"strings"
 )
 
-type Item struct {
+type Type struct {
 	Name    string `json:"name"`
-	Type    string `json:"type"`
 	IsPtr   bool   `json:"isPtr"`
 	IsArray bool   `json:"isArray"`
+}
+
+func (s *Type) String() string {
+	val := fmt.Sprintf("%s", s.Name)
+	if s.IsPtr {
+		val = fmt.Sprintf("*%s", val)
+	}
+	if s.IsArray {
+		val = fmt.Sprintf("[]%s", val)
+	}
+
+	return val
+}
+
+type Item struct {
+	Name  string `json:"name"`
+	Type  *Type  `json:"type"`
+	IsPtr bool   `json:"isPtr"`
 }
 
 type Object struct {
@@ -27,27 +44,31 @@ type Package struct {
 	Objects  []*Object `json:"objects"`
 }
 
-func parseIdent(ptr *ast.Ident) (ret string, err error) {
-	ret = ptr.Name
+func parseIdent(ptr *ast.Ident) (ret *Type, err error) {
+	ret = &Type{Name: ptr.Name, IsPtr: false, IsArray: false}
 	return
 }
 
-func parseArray(ptr *ast.ArrayType) (ret string, err error) {
+func parseArray(ptr *ast.ArrayType) (ret *Type, err error) {
 	switch t := ptr.Elt.(type) {
 	case *ast.Ident:
-		ret = t.Name
+		ret, err = parseIdent(t)
+		if err != nil {
+			return
+		}
+		ret.IsArray = true
 		return
 	case *ast.StarExpr:
-		strVal, bVal, valErr := parseStart(t)
-		if valErr != nil {
-			err = valErr
+		ret, err = parseStart(t)
+		if err != nil {
 			return
 		}
-		if !bVal {
-			ret = strVal
+		if ret.IsArray {
+			err = fmt.Errorf("illegal array, type:[]%v, pos:%v, end:%v", ret, t.Pos(), t.End())
 			return
 		}
-		err = fmt.Errorf("illegal array element, pos:%v, end:%v", t.Pos(), t.End())
+		ret.IsArray = true
+		return
 	default:
 		err = fmt.Errorf("illegal array, pos:%v, end:%v", t.Pos(), t.End())
 	}
@@ -56,15 +77,25 @@ func parseArray(ptr *ast.ArrayType) (ret string, err error) {
 	return
 }
 
-func parseStart(ptr *ast.StarExpr) (strVal string, bVal bool, err error) {
+func parseStart(ptr *ast.StarExpr) (ret *Type, err error) {
 	switch t := ptr.X.(type) {
 	case *ast.Ident:
-		strVal = t.Name
-		bVal = false
+		ret, err = parseIdent(t)
+		if err != nil {
+			return
+		}
+		ret.IsPtr = true
 		return
 	case *ast.ArrayType:
-		strVal, err = parseArray(t)
-		bVal = true
+		ret, err = parseArray(t)
+		if err != nil {
+			return
+		}
+		if ret.IsPtr {
+			err = fmt.Errorf("illegal start, type:*%v, pos:%v, end:%v", ret, t.Pos(), t.End())
+			return
+		}
+		ret.IsPtr = true
 		return
 	default:
 		err = fmt.Errorf("illegal start, pos:%v, end:%v", t.Pos(), t.End())
@@ -80,29 +111,13 @@ func parseField(ptr *ast.Field) (ret *Item, err error) {
 
 	switch t := ptr.Type.(type) {
 	case *ast.Ident:
-		ret.IsPtr = false
-		ret.IsArray = false
 		ret.Type, err = parseIdent(t)
 		return
 	case *ast.ArrayType:
-		ret.IsPtr = false
-		ret.IsArray = true
 		ret.Type, err = parseArray(t)
 		return
 	case *ast.StarExpr:
-		strVal, bVal, errVal := parseStart(t)
-		if errVal != nil {
-			err = errVal
-			return
-		}
-		if bVal {
-			err = fmt.Errorf("illegal field define,name:%v, pos:%v, end:%v", ptr.Names[0].Name, ptr.Pos(), ptr.End())
-			return
-		}
-
-		ret.IsPtr = true
-		ret.IsArray = bVal
-		ret.Type = strVal
+		ret.Type, err = parseStart(t)
 		return
 	default:
 		err = fmt.Errorf("illegal field define,name:%v, pos:%v, end:%v", ptr.Names[0].Name, ptr.Pos(), ptr.End())

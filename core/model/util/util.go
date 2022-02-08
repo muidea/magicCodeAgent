@@ -8,7 +8,7 @@ import (
 )
 
 func IsSimple(val *parser.Item) bool {
-	switch val.Type {
+	switch val.Type.Name {
 	case "bool",
 		"int8", "int16", "int32", "int", "int64",
 		"uint8", "uint16", "uint32", "uint", "uint64",
@@ -22,18 +22,11 @@ func IsSimple(val *parser.Item) bool {
 }
 
 func DefineItem(val *parser.Item) string {
-	if val.IsArray {
-		if val.IsPtr {
-			return fmt.Sprintf("%s: []*model.%s{}", val.Name, val.Type)
-		}
-
-		return fmt.Sprintf("%s: []model.%s{}", val.Name, val.Type)
-	}
 	if val.IsPtr {
-		return fmt.Sprintf("%s: &model.%s{}", val.Name, val.Type)
+		return fmt.Sprintf("%s: *model.%v{}", val.Name, val.Type)
 	}
 
-	return fmt.Sprintf("%s: model.%s{}", val.Name, val.Type)
+	return fmt.Sprintf("%s: model.%v{}", val.Name, val.Type)
 }
 
 func DefineObject(ptr *parser.Object) (ret string) {
