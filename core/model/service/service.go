@@ -309,7 +309,7 @@ func (s *{{$.ModuleName}}) Filter{{.NameVal}}(ctx context.Context, res http.Resp
 	result := &common.{{.NameVal}}StatisticResult{}
 	for {
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		summaryList := s.bizPtr.QuerySummary(common.{{.NameVal}}, curNamespace)
+		summaryList := s.bizPtr.QuerySummary(common.Notify{{.ActionVal}}, curNamespace)
 		for _, val := range summaryList {
 			view := &common.TotalizerView{}
 			view.FromTotalizer(val)
@@ -404,8 +404,7 @@ func (s *{{$.ModuleName}}) Create{{.NameVal}}(ctx context.Context, res http.Resp
 			break
 		}
 
-		// TODO
-		memo := fmt.Sprintf("新增{{.NameVal}}:%s", {{toLower .NameVal}}Ptr.Name)
+		memo := fmt.Sprintf("新增{{.NameVal}}:%d", {{toLower .NameVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
 		result.{{.NameVal}} = &common.{{.NameVal}}View{}
@@ -456,7 +455,7 @@ func (s *{{$.ModuleName}}) Update{{.NameVal}}(ctx context.Context, res http.Resp
 			break
 		}
 
-		memo := fmt.Sprintf("更新{{.NameVal}}:%s", {{toLower .NameVal}}Ptr.Name)
+		memo := fmt.Sprintf("更新{{.NameVal}}:%d", {{toLower .NameVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
 		result.{{.NameVal}} = &common.{{.NameVal}}View{}
@@ -493,7 +492,7 @@ func (s *{{$.ModuleName}}) Delete{{.NameVal}}(ctx context.Context, res http.Resp
 			break
 		}
 
-		memo := fmt.Sprintf("删除{{.NameVal}}:%s", {{toLower .NameVal}}Ptr.Name)
+		memo := fmt.Sprintf("删除{{.NameVal}}:%d", {{toLower .NameVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
 		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{toLower .NameVal}}Ptr.Creater, curNamespace)
@@ -514,12 +513,17 @@ func (s *{{$.ModuleName}}) Delete{{.NameVal}}(ctx context.Context, res http.Resp
 {{end}}`
 
 	type Item struct {
-		NameVal string
+		ActionVal string
+		NameVal   string
 	}
 
 	itemList := []*Item{}
 	nameVal := ptr.Name
-	itemList = append(itemList, &Item{nameVal})
+	actionVal := ptr.Name
+	if ptr.Name != moduleName {
+		actionVal = fmt.Sprintf("%s%s", moduleName, actionVal)
+	}
+	itemList = append(itemList, &Item{actionVal, nameVal})
 
 	factoryPtr := factory.NewMemoryFactor(funcDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemsList": itemList, "ModuleName": moduleName})
