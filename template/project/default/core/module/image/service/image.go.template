@@ -10,7 +10,6 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
 	fu "github.com/muidea/magicCommon/foundation/util"
-	"github.com/muidea/magicCommon/session"
 
 	cc "github.com/muidea/magicCas/common"
 	"github.com/muidea/magicCas/toolkit"
