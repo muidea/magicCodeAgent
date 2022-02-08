@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -225,10 +224,5 @@ func (s *Image) getCurrentNamespace(ctx context.Context, res http.ResponseWriter
 	}
 
 	ret = items[0]
-	return
-}
-
-func (s *Image) queryEntity(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.EntityView) {
-	ret = s.bizPtr.QueryEntity(sessionInfo, id, namespace)
 	return
 }

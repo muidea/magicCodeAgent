@@ -114,11 +114,6 @@ func (s *Authority) getCurrentNamespace(ctx context.Context, res http.ResponseWr
 	return
 }
 
-func (s *Authority) queryEntity(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.EntityView) {
-	ret = s.bizPtr.QueryEntity(sessionInfo, id, namespace)
-	return
-}
-
 func (s *Authority) writeLog(ctx context.Context, res http.ResponseWriter, req *http.Request, memo string) {
 	address := fn.GetHTTPRemoteAddress(req)
 	entityPtr, _ := s.getCurrentEntity(ctx)
