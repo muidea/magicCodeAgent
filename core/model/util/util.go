@@ -7,32 +7,46 @@ import (
 	"github.com/muidea/magicToolkit/parser"
 )
 
-func IsSimple(val *parser.Item) bool {
+func IsComplex(val *parser.Item) bool {
 	switch val.Type.Name {
 	case "bool",
 		"int8", "int16", "int32", "int", "int64",
 		"uint8", "uint16", "uint32", "uint", "uint64",
 		"float32", "float64",
 		"string", "time.Time":
-		return true
+		return false
 	default:
 	}
 
-	return false
+	return true
+}
+
+func DefineType(val *parser.Type) string {
+	if val.IsArray {
+		if val.IsPtr {
+			return fmt.Sprintf("[]*model.%s", val.Name)
+		}
+		return fmt.Sprintf("[]model.%s", val.Name)
+	}
+
+	if val.IsPtr {
+		return fmt.Sprintf("&model.%s", val.Name)
+	}
+	return fmt.Sprintf("model.%s", val.Name)
 }
 
 func DefineItem(val *parser.Item) string {
 	if val.IsPtr {
-		return fmt.Sprintf("%s: *model.%v{}", val.Name, val.Type)
+		return fmt.Sprintf("%s: &%v{}", val.Name, DefineType(val.Type))
 	}
 
-	return fmt.Sprintf("%s: model.%v{}", val.Name, val.Type)
+	return fmt.Sprintf("%s: %v{}", val.Name, DefineType(val.Type))
 }
 
 func DefineObject(ptr *parser.Object) (ret string) {
 	objectDeclare :=
 		`model.{{.Name}} { {{range .Items}}
-{{if !isSimple .}} {{defineItem .}}, {{end}}
+{{- if isComplex .}} {{defineItem .}}, {{end -}}
 {{end}} }`
 	factoryPtr := factory.NewMemoryFactor(objectDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"Name": ptr.Name, "Items": ptr.Items})

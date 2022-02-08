@@ -28,12 +28,12 @@ func New(rootPath string) *Model {
 }
 
 func (s *Model) Create(projectName string) (err error) {
-	factory.RegisterFunc("isSimple", mu.IsSimple)
+	factory.RegisterFunc("isComplex", mu.IsComplex)
 	factory.RegisterFunc("defineItem", mu.DefineItem)
 	factory.RegisterFunc("defineObject", mu.DefineObject)
 	defer factory.UnRegisterFunc("defineObject")
 	defer factory.UnRegisterFunc("defineItem")
-	defer factory.UnRegisterFunc("isSimple")
+	defer factory.UnRegisterFunc("isComplex")
 
 	s.projectName = projectName
 

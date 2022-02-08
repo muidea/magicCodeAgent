@@ -120,6 +120,7 @@ func (s *{{toCamelCase $ModuleName}}) Filter{{formatNameVal $ModuleName .}}(filt
 		filter = bc.NewFilter()
 	}
 	filter.Equal("Namespace", namespace)
+	filter.ValueMask(&{{defineObject .}})
 	total, err = s.batisClient.BatchQueryEntity(&ret, filter)
 	return
 }
@@ -129,7 +130,7 @@ func (s *{{toCamelCase $ModuleName}}) Query{{formatNameVal $ModuleName .}}(id in
 		err = fmt.Errorf("illegal id value, id:%d", id)
 		return
 	}
-	ptr := &model.{{formatNameVal $ModuleName .}}{ID: id, Namespace: namespace}
+	ptr := &{{defineObject .}}
 	ptr.ID = id
 	ptr.Namespace = namespace
 	err = s.batisClient.QueryEntity(ptr)
