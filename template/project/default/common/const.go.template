@@ -18,3 +18,8 @@ const (
 	Delete
 	Update
 )
+
+const (
+	LiteMode = "1"
+	ViewMode = "2"
+)

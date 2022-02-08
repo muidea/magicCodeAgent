@@ -291,12 +291,12 @@ func (s *{{$.ModuleName}}) Filter{{.NameVal}}(ctx context.Context, res http.Resp
 
 	modelVal, modelOK := filter.Get("mode")
 	if modelOK {
-		if modelVal == "1" {
+		if modelVal == common.LiteMode {
 			s.filter{{.NameVal}}Lite(ctx, res, req, queryFilter)
 			return
 		}
 
-		if modelVal == "2" {
+		if modelVal == common.ViewMode {
 			s.filter{{.NameVal}}(ctx, res, req, queryFilter)
 			return
 		}

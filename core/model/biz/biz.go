@@ -159,7 +159,6 @@ func (s *{{$ModuleName}}) Update{{formatNameVal $ModuleName .}}(id int, ptr *com
 	current{{formatNameVal $ModuleName .}} = ptr.To{{formatNameVal $ModuleName .}}(current{{formatNameVal $ModuleName .}})
 	current{{formatNameVal $ModuleName .}}.Creater = updater
 	current{{formatNameVal $ModuleName .}}.UpdateTime = time.Now().UTC().Unix()
-
 	ret, err = s.{{toCamelCase $ModuleName}}Dao.Update{{formatNameVal $ModuleName .}}(current{{formatNameVal $ModuleName .}}, namespace)
 	if err != nil {
 		return
