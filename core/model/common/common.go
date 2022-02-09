@@ -55,11 +55,10 @@ import (
 
 func (s *Common) declareModule(ptr *parser.Package) (ret string) {
 	moduleDeclare := `
-const {{.ModuleName}}Module = "/module/{{toLower .ModuleName}}"
+const {{formatModuleName .ModuleVal}}Module = "/module/{{formatModulePath .ModuleVal}}"
 `
-	moduleName := mu.FormatModuleName(ptr)
 	factoryPtr := factory.NewMemoryFactor(moduleDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
