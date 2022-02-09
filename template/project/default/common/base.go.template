@@ -3,9 +3,9 @@ package common
 import (
 	"time"
 
-	commonDef "github.com/muidea/magicCommon/def"
+	cd "github.com/muidea/magicCommon/def"
 
-	casCommon "github.com/muidea/magicCas/common"
+	cc "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/{{.ProjectName}}/model"
 )
@@ -48,14 +48,14 @@ const (
 const BaseModule = "/kernel/base"
 
 type LogView struct {
-	ID         int                   `json:"id"`
-	Address    string                `json:"address"`
-	Memo       string                `json:"memo"`
-	Creater    *casCommon.EntityView `json:"creater"`
-	CreateTime int64                 `json:"createTime"`
+	ID         int            `json:"id"`
+	Address    string         `json:"address"`
+	Memo       string         `json:"memo"`
+	Creater    *cc.EntityView `json:"creater"`
+	CreateTime int64          `json:"createTime"`
 }
 
-func (s *LogView) FromLog(ptr *model.Log, createrPtr *casCommon.EntityView) {
+func (s *LogView) FromLog(ptr *model.Log, createrPtr *cc.EntityView) {
 	s.ID = ptr.ID
 	s.Address = ptr.Address
 	s.Memo = ptr.Memo
@@ -65,15 +65,15 @@ func (s *LogView) FromLog(ptr *model.Log, createrPtr *casCommon.EntityView) {
 
 // OperateLogListResult operate log list result
 type OperateLogListResult struct {
-	commonDef.Result
+	cd.Result
 	Total      int64      `json:"total"`
 	OperateLog []*LogView `json:"operateLog"`
 }
 
 // EnumPrivateItemResult enum private item result
 type EnumPrivateItemResult struct {
-	commonDef.Result
-	Private []*casCommon.PrivateItem `json:"private"`
+	cd.Result
+	Private []*cc.PrivateItem `json:"private"`
 }
 
 type TimerNotify struct {

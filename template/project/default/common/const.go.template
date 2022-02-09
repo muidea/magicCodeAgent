@@ -11,6 +11,7 @@ const (
 	CreateEventMask = "/#/create/"
 	DeleteEventMask = "/#/delete/+"
 	UpdateEventMask = "/#/update/+"
+	NotifyEventMask = "/#/notify/+"
 )
 
 const (
