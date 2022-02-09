@@ -3,13 +3,16 @@ package service
 import (
 	"bytes"
 	"fmt"
-	log "github.com/cihub/seelog"
-	"github.com/muidea/magicToolkit/core/util"
-	"github.com/muidea/magicToolkit/factory"
-	"github.com/muidea/magicToolkit/parser"
 	"os"
 	"os/exec"
 	"path"
+
+	log "github.com/cihub/seelog"
+
+	mu "github.com/muidea/magicToolkit/core/model/util"
+	"github.com/muidea/magicToolkit/core/util"
+	"github.com/muidea/magicToolkit/factory"
+	"github.com/muidea/magicToolkit/parser"
 )
 
 type Service struct {
@@ -31,7 +34,7 @@ package service
 	return
 }
 
-func (s *Service) declareServiceImport(moduleName string) (ret string) {
+func (s *Service) declareServiceImport(ptr *parser.Package) (ret string) {
 	importDeclare := `
 import (
 	"context"
@@ -48,11 +51,11 @@ import (
 	"github.com/muidea/magicCas/toolkit"
 
 	"github.com/muidea/{{.ProjectName}}/common"
-	"github.com/muidea/{{.ProjectName}}/core/module/{{toLower .ModuleName}}/biz"
+	"github.com/muidea/{{.ProjectName}}/core/module/{{formatModulePath .ModuleVal}}/biz"
 )
 `
 	factoryPtr := factory.NewMemoryFactor(importDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ProjectName": s.projectName, "ModuleName": moduleName})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ProjectName": s.projectName, "ModuleVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -62,7 +65,7 @@ import (
 	return
 }
 
-func (s *Service) declareObjectImport(moduleName string) (ret string) {
+func (s *Service) declareObjectImport(ptr *parser.Package) (ret string) {
 	importDeclare := `
 import (
 	"context"
@@ -81,7 +84,7 @@ import (
 )
 `
 	factoryPtr := factory.NewMemoryFactor(importDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ProjectName": s.projectName, "ModuleName": moduleName})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ProjectName": s.projectName, "ModuleVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -92,29 +95,29 @@ import (
 }
 
 func (s *Service) declareDefine(ptr *parser.Package) (ret string) {
-	defineDeclare := `
-type {{.ModuleName}} struct {
+	defineDeclare := `{{$ModuleVal := .ModuleVal}}
+type {{formatModuleName .ModuleVal}} struct {
 	routeRegistry     toolkit.RouteRegistry
 	casRouteRegistry  toolkit.CasRegistry
 	roleRouteRegistry toolkit.RoleRegistry
 
 	validator fu.Validator
 
-	bizPtr *biz.{{.ModuleName}}
+	bizPtr *biz.{{formatModuleName $ModuleVal}}
 }
 
 func New(
-	{{toLower .ModuleName}}Biz *biz.{{.ModuleName}},
-) *{{.ModuleName}} {
-	ptr := &{{.ModuleName}}{
-		bizPtr:    {{toLower .ModuleName}}Biz,
+	{{formatModuleVal .ModuleVal}}Biz *biz.{{formatModuleName $ModuleVal}},
+) *{{formatModuleName $ModuleVal}} {
+	ptr := &{{formatModuleName $ModuleVal}}{
+		bizPtr:    {{formatModuleVal .ModuleVal}}Biz,
 		validator: fu.NewFormValidator(),
 	}
 
 	return ptr
 }
 
-func (s *{{.ModuleName}}) BindRegistry(
+func (s *{{formatModuleName $ModuleVal}}) BindRegistry(
 	routeRegistry toolkit.RouteRegistry,
 	casRouteRegistry toolkit.CasRegistry,
 	roleRouteRegistry toolkit.RoleRegistry) {
@@ -129,16 +132,16 @@ func (s *{{.ModuleName}}) BindRegistry(
 }
 
 // RegisterRoute 注册路由
-func (s *{{.ModuleName}}) RegisterRoute() { {{range .ItemsList}}
-	s.roleRouteRegistry.AddHandler(common.Filter{{.ActionVal}}, "GET", cc.ReadPrivate, s.Filter{{.NameVal}})
-	s.roleRouteRegistry.AddHandler(common.Query{{.ActionVal}}, "GET", cc.ReadPrivate, s.Query{{.NameVal}})
-	s.roleRouteRegistry.AddHandler(common.Create{{.ActionVal}}, "POST", cc.WritePrivate, s.Create{{.NameVal}})
-	s.roleRouteRegistry.AddHandler(common.Update{{.ActionVal}}, "PUT", cc.WritePrivate, s.Update{{.NameVal}})
-	s.roleRouteRegistry.AddHandler(common.Delete{{.ActionVal}}, "DELETE", cc.DeletePrivate, s.Delete{{.NameVal}})
-{{end}}
+func (s *{{formatModuleName $ModuleVal}}) RegisterRoute() { {{with .ModuleVal}}{{range .Objects}}
+	s.roleRouteRegistry.AddHandler(common.Filter{{formatObjectActionName $ModuleVal .}}, "GET", cc.ReadPrivate, s.Filter{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Query{{formatObjectActionName $ModuleVal .}}, "GET", cc.ReadPrivate, s.Query{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Create{{formatObjectActionName $ModuleVal .}}, "POST", cc.WritePrivate, s.Create{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Update{{formatObjectActionName $ModuleVal .}}, "PUT", cc.WritePrivate, s.Update{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Delete{{formatObjectActionName $ModuleVal .}}, "DELETE", cc.DeletePrivate, s.Delete{{formatObjectName .}})
+{{end}}{{end}}
 }
 
-func (s *{{.ModuleName}}) getCurrentEntity(ctx context.Context) (ret *cc.EntityView, err error) {
+func (s *{{formatModuleName $ModuleVal}}) getCurrentEntity(ctx context.Context) (ret *cc.EntityView, err error) {
 	curSession := ctx.Value(session.AuthSession).(session.Session)
 	authVal, ok := curSession.GetOption(session.AuthAccount)
 	if !ok {
@@ -149,7 +152,7 @@ func (s *{{.ModuleName}}) getCurrentEntity(ctx context.Context) (ret *cc.EntityV
 	return
 }
 
-func (s *{{.ModuleName}}) getCurrentNamespace(ctx context.Context, res http.ResponseWriter, req *http.Request) (ret string) {
+func (s *{{formatModuleName $ModuleVal}}) getCurrentNamespace(ctx context.Context, res http.ResponseWriter, req *http.Request) (ret string) {
 	namespace := req.Header.Get(cc.NamespaceID)
 	if namespace != "" {
 		ret = namespace
@@ -172,35 +175,19 @@ func (s *{{.ModuleName}}) getCurrentNamespace(ctx context.Context, res http.Resp
 	return
 }
 
-func (s *{{.ModuleName}}) queryEntity(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.EntityView) {
+func (s *{{formatModuleName $ModuleVal}}) queryEntity(sessionInfo *session.SessionInfo, id int, namespace string) (ret *cc.EntityView) {
 	ret = s.bizPtr.QueryEntity(sessionInfo, id, namespace)
 	return
 }
 
-func (s *{{.ModuleName}}) writeLog(ctx context.Context, res http.ResponseWriter, req *http.Request, memo string) {
+func (s *{{formatModuleName $ModuleVal}}) writeLog(ctx context.Context, res http.ResponseWriter, req *http.Request, memo string) {
 	address := fn.GetHTTPRemoteAddress(req)
 	entityPtr, _ := s.getCurrentEntity(ctx)
 	namespace := s.getCurrentNamespace(ctx, res, req)
 	s.bizPtr.WriteLog(memo, address, entityPtr, namespace)
 }`
-	type Item struct {
-		ActionVal string
-		NameVal   string
-	}
-
-	moduleName := util.ToTitle(ptr.FileName)
-	itemList := []*Item{}
-	for _, val := range ptr.Objects {
-		actionVal := val.Name
-		if val.Name != moduleName {
-			actionVal = fmt.Sprintf("%s%s", moduleName, actionVal)
-		}
-		nameVal := val.Name
-		itemList = append(itemList, &Item{actionVal, nameVal})
-	}
-
 	factoryPtr := factory.NewMemoryFactor(defineDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName, "ItemsList": itemList})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -210,27 +197,26 @@ func (s *{{.ModuleName}}) writeLog(ctx context.Context, res http.ResponseWriter,
 	return
 }
 
-func (s *Service) declareObjectFunc(moduleName string, ptr *parser.Object) (ret string) {
-	funcDeclare := `{{$ModuleName := .ModuleName}}
-{{range .ItemsList}}
-func (s *{{$.ModuleName}}) filter{{.NameVal}}Lite(ctx context.Context, res http.ResponseWriter, req *http.Request, filter *bc.QueryFilter) {
-	result := &common.{{.NameVal}}LiteListResult{}
+func (s *Service) declareObjectFunc(modulePtr *parser.Package, objectPtr *parser.Object) (ret string) {
+	funcDeclare := `{{$ModuleVal := .ModuleVal}}{{$ObjectVal := .ObjectVal}}
+func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}Lite(ctx context.Context, res http.ResponseWriter, req *http.Request, filter *bc.QueryFilter) {
+	result := &common.{{formatObjectName $ObjectVal}}LiteListResult{}
 	for {
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{toLower .NameVal}}List, {{toLower .NameVal}}Total, {{toLower .NameVal}}Err := s.bizPtr.Filter{{.NameVal}}(filter, curNamespace)
-		if {{toLower .NameVal}}Err != nil {
+		{{formatObjectVal $ObjectVal}}List, {{formatObjectVal $ObjectVal}}Total, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(filter, curNamespace)
+		if {{formatObjectVal $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{toLower .NameVal}}Err.Error()
+			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
 			break
 		}
 
-		for _, val := range {{toLower .NameVal}}List {
-			ptr := &common.{{.NameVal}}Lite{}
-			ptr.From{{.NameVal}}(val)
-			result.{{.NameVal}} = append(result.{{.NameVal}}, ptr)
+		for _, val := range {{formatObjectVal $ObjectVal}}List {
+			ptr := &common.{{formatObjectName $ObjectVal}}Lite{}
+			ptr.From{{formatObjectName $ObjectVal}}(val)
+			result.{{formatObjectName $ObjectVal}} = append(result.{{formatObjectName $ObjectVal}}, ptr)
 		}
 
-		result.Total = {{toLower .NameVal}}Total
+		result.Total = {{formatObjectVal $ObjectVal}}Total
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -244,27 +230,26 @@ func (s *{{$.ModuleName}}) filter{{.NameVal}}Lite(ctx context.Context, res http.
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *{{$.ModuleName}}) filter{{.NameVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request, filter *bc.QueryFilter) {
+func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request, filter *bc.QueryFilter) {
 	curSession := ctx.Value(session.AuthSession).(session.Session)
-	result := &common.{{.NameVal}}ListResult{}
+	result := &common.{{formatObjectName $ObjectVal}}ListResult{}
 	for {
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{toLower .NameVal}}List, {{toLower .NameVal}}Total, {{toLower .NameVal}}Err := s.bizPtr.Filter{{.NameVal}}(filter, curNamespace)
-		if {{toLower .NameVal}}Err != nil {
+		{{formatObjectVal $ObjectVal}}List, {{formatObjectVal $ObjectVal}}Total, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(filter, curNamespace)
+		if {{formatObjectVal $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{toLower .NameVal}}Err.Error()
+			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
 			break
 		}
 
-		for _, val := range {{toLower .NameVal}}List {
-			ptr := &common.{{.NameVal}}View{}
-
+		for _, val := range {{formatObjectVal $ObjectVal}}List {
+			ptr := &common.{{formatObjectName $ObjectVal}}View{}
 			entityPtr := s.queryEntity(curSession.GetSessionInfo(), val.Creater, curNamespace)
-			ptr.From{{.NameVal}}(val, entityPtr)
-			result.{{.NameVal}} = append(result.{{.NameVal}}, ptr)
+			ptr.From{{formatObjectName $ObjectVal}}(val, entityPtr)
+			result.{{formatObjectName $ObjectVal}} = append(result.{{formatObjectName $ObjectVal}}, ptr)
 		}
 
-		result.Total = {{toLower .NameVal}}Total
+		result.Total = {{formatObjectVal $ObjectVal}}Total
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -278,7 +263,7 @@ func (s *{{$.ModuleName}}) filter{{.NameVal}}(ctx context.Context, res http.Resp
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *{{$.ModuleName}}) Filter{{.NameVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	filter := fu.NewFilter()
 	filter.Decode(req)
 	queryFilter := bc.NewFilter()
@@ -292,12 +277,12 @@ func (s *{{$.ModuleName}}) Filter{{.NameVal}}(ctx context.Context, res http.Resp
 	modelVal, modelOK := filter.Get("mode")
 	if modelOK {
 		if modelVal == common.LiteMode {
-			s.filter{{.NameVal}}Lite(ctx, res, req, queryFilter)
+			s.filter{{formatObjectName $ObjectVal}}Lite(ctx, res, req, queryFilter)
 			return
 		}
 
 		if modelVal == common.ViewMode {
-			s.filter{{.NameVal}}(ctx, res, req, queryFilter)
+			s.filter{{formatObjectName $ObjectVal}}(ctx, res, req, queryFilter)
 			return
 		}
 
@@ -306,31 +291,31 @@ func (s *{{$.ModuleName}}) Filter{{.NameVal}}(ctx context.Context, res http.Resp
 	}
 
 	curSession := ctx.Value(session.AuthSession).(session.Session)
-	result := &common.{{.NameVal}}StatisticResult{}
+	result := &common.{{formatObjectName $ObjectVal}}StatisticResult{}
 	for {
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		summaryList := s.bizPtr.QuerySummary(common.Notify{{.ActionVal}}, curNamespace)
+		summaryList := s.bizPtr.QuerySummary(common.Notify{{formatObjectActionName $ModuleVal $ObjectVal}}, curNamespace)
 		for _, val := range summaryList {
 			view := &common.TotalizerView{}
 			view.FromTotalizer(val)
 			result.Summary = append(result.Summary, view)
 		}
 
-		{{toLower .NameVal}}List, {{toLower .NameVal}}Total, {{toLower .NameVal}}Err := s.bizPtr.Filter{{.NameVal}}(queryFilter, curNamespace)
-		if {{toLower .NameVal}}Err != nil {
+		{{formatObjectVal $ObjectVal}}List, {{formatObjectVal $ObjectVal}}Total, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(queryFilter, curNamespace)
+		if {{formatObjectVal $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{toLower .NameVal}}Err.Error()
+			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
 			break
 		}
 
-		for _, val := range {{toLower .NameVal}}List {
-			view := &common.{{.NameVal}}View{}
+		for _, val := range {{formatObjectVal $ObjectVal}}List {
+			view := &common.{{formatObjectName $ObjectVal}}View{}
 
 			entityPtr := s.queryEntity(curSession.GetSessionInfo(), val.Creater, curNamespace)
-			view.From{{.NameVal}}(val, entityPtr)
-			result.{{.NameVal}} = append(result.{{.NameVal}}, view)
+			view.From{{formatObjectName $ObjectVal}}(val, entityPtr)
+			result.{{formatObjectName $ObjectVal}} = append(result.{{formatObjectName $ObjectVal}}, view)
 		}
-		result.Total = {{toLower .NameVal}}Total
+		result.Total = {{formatObjectVal $ObjectVal}}Total
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -344,9 +329,9 @@ func (s *{{$.ModuleName}}) Filter{{.NameVal}}(ctx context.Context, res http.Resp
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *{{$.ModuleName}}) Query{{.NameVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	curSession := ctx.Value(session.AuthSession).(session.Session)
-	result := &common.{{.NameVal}}Result{}
+	result := &common.{{formatObjectName $ObjectVal}}Result{}
 	for {
 		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
@@ -356,16 +341,16 @@ func (s *{{$.ModuleName}}) Query{{.NameVal}}(ctx context.Context, res http.Respo
 		}
 
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{toLower .NameVal}}Ptr, {{toLower .NameVal}}Err := s.bizPtr.Query{{.NameVal}}(id, curNamespace)
-		if {{toLower .NameVal}}Err != nil {
+		{{formatObjectVal $ObjectVal}}Ptr, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Query{{formatObjectName $ObjectVal}}(id, curNamespace)
+		if {{formatObjectVal $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{toLower .NameVal}}Err.Error()
+			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
 			break
 		}
 
-		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{toLower .NameVal}}Ptr.Creater, curNamespace)
-		result.{{.NameVal}} = &common.{{.NameVal}}View{}
-		result.{{.NameVal}}.From{{.NameVal}}({{toLower .NameVal}}Ptr, entityPtr)
+		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectVal $ObjectVal}}Ptr.Creater, curNamespace)
+		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, entityPtr)
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -379,10 +364,10 @@ func (s *{{$.ModuleName}}) Query{{.NameVal}}(ctx context.Context, res http.Respo
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *{{$.ModuleName}}) Create{{.NameVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.{{.NameVal}}Result{}
+func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.{{formatObjectName $ObjectVal}}Result{}
 	for {
-		param := &common.{{.NameVal}}Param{}
+		param := &common.{{formatObjectName $ObjectVal}}Param{}
 		err := fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = cd.IllegalParam
@@ -397,18 +382,18 @@ func (s *{{$.ModuleName}}) Create{{.NameVal}}(ctx context.Context, res http.Resp
 		}
 
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{toLower .NameVal}}Ptr, {{toLower .NameVal}}Err := s.bizPtr.Create{{.NameVal}}(param, curEntity.ID, curNamespace)
-		if {{toLower .NameVal}}Err != nil {
+		{{formatObjectVal $ObjectVal}}Ptr, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Create{{formatObjectName $ObjectVal}}(param, curEntity.ID, curNamespace)
+		if {{formatObjectVal $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{toLower .NameVal}}Err.Error()
+			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
 			break
 		}
 
-		memo := fmt.Sprintf("新增{{.NameVal}}:%d", {{toLower .NameVal}}Ptr.ID)
+		memo := fmt.Sprintf("新增{{formatObjectName $ObjectVal}}:%d", {{formatObjectVal $ObjectVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
-		result.{{.NameVal}} = &common.{{.NameVal}}View{}
-		result.{{.NameVal}}.From{{.NameVal}}({{toLower .NameVal}}Ptr, curEntity)
+		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, curEntity)
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -422,8 +407,8 @@ func (s *{{$.ModuleName}}) Create{{.NameVal}}(ctx context.Context, res http.Resp
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *{{$.ModuleName}}) Update{{.NameVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.{{.NameVal}}Result{}
+func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.{{formatObjectName $ObjectVal}}Result{}
 	for {
 		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
@@ -432,7 +417,7 @@ func (s *{{$.ModuleName}}) Update{{.NameVal}}(ctx context.Context, res http.Resp
 			break
 		}
 
-		param := &common.{{.NameVal}}Param{}
+		param := &common.{{formatObjectName $ObjectVal}}Param{}
 		err = fn.ParseJSONBody(req, s.validator, param)
 		if err != nil {
 			result.ErrorCode = cd.IllegalParam
@@ -448,18 +433,18 @@ func (s *{{$.ModuleName}}) Update{{.NameVal}}(ctx context.Context, res http.Resp
 		}
 
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{toLower .NameVal}}Ptr, {{toLower .NameVal}}Err := s.bizPtr.Update{{.NameVal}}(id, param, curEntity.ID, curNamespace)
-		if {{toLower .NameVal}}Err != nil {
+		{{formatObjectVal $ObjectVal}}Ptr, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Update{{formatObjectName $ObjectVal}}(id, param, curEntity.ID, curNamespace)
+		if {{formatObjectVal $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{toLower .NameVal}}Err.Error()
+			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
 			break
 		}
 
-		memo := fmt.Sprintf("更新{{.NameVal}}:%d", {{toLower .NameVal}}Ptr.ID)
+		memo := fmt.Sprintf("更新{{formatObjectName $ObjectVal}}:%d", {{formatObjectVal $ObjectVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
-		result.{{.NameVal}} = &common.{{.NameVal}}View{}
-		result.{{.NameVal}}.From{{.NameVal}}({{toLower .NameVal}}Ptr, curEntity)
+		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, curEntity)
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -473,9 +458,9 @@ func (s *{{$.ModuleName}}) Update{{.NameVal}}(ctx context.Context, res http.Resp
 	res.WriteHeader(http.StatusExpectationFailed)
 }
 
-func (s *{{$.ModuleName}}) Delete{{.NameVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *{{formatModuleName $ModuleVal}}) Delete{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	curSession := ctx.Value(session.AuthSession).(session.Session)
-	result := &common.{{.NameVal}}Result{}
+	result := &common.{{formatObjectName $ObjectVal}}Result{}
 	for {
 		id, err := fn.SplitRESTID(req.URL.Path)
 		if err != nil || id == 0 {
@@ -485,19 +470,19 @@ func (s *{{$.ModuleName}}) Delete{{.NameVal}}(ctx context.Context, res http.Resp
 		}
 
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{toLower .NameVal}}Ptr, {{toLower .NameVal}}Err := s.bizPtr.Delete{{.NameVal}}(id, curNamespace)
-		if {{toLower .NameVal}}Err != nil {
+		{{formatObjectVal $ObjectVal}}Ptr, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Delete{{formatObjectName $ObjectVal}}(id, curNamespace)
+		if {{formatObjectVal $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{toLower .NameVal}}Err.Error()
+			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
 			break
 		}
 
-		memo := fmt.Sprintf("删除{{.NameVal}}:%d", {{toLower .NameVal}}Ptr.ID)
+		memo := fmt.Sprintf("删除{{formatObjectName $ObjectVal}}:%d", {{formatObjectVal $ObjectVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
-		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{toLower .NameVal}}Ptr.Creater, curNamespace)
-		result.{{.NameVal}} = &common.{{.NameVal}}View{}
-		result.{{.NameVal}}.From{{.NameVal}}({{toLower .NameVal}}Ptr, entityPtr)
+		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectVal $ObjectVal}}Ptr.Creater, curNamespace)
+		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, entityPtr)
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -510,23 +495,10 @@ func (s *{{$.ModuleName}}) Delete{{.NameVal}}(ctx context.Context, res http.Resp
 
 	res.WriteHeader(http.StatusExpectationFailed)
 }
-{{end}}`
-
-	type Item struct {
-		ActionVal string
-		NameVal   string
-	}
-
-	itemList := []*Item{}
-	nameVal := ptr.Name
-	actionVal := ptr.Name
-	if ptr.Name != moduleName {
-		actionVal = fmt.Sprintf("%s%s", moduleName, actionVal)
-	}
-	itemList = append(itemList, &Item{actionVal, nameVal})
+`
 
 	factoryPtr := factory.NewMemoryFactor(funcDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemsList": itemList, "ModuleName": moduleName})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": modulePtr, "ObjectVal": objectPtr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -559,7 +531,7 @@ func (s *Service) Create(ptr *parser.Package) (err error) {
 			return
 		}
 
-		_, err = fileHandle.WriteString(s.declareServiceImport(moduleName))
+		_, err = fileHandle.WriteString(s.declareServiceImport(ptr))
 		if err != nil {
 			return
 		}
@@ -578,7 +550,7 @@ func (s *Service) Create(ptr *parser.Package) (err error) {
 	err = cmd.Run()
 
 	for _, val := range ptr.Objects {
-		err = s.createObject(moduleName, val)
+		err = s.createObject(ptr, val)
 		if err != nil {
 			return
 		}
@@ -587,9 +559,9 @@ func (s *Service) Create(ptr *parser.Package) (err error) {
 	return
 }
 
-func (s *Service) createObject(moduleName string, ptr *parser.Object) (err error) {
+func (s *Service) createObject(modulePtr *parser.Package, ptr *parser.Object) (err error) {
 	commonFile := fmt.Sprintf("%s.go", util.ToLower(ptr.Name))
-	commonFilePath := path.Join(s.rootPath, "core/module", util.ToLower(moduleName), "service", commonFile)
+	commonFilePath := path.Join(s.rootPath, "core/module", mu.FormatModulePath(modulePtr), "service", commonFile)
 
 	log.Info(commonFilePath)
 	func() {
@@ -605,12 +577,12 @@ func (s *Service) createObject(moduleName string, ptr *parser.Object) (err error
 			return
 		}
 
-		_, err = fileHandle.WriteString(s.declareObjectImport(moduleName))
+		_, err = fileHandle.WriteString(s.declareObjectImport(modulePtr))
 		if err != nil {
 			return
 		}
 
-		_, err = fileHandle.WriteString(s.declareObjectFunc(moduleName, ptr))
+		_, err = fileHandle.WriteString(s.declareObjectFunc(modulePtr, ptr))
 		if err != nil {
 			return
 		}
