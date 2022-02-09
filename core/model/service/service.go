@@ -593,20 +593,10 @@ func (s *Service) createObject(moduleName string, ptr *parser.Object) (err error
 
 	log.Info(commonFilePath)
 	func() {
-		var fileHandle *os.File
-		var fileErr error
-		if moduleName != ptr.Name {
-			fileHandle, fileErr = os.OpenFile(commonFilePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
-			if fileErr != nil {
-				err = fileErr
-				return
-			}
-		} else {
-			fileHandle, fileErr = os.OpenFile(commonFilePath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
-			if fileErr != nil {
-				err = fileErr
-				return
-			}
+		fileHandle, fileErr := os.OpenFile(commonFilePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.ModePerm)
+		if fileErr != nil {
+			err = fileErr
+			return
 		}
 		defer fileHandle.Close()
 

@@ -56,18 +56,18 @@ func (s *Dao) declareInterface(ptr *parser.Package) (ret string) {
 	interfaceDeclare := `{{$ModuleName:=.ModuleName}}
 type {{$ModuleName}} interface {
 {{range .Items}}
-	Filter{{formatNameVal $ModuleName .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatNameVal $ModuleName .}}, total int64, err error)
-	Query{{formatNameVal $ModuleName .}}(id int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error)
-	Create{{formatNameVal $ModuleName .}}(ptr *model.{{formatNameVal $ModuleName .}}, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error)
-	Update{{formatNameVal $ModuleName .}}(ptr *model.{{formatNameVal $ModuleName .}}, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error)
-	Delete{{formatNameVal $ModuleName .}}(id int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error)
+	Filter{{formatNameVal .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatNameVal .}}, total int64, err error)
+	Query{{formatNameVal .}}(id int, namespace string) (ret *model.{{formatNameVal .}}, err error)
+	Create{{formatNameVal .}}(ptr *model.{{formatNameVal .}}, namespace string) (ret *model.{{formatNameVal .}}, err error)
+	Update{{formatNameVal .}}(ptr *model.{{formatNameVal .}}, namespace string) (ret *model.{{formatNameVal .}}, err error)
+	Delete{{formatNameVal .}}(id int, namespace string) (ret *model.{{formatNameVal .}}, err error)
 {{end}}
 }`
-	factory.RegisterFunc("formatNameVal", func(moduleName string, ptr *parser.Object) string {
+	factory.RegisterFunc("formatNameVal", func(ptr *parser.Object) string {
 		val := ptr.Name
 		return val
 	})
-	factory.RegisterFunc("formatPtrVal", func(moduleName string, ptr *parser.Object) string {
+	factory.RegisterFunc("formatPtrVal", func(ptr *parser.Object) string {
 		val := ptr.Name
 		return util.ToCamelCase(val)
 	})
@@ -114,8 +114,8 @@ type {{toCamelCase .ModuleName}} struct {
 func (s *Dao) declareFunc(ptr *parser.Package) (ret string) {
 	funcDeclare := `{{$ModuleName := .ModuleName}}
 {{range .Items}}
-func (s *{{toCamelCase $ModuleName}}) Filter{{formatNameVal $ModuleName .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatNameVal $ModuleName .}}, total int64, err error) {
-	ret = []*model.{{formatNameVal $ModuleName .}}{}
+func (s *{{toCamelCase $ModuleName}}) Filter{{formatNameVal .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatNameVal .}}, total int64, err error) {
+	ret = []*model.{{formatNameVal .}}{}
 	if filter == nil {
 		filter = bc.NewFilter()
 	}
@@ -125,7 +125,7 @@ func (s *{{toCamelCase $ModuleName}}) Filter{{formatNameVal $ModuleName .}}(filt
 	return
 }
 
-func (s *{{toCamelCase $ModuleName}}) Query{{formatNameVal $ModuleName .}}(id int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
+func (s *{{toCamelCase $ModuleName}}) Query{{formatNameVal .}}(id int, namespace string) (ret *model.{{formatNameVal .}}, err error) {
 	if id <= 0 {
 		err = fmt.Errorf("illegal id value, id:%d", id)
 		return
@@ -141,7 +141,7 @@ func (s *{{toCamelCase $ModuleName}}) Query{{formatNameVal $ModuleName .}}(id in
 	return
 }
 
-func (s *{{toCamelCase $ModuleName}}) Create{{formatNameVal $ModuleName .}}(ptr *model.{{formatNameVal $ModuleName .}}, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
+func (s *{{toCamelCase $ModuleName}}) Create{{formatNameVal .}}(ptr *model.{{formatNameVal .}}, namespace string) (ret *model.{{formatNameVal .}}, err error) {
 	if ptr == nil {
 		err = fmt.Errorf("illegal ptr value")
 		return
@@ -155,7 +155,7 @@ func (s *{{toCamelCase $ModuleName}}) Create{{formatNameVal $ModuleName .}}(ptr 
 	return
 }
 
-func (s *{{toCamelCase $ModuleName}}) Update{{formatNameVal $ModuleName .}}(ptr *model.{{formatNameVal $ModuleName .}}, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
+func (s *{{toCamelCase $ModuleName}}) Update{{formatNameVal .}}(ptr *model.{{formatNameVal .}}, namespace string) (ret *model.{{formatNameVal .}}, err error) {
 	if ptr == nil || ptr.ID <= 0 {
 		err = fmt.Errorf("illegal update ptr")
 		return
@@ -169,8 +169,8 @@ func (s *{{toCamelCase $ModuleName}}) Update{{formatNameVal $ModuleName .}}(ptr 
 	return
 }
 
-func (s *{{toCamelCase $ModuleName}}) Delete{{formatNameVal $ModuleName .}}(id int, namespace string) (ret *model.{{formatNameVal $ModuleName .}}, err error) {
-	valPtr, valErr := s.Query{{formatNameVal $ModuleName .}}(id, namespace)
+func (s *{{toCamelCase $ModuleName}}) Delete{{formatNameVal .}}(id int, namespace string) (ret *model.{{formatNameVal .}}, err error) {
+	valPtr, valErr := s.Query{{formatNameVal .}}(id, namespace)
 	if valErr != nil {
 		err = valErr
 		return
@@ -184,11 +184,11 @@ func (s *{{toCamelCase $ModuleName}}) Delete{{formatNameVal $ModuleName .}}(id i
 }
 {{end}}`
 
-	factory.RegisterFunc("formatNameVal", func(moduleName string, ptr *parser.Object) string {
+	factory.RegisterFunc("formatNameVal", func(ptr *parser.Object) string {
 		val := ptr.Name
 		return val
 	})
-	factory.RegisterFunc("formatPtrVal", func(moduleName string, ptr *parser.Object) string {
+	factory.RegisterFunc("formatPtrVal", func(ptr *parser.Object) string {
 		val := ptr.Name
 		return util.ToCamelCase(val)
 	})

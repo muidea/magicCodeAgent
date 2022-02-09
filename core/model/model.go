@@ -91,7 +91,7 @@ func (s *Model) Create(projectName string) (err error) {
 		servicePtr := service.New(s.rootPath, s.projectName)
 		serviceErr := servicePtr.Create(packagePtr)
 		if serviceErr != nil {
-			log.Errorf("create service file failed, name:%s, err:%s", packagePtr.Name, bizErr.Error())
+			log.Errorf("create service file failed, name:%s, err:%s", packagePtr.Name, serviceErr.Error())
 			return
 		}
 	}
