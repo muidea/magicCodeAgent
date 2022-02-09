@@ -2,7 +2,6 @@ package common
 
 import (
 	"bytes"
-	"fmt"
 	log "github.com/cihub/seelog"
 	mu "github.com/muidea/magicToolkit/core/model/util"
 	"github.com/muidea/magicToolkit/core/util"
@@ -154,8 +153,12 @@ func DeclareEntityView(val *parser.Item) string {
 }
 
 func DeclareObjectView(ptr *parser.Object) (ret string) {
+	viewDefine := `
+type {{formatObjectName .ObjectVal}}View struct {
+	{{.ContentVal -}}
+}
+`
 	byteBuff := bytes.Buffer{}
-	byteBuff.WriteString(fmt.Sprintf("type %sView struct {\n", ptr.Name))
 	for _, val := range ptr.Items {
 		if isReserved(val.Name) {
 			continue
@@ -166,13 +169,24 @@ func DeclareObjectView(ptr *parser.Object) (ret string) {
 		}
 		byteBuff.WriteString(DeclareItemView(val))
 	}
-	byteBuff.WriteString("}\n")
-	return byteBuff.String()
+
+	factoryPtr := factory.NewMemoryFactor(viewDefine)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String()})
+	if contentErr != nil {
+		log.Errorf("create content failed, err:%s", contentErr.Error())
+		return ""
+	}
+
+	return contentVal
 }
 
 func DeclareObjectLite(ptr *parser.Object) (ret string) {
+	liteDefine := `
+type {{formatObjectName .ObjectVal}}Lite struct {
+	{{.ContentVal -}}
+}
+`
 	byteBuff := bytes.Buffer{}
-	byteBuff.WriteString(fmt.Sprintf("type %sLite struct {\n", ptr.Name))
 	for idx, val := range ptr.Items {
 		if isReserved(val.Name) {
 			continue
@@ -187,13 +201,23 @@ func DeclareObjectLite(ptr *parser.Object) (ret string) {
 			break
 		}
 	}
-	byteBuff.WriteString("}\n")
-	return byteBuff.String()
+	factoryPtr := factory.NewMemoryFactor(liteDefine)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String()})
+	if contentErr != nil {
+		log.Errorf("create content failed, err:%s", contentErr.Error())
+		return ""
+	}
+
+	return contentVal
 }
 
 func DeclareObjectParam(ptr *parser.Object) (ret string) {
+	liteDefine := `
+type {{formatObjectName .ObjectVal}}Param struct {
+	{{.ContentVal -}}
+}
+`
 	byteBuff := bytes.Buffer{}
-	byteBuff.WriteString(fmt.Sprintf("type %sParam struct {\n", ptr.Name))
 	for _, val := range ptr.Items {
 		if isReserved(val.Name) {
 			continue
@@ -207,8 +231,14 @@ func DeclareObjectParam(ptr *parser.Object) (ret string) {
 
 		byteBuff.WriteString(DeclareItemView(val))
 	}
-	byteBuff.WriteString("}\n")
-	return byteBuff.String()
+	factoryPtr := factory.NewMemoryFactor(liteDefine)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String()})
+	if contentErr != nil {
+		log.Errorf("create content failed, err:%s", contentErr.Error())
+		return ""
+	}
+
+	return contentVal
 }
 
 func DeclareItemViewAssign(val *parser.Item) string {
@@ -385,7 +415,7 @@ func DeclareEntityViewAssign(val *parser.Item) string {
 
 func DeclareObjectViewAssign(ptr *parser.Object) (ret string) {
 	viewDefine := `
-func (s *{{formatNameVal .ObjectVal}}View) From{{formatNameVal .ObjectVal}}(ptr *model.{{formatNameVal .ObjectVal}}, entityPtr *cc.EntityView) {
+func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}, entityPtr *cc.EntityView) {
 	{{.ContentVal -}}
 	return
 }
@@ -414,17 +444,17 @@ func (s *{{formatNameVal .ObjectVal}}View) From{{formatNameVal .ObjectVal}}(ptr 
 
 func DeclareObjectLiteAssign(ptr *parser.Object) (ret string) {
 	liteDefine := `
-func (s *{{formatNameVal .ObjectVal}}Lite) From{{formatNameVal .ObjectVal}}(ptr *model.{{formatNameVal .ObjectVal}}) {
+func (s *{{formatObjectName .ObjectVal}}Lite) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) {
 	{{.ObjectAssignVal -}}
 	return
 }
 
-func (s *{{formatNameVal .ObjectVal}}Lite) FromView(ptr *{{formatNameVal .ObjectVal}}View) {
+func (s *{{formatObjectName .ObjectVal}}Lite) FromView(ptr *{{formatObjectName .ObjectVal}}View) {
 	{{.ViewAssignVal -}}
 	return
 }
 
-func (s *{{formatNameVal .ObjectVal}}Lite) To{{formatNameVal .ObjectVal}}() (ret *model.{{formatNameVal .ObjectVal}}) {
+func (s *{{formatObjectName .ObjectVal}}Lite) To{{formatObjectName .ObjectVal}}() (ret *model.{{formatObjectName .ObjectVal}}) {
 	ptr := &{{defineObject .ObjectVal}}
 	{{.ObjectToVal -}}
 	ret = ptr
@@ -494,7 +524,7 @@ func (s *{{formatNameVal .ObjectVal}}Lite) To{{formatNameVal .ObjectVal}}() (ret
 
 func DeclareObjectParamAssign(ptr *parser.Object) (ret string) {
 	paramToDefine := `
-func (s *{{formatNameVal .ObjectVal}}Param) To{{formatNameVal .ObjectVal}}(ptr *model.{{formatNameVal .ObjectVal}}) (ret *model.{{formatNameVal .ObjectVal}}) {
+func (s *{{formatObjectName .ObjectVal}}Param) To{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) (ret *model.{{formatObjectName .ObjectVal}}) {
 	if ptr == nil {
 		ptr = &{{defineObject .ObjectVal}}
 	}

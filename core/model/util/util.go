@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	log "github.com/cihub/seelog"
+	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
 )
@@ -57,4 +58,49 @@ func DefineObject(ptr *parser.Object) (ret string) {
 
 	ret = contentVal
 	return
+}
+
+func FormatModuleName(ptr *parser.Package) (ret string) {
+	ret = util.ToTitle(ptr.FileName)
+	return ret
+}
+
+func FormatModuleVal(ptr *parser.Package) (ret string) {
+	ret = util.ToLower(ptr.FileName)
+	return ret
+}
+
+func FormatObjectName(ptr *parser.Object) string {
+	val := ptr.Name
+	return val
+}
+
+func FormatObjectVal(ptr *parser.Object) string {
+	val := util.ToCamelCase(ptr.Name)
+	return val
+}
+
+func FormatObjectJson(ptr *parser.Object) string {
+	val := util.ToCamelCase(FormatObjectName(ptr))
+	return val
+}
+
+func FormatObjectActionName(modulePtr *parser.Package, ptr *parser.Object) (ret string) {
+	val := ptr.Name
+	moduleName := FormatModuleName(modulePtr)
+	if moduleName != ptr.Name {
+		val = fmt.Sprintf("%s%s", moduleName, ptr.Name)
+	}
+
+	return val
+}
+
+func FormatObjectActionVal(modulePtr *parser.Package, ptr *parser.Object) (ret string) {
+	val := ptr.Name
+	moduleName := FormatModuleName(modulePtr)
+	if moduleName != ptr.Name {
+		val = fmt.Sprintf("%s/%s", moduleName, ptr.Name)
+	}
+
+	return util.ToLower(val)
 }

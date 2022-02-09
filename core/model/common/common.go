@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"fmt"
+	mu "github.com/muidea/magicToolkit/core/model/util"
 	"os"
 	"os/exec"
 	"path"
@@ -56,7 +57,7 @@ func (s *Common) declareModule(ptr *parser.Package) (ret string) {
 	moduleDeclare := `
 const {{.ModuleName}}Module = "/module/{{toLower .ModuleName}}"
 `
-	moduleName := util.ToTitle(ptr.FileName)
+	moduleName := mu.FormatModuleName(ptr)
 	factoryPtr := factory.NewMemoryFactor(moduleDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName})
 	if contentErr != nil {
@@ -70,40 +71,19 @@ const {{.ModuleName}}Module = "/module/{{toLower .ModuleName}}"
 }
 
 func (s *Common) declareAction(ptr *parser.Package) (ret string) {
-	actionDeclare := `{{$ModuleName := .ModuleName}}
-const (
-{{range .Items}}
-	Filter{{formatNameVal $ModuleName .}} = "/{{formatUrlVal $ModuleName .}}/query/"
-	Query{{formatNameVal $ModuleName .}}  = "/{{formatUrlVal $ModuleName .}}/query/:id"
-	Create{{formatNameVal $ModuleName .}} = "/{{formatUrlVal $ModuleName .}}/create/"
-	Update{{formatNameVal $ModuleName .}} = "/{{formatUrlVal $ModuleName .}}/update/:id"
-	Delete{{formatNameVal $ModuleName .}} = "/{{formatUrlVal $ModuleName .}}/delete/:id"
-	Notify{{formatNameVal $ModuleName .}} = "/{{formatUrlVal $ModuleName .}}/notify/:id"
-{{end}}
+	actionDeclare := `{{$ModuleVal := .ModuleVal}}
+const ({{with .ModuleVal}}
+{{range .Objects}}
+	Filter{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/query/"
+	Query{{formatObjectActionName $ModuleVal .}}  = "/{{formatObjectActionVal $ModuleVal .}}/query/:id"
+	Create{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/create/"
+	Update{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/update/:id"
+	Delete{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/delete/:id"
+	Notify{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/notify/:id"
+{{end}}{{end}}
 )`
-
-	factory.RegisterFunc("formatNameVal", func(moduleName string, ptr *parser.Object) string {
-		val := ptr.Name
-		if moduleName != ptr.Name {
-			val = fmt.Sprintf("%s%s", moduleName, ptr.Name)
-		}
-
-		return val
-	})
-	factory.RegisterFunc("formatUrlVal", func(moduleName string, ptr *parser.Object) string {
-		val := ptr.Name
-		if moduleName != ptr.Name {
-			val = fmt.Sprintf("%s/%s", moduleName, ptr.Name)
-		}
-
-		return util.ToLower(val)
-	})
-	defer factory.UnRegisterFunc("formatUrlVal")
-	defer factory.UnRegisterFunc("formatNameVal")
-
-	moduleName := util.ToTitle(ptr.FileName)
 	factoryPtr := factory.NewMemoryFactor(actionDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName, "Items": ptr.Objects})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -114,8 +94,8 @@ const (
 }
 
 func (s *Common) declareMessage(ptr *parser.Package) (ret string) {
-	messageDeclare := `{{$BackQuote := .BackQuote}}{{$ModuleName := .ModuleName}}
-{{range .Items}}
+	messageDeclare := `{{$BackQuote := .BackQuote}}{{$ModuleVal := .ModuleVal}}{{with $ModuleVal}}
+{{range .Objects}}
 
 {{declareObjectView .}}
 
@@ -129,37 +109,29 @@ func (s *Common) declareMessage(ptr *parser.Package) (ret string) {
 
 {{declareObjectParamAssign .}}
 
-type {{formatNameVal .}}Result struct {
+type {{formatObjectName .}}Result struct {
 	cd.Result
-	{{formatNameVal .}} *{{formatNameVal .}}View {{$BackQuote}}json:"{{formatJsonVal . }}"{{$BackQuote}}
+	{{formatObjectName .}} *{{formatObjectName .}}View {{$BackQuote}}json:"{{formatObjectJson .}}"{{$BackQuote}}
 }
 
-type {{formatNameVal .}}LiteListResult struct {
-	cd.Result
-	Total int64       {{$BackQuote}}json:"total"{{$BackQuote}}
-	{{formatNameVal .}}  []*{{formatNameVal .}}Lite {{$BackQuote}}json:"{{formatJsonVal . }}"{{$BackQuote}}
-}
-
-type {{formatNameVal .}}ListResult struct {
+type {{formatObjectName .}}LiteListResult struct {
 	cd.Result
 	Total int64       {{$BackQuote}}json:"total"{{$BackQuote}}
-	{{formatNameVal .}}  []*{{formatNameVal .}}View {{$BackQuote}}json:"{{formatJsonVal . }}"{{$BackQuote}}
+	{{formatObjectName .}}  []*{{formatObjectName .}}Lite {{$BackQuote}}json:"{{formatObjectJson .}}"{{$BackQuote}}
 }
 
-type {{formatNameVal .}}StatisticResult struct {
-	{{formatNameVal .}}ListResult
+type {{formatObjectName .}}ListResult struct {
+	cd.Result
+	Total int64       {{$BackQuote}}json:"total"{{$BackQuote}}
+	{{formatObjectName .}}  []*{{formatObjectName .}}View {{$BackQuote}}json:"{{formatObjectJson .}}"{{$BackQuote}}
+}
+
+type {{formatObjectName .}}StatisticResult struct {
+	{{formatObjectName .}}ListResult
 	Summary []*TotalizerView {{$BackQuote}}json:"summary"{{$BackQuote}}
 }
-{{end}}
+{{end}}{{end}}
 `
-	factory.RegisterFunc("formatNameVal", func(ptr *parser.Object) string {
-		val := ptr.Name
-		return val
-	})
-	factory.RegisterFunc("formatJsonVal", func(ptr *parser.Object) string {
-		val := ptr.Name
-		return util.ToCamelCase(val)
-	})
 	factory.RegisterFunc("declareObjectView", DeclareObjectView)
 	factory.RegisterFunc("declareObjectViewAssign", DeclareObjectViewAssign)
 	factory.RegisterFunc("declareObjectLite", DeclareObjectLite)
@@ -173,12 +145,9 @@ type {{formatNameVal .}}StatisticResult struct {
 	defer factory.UnRegisterFunc("declareObjectLiteAssign")
 	defer factory.UnRegisterFunc("declareObjectView")
 	defer factory.UnRegisterFunc("declareObjectViewAssign")
-	defer factory.UnRegisterFunc("formatJsonVal")
-	defer factory.UnRegisterFunc("formatNameVal")
 
-	moduleName := util.ToTitle(ptr.FileName)
 	factoryPtr := factory.NewMemoryFactor(messageDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName, "Items": ptr.Objects, "BackQuote": "`"})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr, "BackQuote": "`"})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
