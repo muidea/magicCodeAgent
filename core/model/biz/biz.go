@@ -42,7 +42,7 @@ import (
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
-	"github.com/muidea/{{.ProjectName}}/core/module/{{formatModuleVal .ModuleVal}}/dao"
+	"github.com/muidea/{{.ProjectName}}/core/module/{{formatModulePath .ModuleVal}}/dao"
 )
 `
 	factoryPtr := factory.NewMemoryFactor(importDeclare)
@@ -203,7 +203,7 @@ func (s *Biz) Create(ptr *parser.Package) (err error) {
 	}
 
 	commonFile := fmt.Sprintf("%s.go", "biz")
-	commonFilePath := path.Join(s.rootPath, "core/module", util.ToLower(mu.FormatModuleName(ptr)), "biz", commonFile)
+	commonFilePath := path.Join(s.rootPath, "core/module", mu.FormatModulePath(ptr), "biz", commonFile)
 
 	log.Info(commonFilePath)
 	func() {
@@ -249,7 +249,7 @@ func (s *Biz) Create(ptr *parser.Package) (err error) {
 
 func (s *Biz) createObject(modulePtr *parser.Package, ptr *parser.Object) (err error) {
 	commonFile := fmt.Sprintf("%s.go", util.ToLower(ptr.Name))
-	commonFilePath := path.Join(s.rootPath, "core/module", util.ToLower(mu.FormatModuleName(modulePtr)), "biz", commonFile)
+	commonFilePath := path.Join(s.rootPath, "core/module", mu.FormatModulePath(modulePtr), "biz", commonFile)
 
 	log.Info(commonFilePath)
 	func() {

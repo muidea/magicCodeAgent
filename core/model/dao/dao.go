@@ -3,13 +3,15 @@ package dao
 import (
 	"bytes"
 	"fmt"
-	log "github.com/cihub/seelog"
-	"github.com/muidea/magicToolkit/core/util"
-	"github.com/muidea/magicToolkit/factory"
-	"github.com/muidea/magicToolkit/parser"
 	"os"
 	"os/exec"
 	"path"
+
+	log "github.com/cihub/seelog"
+
+	mu "github.com/muidea/magicToolkit/core/model/util"
+	"github.com/muidea/magicToolkit/factory"
+	"github.com/muidea/magicToolkit/parser"
 )
 
 type Dao struct {
@@ -53,30 +55,18 @@ import (
 }
 
 func (s *Dao) declareInterface(ptr *parser.Package) (ret string) {
-	interfaceDeclare := `{{$ModuleName:=.ModuleName}}
-type {{$ModuleName}} interface {
-{{range .Items}}
-	Filter{{formatNameVal .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatNameVal .}}, total int64, err error)
-	Query{{formatNameVal .}}(id int, namespace string) (ret *model.{{formatNameVal .}}, err error)
-	Create{{formatNameVal .}}(ptr *model.{{formatNameVal .}}, namespace string) (ret *model.{{formatNameVal .}}, err error)
-	Update{{formatNameVal .}}(ptr *model.{{formatNameVal .}}, namespace string) (ret *model.{{formatNameVal .}}, err error)
-	Delete{{formatNameVal .}}(id int, namespace string) (ret *model.{{formatNameVal .}}, err error)
-{{end}}
+	interfaceDeclare := `
+type {{formatModuleName .ModuleVal}} interface { {{with .ModuleVal}}
+{{range .Objects}}
+	Filter{{formatObjectName .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatObjectName .}}, total int64, err error)
+	Query{{formatObjectName .}}(id int, namespace string) (ret *model.{{formatObjectName .}}, err error)
+	Create{{formatObjectName .}}(ptr *model.{{formatObjectName .}}, namespace string) (ret *model.{{formatObjectName .}}, err error)
+	Update{{formatObjectName .}}(ptr *model.{{formatObjectName .}}, namespace string) (ret *model.{{formatObjectName .}}, err error)
+	Delete{{formatObjectName .}}(id int, namespace string) (ret *model.{{formatObjectName .}}, err error)
+{{end}}{{end}}
 }`
-	factory.RegisterFunc("formatNameVal", func(ptr *parser.Object) string {
-		val := ptr.Name
-		return val
-	})
-	factory.RegisterFunc("formatPtrVal", func(ptr *parser.Object) string {
-		val := ptr.Name
-		return util.ToCamelCase(val)
-	})
-	defer factory.UnRegisterFunc("formatPtrVal")
-	defer factory.UnRegisterFunc("formatNameVal")
-
-	moduleName := util.ToTitle(ptr.FileName)
 	factoryPtr := factory.NewMemoryFactor(interfaceDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName, "Items": ptr.Objects})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -88,20 +78,19 @@ type {{$ModuleName}} interface {
 
 func (s *Dao) declareDefine(ptr *parser.Package) (ret string) {
 	defineDeclare := `
-func New(clnt client.Client) {{.ModuleName}} {
-	return &{{toCamelCase .ModuleName}}{batisClient: clnt}
+func New(clnt client.Client) {{formatModuleName .ModuleVal}} {
+	return &{{formatModuleVal .ModuleVal}}{batisClient: clnt}
 }
 
-type {{toCamelCase .ModuleName}} struct {
+type {{formatModuleVal .ModuleVal}} struct {
 	batisClient client.Client
 }`
 	type Item struct {
 		NameVal string
 	}
 
-	moduleName := util.ToTitle(ptr.FileName)
 	factoryPtr := factory.NewMemoryFactor(defineDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -112,10 +101,10 @@ type {{toCamelCase .ModuleName}} struct {
 }
 
 func (s *Dao) declareFunc(ptr *parser.Package) (ret string) {
-	funcDeclare := `{{$ModuleName := .ModuleName}}
-{{range .Items}}
-func (s *{{toCamelCase $ModuleName}}) Filter{{formatNameVal .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatNameVal .}}, total int64, err error) {
-	ret = []*model.{{formatNameVal .}}{}
+	funcDeclare := `{{$ModuleVal := .ModuleVal}}{{with .ModuleVal}}
+{{range .Objects}}
+func (s *{{formatModuleVal $ModuleVal}}) Filter{{formatObjectName .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatObjectName .}}, total int64, err error) {
+	ret = []*model.{{formatObjectName .}}{}
 	if filter == nil {
 		filter = bc.NewFilter()
 	}
@@ -125,7 +114,7 @@ func (s *{{toCamelCase $ModuleName}}) Filter{{formatNameVal .}}(filter *bc.Query
 	return
 }
 
-func (s *{{toCamelCase $ModuleName}}) Query{{formatNameVal .}}(id int, namespace string) (ret *model.{{formatNameVal .}}, err error) {
+func (s *{{formatModuleVal $ModuleVal}}) Query{{formatObjectName .}}(id int, namespace string) (ret *model.{{formatObjectName .}}, err error) {
 	if id <= 0 {
 		err = fmt.Errorf("illegal id value, id:%d", id)
 		return
@@ -141,7 +130,7 @@ func (s *{{toCamelCase $ModuleName}}) Query{{formatNameVal .}}(id int, namespace
 	return
 }
 
-func (s *{{toCamelCase $ModuleName}}) Create{{formatNameVal .}}(ptr *model.{{formatNameVal .}}, namespace string) (ret *model.{{formatNameVal .}}, err error) {
+func (s *{{formatModuleVal $ModuleVal}}) Create{{formatObjectName .}}(ptr *model.{{formatObjectName .}}, namespace string) (ret *model.{{formatObjectName .}}, err error) {
 	if ptr == nil {
 		err = fmt.Errorf("illegal ptr value")
 		return
@@ -155,7 +144,7 @@ func (s *{{toCamelCase $ModuleName}}) Create{{formatNameVal .}}(ptr *model.{{for
 	return
 }
 
-func (s *{{toCamelCase $ModuleName}}) Update{{formatNameVal .}}(ptr *model.{{formatNameVal .}}, namespace string) (ret *model.{{formatNameVal .}}, err error) {
+func (s *{{formatModuleVal $ModuleVal}}) Update{{formatObjectName .}}(ptr *model.{{formatObjectName .}}, namespace string) (ret *model.{{formatObjectName .}}, err error) {
 	if ptr == nil || ptr.ID <= 0 {
 		err = fmt.Errorf("illegal update ptr")
 		return
@@ -169,8 +158,8 @@ func (s *{{toCamelCase $ModuleName}}) Update{{formatNameVal .}}(ptr *model.{{for
 	return
 }
 
-func (s *{{toCamelCase $ModuleName}}) Delete{{formatNameVal .}}(id int, namespace string) (ret *model.{{formatNameVal .}}, err error) {
-	valPtr, valErr := s.Query{{formatNameVal .}}(id, namespace)
+func (s *{{formatModuleVal $ModuleVal}}) Delete{{formatObjectName .}}(id int, namespace string) (ret *model.{{formatObjectName .}}, err error) {
+	valPtr, valErr := s.Query{{formatObjectName .}}(id, namespace)
 	if valErr != nil {
 		err = valErr
 		return
@@ -182,22 +171,10 @@ func (s *{{toCamelCase $ModuleName}}) Delete{{formatNameVal .}}(id int, namespac
 	ret = valPtr
 	return
 }
-{{end}}`
+{{end}}{{end}}`
 
-	factory.RegisterFunc("formatNameVal", func(ptr *parser.Object) string {
-		val := ptr.Name
-		return val
-	})
-	factory.RegisterFunc("formatPtrVal", func(ptr *parser.Object) string {
-		val := ptr.Name
-		return util.ToCamelCase(val)
-	})
-	defer factory.UnRegisterFunc("formatPtrVal")
-	defer factory.UnRegisterFunc("formatNameVal")
-
-	moduleName := util.ToTitle(ptr.FileName)
 	factoryPtr := factory.NewMemoryFactor(funcDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleName": moduleName, "Items": ptr.Objects})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -212,9 +189,8 @@ func (s *Dao) Create(ptr *parser.Package) (err error) {
 		return
 	}
 
-	moduleName := ptr.FileName
 	commonFile := fmt.Sprintf("%s.go", "dao")
-	commonFilePath := path.Join(s.rootPath, "core/module", util.ToLower(moduleName), "dao", commonFile)
+	commonFilePath := path.Join(s.rootPath, "core/module", mu.FormatModulePath(ptr), "dao", commonFile)
 
 	log.Info(commonFilePath)
 	func() {

@@ -66,6 +66,11 @@ func FormatModuleName(ptr *parser.Package) (ret string) {
 }
 
 func FormatModuleVal(ptr *parser.Package) (ret string) {
+	ret = util.ToCamelCase(ptr.FileName)
+	return ret
+}
+
+func FormatModulePath(ptr *parser.Package) (ret string) {
 	ret = util.ToLower(ptr.FileName)
 	return ret
 }
