@@ -162,7 +162,7 @@ func (s *Common) Create(ptr *parser.Package) (err error) {
 		return
 	}
 
-	moduleName := ptr.FileName
+	moduleName := mu.FormatModulePath(ptr)
 	commonFile := fmt.Sprintf("%s.go", moduleName)
 	commonFilePath := path.Join(s.rootPath, "common", commonFile)
 	if !util.Exists(commonFilePath) {

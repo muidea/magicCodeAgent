@@ -559,8 +559,8 @@ func (s *Service) Create(ptr *parser.Package) (err error) {
 	return
 }
 
-func (s *Service) createObject(modulePtr *parser.Package, ptr *parser.Object) (err error) {
-	commonFile := fmt.Sprintf("%s.go", util.ToLower(ptr.Name))
+func (s *Service) createObject(modulePtr *parser.Package, objectPtr *parser.Object) (err error) {
+	commonFile := fmt.Sprintf("%s.go", util.ToLower(objectPtr.Name))
 	commonFilePath := path.Join(s.rootPath, "core/module", mu.FormatModulePath(modulePtr), "service", commonFile)
 
 	log.Info(commonFilePath)
@@ -582,7 +582,7 @@ func (s *Service) createObject(modulePtr *parser.Package, ptr *parser.Object) (e
 			return
 		}
 
-		_, err = fileHandle.WriteString(s.declareObjectFunc(modulePtr, ptr))
+		_, err = fileHandle.WriteString(s.declareObjectFunc(modulePtr, objectPtr))
 		if err != nil {
 			return
 		}

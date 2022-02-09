@@ -246,8 +246,8 @@ func (s *Biz) Create(ptr *parser.Package) (err error) {
 	return
 }
 
-func (s *Biz) createObject(modulePtr *parser.Package, ptr *parser.Object) (err error) {
-	commonFile := fmt.Sprintf("%s.go", util.ToLower(ptr.Name))
+func (s *Biz) createObject(modulePtr *parser.Package, objectPtr *parser.Object) (err error) {
+	commonFile := fmt.Sprintf("%s.go", util.ToLower(objectPtr.Name))
 	commonFilePath := path.Join(s.rootPath, "core/module", mu.FormatModulePath(modulePtr), "biz", commonFile)
 
 	log.Info(commonFilePath)
@@ -269,7 +269,7 @@ func (s *Biz) createObject(modulePtr *parser.Package, ptr *parser.Object) (err e
 			return
 		}
 
-		_, err = fileHandle.WriteString(s.declareObjectFunc(modulePtr, ptr))
+		_, err = fileHandle.WriteString(s.declareObjectFunc(modulePtr, objectPtr))
 		if err != nil {
 			return
 		}
