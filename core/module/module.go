@@ -16,6 +16,7 @@ import (
 type Module struct {
 	rootPath    string
 	projectName string
+	modulePath  string
 	moduleName  string
 }
 
@@ -25,7 +26,8 @@ func New(rootPath string) *Module {
 
 func (s *Module) Create(projectName, moduleName string) (ret *model.Module, err error) {
 	s.projectName = projectName
-	s.moduleName = moduleName
+	s.moduleName = util.ToTitle(moduleName)
+	s.modulePath = util.ToLower(moduleName)
 
 	err = s.walkTemplate("")
 	if err != nil {
@@ -91,19 +93,19 @@ func (s *Module) cloneModuleContent(templatePath, filePath, fileName string) (er
 	contentVal := map[string]interface{}{
 		"ProjectName": s.projectName,
 		"ModuleName":  s.moduleName,
-		"ModulePath":  util.ToCamelCase(s.moduleName),
+		"ModulePath":  s.modulePath,
 	}
 	factoryPtr := factory.NewFileFactory(templatePath, s.rootPath, filePath, fileName, contentVal)
 
 	items := strings.Split(fileName, ".")
 	fileName = strings.Join(items[:len(items)-1], ".")
 	if fileName == "common.go" {
-		fileName = util.ToCamelCase(s.moduleName) + ".go"
+		fileName = util.ToLower(s.moduleName) + ".go"
 		err = factoryPtr.Create("common", fileName, true)
 		return
 	}
 
-	filePath = path.Join("core", "module", util.ToCamelCase(s.moduleName), filePath)
+	filePath = path.Join("core", "module", s.modulePath, filePath)
 	err = factoryPtr.Create(filePath, fileName, true)
 	return
 }
