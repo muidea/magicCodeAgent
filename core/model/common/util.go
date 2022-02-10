@@ -416,6 +416,9 @@ func DeclareEntityViewAssign(val *parser.Item) string {
 func DeclareObjectViewAssign(ptr *parser.Object) (ret string) {
 	viewDefine := `
 func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}, entityPtr *cc.EntityView) {
+	if ptr == nil {
+		return
+	}
 	{{.ContentVal -}}
 	return
 }
@@ -445,11 +448,17 @@ func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}
 func DeclareObjectLiteAssign(ptr *parser.Object) (ret string) {
 	liteDefine := `
 func (s *{{formatObjectName .ObjectVal}}Lite) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) {
+	if ptr == nil {
+		return
+	}
 	{{.ObjectAssignVal -}}
 	return
 }
 
 func (s *{{formatObjectName .ObjectVal}}Lite) FromView(ptr *{{formatObjectName .ObjectVal}}View) {
+	if ptr == nil {
+		return
+	}
 	{{.ViewAssignVal -}}
 	return
 }

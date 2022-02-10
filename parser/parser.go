@@ -39,10 +39,10 @@ type Object struct {
 	Items []*Item `json:"items"`
 }
 
-const stdVal = 'A' - 'a'
+const stdVal = 'a' - 'A'
 
 func (s *Object) IsPublic() bool {
-	offSet := int32(s.Name[0] - strings.ToLower(s.Name)[0])
+	offSet := int32(strings.ToLower(s.Name)[0] - s.Name[0])
 
 	return offSet == stdVal
 }
