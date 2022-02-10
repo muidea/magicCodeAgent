@@ -39,6 +39,14 @@ type Object struct {
 	Items []*Item `json:"items"`
 }
 
+const stdVal = 'A' - 'a'
+
+func (s *Object) IsPublic() bool {
+	offSet := int32(s.Name[0] - strings.ToLower(s.Name)[0])
+
+	return offSet == stdVal
+}
+
 type Package struct {
 	Name     string      `json:"packageName"`
 	FileName string      `json:"fileName"`
@@ -200,7 +208,7 @@ func Parse(fullFileName string) (ret *Package, err error) {
 			return
 		}
 
-		if objPtr != nil {
+		if objPtr != nil && objPtr.IsPublic() {
 			ret.Objects = append(ret.Objects, objPtr)
 		}
 	}
