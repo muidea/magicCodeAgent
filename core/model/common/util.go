@@ -219,6 +219,9 @@ type {{formatObjectName .ObjectVal}}Param struct {
 `
 	byteBuff := bytes.Buffer{}
 	for _, val := range ptr.Items {
+		if isID(val.Name) {
+			continue
+		}
 		if isReserved(val.Name) {
 			continue
 		}
@@ -254,8 +257,10 @@ func DeclareItemViewAssign(val *parser.Item) string {
 		s.{{.NameVal}} = append(s.{{.NameVal}}, lite)
 	}
 `
-	itemPtrAssign := `s.{{.NameVal}} = &{{.TypeVal}}Lite{}
+	itemPtrAssign := `if ptr.{{.NameVal}} != nil {
+		s.{{.NameVal}} = &{{.TypeVal}}Lite{}
 		s.{{.NameVal}}.From{{.TypeVal}}(ptr.{{.NameVal}})
+	}
 `
 	itemAssign := `s.{{.NameVal}} = &{{.TypeVal}}Lite{}
 	s.{{.NameVal}}.From{{.TypeVal}}(&ptr.{{.NameVal}})
