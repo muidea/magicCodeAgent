@@ -37,9 +37,9 @@ func DefineType(val *parser.Type) string {
 }
 
 func DefineItem(val *parser.Item) string {
-	if val.IsPtr {
-		return fmt.Sprintf("%s: &%v{}", val.Name, DefineType(val.Type))
-	}
+	//if val.IsPtr {
+	//	return fmt.Sprintf("%s: &%v{}", val.Name, DefineType(val.Type))
+	//}
 
 	return fmt.Sprintf("%s: %v{}", val.Name, DefineType(val.Type))
 }
