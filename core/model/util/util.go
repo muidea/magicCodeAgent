@@ -8,6 +8,22 @@ import (
 	"github.com/muidea/magicToolkit/parser"
 )
 
+var innerFileName = []string{
+	"log.go",
+	"totalizer.go",
+	"helper.go",
+}
+
+func IsInnerFile(fileName string) bool {
+	for _, val := range innerFileName {
+		if val == fileName {
+			return true
+		}
+	}
+
+	return false
+}
+
 func IsComplex(val *parser.Item) bool {
 	switch val.Type.Name {
 	case "bool",

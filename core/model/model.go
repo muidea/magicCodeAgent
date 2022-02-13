@@ -69,7 +69,7 @@ func (s *Model) Create(projectName string) (err error) {
 	for _, fd := range fdList {
 		fileName := fd.Name()
 		fullPath := path.Join(modelPath, fileName)
-		if !util.Exists(fullPath) || fileName == "log.go" || fileName == "totalizer.go" || fileName == "helper.go" {
+		if !util.Exists(fullPath) || mu.IsInnerFile(fileName) {
 			continue
 		}
 
