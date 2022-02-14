@@ -9,6 +9,7 @@ import (
 )
 
 var innerFileName = []string{
+	"common.go",
 	"log.go",
 	"totalizer.go",
 	"helper.go",
