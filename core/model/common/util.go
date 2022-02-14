@@ -16,7 +16,7 @@ const (
 var reserved = []string{"Namespace"}
 var entityItem = []string{"Creater", "Updater"}
 var timeStamp = []string{"UpdateTime", "CreateTime"}
-var specialItem = []string{"ID", "URL"}
+var specialItem = []string{"ID", "URL", "SKU", "SN", "WeChat"}
 var liteMaxIndex = 2
 
 func isID(val string) bool {

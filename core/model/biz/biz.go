@@ -152,6 +152,7 @@ func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(
 func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(id int, ptr *common.{{formatObjectName $ObjectVal}}Param, updater int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
 	current{{formatObjectName $ObjectVal}}, currentErr := s.{{formatModuleVal $ModuleVal}}Dao.Query{{formatObjectName $ObjectVal}}(id, namespace)
 	if currentErr != nil {
+		err = currentErr
 		return
 	}
 
