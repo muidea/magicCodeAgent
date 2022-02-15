@@ -123,9 +123,6 @@ func (s *{{formatModuleName .ModuleVal}}) Notify(event event.Event, result event
 func (s *Biz) declareObjectFunc(modulePtr *parser.Package, objectPtr *parser.Object) (ret string) {
 	funcDeclare := `{{$ModuleVal := .ModuleVal}}{{$ObjectVal := .ObjectVal}}
 func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatObjectName $ObjectVal}}, total int64, err error) {
-	if filter == nil {
-		filter = bc.NewFilter()
-	}
 	ret, total, err = s.{{formatModuleVal $ModuleVal}}Dao.Filter{{formatObjectName $ObjectVal}}(filter, namespace)
 	return
 }
