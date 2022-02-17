@@ -272,7 +272,6 @@ func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(
 	} else {
 		queryFilter.Page(fu.NewPagination(20, 1))
 	}
-	queryFilter.Sort(fu.NewSortFilter("UpdateTime", false))
 
 	modelVal, modelOK := filter.Get("mode")
 	if modelOK {
