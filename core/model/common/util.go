@@ -335,12 +335,18 @@ func DeclareItemLiteAssign(val *parser.Item) string {
 }
 
 func DeclareItemLiteTo(val *parser.Item) string {
-	arrayPtrAssign := `for _, val := range s.{{.NameVal}} {
-		ptr.{{.NameVal}} = append(ptr.{{.NameVal}}, val.To{{.TypeVal}}())
+	arrayPtrAssign := `if len(s.{{.NameVal}}) > 0 {
+		ptr.{{.NameVal}} = []*model.{{.TypeVal}}{}
+		for _, val := range s.{{.NameVal}} {
+			ptr.{{.NameVal}} = append(ptr.{{.NameVal}}, val.To{{.TypeVal}}())
+		}
 	}
 `
-	arrayAssign := `for _, val := range s.{{.NameVal}} {
-		ptr.{{.NameVal}} = append(ptr.{{.NameVal}}, *val.To{{.TypeVal}}())
+	arrayAssign := `if len(s.{{.NameVal}}) > 0 {
+		ptr.{{.NameVal}} = []model.{{.TypeVal}}{}
+		for _, val := range s.{{.NameVal}} {
+			ptr.{{.NameVal}} = append(ptr.{{.NameVal}}, *val.To{{.TypeVal}}())
+		}
 	}
 `
 	itemPtrAssign := `if s.{{.NameVal}} != nil {
