@@ -31,6 +31,7 @@ func (s *Model) Create(projectName string) (err error) {
 	factory.RegisterFunc("isComplex", mu.IsComplex)
 	factory.RegisterFunc("defineItem", mu.DefineItem)
 	factory.RegisterFunc("defineObject", mu.DefineObject)
+	factory.RegisterFunc("defineObjectLite", mu.DefineObjectLite)
 	factory.RegisterFunc("formatModuleName", mu.FormatModuleName)
 	factory.RegisterFunc("formatObjectName", mu.FormatObjectName)
 	factory.RegisterFunc("formatObjectActionName", mu.FormatObjectActionName)

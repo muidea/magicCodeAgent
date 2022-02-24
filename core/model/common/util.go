@@ -534,7 +534,7 @@ func (s *{{formatObjectName .ObjectVal}}Lite) FromView(ptr *{{formatObjectName .
 }
 
 func (s *{{formatObjectName .ObjectVal}}Lite) To{{formatObjectName .ObjectVal}}() (ret *model.{{formatObjectName .ObjectVal}}) {
-	ptr := &{{defineObject .ObjectVal}}
+	ptr := &{{defineObjectLite .ObjectVal}}
 	{{.ObjectToVal -}}
 	ret = ptr
 	return
@@ -605,7 +605,7 @@ func DeclareObjectParamAssign(ptr *parser.Object) (ret string) {
 	paramToDefine := `
 func (s *{{formatObjectName .ObjectVal}}Param) To{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) (ret *model.{{formatObjectName .ObjectVal}}) {
 	if ptr == nil {
-		ptr = &{{defineObject .ObjectVal}}
+		ptr = &{{defineObjectLite .ObjectVal}}
 	}
 
 	{{.ContentVal}}

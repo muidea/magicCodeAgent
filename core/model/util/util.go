@@ -61,6 +61,20 @@ func DefineItem(val *parser.Item) string {
 	return fmt.Sprintf("%s: %v{}", val.Name, DefineType(val.Type))
 }
 
+func DefineObjectLite(ptr *parser.Object) (ret string) {
+	objectDeclare :=
+		`model.{{.Name}} { }`
+	factoryPtr := factory.NewMemoryFactor(objectDeclare)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"Name": ptr.Name, "Items": ptr.Items})
+	if contentErr != nil {
+		log.Errorf("create content failed, err:%s", contentErr.Error())
+		return
+	}
+
+	ret = contentVal
+	return
+}
+
 func DefineObject(ptr *parser.Object) (ret string) {
 	objectDeclare :=
 		`model.{{.Name}} { {{range .Items}}
