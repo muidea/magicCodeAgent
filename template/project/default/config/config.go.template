@@ -1,9 +1,12 @@
 package config
 
 import (
+	"fmt"
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
+var localService = "{{toLower .ProjectName}}"
+var localListenPort = "8010"
 var batisService = "http://127.0.0.1:8080"
 var casService = "http://127.0.0.1:8081"
 var fileService = "http://127.0.0.1:8083"
@@ -38,6 +41,16 @@ type CfgItem struct {
 	DatabaseUsername      string `json:"databaseUsername"`
 	DatabasePassword      string `json:"databasePassword"`
 	DatabaseMaxConnection int    `json:"databaseMaxConnection"`
+}
+
+func UpdateLocalInfo(service, port string) {
+	localService = service
+	localListenPort = port
+}
+
+func LocalServiceUrl() (ret string) {
+	ret = fmt.Sprintf("http://%s:%s", localService, localListenPort)
+	return
 }
 
 // BatisService baits Service
