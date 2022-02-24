@@ -15,7 +15,7 @@ const (
 
 var reserved = []string{"Namespace"}
 var entityItem = []string{"Creater", "Updater"}
-var timeStamp = []string{"UpdateTime", "CreateTime"}
+var timeStamp = []string{"UpdateTime", "CreateTime", "DateTime"}
 var specialItem = []string{"ID", "URL", "SKU", "SN", "WeChat"}
 var liteMaxIndex = 2
 
