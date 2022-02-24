@@ -13,71 +13,7 @@ const (
 	BackQuote = "`"
 )
 
-var reserved = []string{"Namespace"}
-var entityItem = []string{"Creater", "Updater"}
-var timeStamp = []string{"UpdateTime", "CreateTime", "DateTime"}
-var specialItem = []string{"ID", "URL", "SKU", "SN", "WeChat"}
 var liteMaxIndex = 2
-
-func isID(val string) bool {
-	return val == "ID"
-}
-
-func isNumber(val string) bool {
-	switch val {
-
-	}
-
-	return false
-}
-
-func isString(val string) bool {
-	return val == "string"
-}
-
-func isBoolean(val string) bool {
-	return val == "bool"
-}
-
-func isReserved(val string) bool {
-	for _, sv := range reserved {
-		if sv == val {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isEntity(val string) bool {
-	for _, sv := range entityItem {
-		if sv == val {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isSpecial(val string) bool {
-	for _, sv := range specialItem {
-		if sv == val {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isTimeStamp(val string) bool {
-	for _, sv := range timeStamp {
-		if sv == val {
-			return true
-		}
-	}
-
-	return false
-}
 
 func DeclareItemView(val *parser.Item) string {
 	arrayDeclare := `{{.NameVal}} []*{{.TypeVal}}Lite {{.BackQuote}}json:"{{.JsonVal}}"{{.BackQuote}}
@@ -89,7 +25,7 @@ func DeclareItemView(val *parser.Item) string {
 	simpleDeclare := `{{.NameVal}} {{.TypeVal}} {{.BackQuote}}json:"{{.JsonVal}}"{{.BackQuote}}
 `
 	jsonVal := util.ToCamelCase(val.Name)
-	if isSpecial(val.Name) {
+	if mu.IsSpecial(val.Name) {
 		jsonVal = util.ToLower(jsonVal)
 	}
 	if mu.IsComplex(val) {
@@ -139,7 +75,7 @@ func DeclareEntityView(val *parser.Item) string {
 	entityAssign := `{{.NameVal}}     *cc.EntityView {{.BackQuote}}json:"{{.JsonVal}}"{{.BackQuote}}
 `
 	jsonVal := util.ToCamelCase(val.Name)
-	if isSpecial(val.Name) {
+	if mu.IsSpecial(val.Name) {
 		jsonVal = util.ToLower(jsonVal)
 	}
 	factoryPtr := factory.NewMemoryFactor(entityAssign)
@@ -160,10 +96,10 @@ type {{formatObjectName .ObjectVal}}View struct {
 `
 	byteBuff := bytes.Buffer{}
 	for _, val := range ptr.Items {
-		if isReserved(val.Name) {
+		if mu.IsReserved(val.Name) {
 			continue
 		}
-		if isEntity(val.Name) {
+		if mu.IsEntity(val.Name) {
 			byteBuff.WriteString(DeclareEntityView(val))
 			continue
 		}
@@ -188,10 +124,10 @@ type {{formatObjectName .ObjectVal}}Lite struct {
 `
 	byteBuff := bytes.Buffer{}
 	for idx, val := range ptr.Items {
-		if isReserved(val.Name) {
+		if mu.IsReserved(val.Name) {
 			continue
 		}
-		if isEntity(val.Name) {
+		if mu.IsEntity(val.Name) {
 			byteBuff.WriteString(DeclareEntityView(val))
 			continue
 		}
@@ -219,16 +155,16 @@ type {{formatObjectName .ObjectVal}}Param struct {
 `
 	byteBuff := bytes.Buffer{}
 	for _, val := range ptr.Items {
-		if isID(val.Name) {
+		if mu.IsID(val.Name) {
 			continue
 		}
-		if isReserved(val.Name) {
+		if mu.IsReserved(val.Name) {
 			continue
 		}
-		if isTimeStamp(val.Name) {
+		if mu.IsTimeStamp(val.Name) {
 			continue
 		}
-		if isEntity(val.Name) {
+		if mu.IsEntity(val.Name) {
 			continue
 		}
 
@@ -428,7 +364,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 
 		return contentVal
 	}
-	if isNumber(val.Type.Name) {
+	if mu.IsNumber(val.Type.Name) {
 		factoryPtr := factory.NewMemoryFactor(simpleNumAssign)
 		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
 		if contentErr != nil {
@@ -438,7 +374,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 
 		return contentVal
 	}
-	if isString(val.Type.Name) {
+	if mu.IsString(val.Type.Name) {
 		factoryPtr := factory.NewMemoryFactor(simpleStringAssign)
 		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
 		if contentErr != nil {
@@ -449,7 +385,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 		return contentVal
 	}
 
-	if isBoolean(val.Type.Name) {
+	if mu.IsBoolean(val.Type.Name) {
 		factoryPtr := factory.NewMemoryFactor(simpleBooleanAssign)
 		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
 		if contentErr != nil {
@@ -485,7 +421,11 @@ func DeclareEntityViewAssign(val *parser.Item) string {
 
 func DeclareObjectViewAssign(ptr *parser.Object) (ret string) {
 	viewDefine := `
+{{- if .HasEntity -}}
 func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}, entityPtr *cc.EntityView) {
+{{- else -}}
+func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) {
+{{- end}}
 	if ptr == nil {
 		return
 	}
@@ -495,10 +435,10 @@ func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}
 `
 	byteBuff := bytes.Buffer{}
 	for _, val := range ptr.Items {
-		if isReserved(val.Name) {
+		if mu.IsReserved(val.Name) {
 			continue
 		}
-		if isEntity(val.Name) {
+		if mu.IsEntity(val.Name) {
 			byteBuff.WriteString(DeclareEntityViewAssign(val))
 			continue
 		}
@@ -506,7 +446,7 @@ func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}
 	}
 
 	factoryPtr := factory.NewMemoryFactor(viewDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String()})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String(), "HasEntity": mu.HasEntity(ptr)})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -542,10 +482,10 @@ func (s *{{formatObjectName .ObjectVal}}Lite) To{{formatObjectName .ObjectVal}}(
 `
 	objectAssign := bytes.Buffer{}
 	for idx, val := range ptr.Items {
-		if isReserved(val.Name) {
+		if mu.IsReserved(val.Name) {
 			continue
 		}
-		if isEntity(val.Name) {
+		if mu.IsEntity(val.Name) {
 			continue
 		}
 		objectAssign.WriteString(DeclareItemViewAssign(val))
@@ -556,10 +496,10 @@ func (s *{{formatObjectName .ObjectVal}}Lite) To{{formatObjectName .ObjectVal}}(
 	}
 	viewAssign := bytes.Buffer{}
 	for idx, val := range ptr.Items {
-		if isReserved(val.Name) {
+		if mu.IsReserved(val.Name) {
 			continue
 		}
-		if isEntity(val.Name) {
+		if mu.IsEntity(val.Name) {
 			continue
 		}
 		viewAssign.WriteString(DeclareItemLiteAssign(val))
@@ -570,13 +510,13 @@ func (s *{{formatObjectName .ObjectVal}}Lite) To{{formatObjectName .ObjectVal}}(
 	}
 	objectTo := bytes.Buffer{}
 	for idx, val := range ptr.Items {
-		if isReserved(val.Name) {
+		if mu.IsReserved(val.Name) {
 			continue
 		}
-		if isTimeStamp(val.Name) {
+		if mu.IsTimeStamp(val.Name) {
 			continue
 		}
-		if isEntity(val.Name) {
+		if mu.IsEntity(val.Name) {
 			continue
 		}
 
@@ -615,17 +555,17 @@ func (s *{{formatObjectName .ObjectVal}}Param) To{{formatObjectName .ObjectVal}}
 `
 	byteBuff := bytes.Buffer{}
 	for _, val := range ptr.Items {
-		if isID(val.Name) {
+		if mu.IsID(val.Name) {
 			continue
 		}
 
-		if isReserved(val.Name) {
+		if mu.IsReserved(val.Name) {
 			continue
 		}
-		if isTimeStamp(val.Name) {
+		if mu.IsTimeStamp(val.Name) {
 			continue
 		}
-		if isEntity(val.Name) {
+		if mu.IsEntity(val.Name) {
 			continue
 		}
 

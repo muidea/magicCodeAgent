@@ -198,7 +198,7 @@ func (s *{{formatModuleName $ModuleVal}}) writeLog(ctx context.Context, res http
 }
 
 func (s *Service) declareObjectFunc(modulePtr *parser.Package, objectPtr *parser.Object) (ret string) {
-	funcDeclare := `{{$ModuleVal := .ModuleVal}}{{$ObjectVal := .ObjectVal}}
+	funcDeclare := `{{$ModuleVal := .ModuleVal}}{{$ObjectVal := .ObjectVal}}{{$HasEntity := .HasEntity}}
 func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}Lite(ctx context.Context, res http.ResponseWriter, req *http.Request, filter *bc.QueryFilter) {
 	result := &common.{{formatObjectName $ObjectVal}}LiteListResult{}
 	for {
@@ -231,7 +231,9 @@ func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}L
 }
 
 func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request, filter *bc.QueryFilter) {
+	{{if $HasEntity -}}
 	curSession := ctx.Value(session.AuthSession).(session.Session)
+	{{- end }}
 	result := &common.{{formatObjectName $ObjectVal}}ListResult{}
 	for {
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
@@ -244,8 +246,12 @@ func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}(
 
 		for _, val := range {{formatObjectVal $ObjectVal}}List {
 			ptr := &common.{{formatObjectName $ObjectVal}}View{}
+			{{if $HasEntity -}}
 			entityPtr := s.queryEntity(curSession.GetSessionInfo(), val.Creater, curNamespace)
 			ptr.From{{formatObjectName $ObjectVal}}(val, entityPtr)
+			{{- else -}}
+			ptr.From{{formatObjectName $ObjectVal}}(val)
+			{{- end }}
 			result.{{formatObjectName $ObjectVal}} = append(result.{{formatObjectName $ObjectVal}}, ptr)
 		}
 
@@ -288,8 +294,9 @@ func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(
 		res.WriteHeader(http.StatusNotFound)
 		return
 	}
-
+	{{- if $HasEntity -}}
 	curSession := ctx.Value(session.AuthSession).(session.Session)
+	{{- end }}
 	result := &common.{{formatObjectName $ObjectVal}}StatisticResult{}
 	for {
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
@@ -309,9 +316,12 @@ func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(
 
 		for _, val := range {{formatObjectVal $ObjectVal}}List {
 			view := &common.{{formatObjectName $ObjectVal}}View{}
-
+			{{if $HasEntity -}}
 			entityPtr := s.queryEntity(curSession.GetSessionInfo(), val.Creater, curNamespace)
 			view.From{{formatObjectName $ObjectVal}}(val, entityPtr)
+			{{- else -}}
+			view.From{{formatObjectName $ObjectVal}}(val)
+			{{- end}}
 			result.{{formatObjectName $ObjectVal}} = append(result.{{formatObjectName $ObjectVal}}, view)
 		}
 		result.Total = {{formatObjectVal $ObjectVal}}Total
@@ -329,7 +339,9 @@ func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(
 }
 
 func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	{{- if $HasEntity -}}
 	curSession := ctx.Value(session.AuthSession).(session.Session)
+	{{- end }}
 	result := &common.{{formatObjectName $ObjectVal}}Result{}
 	for {
 		id, err := fn.SplitRESTID(req.URL.Path)
@@ -347,9 +359,13 @@ func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(c
 			break
 		}
 
-		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectVal $ObjectVal}}Ptr.Creater, curNamespace)
 		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
+		{{if $HasEntity -}}
+		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectVal $ObjectVal}}Ptr.Creater, curNamespace)
 		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, entityPtr)
+		{{- else -}}
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr)
+		{{- end }}
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -392,7 +408,11 @@ func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(
 		s.writeLog(ctx, res, req, memo)
 
 		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
+		{{if $HasEntity -}}
 		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, curEntity)
+		{{- else -}}
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr)
+		{{- end }}
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -443,7 +463,11 @@ func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(
 		s.writeLog(ctx, res, req, memo)
 
 		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
+		{{if $HasEntity -}}
 		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, curEntity)
+		{{- else -}}
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr)
+		{{- end }}
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -458,7 +482,9 @@ func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(
 }
 
 func (s *{{formatModuleName $ModuleVal}}) Delete{{formatObjectName $ObjectVal}}(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	{{- if $HasEntity -}}
 	curSession := ctx.Value(session.AuthSession).(session.Session)
+	{{- end }}
 	result := &common.{{formatObjectName $ObjectVal}}Result{}
 	for {
 		id, err := fn.SplitRESTID(req.URL.Path)
@@ -479,9 +505,13 @@ func (s *{{formatModuleName $ModuleVal}}) Delete{{formatObjectName $ObjectVal}}(
 		memo := fmt.Sprintf("删除{{formatObjectName $ObjectVal}}:%d", {{formatObjectVal $ObjectVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
-		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectVal $ObjectVal}}Ptr.Creater, curNamespace)
 		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
+		{{if $HasEntity -}}
+		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectVal $ObjectVal}}Ptr.Creater, curNamespace)
 		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, entityPtr)
+		{{- else -}}
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr)
+		{{- end }}
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -497,7 +527,7 @@ func (s *{{formatModuleName $ModuleVal}}) Delete{{formatObjectName $ObjectVal}}(
 `
 
 	factoryPtr := factory.NewMemoryFactor(funcDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": modulePtr, "ObjectVal": objectPtr})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": modulePtr, "ObjectVal": objectPtr, "HasEntity": mu.HasEntity(objectPtr)})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return

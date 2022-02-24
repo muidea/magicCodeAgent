@@ -8,11 +8,87 @@ import (
 	"github.com/muidea/magicToolkit/parser"
 )
 
+var reserved = []string{"Namespace"}
+var entityItem = []string{"Creater", "Updater"}
+var timeStamp = []string{"UpdateTime", "CreateTime", "DateTime"}
+var specialItem = []string{"ID", "URL", "SKU", "SN", "WeChat"}
 var innerFileName = []string{
 	"common.go",
 	"log.go",
 	"totalizer.go",
 	"helper.go",
+}
+
+func IsID(val string) bool {
+	return val == "ID"
+}
+
+func IsNumber(val string) bool {
+	switch val {
+
+	}
+
+	return false
+}
+
+func IsString(val string) bool {
+	return val == "string"
+}
+
+func IsBoolean(val string) bool {
+	return val == "bool"
+}
+
+func IsReserved(val string) bool {
+	for _, sv := range reserved {
+		if sv == val {
+			return true
+		}
+	}
+
+	return false
+}
+
+func IsEntity(val string) bool {
+	for _, sv := range entityItem {
+		if sv == val {
+			return true
+		}
+	}
+
+	return false
+}
+
+func IsSpecial(val string) bool {
+	for _, sv := range specialItem {
+		if sv == val {
+			return true
+		}
+	}
+
+	return false
+}
+
+func IsTimeStamp(val string) bool {
+	for _, sv := range timeStamp {
+		if sv == val {
+			return true
+		}
+	}
+
+	return false
+}
+
+func HasEntity(ptr *parser.Object) (ret bool) {
+	ret = false
+	for _, val := range ptr.Items {
+		if IsEntity(val.Name) {
+			ret = true
+			return
+		}
+	}
+
+	return
 }
 
 func IsInnerFile(fileName string) bool {
