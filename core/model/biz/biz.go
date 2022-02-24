@@ -3,14 +3,15 @@ package biz
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
+
 	log "github.com/cihub/seelog"
 	mu "github.com/muidea/magicToolkit/core/model/util"
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
-	"os"
-	"os/exec"
-	"path"
 )
 
 type Biz struct {
@@ -135,7 +136,7 @@ func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(i
 func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(ptr *common.{{formatObjectName $ObjectVal}}Param, creater int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
 	{{formatObjectVal $ObjectVal}}Ptr := ptr.To{{formatObjectName $ObjectVal}}(nil)
 	{{formatObjectVal $ObjectVal}}Ptr.Creater = creater
-	{{formatObjectVal $ObjectVal}}Ptr.UpdateTime = time.Now().UTC().Unix()
+	{{formatObjectVal $ObjectVal}}Ptr.CreateTime = time.Now().UTC().Unix()
 	ret, err = s.{{formatModuleVal $ModuleVal}}Dao.Create{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, namespace)
 	if err != nil {
 		return
@@ -158,7 +159,7 @@ func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(
 
 	current{{formatObjectName $ObjectVal}} = ptr.To{{formatObjectName $ObjectVal}}(current{{formatObjectName $ObjectVal}})
 	current{{formatObjectName $ObjectVal}}.Creater = updater
-	current{{formatObjectName $ObjectVal}}.UpdateTime = time.Now().UTC().Unix()
+	current{{formatObjectName $ObjectVal}}.CreateTime = time.Now().UTC().Unix()
 	ret, err = s.{{formatModuleVal $ModuleVal}}Dao.Update{{formatObjectName $ObjectVal}}(current{{formatObjectName $ObjectVal}}, namespace)
 	if err != nil {
 		return
