@@ -46,6 +46,13 @@ func (s *Core) Startup(
 }
 
 func (s *Core) Run() {
+	go func() {
+		modules := module.GetModules()
+		for _, val := range modules {
+			module.Run(val)
+		}
+	}()
+
 	s.httpServer.Run()
 }
 
