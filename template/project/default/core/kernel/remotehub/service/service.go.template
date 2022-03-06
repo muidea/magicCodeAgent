@@ -15,7 +15,7 @@ import (
 	"github.com/muidea/magicCas/toolkit"
 
 	"github.com/muidea/{{.ProjectName}}/common"
-	"github.com/muidea/{{.ProjectName}}/core/module/remotehub/biz"
+	"github.com/muidea/{{.ProjectName}}/core/kernel/remotehub/biz"
 )
 
 type RemoteHub struct {

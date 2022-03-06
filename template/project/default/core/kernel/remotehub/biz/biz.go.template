@@ -6,7 +6,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
-	"github.com/muidea/{{.ProjectName}}/core/module/remotehub/dao"
+	"github.com/muidea/{{.ProjectName}}/core/kernel/remotehub/dao"
 )
 
 type RemoteHub struct {
