@@ -294,7 +294,7 @@ func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(
 		res.WriteHeader(http.StatusNotFound)
 		return
 	}
-	{{- if $HasEntity -}}
+	{{if $HasEntity -}}
 	curSession := ctx.Value(session.AuthSession).(session.Session)
 	{{- end }}
 	result := &common.{{formatObjectName $ObjectVal}}StatisticResult{}
