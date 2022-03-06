@@ -1,11 +1,12 @@
 package totalizer
 
 import (
+	"github.com/muidea/magicBatis/client"
+
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/module"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/{{.ProjectName}}/assist/persistence"
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/kernel/totalizer/biz"
 )
@@ -15,6 +16,8 @@ func init() {
 }
 
 type Totalizer struct {
+	batisClient client.Client
+
 	biz *biz.Totalizer
 }
 
@@ -26,9 +29,16 @@ func (s *Totalizer) ID() string {
 	return common.TotalizerModule
 }
 
-func (s *Totalizer) Setup(endpointName string, eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) {
-	s.biz = biz.New(
-		persistence.GetBatisClient(),
+func (s *Totalizer) BindBatisClient(clnt client.Client) {
+	s.batisClient = clnt
+}
+
+func (s *Totalizer) Setup(
+	endpointName string,
+	eventHub event.Hub,
+	backgroundRoutine task.BackgroundRoutine) {
+	s.biz = biz.New(endpointName,
+		s.batisClient,
 		eventHub,
 		backgroundRoutine,
 	)

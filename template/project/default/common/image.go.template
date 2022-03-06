@@ -10,7 +10,6 @@ const (
 	QueryImage  = "/image/query/:id"
 	UpdateImage = "/image/update/:id"
 	DeleteImage = "/image/destroy/:id"
-	NotifyImage = "/image/notify/:id"
 )
 
 const ImageModule = "/module/image"

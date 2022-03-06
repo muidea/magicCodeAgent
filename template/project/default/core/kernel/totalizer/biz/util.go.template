@@ -87,6 +87,15 @@ func (s *Totalizer) onDeleteTotalizer(totalizerPtr *model.Totalizer) {
 	})
 }
 
+func (s *Totalizer) onNotifyTotalizer(action int, owner, namespace string) {
+	switch action {
+	case common.Create:
+		s.onIncreaseTotalizer(owner, namespace)
+	case common.Delete:
+		s.onDecreaseTotalizer(owner, namespace)
+	}
+}
+
 func (s *Totalizer) onIncreaseTotalizer(owner, namespace string) {
 	s.Invoke(func() {
 		type2Totalizer, ok := s.namespace2Totalizer[namespace]
@@ -135,6 +144,10 @@ func (s *Totalizer) onDecreaseTotalizer(owner, namespace string) {
 				}
 
 				v.Value -= 1
+				if v.Value <= 0 {
+					v.Value = 0
+				}
+
 				v.TimeStamp = time.Now().UTC().Unix()
 
 				v = s.saveTotalizer(v)
@@ -156,30 +169,32 @@ func (s *Totalizer) onTimerNotify(eventPtr *common.TimerNotify) {
 		_, curWeek := eventPtr.CurTime.ISOWeek()
 		refreshWeek := curWeek != preWeek
 		refreshMonth := eventPtr.PreTime.Month() != eventPtr.CurTime.Month()
-		log.Infof("onTimerNotify, refreshWeek:%v, refreshMonth:%v,curWeek:%v,curMonth:%v", refreshWeek, refreshMonth, curWeek, eventPtr.CurTime.Month())
+		log.Infof("onTimerNotify, refreshWeek:%v, refreshMonth:%v,curWeek:%v,curMonth:%v", refreshWeek, refreshMonth, eventPtr.CurTime.Weekday(), eventPtr.CurTime.Month())
 		for _, nsv := range s.namespace2Totalizer {
 			for tk, tv := range nsv {
 				if refreshWeek && tk == model.TotalizeWeek {
 					// 每周一 更新周统计
-					if eventPtr.CurTime.Weekday() == 0 {
+					if eventPtr.CurTime.Weekday() == time.Monday {
 						for _, nv := range tv {
 							nv.Catalog = model.TotalizeHistory
 							nv.TimeStamp = eventPtr.CurTime.UTC().Unix()
 							s.saveTotalizer(nv)
 
 							nv.Reset()
+							s.saveTotalizer(nv)
 						}
 					}
 				}
 				if refreshMonth && tk == model.TotalizeMonth {
 					// 每月第一天 更新月统计
-					if eventPtr.CurTime.Day() == 0 {
+					if eventPtr.CurTime.Day() == 1 {
 						for _, nv := range tv {
 							nv.Catalog = model.TotalizeHistory
 							nv.TimeStamp = eventPtr.CurTime.UTC().Unix()
 							s.saveTotalizer(nv)
 
 							nv.Reset()
+							s.saveTotalizer(nv)
 						}
 					}
 				}
