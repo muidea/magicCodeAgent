@@ -2,13 +2,12 @@ package biz
 
 import (
 	log "github.com/cihub/seelog"
+
 	"github.com/muidea/magicBatis/client"
 	bc "github.com/muidea/magicBatis/common"
 
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
-
-	cc "github.com/muidea/magicCas/common"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/core/base/biz"
@@ -16,17 +15,21 @@ import (
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
+type Owner2Totalizer map[string]*model.Totalizer
+
+type Type2Totalizer map[int]Owner2Totalizer
+
+type Namespace2Totalizer map[string]Type2Totalizer
+
 type Totalizer struct {
 	biz.Base
 
 	totalizerDao dao.Totalizer
 
-	endpointName        string
 	namespace2Totalizer Namespace2Totalizer
 }
 
 func New(
-	endpointName string,
 	batisClient client.Client,
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
@@ -34,11 +37,8 @@ func New(
 	totalizer := &Totalizer{
 		Base:                biz.New(common.TotalizerModule, eventHub, backgroundRoutine),
 		totalizerDao:        dao.New(batisClient),
-		endpointName:        endpointName,
 		namespace2Totalizer: Namespace2Totalizer{},
 	}
-
-	eventHub.Subscribe(common.NotifyAuthorityNamespace, totalizer)
 
 	eventHub.Subscribe(common.QueryTotalizer, totalizer)
 	eventHub.Subscribe(common.CreateTotalizer, totalizer)
@@ -53,15 +53,6 @@ func New(
 func (s *Totalizer) Notify(event event.Event, result event.Result) {
 	namespace := event.Header().GetString("namespace")
 	log.Infof("notify event, id:%s,source:%s,destination:%s, namespace:%s", event.ID(), event.Source(), event.Destination(), namespace)
-	if event.Match(common.NotifyAuthorityNamespace) {
-		namespaceLite, namespaceOK := event.Data().(*cc.NamespaceView)
-		if !namespaceOK {
-			return
-		}
-
-		s.onInitializeNamespace(namespaceLite)
-		return
-	}
 	if event.Match(common.CreateTotalizer) {
 		totalizerPtr, totalizerOK := event.Data().(*model.Totalizer)
 		if !totalizerOK {
@@ -100,9 +91,8 @@ func (s *Totalizer) Notify(event event.Event, result event.Result) {
 		return
 	}
 	if event.Match(common.NotifyEventMask) {
-		owner := event.Header().GetString("owner")
 		action := event.Header().GetInt("action")
-		s.onNotifyTotalizer(action, owner, namespace)
+		s.onNotifyTotalizer(event.ID(), action, namespace)
 		return
 	}
 }

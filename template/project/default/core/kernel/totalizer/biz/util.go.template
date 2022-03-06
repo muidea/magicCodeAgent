@@ -4,95 +4,92 @@ import (
 	"time"
 
 	log "github.com/cihub/seelog"
-	bc "github.com/muidea/magicBatis/common"
 
-	cc "github.com/muidea/magicCas/common"
+	bc "github.com/muidea/magicBatis/common"
+	fn "github.com/muidea/magicCommon/foundation/net"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
-/*
-namespace  -> type -> owner -> totalizer
-*/
-func (s *Totalizer) onInitializeNamespace(namespacePtr *cc.NamespaceView) {
-	s.Invoke(func() {
-		totalizerList, _, totalizerErr := s.totalizerDao.FilterTotalizer(nil, namespacePtr.Name)
-		if totalizerErr != nil {
-			return
-		}
+func (s *Totalizer) initializerTotalizer(totalizerPtr *model.Totalizer) {
+	type2Totalizer, ok := s.namespace2Totalizer[totalizerPtr.Namespace]
+	if !ok {
+		type2Totalizer = Type2Totalizer{}
+	}
 
-		type2Totalizer, ok := s.namespace2Totalizer[namespacePtr.Name]
-		if !ok {
-			type2Totalizer = Type2Totalizer{}
-		}
+	n2Totalizer, ok := type2Totalizer[totalizerPtr.Type]
+	if !ok {
+		n2Totalizer = Owner2Totalizer{}
+	}
 
-		for _, val := range totalizerList {
-			n2Totalizer, ok := type2Totalizer[val.Type]
-			if !ok {
-				n2Totalizer = Owner2Totalizer{}
-			}
+	curTotalizer := s.loadTotalizer(totalizerPtr)
+	if curTotalizer != nil {
+		totalizerPtr = curTotalizer
+	} else {
+		totalizerPtr = s.saveTotalizer(totalizerPtr)
+	}
 
-			n2Totalizer[val.Owner] = val
-			type2Totalizer[val.Type] = n2Totalizer
-		}
-		s.namespace2Totalizer[namespacePtr.Name] = type2Totalizer
-	})
+	n2Totalizer[totalizerPtr.Owner] = totalizerPtr
+	type2Totalizer[totalizerPtr.Type] = n2Totalizer
+	s.namespace2Totalizer[totalizerPtr.Namespace] = type2Totalizer
+}
+
+func (s *Totalizer) uninitializedTotalizer(totalizerPtr *model.Totalizer) {
+	type2Totalizer, ok := s.namespace2Totalizer[totalizerPtr.Namespace]
+	if !ok {
+		return
+	}
+
+	n2Totalizer, ok := type2Totalizer[totalizerPtr.Type]
+	if !ok {
+		return
+	}
+
+	delete(n2Totalizer, totalizerPtr.Owner)
+	if len(n2Totalizer) == 0 {
+		delete(type2Totalizer, totalizerPtr.Type)
+	}
+	if len(type2Totalizer) == 0 {
+		delete(s.namespace2Totalizer, totalizerPtr.Namespace)
+	}
+}
+
+func (s *Totalizer) createInternal(owner, namespace string) {
+	log.Infof("create internal totalizer, owner:%v, namespace:%v", owner, namespace)
+	ptr := model.NewTotalizer(owner, common.TotalizeRealtime, namespace)
+	ptr.Value = 1
+	s.initializerTotalizer(ptr)
+
+	ptr = model.NewTotalizer(owner, common.TotalizeWeek, namespace)
+	ptr.Value = 1
+	s.initializerTotalizer(ptr)
+
+	ptr = model.NewTotalizer(owner, common.TotalizeMonth, namespace)
+	ptr.Value = 1
+	s.initializerTotalizer(ptr)
 }
 
 func (s *Totalizer) onCreateTotalizer(totalizerPtr *model.Totalizer) {
 	s.Invoke(func() {
-		type2Totalizer, ok := s.namespace2Totalizer[totalizerPtr.Namespace]
-		if !ok {
-			type2Totalizer = Type2Totalizer{}
-		}
-
-		n2Totalizer, ok := type2Totalizer[totalizerPtr.Type]
-		if !ok {
-			n2Totalizer = Owner2Totalizer{}
-		}
-
-		curTotalizer := s.loadTotalizer(totalizerPtr)
-		if curTotalizer != nil {
-			totalizerPtr = curTotalizer
-		} else {
-			totalizerPtr = s.saveTotalizer(totalizerPtr)
-		}
-
-		n2Totalizer[totalizerPtr.Owner] = totalizerPtr
-		type2Totalizer[totalizerPtr.Type] = n2Totalizer
-		s.namespace2Totalizer[totalizerPtr.Namespace] = type2Totalizer
+		s.initializerTotalizer(totalizerPtr)
 	})
 }
 
 func (s *Totalizer) onDeleteTotalizer(totalizerPtr *model.Totalizer) {
 	s.Invoke(func() {
-		type2Totalizer, ok := s.namespace2Totalizer[totalizerPtr.Namespace]
-		if !ok {
-			return
-		}
-
-		n2Totalizer, ok := type2Totalizer[totalizerPtr.Type]
-		if !ok {
-			return
-		}
-
-		delete(n2Totalizer, totalizerPtr.Owner)
-		if len(n2Totalizer) == 0 {
-			delete(type2Totalizer, totalizerPtr.Type)
-		}
-		if len(type2Totalizer) == 0 {
-			delete(s.namespace2Totalizer, totalizerPtr.Namespace)
-		}
+		s.uninitializedTotalizer(totalizerPtr)
 	})
 }
 
-func (s *Totalizer) onNotifyTotalizer(action int, owner, namespace string) {
+func (s *Totalizer) onNotifyTotalizer(eventID string, action int, namespace string) {
+	eventPath, _ := fn.SplitRESTURL(eventID)
+	feature := fn.FormatRoutePattern(eventPath, nil)
 	switch action {
 	case common.Create:
-		s.onIncreaseTotalizer(owner, namespace)
+		s.onIncreaseTotalizer(feature, namespace)
 	case common.Delete:
-		s.onDecreaseTotalizer(owner, namespace)
+		s.onDecreaseTotalizer(feature, namespace)
 	}
 }
 
@@ -100,7 +97,8 @@ func (s *Totalizer) onIncreaseTotalizer(owner, namespace string) {
 	s.Invoke(func() {
 		type2Totalizer, ok := s.namespace2Totalizer[namespace]
 		if !ok {
-			return
+			s.createInternal(owner, namespace)
+			type2Totalizer, ok = s.namespace2Totalizer[namespace]
 		}
 
 		//ntv := Type2Totalizer{}
@@ -127,11 +125,13 @@ func (s *Totalizer) onIncreaseTotalizer(owner, namespace string) {
 		}
 	})
 }
+
 func (s *Totalizer) onDecreaseTotalizer(owner, namespace string) {
 	s.Invoke(func() {
 		type2Totalizer, ok := s.namespace2Totalizer[namespace]
 		if !ok {
-			return
+			s.createInternal(owner, namespace)
+			type2Totalizer, ok = s.namespace2Totalizer[namespace]
 		}
 
 		//ntv := Type2Totalizer{}
@@ -172,7 +172,7 @@ func (s *Totalizer) onTimerNotify(eventPtr *common.TimerNotify) {
 		log.Infof("onTimerNotify, refreshWeek:%v, refreshMonth:%v,curWeek:%v,curMonth:%v", refreshWeek, refreshMonth, eventPtr.CurTime.Weekday(), eventPtr.CurTime.Month())
 		for _, nsv := range s.namespace2Totalizer {
 			for tk, tv := range nsv {
-				if refreshWeek && tk == model.TotalizeWeek {
+				if refreshWeek && tk == common.TotalizeWeek {
 					// 每周一 更新周统计
 					if eventPtr.CurTime.Weekday() == time.Monday {
 						for _, nv := range tv {
@@ -185,7 +185,7 @@ func (s *Totalizer) onTimerNotify(eventPtr *common.TimerNotify) {
 						}
 					}
 				}
-				if refreshMonth && tk == model.TotalizeMonth {
+				if refreshMonth && tk == common.TotalizeMonth {
 					// 每月第一天 更新月统计
 					if eventPtr.CurTime.Day() == 1 {
 						for _, nv := range tv {
