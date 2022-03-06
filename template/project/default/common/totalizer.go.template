@@ -3,10 +3,15 @@ package common
 import "github.com/muidea/{{.ProjectName}}/model"
 
 const (
-	CreateTotalizer = "/base/totalizer/create/"
-	DeleteTotalizer = "/base/totalizer/destroy/:id"
-	UpdateTotalizer = "/base/totalizer/update/:id"
 	QueryTotalizer  = "/base/totalizer/query/"
+	CreateTotalizer = "/base/totalizer/create/"
+	DeleteTotalizer = "/base/totalizer/delete/:id"
+)
+
+const (
+	TotalizeRealtime = 1
+	TotalizeWeek     = 2
+	TotalizeMonth    = 3
 )
 
 const TotalizerModule = "/kernel/totalizer"
