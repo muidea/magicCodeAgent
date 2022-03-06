@@ -65,7 +65,7 @@ import (
 	return
 }
 
-func (s *Service) declareObjectImport(ptr *parser.Package) (ret string) {
+func (s *Service) declareObjectImport(ptr *parser.Package, objectPtr *parser.Object) (ret string) {
 	importDeclare := `
 import (
 	"context"
@@ -78,13 +78,14 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
 	fu "github.com/muidea/magicCommon/foundation/util"
+{{if .HasEntity -}}
 	"github.com/muidea/magicCommon/session"
-
+{{- end}}
 	"github.com/muidea/{{.ProjectName}}/common"
 )
 `
 	factoryPtr := factory.NewMemoryFactor(importDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ProjectName": s.projectName, "ModuleVal": ptr})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ProjectName": s.projectName, "ModuleVal": ptr, "HasEntity": mu.HasEntity(objectPtr)})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
@@ -606,7 +607,7 @@ func (s *Service) createObject(modulePtr *parser.Package, objectPtr *parser.Obje
 			return
 		}
 
-		_, err = fileHandle.WriteString(s.declareObjectImport(modulePtr))
+		_, err = fileHandle.WriteString(s.declareObjectImport(modulePtr, objectPtr))
 		if err != nil {
 			return
 		}
