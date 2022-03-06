@@ -26,10 +26,13 @@ type Totalizer struct {
 
 	totalizerDao dao.Totalizer
 
+	endpointName string
+
 	namespace2Totalizer Namespace2Totalizer
 }
 
 func New(
+	endpointName string,
 	batisClient client.Client,
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
@@ -37,6 +40,7 @@ func New(
 	totalizer := &Totalizer{
 		Base:                biz.New(common.TotalizerModule, eventHub, backgroundRoutine),
 		totalizerDao:        dao.New(batisClient),
+		endpointName:        endpointName,
 		namespace2Totalizer: Namespace2Totalizer{},
 	}
 

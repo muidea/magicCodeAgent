@@ -37,7 +37,7 @@ func (s *Totalizer) Setup(
 	endpointName string,
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine) {
-	s.biz = biz.New(
+	s.biz = biz.New(endpointName,
 		s.batisClient,
 		eventHub,
 		backgroundRoutine,
