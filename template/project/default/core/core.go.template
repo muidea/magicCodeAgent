@@ -26,11 +26,11 @@ import (
 	"github.com/muidea/{{.ProjectName}}/config"
 
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/base"
+	_ "github.com/muidea/{{.ProjectName}}/core/kernel/remotehub"
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/setting"
 	_ "github.com/muidea/{{.ProjectName}}/core/kernel/totalizer"
 	_ "github.com/muidea/{{.ProjectName}}/core/module/authority"
 	_ "github.com/muidea/{{.ProjectName}}/core/module/image"
-	_ "github.com/muidea/{{.ProjectName}}/core/module/remotehub"
 )
 
 type loadNamespaceTask struct {
