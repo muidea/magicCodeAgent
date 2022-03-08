@@ -177,10 +177,10 @@ func (s *Totalizer) onTimerNotify(eventPtr *common.TimerNotify) {
 					if eventPtr.CurTime.Weekday() == time.Monday {
 						for _, nv := range tv {
 							nv.Catalog = model.TotalizeHistory
-							nv.TimeStamp = eventPtr.CurTime.UTC().Unix()
 							s.saveTotalizer(nv)
 
 							nv.Reset()
+							nv.TimeStamp = eventPtr.CurTime.UTC().Unix()
 							s.saveTotalizer(nv)
 						}
 					}
@@ -190,10 +190,10 @@ func (s *Totalizer) onTimerNotify(eventPtr *common.TimerNotify) {
 					if eventPtr.CurTime.Day() == 1 {
 						for _, nv := range tv {
 							nv.Catalog = model.TotalizeHistory
-							nv.TimeStamp = eventPtr.CurTime.UTC().Unix()
 							s.saveTotalizer(nv)
 
 							nv.Reset()
+							nv.TimeStamp = eventPtr.CurTime.UTC().Unix()
 							s.saveTotalizer(nv)
 						}
 					}
