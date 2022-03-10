@@ -380,37 +380,6 @@ func (s *Base) QueryOperateLog(ctx context.Context, res http.ResponseWriter, req
 	return
 }
 
-func (s *Base) EnumPrivate(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	namespace := s.getCurrentNamespace(ctx, res, req)
-	result := &common.EnumPrivateItemResult{Private: []*cc.PrivateItem{}}
-	for {
-		items := s.roleRouteRegistry.GetAllPrivateItem()
-		for _, val := range items {
-			// if special route must be super namespace
-			if s.systemBiz.IsSpecialRoute(val.Path) && !s.isSuperNamespace(namespace) {
-				continue
-			}
-
-			// if super namespace, only setting route
-			if s.isSuperNamespace(namespace) && !s.systemBiz.IsSettingRoute(val.Path) {
-				continue
-			}
-
-			result.Private = append(result.Private, val)
-		}
-		result.ErrorCode = cd.Success
-		break
-	}
-
-	block, err := json.Marshal(result)
-	if err == nil {
-		res.Write(block)
-		return
-	}
-
-	res.WriteHeader(http.StatusInternalServerError)
-}
-
 // QueryBaseInfo get system info
 func (s *Base) QueryBaseInfo(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	curSession := ctx.Value(session.AuthSession).(session.Session)
@@ -419,6 +388,7 @@ func (s *Base) QueryBaseInfo(ctx context.Context, res http.ResponseWriter, req *
 		cd.Result
 		Route   []*biz.Route   `json:"route"`
 		Content []*biz.Content `json:"content"`
+		Private []*cc.PrivateItem `json:"private"`
 	}
 
 	result := &getResult{}
@@ -440,6 +410,20 @@ func (s *Base) QueryBaseInfo(ctx context.Context, res http.ResponseWriter, req *
 
 		isSuper := s.isSuperNamespace(curNamespace)
 		result.Route, result.Content = s.systemBiz.SystemInfo(entityRole, isSuper)
+		items := s.roleRouteRegistry.GetAllPrivateItem()
+		for _, val := range items {
+			// if special route must be super namespace
+			if s.systemBiz.IsSpecialRoute(val.Path) && !s.isSuperNamespace(curNamespace) {
+				continue
+			}
+
+			// if super namespace, only setting route
+			if s.isSuperNamespace(curNamespace) && !s.systemBiz.IsSettingRoute(val.Path) {
+				continue
+			}
+
+			result.Private = append(result.Private, val)
+		}
 		break
 	}
 	block, err := json.Marshal(result)
@@ -509,7 +493,6 @@ func (s *Base) RegisterRoute() {
 	viewFileRoute := engine.CreateProxyRoute(common.ViewFile, "GET", viewFileURL, true)
 	s.routeRegistry.AddRoute(viewFileRoute, s)
 
-	s.casRouteRegistry.AddHandler(common.EnumPrivate, "GET", s.EnumPrivate)
 	s.casRouteRegistry.AddHandler(common.QueryBaseInfo, "GET", s.QueryBaseInfo)
 }
 

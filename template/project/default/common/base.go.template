@@ -37,8 +37,6 @@ const (
 	// ViewFile view file url
 	ViewFile = "/static/file/view/"
 
-	// EnumPrivate enum private item
-	EnumPrivate = "/base/private/enum/"
 	// QueryBaseInfo query base info
 	QueryBaseInfo = "/base/info/query/"
 	// NotifyTimer notify timer
@@ -68,12 +66,6 @@ type OperateLogListResult struct {
 	cd.Result
 	Total      int64      `json:"total"`
 	OperateLog []*LogView `json:"operateLog"`
-}
-
-// EnumPrivateItemResult enum private item result
-type EnumPrivateItemResult struct {
-	cd.Result
-	Private []*cc.PrivateItem `json:"private"`
 }
 
 type TimerNotify struct {
