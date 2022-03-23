@@ -21,7 +21,7 @@ type Base struct {
 	biz *biz.Base
 }
 
-func New() module.Module {
+func New() *Base {
 	return &Base{}
 }
 
