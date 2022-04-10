@@ -1,12 +1,15 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	log "github.com/cihub/seelog"
 
 	"github.com/muidea/magicToolkit/core/model"
 )
+
+var bothFlag = false
 
 func init() {
 	actionList = append(actionList, &action{
@@ -15,6 +18,8 @@ func init() {
 		description:  "initialize model",
 		funcPtr:      InitModel,
 	})
+
+	flag.BoolVar(&bothFlag, "bothFlag", bothFlag, "init model both backend & frontend")
 }
 
 func InitModel(curPath string) {
@@ -24,7 +29,7 @@ func InitModel(curPath string) {
 		return
 	}
 
-	ptr := model.New(curPath)
+	ptr := model.New(curPath, bothFlag)
 	curErr := ptr.Create(projectDefine.ProjectName)
 	if curErr != nil {
 		log.Errorf("init models failed, err:%s", curErr.Error())
