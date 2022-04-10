@@ -39,12 +39,12 @@ import {genApi} from '@/utils';
 func (s *Services) declareObject(ptr *parser.Package) (ret string) {
 	objectDeclare := `{{$ModuleVal := .ModuleVal}}{{with .ModuleVal}}
 const index :{[index:string]:string} = {
-{{range .Objects}}
-  filterPartner: 'GET /partner/query/',
-  queryPartner: 'GET /partner/query/:id',
-  createPartner: 'POST /partner/create/',
-  updatePartner: 'PUT /partner/update/:id',
-  deletePartner: 'DELETE /partner/delete/:id',
+{{- range .Objects}}
+  filter{{formatObjectActionName $ModuleVal .}}: 'GET /{{formatObjectActionVal $ModuleVal .}}/query/',
+  query{{formatObjectActionName $ModuleVal .}}: 'GET /{{formatObjectActionVal $ModuleVal .}}/query/:id',
+  create{{formatObjectActionName $ModuleVal .}}: 'POST /{{formatObjectActionVal $ModuleVal .}}/create/',
+  update{{formatObjectActionName $ModuleVal .}}: 'PUT /{{formatObjectActionVal $ModuleVal .}}/update/:id',
+  delete{{formatObjectActionName $ModuleVal .}}: 'DELETE /{{formatObjectActionVal $ModuleVal .}}/delete/:id',
 {{end}}
 }{{end}}`
 	factoryPtr := factory.NewMemoryFactor(objectDeclare)

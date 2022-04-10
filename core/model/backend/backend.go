@@ -7,10 +7,8 @@ import (
 	"github.com/muidea/magicToolkit/core/model/backend/common"
 	"github.com/muidea/magicToolkit/core/model/backend/dao"
 	"github.com/muidea/magicToolkit/core/model/backend/service"
-	mu "github.com/muidea/magicToolkit/core/model/util"
 	"github.com/muidea/magicToolkit/core/module"
 	"github.com/muidea/magicToolkit/core/util"
-	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/model"
 	"github.com/muidea/magicToolkit/parser"
 )
@@ -31,32 +29,6 @@ func (s *Backend) createModule(ptr *parser.Package) (ret *model.Module, err erro
 }
 
 func (s *Backend) Create(packagePtr *parser.Package) (err error) {
-	factory.RegisterFunc("isComplex", mu.IsComplex)
-	factory.RegisterFunc("defineItem", mu.DefineItem)
-	factory.RegisterFunc("defineObject", mu.DefineObject)
-	factory.RegisterFunc("defineObjectLite", mu.DefineObjectLite)
-	factory.RegisterFunc("formatModuleName", mu.FormatModuleName)
-	factory.RegisterFunc("formatObjectName", mu.FormatObjectName)
-	factory.RegisterFunc("formatObjectActionName", mu.FormatObjectActionName)
-	factory.RegisterFunc("formatModuleVal", mu.FormatModuleVal)
-	factory.RegisterFunc("formatObjectVal", mu.FormatObjectVal)
-	factory.RegisterFunc("formatObjectActionVal", mu.FormatObjectActionVal)
-	factory.RegisterFunc("formatModulePath", mu.FormatModulePath)
-	factory.RegisterFunc("formatObjectJson", mu.FormatObjectJson)
-
-	defer factory.UnRegisterFunc("formatObjectJson")
-	defer factory.UnRegisterFunc("formatModulePath")
-	defer factory.UnRegisterFunc("formatObjectActionVal")
-	defer factory.UnRegisterFunc("formatObjectVal")
-	defer factory.UnRegisterFunc("formatModuleVal")
-	defer factory.UnRegisterFunc("formatObjectActionName")
-	defer factory.UnRegisterFunc("formatObjectName")
-	defer factory.UnRegisterFunc("formatModuleName")
-	defer factory.UnRegisterFunc("defineObjectLite")
-	defer factory.UnRegisterFunc("defineObject")
-	defer factory.UnRegisterFunc("defineItem")
-	defer factory.UnRegisterFunc("isComplex")
-
 	_, moduleErr := s.createModule(packagePtr)
 	if moduleErr != nil {
 		log.Errorf("create module failed, name:%s, err:%s", packagePtr.Name, moduleErr.Error())

@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/muidea/magicToolkit/core/model/frontend"
+	"github.com/muidea/magicToolkit/factory"
 	"io/ioutil"
 	"path"
 
@@ -25,8 +26,33 @@ func New(rootPath string, bothFlag bool) *Model {
 }
 
 func (s *Model) Create(projectName string) (err error) {
-	s.projectName = projectName
+	factory.RegisterFunc("isComplex", mu.IsComplex)
+	factory.RegisterFunc("defineItem", mu.DefineItem)
+	factory.RegisterFunc("defineObject", mu.DefineObject)
+	factory.RegisterFunc("defineObjectLite", mu.DefineObjectLite)
+	factory.RegisterFunc("formatModuleName", mu.FormatModuleName)
+	factory.RegisterFunc("formatObjectName", mu.FormatObjectName)
+	factory.RegisterFunc("formatObjectActionName", mu.FormatObjectActionName)
+	factory.RegisterFunc("formatModuleVal", mu.FormatModuleVal)
+	factory.RegisterFunc("formatObjectVal", mu.FormatObjectVal)
+	factory.RegisterFunc("formatObjectActionVal", mu.FormatObjectActionVal)
+	factory.RegisterFunc("formatModulePath", mu.FormatModulePath)
+	factory.RegisterFunc("formatObjectJson", mu.FormatObjectJson)
 
+	defer factory.UnRegisterFunc("formatObjectJson")
+	defer factory.UnRegisterFunc("formatModulePath")
+	defer factory.UnRegisterFunc("formatObjectActionVal")
+	defer factory.UnRegisterFunc("formatObjectVal")
+	defer factory.UnRegisterFunc("formatModuleVal")
+	defer factory.UnRegisterFunc("formatObjectActionName")
+	defer factory.UnRegisterFunc("formatObjectName")
+	defer factory.UnRegisterFunc("formatModuleName")
+	defer factory.UnRegisterFunc("defineObjectLite")
+	defer factory.UnRegisterFunc("defineObject")
+	defer factory.UnRegisterFunc("defineItem")
+	defer factory.UnRegisterFunc("isComplex")
+
+	s.projectName = projectName
 	modelPath := path.Join(s.rootPath, "model")
 	existFlag := util.Exists(modelPath)
 	if !existFlag {

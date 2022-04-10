@@ -21,15 +21,16 @@ func New(rootPath, projectName string) *Data {
 }
 
 func (s *Data) declareObject(ptr *parser.Package) (ret string) {
-	objectDeclare := `{{$ModuleVal := .ModuleVal}}{{with .ModuleVal}}
-{{range .Objects}}
-export interface {{.Name}} {
-}
+	objectDeclare := `{{$ModuleVal := .ModuleVal}}{{with .ModuleVal}}{{range .Objects}}
+{{declareObjectView .}}
 
 export const formatter{{.Name}} = (val: any) => {
   return '-'
-}
-{{end}}{{end}}`
+}{{end}}{{end}}`
+
+	factory.RegisterFunc("declareObjectView", DeclareObjectView)
+	defer factory.UnRegisterFunc("declareObjectView")
+
 	factoryPtr := factory.NewMemoryFactor(objectDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr})
 	if contentErr != nil {
