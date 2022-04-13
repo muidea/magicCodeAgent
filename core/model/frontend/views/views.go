@@ -6,7 +6,9 @@ import (
 	"path"
 
 	log "github.com/cihub/seelog"
+
 	mu "github.com/muidea/magicToolkit/core/model/util"
+	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
 )
@@ -46,23 +48,30 @@ func (s *Views) Create(ptr *parser.Package) (err error) {
 		return
 	}
 
-	moduleName := mu.FormatModulePath(ptr)
-	commonFile := fmt.Sprintf("/%s/index.tsx", moduleName)
-	commonFilePath := path.Join(s.rootPath, "pages", commonFile)
-	log.Info(commonFilePath)
-	func() {
-		fileHandle, fileErr := os.OpenFile(commonFilePath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
-		if fileErr != nil {
-			err = fileErr
-			return
+	for _, val := range ptr.Objects {
+		commonPath := fmt.Sprintf("%s/pages/%s", s.rootPath, mu.FormatObjectActionValue(ptr, val))
+		if !util.Exists(commonPath) {
+			err = os.MkdirAll(commonPath, os.ModePerm)
+			if err != nil {
+				return
+			}
 		}
-		defer fileHandle.Close()
+		commonFile := path.Join(commonPath, "index.tsx")
+		log.Info(commonFile)
 
-		_, err = fileHandle.WriteString(s.declareObject(ptr))
-		if err != nil {
-			return
-		}
-	}()
+		func() {
+			fileHandle, fileErr := os.OpenFile(commonFile, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+			if fileErr != nil {
+				err = fileErr
+				return
+			}
+			defer fileHandle.Close()
 
+			_, err = fileHandle.WriteString(s.declareObject(ptr))
+			if err != nil {
+				return
+			}
+		}()
+	}
 	return
 }
