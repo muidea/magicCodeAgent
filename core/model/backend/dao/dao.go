@@ -79,10 +79,10 @@ type {{formatModuleName .ModuleVal}} interface { {{with .ModuleVal}}
 func (s *Dao) declareDefine(ptr *parser.Package) (ret string) {
 	defineDeclare := `
 func New(clnt client.Client) {{formatModuleName .ModuleVal}} {
-	return &{{formatModuleVal .ModuleVal}}{batisClient: clnt}
+	return &{{formatModuleValue .ModuleVal}}{batisClient: clnt}
 }
 
-type {{formatModuleVal .ModuleVal}} struct {
+type {{formatModuleValue .ModuleVal}} struct {
 	batisClient client.Client
 }`
 	type Item struct {
@@ -103,7 +103,7 @@ type {{formatModuleVal .ModuleVal}} struct {
 func (s *Dao) declareFunc(ptr *parser.Package) (ret string) {
 	funcDeclare := `{{$ModuleVal := .ModuleVal}}{{with .ModuleVal}}
 {{range .Objects}}
-func (s *{{formatModuleVal $ModuleVal}}) Filter{{formatObjectName .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatObjectName .}}, total int64, err error) {
+func (s *{{formatModuleValue $ModuleVal}}) Filter{{formatObjectName .}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatObjectName .}}, total int64, err error) {
 	ret = []*model.{{formatObjectName .}}{}
 	if filter == nil {
 		filter = bc.NewFilter()
@@ -114,7 +114,7 @@ func (s *{{formatModuleVal $ModuleVal}}) Filter{{formatObjectName .}}(filter *bc
 	return
 }
 
-func (s *{{formatModuleVal $ModuleVal}}) Query{{formatObjectName .}}(id int, namespace string) (ret *model.{{formatObjectName .}}, err error) {
+func (s *{{formatModuleValue $ModuleVal}}) Query{{formatObjectName .}}(id int, namespace string) (ret *model.{{formatObjectName .}}, err error) {
 	if id <= 0 {
 		err = fmt.Errorf("illegal id value, id:%d", id)
 		return
@@ -130,7 +130,7 @@ func (s *{{formatModuleVal $ModuleVal}}) Query{{formatObjectName .}}(id int, nam
 	return
 }
 
-func (s *{{formatModuleVal $ModuleVal}}) Create{{formatObjectName .}}(ptr *model.{{formatObjectName .}}, namespace string) (ret *model.{{formatObjectName .}}, err error) {
+func (s *{{formatModuleValue $ModuleVal}}) Create{{formatObjectName .}}(ptr *model.{{formatObjectName .}}, namespace string) (ret *model.{{formatObjectName .}}, err error) {
 	if ptr == nil {
 		err = fmt.Errorf("illegal ptr value")
 		return
@@ -144,7 +144,7 @@ func (s *{{formatModuleVal $ModuleVal}}) Create{{formatObjectName .}}(ptr *model
 	return
 }
 
-func (s *{{formatModuleVal $ModuleVal}}) Update{{formatObjectName .}}(ptr *model.{{formatObjectName .}}, namespace string) (ret *model.{{formatObjectName .}}, err error) {
+func (s *{{formatModuleValue $ModuleVal}}) Update{{formatObjectName .}}(ptr *model.{{formatObjectName .}}, namespace string) (ret *model.{{formatObjectName .}}, err error) {
 	if ptr == nil || ptr.ID <= 0 {
 		err = fmt.Errorf("illegal update ptr")
 		return
@@ -158,7 +158,7 @@ func (s *{{formatModuleVal $ModuleVal}}) Update{{formatObjectName .}}(ptr *model
 	return
 }
 
-func (s *{{formatModuleVal $ModuleVal}}) Delete{{formatObjectName .}}(id int, namespace string) (ret *model.{{formatObjectName .}}, err error) {
+func (s *{{formatModuleValue $ModuleVal}}) Delete{{formatObjectName .}}(id int, namespace string) (ret *model.{{formatObjectName .}}, err error) {
 	valPtr, valErr := s.Query{{formatObjectName .}}(id, namespace)
 	if valErr != nil {
 		err = valErr

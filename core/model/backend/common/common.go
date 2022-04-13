@@ -73,12 +73,12 @@ func (s *Common) declareAction(ptr *parser.Package) (ret string) {
 	actionDeclare := `{{$ModuleVal := .ModuleVal}}
 const ({{with .ModuleVal}}
 {{range .Objects}}
-	Filter{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/query/"
-	Query{{formatObjectActionName $ModuleVal .}}  = "/{{formatObjectActionVal $ModuleVal .}}/query/:id"
-	Create{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/create/"
-	Update{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/update/:id"
-	Delete{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/delete/:id"
-	Notify{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionVal $ModuleVal .}}/notify/:id"
+	Filter{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/query/"
+	Query{{formatObjectActionName $ModuleVal .}}  = "/{{formatObjectActionValue $ModuleVal .}}/query/:id"
+	Create{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/create/"
+	Update{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/update/:id"
+	Delete{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/delete/:id"
+	Notify{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/notify/:id"
 {{end}}{{end}}
 )`
 	factoryPtr := factory.NewMemoryFactor(actionDeclare)

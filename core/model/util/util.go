@@ -121,7 +121,7 @@ func FormatModuleName(ptr *parser.Package) (ret string) {
 	return ret
 }
 
-func FormatModuleVal(ptr *parser.Package) (ret string) {
+func FormatModuleValue(ptr *parser.Package) (ret string) {
 	ret = util.ToCamelCase(ptr.FileName)
 	return ret
 }
@@ -136,7 +136,7 @@ func FormatObjectName(ptr *parser.Object) string {
 	return val
 }
 
-func FormatObjectVal(ptr *parser.Object) string {
+func FormatObjectValue(ptr *parser.Object) string {
 	val := util.ToCamelCase(ptr.Name)
 	return val
 }
@@ -156,7 +156,7 @@ func FormatObjectActionName(modulePtr *parser.Package, ptr *parser.Object) (ret 
 	return val
 }
 
-func FormatObjectActionVal(modulePtr *parser.Package, ptr *parser.Object) (ret string) {
+func FormatObjectActionValue(modulePtr *parser.Package, ptr *parser.Object) (ret string) {
 	val := ptr.Name
 	moduleName := FormatModuleName(modulePtr)
 	if moduleName != ptr.Name {

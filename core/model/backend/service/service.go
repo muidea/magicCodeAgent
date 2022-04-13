@@ -108,10 +108,10 @@ type {{formatModuleName .ModuleVal}} struct {
 }
 
 func New(
-	{{formatModuleVal .ModuleVal}}Biz *biz.{{formatModuleName $ModuleVal}},
+	{{formatModuleValue .ModuleVal}}Biz *biz.{{formatModuleName $ModuleVal}},
 ) *{{formatModuleName $ModuleVal}} {
 	ptr := &{{formatModuleName $ModuleVal}}{
-		bizPtr:    {{formatModuleVal .ModuleVal}}Biz,
+		bizPtr:    {{formatModuleValue .ModuleVal}}Biz,
 		validator: fu.NewFormValidator(),
 	}
 
@@ -204,20 +204,20 @@ func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}L
 	result := &common.{{formatObjectName $ObjectVal}}LiteListResult{}
 	for {
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{formatObjectVal $ObjectVal}}List, {{formatObjectVal $ObjectVal}}Total, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(filter, curNamespace)
-		if {{formatObjectVal $ObjectVal}}Err != nil {
+		{{formatObjectValue $ObjectVal}}List, {{formatObjectValue $ObjectVal}}Total, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(filter, curNamespace)
+		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
+			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()
 			break
 		}
 
-		for _, val := range {{formatObjectVal $ObjectVal}}List {
+		for _, val := range {{formatObjectValue $ObjectVal}}List {
 			ptr := &common.{{formatObjectName $ObjectVal}}Lite{}
 			ptr.From{{formatObjectName $ObjectVal}}(val)
 			result.{{formatObjectName $ObjectVal}} = append(result.{{formatObjectName $ObjectVal}}, ptr)
 		}
 
-		result.Total = {{formatObjectVal $ObjectVal}}Total
+		result.Total = {{formatObjectValue $ObjectVal}}Total
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -238,14 +238,14 @@ func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}(
 	result := &common.{{formatObjectName $ObjectVal}}ListResult{}
 	for {
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{formatObjectVal $ObjectVal}}List, {{formatObjectVal $ObjectVal}}Total, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(filter, curNamespace)
-		if {{formatObjectVal $ObjectVal}}Err != nil {
+		{{formatObjectValue $ObjectVal}}List, {{formatObjectValue $ObjectVal}}Total, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(filter, curNamespace)
+		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
+			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()
 			break
 		}
 
-		for _, val := range {{formatObjectVal $ObjectVal}}List {
+		for _, val := range {{formatObjectValue $ObjectVal}}List {
 			ptr := &common.{{formatObjectName $ObjectVal}}View{}
 			{{if $HasEntity -}}
 			entityPtr := s.queryEntity(curSession.GetSessionInfo(), val.Creater, curNamespace)
@@ -256,7 +256,7 @@ func (s *{{formatModuleName $ModuleVal}}) filter{{formatObjectName $ObjectVal}}(
 			result.{{formatObjectName $ObjectVal}} = append(result.{{formatObjectName $ObjectVal}}, ptr)
 		}
 
-		result.Total = {{formatObjectVal $ObjectVal}}Total
+		result.Total = {{formatObjectValue $ObjectVal}}Total
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -308,14 +308,14 @@ func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(
 			result.Summary = append(result.Summary, view)
 		}
 
-		{{formatObjectVal $ObjectVal}}List, {{formatObjectVal $ObjectVal}}Total, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(queryFilter, curNamespace)
-		if {{formatObjectVal $ObjectVal}}Err != nil {
+		{{formatObjectValue $ObjectVal}}List, {{formatObjectValue $ObjectVal}}Total, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Filter{{formatObjectName $ObjectVal}}(queryFilter, curNamespace)
+		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
+			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()
 			break
 		}
 
-		for _, val := range {{formatObjectVal $ObjectVal}}List {
+		for _, val := range {{formatObjectValue $ObjectVal}}List {
 			view := &common.{{formatObjectName $ObjectVal}}View{}
 			{{if $HasEntity -}}
 			entityPtr := s.queryEntity(curSession.GetSessionInfo(), val.Creater, curNamespace)
@@ -325,7 +325,7 @@ func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(
 			{{- end}}
 			result.{{formatObjectName $ObjectVal}} = append(result.{{formatObjectName $ObjectVal}}, view)
 		}
-		result.Total = {{formatObjectVal $ObjectVal}}Total
+		result.Total = {{formatObjectValue $ObjectVal}}Total
 		result.ErrorCode = cd.Success
 		break
 	}
@@ -353,19 +353,19 @@ func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(c
 		}
 
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{formatObjectVal $ObjectVal}}Ptr, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Query{{formatObjectName $ObjectVal}}(id, curNamespace)
-		if {{formatObjectVal $ObjectVal}}Err != nil {
+		{{formatObjectValue $ObjectVal}}Ptr, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Query{{formatObjectName $ObjectVal}}(id, curNamespace)
+		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
+			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()
 			break
 		}
 
 		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
 		{{if $HasEntity -}}
-		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectVal $ObjectVal}}Ptr.Creater, curNamespace)
-		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, entityPtr)
+		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectValue $ObjectVal}}Ptr.Creater, curNamespace)
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr, entityPtr)
 		{{- else -}}
-		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr)
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr)
 		{{- end }}
 		result.ErrorCode = cd.Success
 		break
@@ -398,21 +398,21 @@ func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(
 		}
 
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{formatObjectVal $ObjectVal}}Ptr, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Create{{formatObjectName $ObjectVal}}(param, curEntity.ID, curNamespace)
-		if {{formatObjectVal $ObjectVal}}Err != nil {
+		{{formatObjectValue $ObjectVal}}Ptr, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Create{{formatObjectName $ObjectVal}}(param, curEntity.ID, curNamespace)
+		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
+			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()
 			break
 		}
 
-		memo := fmt.Sprintf("新增{{formatObjectName $ObjectVal}}:%d", {{formatObjectVal $ObjectVal}}Ptr.ID)
+		memo := fmt.Sprintf("新增{{formatObjectName $ObjectVal}}:%d", {{formatObjectValue $ObjectVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
 		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
 		{{if $HasEntity -}}
-		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, curEntity)
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr, curEntity)
 		{{- else -}}
-		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr)
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr)
 		{{- end }}
 		result.ErrorCode = cd.Success
 		break
@@ -453,21 +453,21 @@ func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(
 		}
 
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{formatObjectVal $ObjectVal}}Ptr, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Update{{formatObjectName $ObjectVal}}(id, param, curEntity.ID, curNamespace)
-		if {{formatObjectVal $ObjectVal}}Err != nil {
+		{{formatObjectValue $ObjectVal}}Ptr, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Update{{formatObjectName $ObjectVal}}(id, param, curEntity.ID, curNamespace)
+		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
+			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()
 			break
 		}
 
-		memo := fmt.Sprintf("更新{{formatObjectName $ObjectVal}}:%d", {{formatObjectVal $ObjectVal}}Ptr.ID)
+		memo := fmt.Sprintf("更新{{formatObjectName $ObjectVal}}:%d", {{formatObjectValue $ObjectVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
 		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
 		{{if $HasEntity -}}
-		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, curEntity)
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr, curEntity)
 		{{- else -}}
-		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr)
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr)
 		{{- end }}
 		result.ErrorCode = cd.Success
 		break
@@ -496,22 +496,22 @@ func (s *{{formatModuleName $ModuleVal}}) Delete{{formatObjectName $ObjectVal}}(
 		}
 
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{formatObjectVal $ObjectVal}}Ptr, {{formatObjectVal $ObjectVal}}Err := s.bizPtr.Delete{{formatObjectName $ObjectVal}}(id, curNamespace)
-		if {{formatObjectVal $ObjectVal}}Err != nil {
+		{{formatObjectValue $ObjectVal}}Ptr, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Delete{{formatObjectName $ObjectVal}}(id, curNamespace)
+		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
-			result.Reason = {{formatObjectVal $ObjectVal}}Err.Error()
+			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()
 			break
 		}
 
-		memo := fmt.Sprintf("删除{{formatObjectName $ObjectVal}}:%d", {{formatObjectVal $ObjectVal}}Ptr.ID)
+		memo := fmt.Sprintf("删除{{formatObjectName $ObjectVal}}:%d", {{formatObjectValue $ObjectVal}}Ptr.ID)
 		s.writeLog(ctx, res, req, memo)
 
 		result.{{formatObjectName $ObjectVal}} = &common.{{formatObjectName $ObjectVal}}View{}
 		{{if $HasEntity -}}
-		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectVal $ObjectVal}}Ptr.Creater, curNamespace)
-		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, entityPtr)
+		entityPtr := s.queryEntity(curSession.GetSessionInfo(), {{formatObjectValue $ObjectVal}}Ptr.Creater, curNamespace)
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr, entityPtr)
 		{{- else -}}
-		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr)
+		result.{{formatObjectName $ObjectVal}}.From{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr)
 		{{- end }}
 		result.ErrorCode = cd.Success
 		break

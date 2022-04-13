@@ -26,10 +26,10 @@ func getTypeValue(typeName string) (ret string) {
 	return
 }
 
-func DeclareItemView(val *parser.Item) string {
-	arrayDeclare := `  {{.JsonVal}}: any[];
+func DeclareItem(val *parser.Item) string {
+	arrayDeclare := `  {{.JsonVal}}?: any[];
 `
-	itemDeclare := `  {{.JsonVal}}: any;
+	itemDeclare := `  {{.JsonVal}}?: any;
 `
 	simpleArrayDeclare := `  {{.JsonVal}}: {{.TypeVal}}[];
 `
@@ -83,8 +83,8 @@ func DeclareItemView(val *parser.Item) string {
 	return contentVal
 }
 
-func DeclareEntityView(val *parser.Item) string {
-	entityAssign := `  {{.JsonVal}}: any;
+func DeclareEntity(val *parser.Item) string {
+	entityAssign := `  {{.JsonVal}}?: any;
 `
 	jsonVal := util.ToCamelCase(val.Name)
 	if mu.IsSpecial(val.Name) {
@@ -110,11 +110,11 @@ export interface {{formatObjectName .ObjectVal}} {
 			continue
 		}
 		if mu.IsEntity(val.Name) {
-			byteBuff.WriteString(DeclareEntityView(val))
+			byteBuff.WriteString(DeclareEntity(val))
 			continue
 		}
 
-		byteBuff.WriteString(DeclareItemView(val))
+		byteBuff.WriteString(DeclareItem(val))
 	}
 
 	factoryPtr := factory.NewMemoryFactor(viewDefine)

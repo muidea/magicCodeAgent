@@ -87,7 +87,7 @@ func (s *Biz) declareDefine(ptr *parser.Package) (ret string) {
 type {{formatModuleName .ModuleVal}} struct {
 	biz.Base
 
-	{{formatModuleVal .ModuleVal}}Dao dao.{{formatModuleName .ModuleVal}}
+	{{formatModuleValue .ModuleVal}}Dao dao.{{formatModuleName .ModuleVal}}
 
 	endpointName string
 }
@@ -100,7 +100,7 @@ func New(
 
 	ptr := &{{formatModuleName .ModuleVal}}{
 		Base:         biz.New(common.{{formatModuleName .ModuleVal}}Module, eventHub, backgroundRoutine),
-		{{formatModuleVal .ModuleVal}}Dao:   dao.New(batisClient),
+		{{formatModuleValue .ModuleVal}}Dao:   dao.New(batisClient),
 		endpointName: endpointName,
 	}
 
@@ -124,22 +124,22 @@ func (s *{{formatModuleName .ModuleVal}}) Notify(event event.Event, result event
 func (s *Biz) declareObjectFunc(modulePtr *parser.Package, objectPtr *parser.Object) (ret string) {
 	funcDeclare := `{{$ModuleVal := .ModuleVal}}{{$ObjectVal := .ObjectVal}}
 func (s *{{formatModuleName $ModuleVal}}) Filter{{formatObjectName $ObjectVal}}(filter *bc.QueryFilter, namespace string) (ret []*model.{{formatObjectName $ObjectVal}}, total int64, err error) {
-	ret, total, err = s.{{formatModuleVal $ModuleVal}}Dao.Filter{{formatObjectName $ObjectVal}}(filter, namespace)
+	ret, total, err = s.{{formatModuleValue $ModuleVal}}Dao.Filter{{formatObjectName $ObjectVal}}(filter, namespace)
 	return
 }
 
 func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(id int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
-	ret, err = s.{{formatModuleVal $ModuleVal}}Dao.Query{{formatObjectName $ObjectVal}}(id, namespace)
+	ret, err = s.{{formatModuleValue $ModuleVal}}Dao.Query{{formatObjectName $ObjectVal}}(id, namespace)
 	return
 }
 
 func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(ptr *common.{{formatObjectName $ObjectVal}}Param, creater int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
-	{{formatObjectVal $ObjectVal}}Ptr := ptr.To{{formatObjectName $ObjectVal}}(nil)
+	{{formatObjectValue $ObjectVal}}Ptr := ptr.To{{formatObjectName $ObjectVal}}(nil)
 {{if .HasEntity -}}
-	{{formatObjectVal $ObjectVal}}Ptr.Creater = creater
-	{{formatObjectVal $ObjectVal}}Ptr.CreateTime = time.Now().UTC().Unix()
+	{{formatObjectValue $ObjectVal}}Ptr.Creater = creater
+	{{formatObjectValue $ObjectVal}}Ptr.CreateTime = time.Now().UTC().Unix()
 {{- end}}
-	ret, err = s.{{formatModuleVal $ModuleVal}}Dao.Create{{formatObjectName $ObjectVal}}({{formatObjectVal $ObjectVal}}Ptr, namespace)
+	ret, err = s.{{formatModuleValue $ModuleVal}}Dao.Create{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr, namespace)
 	if err != nil {
 		return
 	}
@@ -153,7 +153,7 @@ func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(
 }
 
 func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(id int, ptr *common.{{formatObjectName $ObjectVal}}Param, updater int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
-	current{{formatObjectName $ObjectVal}}, currentErr := s.{{formatModuleVal $ModuleVal}}Dao.Query{{formatObjectName $ObjectVal}}(id, namespace)
+	current{{formatObjectName $ObjectVal}}, currentErr := s.{{formatModuleValue $ModuleVal}}Dao.Query{{formatObjectName $ObjectVal}}(id, namespace)
 	if currentErr != nil {
 		err = currentErr
 		return
@@ -164,7 +164,7 @@ func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(
 	current{{formatObjectName $ObjectVal}}.Creater = updater
 	current{{formatObjectName $ObjectVal}}.CreateTime = time.Now().UTC().Unix()
 {{- end}}
-	ret, err = s.{{formatModuleVal $ModuleVal}}Dao.Update{{formatObjectName $ObjectVal}}(current{{formatObjectName $ObjectVal}}, namespace)
+	ret, err = s.{{formatModuleValue $ModuleVal}}Dao.Update{{formatObjectName $ObjectVal}}(current{{formatObjectName $ObjectVal}}, namespace)
 	if err != nil {
 		return
 	}
@@ -178,7 +178,7 @@ func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(
 }
 
 func (s *{{formatModuleName $ModuleVal}}) Delete{{formatObjectName $ObjectVal}}(id int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
-	ret, err = s.{{formatModuleVal $ModuleVal}}Dao.Delete{{formatObjectName $ObjectVal}}(id, namespace)
+	ret, err = s.{{formatModuleValue $ModuleVal}}Dao.Delete{{formatObjectName $ObjectVal}}(id, namespace)
 	if err != nil {
 		return
 	}
