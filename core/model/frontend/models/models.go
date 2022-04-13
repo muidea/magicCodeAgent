@@ -44,7 +44,8 @@ export interface {{formatModuleName $ModuleVal}}ModelState {
   summaryList: [];
   itemSize: number;
 {{- with .ModuleVal -}}{{range .Objects}}
-  {{toLower .Name}}List: any[];
+  {{formatObjectVal .}}List: any[];
+  current{{formatObjectName .}}?: any;
 {{end}}{{end}}
 }
 
@@ -53,11 +54,11 @@ export interface {{formatModuleName $ModuleVal}}ModelType {
   state: {{formatModuleName $ModuleVal}}ModelState;
   effects: {
 {{- with .ModuleVal -}}{{range .Objects}}
-    filter{{.Name}}: Effect;
-    delete{{.Name}}: Effect;
-    submit{{.Name}}: Effect;
-    create{{.Name}}: Effect;
-    update{{.Name}}: Effect;
+    filter{{formatObjectName .}}: Effect;
+    delete{{formatObjectName .}}: Effect;
+    submit{{formatObjectName .}}: Effect;
+    create{{formatObjectName .}}: Effect;
+    update{{formatObjectName .}}: Effect;
 {{end}}{{end}}
   };
   reducers: {
@@ -83,6 +84,17 @@ func (s *Models) declareSubscriptions(ptr *parser.Package) (ret string) {
   subscriptions: {
     setup({dispatch, history}) {
       return history.listen((location) => {
+		{{- with .ModuleVal -}}{{range .Objects}}
+		if (location.pathname === '/{{formatObjectActionName $ModuleVal .}}') {
+		  dispatch({
+			type: 'filter{{formatObjectName .}}',
+			payload: {
+			  value: {...defaultPagination},
+			}
+		  })
+          return
+		}
+		{{end}}{{end}}
       });
     }
   },`
@@ -100,6 +112,105 @@ func (s *Models) declareSubscriptions(ptr *parser.Package) (ret string) {
 func (s *Models) declareEffects(ptr *parser.Package) (ret string) {
 	effectsDeclare := `{{$ModuleVal := .ModuleVal}}
   effects: {
+	{{- with .ModuleVal -}}{{range .Objects}}
+    * filter{{formatObjectName .}}({payload}, {call, put}) {
+      const data = yield call(api.filter{{formatObjectName .}})
+      const {errorCode, reason} = data
+      if (errorCode === 0) {
+        const { {{formatObjectValue .}} } = data
+        yield put({
+          type: 'save',
+          payload: {
+            {{formatObjectValue .}}List: {{formatObjectValue .}},
+          },
+        });
+        return
+      }
+      showErrorMessage(reason);
+    },
+    * query{{formatObjectName .}}({payload}, {call, put}) {
+      const {value} = payload
+      const data = yield call(api.query{{formatObjectName .}}, {id: value.id})
+      const {errorCode, reason} = data
+      if (errorCode === 0) {
+        const { {{formatObjectValue .}} } = data
+        yield put({
+          type: 'save',
+          payload: {
+            current{{formatObjectName .}}: {{formatObjectValue .}},
+          },
+        });
+        return
+      }
+      showErrorMessage(reason);
+    },
+    * submit{{formatObjectName .}}({payload}, {put}) {
+      const {action, value} = payload
+      if (action === 'create') {
+        yield put({
+          type: 'create{{formatObjectName .}}',
+          payload: {
+            value,
+          }
+        })
+        return
+      }
+      if (action === 'update') {
+        yield put({
+          type: 'update{{formatObjectName .}}',
+          payload: {
+            value,
+          }
+        })
+        return
+      }
+    },
+    * create{{formatObjectName .}}({payload}, {call, put}) {
+      const {value} = payload
+      const data = yield call(api.create{{formatObjectName .}}, {...value})
+      const {errorCode, reason} = data
+      if (errorCode === 0) {
+        yield put({
+          type: 'filter{{formatObjectName .}}',
+          payload: {
+            value: {...defaultPagination},
+          }
+        });
+        return
+      }
+      showErrorMessage(reason);
+    },
+    * update{{formatObjectName .}}({payload}, {call, put}) {
+      const {value} = payload
+      const data = yield call(api.update{{formatObjectName .}}, {...value})
+      const {errorCode, reason} = data
+      if (errorCode === 0) {
+        yield put({
+          type: 'filter{{formatObjectName .}}',
+          payload: {
+            value: {...defaultPagination},
+          }
+        });
+        return
+      }
+      showErrorMessage(reason);
+    },
+    * delete{{formatObjectName .}}({payload}, {call, put}) {
+      const {value} = payload
+      const data = yield call(api.delete{{formatObjectName .}}, {id: value.id})
+      const {errorCode, reason} = data
+      if (errorCode === 0) {
+        yield put({
+          type: 'filter{{formatObjectName .}}',
+          payload: {
+            value: {...defaultPagination},
+          }
+        });
+        return
+      }
+      showErrorMessage(reason);
+    },
+	{{end}}{{end}}
   },`
 	factoryPtr := factory.NewMemoryFactor(effectsDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ProjectName": s.projectName, "ModuleVal": ptr})

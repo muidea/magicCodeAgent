@@ -100,7 +100,7 @@ func DeclareEntityView(val *parser.Item) string {
 	return contentVal
 }
 
-func DeclareObjectView(ptr *parser.Object) (ret string) {
+func DeclareObjectInterface(ptr *parser.Object) (ret string) {
 	viewDefine := `
 export interface {{formatObjectName .ObjectVal}} {
 {{  .ContentVal }}}`
