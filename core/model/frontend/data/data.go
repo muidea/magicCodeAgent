@@ -21,12 +21,15 @@ func New(rootPath, projectName string) *Data {
 }
 
 func (s *Data) declareObject(ptr *parser.Package) (ret string) {
-	objectDeclare := `{{$ModuleVal := .ModuleVal}}{{with .ModuleVal}}{{range .Objects}}
+	objectDeclare := `{{- with .ModuleVal -}}
+{{range .Objects}}
 {{declareObjectInterface .}}
 
 export const formatter{{formatObjectName .}} = (val: any) => {
   return '-'
-}{{end}}{{end}}`
+}
+{{end}}
+{{end}}`
 
 	factory.RegisterFunc("declareObjectInterface", DeclareObjectInterface)
 	defer factory.UnRegisterFunc("declareObjectInterface")

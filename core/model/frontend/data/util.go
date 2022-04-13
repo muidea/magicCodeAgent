@@ -101,8 +101,7 @@ func DeclareEntity(val *parser.Item) string {
 }
 
 func DeclareObjectInterface(ptr *parser.Object) (ret string) {
-	viewDefine := `
-export interface {{formatObjectName .ObjectVal}} {
+	viewDefine := `export interface {{formatObjectName .ObjectVal}} {
 {{  .ContentVal }}}`
 	byteBuff := bytes.Buffer{}
 	for _, val := range ptr.Items {
