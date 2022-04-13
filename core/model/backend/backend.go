@@ -7,8 +7,10 @@ import (
 	"github.com/muidea/magicToolkit/core/model/backend/common"
 	"github.com/muidea/magicToolkit/core/model/backend/dao"
 	"github.com/muidea/magicToolkit/core/model/backend/service"
+	bu "github.com/muidea/magicToolkit/core/model/backend/util"
 	"github.com/muidea/magicToolkit/core/module"
 	"github.com/muidea/magicToolkit/core/util"
+	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/model"
 	"github.com/muidea/magicToolkit/parser"
 )
@@ -29,6 +31,13 @@ func (s *Backend) createModule(ptr *parser.Package) (ret *model.Module, err erro
 }
 
 func (s *Backend) Create(packagePtr *parser.Package) (err error) {
+	factory.RegisterFunc("defineItem", bu.DefineItem)
+	factory.RegisterFunc("defineObject", bu.DefineObject)
+	factory.RegisterFunc("defineObjectLite", bu.DefineObjectLite)
+	defer factory.UnRegisterFunc("defineObjectLite")
+	defer factory.UnRegisterFunc("defineObject")
+	defer factory.UnRegisterFunc("defineItem")
+
 	_, moduleErr := s.createModule(packagePtr)
 	if moduleErr != nil {
 		log.Errorf("create module failed, name:%s, err:%s", packagePtr.Name, moduleErr.Error())

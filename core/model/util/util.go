@@ -2,9 +2,7 @@ package util
 
 import (
 	"fmt"
-	log "github.com/cihub/seelog"
 	"github.com/muidea/magicToolkit/core/util"
-	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
 )
 
@@ -25,7 +23,10 @@ func IsID(val string) bool {
 
 func IsNumber(val string) bool {
 	switch val {
-
+	case "int8", "int16", "int32", "int64", "int",
+		"uint8", "uint16", "uint32", "uint64", "uint",
+		"float32", "float64":
+		return true
 	}
 
 	return false
@@ -113,58 +114,6 @@ func IsComplex(val *parser.Item) bool {
 	}
 
 	return true
-}
-
-func DefineType(val *parser.Type) string {
-	if val.IsArray {
-		if val.IsPtr {
-			return fmt.Sprintf("[]*model.%s", val.Name)
-		}
-		return fmt.Sprintf("[]model.%s", val.Name)
-	}
-
-	if val.IsPtr {
-		return fmt.Sprintf("&model.%s", val.Name)
-	}
-	return fmt.Sprintf("model.%s", val.Name)
-}
-
-func DefineItem(val *parser.Item) string {
-	//if val.IsPtr {
-	//	return fmt.Sprintf("%s: &%v{}", val.Name, DefineType(val.Type))
-	//}
-
-	return fmt.Sprintf("%s: %v{}", val.Name, DefineType(val.Type))
-}
-
-func DefineObjectLite(ptr *parser.Object) (ret string) {
-	objectDeclare :=
-		`model.{{.Name}} { }`
-	factoryPtr := factory.NewMemoryFactor(objectDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"Name": ptr.Name, "Items": ptr.Items})
-	if contentErr != nil {
-		log.Errorf("create content failed, err:%s", contentErr.Error())
-		return
-	}
-
-	ret = contentVal
-	return
-}
-
-func DefineObject(ptr *parser.Object) (ret string) {
-	objectDeclare :=
-		`model.{{.Name}} { {{range .Items}}
-{{- if isComplex .}} {{defineItem .}}, {{end -}}
-{{end}} }`
-	factoryPtr := factory.NewMemoryFactor(objectDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"Name": ptr.Name, "Items": ptr.Items})
-	if contentErr != nil {
-		log.Errorf("create content failed, err:%s", contentErr.Error())
-		return
-	}
-
-	ret = contentVal
-	return
 }
 
 func FormatModuleName(ptr *parser.Package) (ret string) {

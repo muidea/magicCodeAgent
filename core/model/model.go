@@ -27,9 +27,6 @@ func New(rootPath string, bothFlag bool) *Model {
 
 func (s *Model) Create(projectName string) (err error) {
 	factory.RegisterFunc("isComplex", mu.IsComplex)
-	factory.RegisterFunc("defineItem", mu.DefineItem)
-	factory.RegisterFunc("defineObject", mu.DefineObject)
-	factory.RegisterFunc("defineObjectLite", mu.DefineObjectLite)
 	factory.RegisterFunc("formatModuleName", mu.FormatModuleName)
 	factory.RegisterFunc("formatObjectName", mu.FormatObjectName)
 	factory.RegisterFunc("formatObjectActionName", mu.FormatObjectActionName)
@@ -47,9 +44,6 @@ func (s *Model) Create(projectName string) (err error) {
 	defer factory.UnRegisterFunc("formatObjectActionName")
 	defer factory.UnRegisterFunc("formatObjectName")
 	defer factory.UnRegisterFunc("formatModuleName")
-	defer factory.UnRegisterFunc("defineObjectLite")
-	defer factory.UnRegisterFunc("defineObject")
-	defer factory.UnRegisterFunc("defineItem")
 	defer factory.UnRegisterFunc("isComplex")
 
 	s.projectName = projectName
