@@ -15,7 +15,7 @@ type indexer struct {
 
 func (s *indexer) declareImport(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	importDeclare := `import React, {FC, useState} from 'react';
-import { {{formatObjectName .ObjectVal}}ModelState, connect, ConnectProps, Dispatch} from "umi";
+import { {{- formatObjectName .ObjectVal}}ModelState, connect, ConnectProps, Dispatch} from "umi";
 import {Button, Divider, Popconfirm} from 'antd';
 import {SearchOutlined} from "@ant-design/icons";
 import {PageContainer} from '@ant-design/pro-layout';
@@ -77,25 +77,25 @@ func (s *indexer) declareFunc(ptr *parser.Package, objPtr *parser.Object) (ret s
 
   const getCreatePanel = () => {
     if (verifyAuthority(authorities, baseDef.Authority.WritePrivate)) {
-      return <Create key={"1"} title={"新建"} onSubmitHandle={onSubmit{{formatObjectName .ObjectVal}}}/>
+      return <Create key={'1'} title={'新建'} onSubmitHandle={onSubmit{{formatObjectName .ObjectVal}}}/>
     }
   }
 
   const getUpdatePanel = (record: contentDef.{{formatObjectName .ObjectVal}}) => {
     if (verifyAuthority(authorities, baseDef.Authority.WritePrivate)) {
-      return <Update title={"更新"} initialValue={record} onSubmitHandle={onSubmit{{formatObjectName .ObjectVal}}}/>
+      return <Update title={'更新'} initialValue={record} onSubmitHandle={onSubmit{{formatObjectName .ObjectVal}}}/>
     }
   }
 
   const getDeletePanel = (record: contentDef.{{formatObjectName .ObjectVal}}) => {
     if (verifyAuthority(authorities, baseDef.Authority.DeletePrivate)) {
       return <Popconfirm
-        title="确认删除?"
+        title='确认删除?'
         onConfirm={() => {
           onDelete{{formatObjectName .ObjectVal}}(record)
         }}
       >
-        <Button type="text" size={"small"}>删除</Button>
+        <Button type='text' size={'small'}>删除</Button>
       </Popconfirm>
     }
   }
@@ -141,22 +141,14 @@ func (s *indexer) declareColumns(ptr *parser.Package, objPtr *parser.Object) (re
       filters: false,
       filterDropdown: (props) => (
         <InputFilter {...props}
-                     dataIndex={"title"}
-                     placeholder={"请输入标题"}
+                     dataIndex={'title'}
+                     placeholder={'请输入标题'}
                      onSubmitFilter={onSubmitFilter}
                      onResetFilter={onResetFilter}/>
       ),
       filterIcon: (filtered) => (
-        <SearchOutlined style={ {color: filtered ? '#1890ff' : undefined } }/>
+        <SearchOutlined style={{"{{color: filtered ? '#1890ff' : undefined}}"}}/>
       ),
-    },
-    {
-      title: '分类',
-      dataIndex: 'catalog',
-      render: (text, record) => {
-        return <ValueInfo initialValue={record.catalog} valueFormatter={contentDef.catalogFormatter}/>
-      },
-      filters: false,
     },
     {
       title: '标签',
@@ -198,10 +190,10 @@ func (s *indexer) declareColumns(ptr *parser.Package, objPtr *parser.Object) (re
 
 func (s *indexer) declareReturn(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	returnDeclare := `
-  const labels = [{id: 1, label: "文章总数"}, {id: 2, label: "本周新增"}, {id: 3, label: "本月新增"}]
+  const labels = [{id: 1, label: '文章总数'}, {id: 2, label: '本周新增'}, {id: 3, label: '本月新增'}]
   return (
     <PageContainer
-      header={ {title: "文章信息"} }
+      header={{"{{title: '文章信息'}}"}}
       content={(<TotalizerSummary labels={labels} values={summaryList}/>)}
       tabList={[
         {
@@ -214,14 +206,14 @@ func (s *indexer) declareReturn(ptr *parser.Package, objPtr *parser.Object) (ret
       ]}
     >
       <ProTable<contentDef.{{formatObjectName .ObjectVal}}>
-        cardProps={ {bodyStyle: {padding: 0}} }
+        cardProps={{"{{bodyStyle: {padding: 0},}}"}}
         size={"small"}
         rowKey={"id"}
         columns={columns}
-        pagination={ {showSizeChanger: false, ...currentPagination, total: itemSize} }
+        pagination={{"{{showSizeChanger: false, ...currentPagination, total: itemSize}}"}}
         search={false}
         options={false}
-        dataSource={ {{formatObjectValue .ObjectVal}}List}
+        dataSource={ {{- formatObjectValue .ObjectVal}}List}
         onChange={onTableChange}
       />
     </PageContainer>
@@ -239,18 +231,17 @@ func (s *indexer) declareReturn(ptr *parser.Package, objPtr *parser.Object) (ret
 
 func (s *indexer) declareObject(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	objectDeclare := `
-const {{formatObjectValue .ObjectVal}}: FC<{{formatObjectName .ObjectVal}}Props> = ({ {{formatObjectValue .ObjectVal}},dispatch, location, children}) => {
+const {{formatObjectValue .ObjectVal}}: FC<{{formatObjectName .ObjectVal}}Props> = ({ {{- formatObjectValue .ObjectVal}},dispatch, location, children}) => {
   const [currentFilter, setCurrentFilter] = useState<any>({})
   const [currentPagination, setCurrentPagination] = useState<any>({current: 1, pageSize: 20})
 
   const {summaryList, itemSize, {{formatObjectValue .ObjectVal}}List} = {{formatObjectValue .ObjectVal}}
   const {pathname} = location
   const authorities = getAuthority(pathname)
-  {{declareFunc .ModuleVal .ObjectVal}}
-  {{declareColumns .ModuleVal .ObjectVal}}
-  {{declareReturn .ModuleVal .ObjectVal}}
-}
-`
+{{declareFunc .ModuleVal .ObjectVal}}
+{{declareColumns .ModuleVal .ObjectVal}}
+{{declareReturn .ModuleVal .ObjectVal}}
+}`
 	factory.RegisterFunc("declareFunc", s.declareFunc)
 	factory.RegisterFunc("declareColumns", s.declareColumns)
 	factory.RegisterFunc("declareReturn", s.declareReturn)
@@ -270,7 +261,7 @@ const {{formatObjectValue .ObjectVal}}: FC<{{formatObjectName .ObjectVal}}Props>
 
 func (s *indexer) declareExport(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	exportDeclare := `
-export default connect(({ {{formatObjectValue .ObjectVal}} }: { {{formatObjectValue .ObjectVal}}: {{formatObjectName .ObjectVal}}ModelState }) => ({
+export default connect(({ {{- formatObjectValue .ObjectVal -}} }: { {{- formatObjectValue .ObjectVal}}: {{formatObjectName .ObjectVal}}ModelState,}) => ({
   {{formatObjectValue .ObjectVal}},
 }))({{formatObjectValue .ObjectVal}});`
 	factoryPtr := factory.NewMemoryFactor(exportDeclare)

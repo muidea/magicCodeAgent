@@ -56,10 +56,10 @@ const Create: React.FC<createProps> = (props) => {
   return (
     <DrawerForm
       title={title}
-      width="500px"
-      drawerProps={ {destroyOnClose: true,} }
+      width='500px'
+      drawerProps={{"{{destroyOnClose: true,}}"}}
       trigger={
-        <Button type="primary">
+        <Button type='primary'>
           <PlusOutlined/>
           {title}
         </Button>
@@ -70,36 +70,36 @@ const Create: React.FC<createProps> = (props) => {
         }
       }}
       onFinish={async (values) => {
-        onSubmitHandle("create", values)
+        onSubmitHandle('create', values)
         return true;
       }}
     >
       <ProForm.Group>
         <ProFormText
-          name="title"
-          label="标题"
-          width={"lg"}
-          placeholder="请输入标题"
+          name='title'
+          label='标题'
+          width={'lg'}
+          placeholder='请输入标题'
           rules={[{required: true, message: '请输入标题'}]}
         />
       </ProForm.Group>
       <ProForm.Group>
         <ProFormTextArea
-          name="content"
-          label="内容"
-          width={"lg"}
-          placeholder="请输入内容"
+          name='content'
+          label='内容'
+          width={'lg'}
+          placeholder='请输入内容'
           rules={[{required: true, message: '请输入内容'}]}
         />
       </ProForm.Group>
       <ProForm.Group>
         <ProFormSelect
-          name="tags"
-          label="标签"
-          width={"lg"}
-          placeholder="请输入标签"
-          mode="tags"
-          valueEnum={ {} }
+          name='tags'
+          label='标签'
+          width={'lg'}
+          placeholder='请输入标签'
+          mode='tags'
+          valueEnum={{"{{}}"}}
         />
       </ProForm.Group>
     </DrawerForm>

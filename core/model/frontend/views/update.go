@@ -17,7 +17,7 @@ func (s *updater) declareImport(ptr *parser.Package, objPtr *parser.Object) (ret
 	importDeclare := `import React from 'react';
 import {Button} from 'antd';
 import ProForm, {DrawerForm, ProFormSelect, ProFormText, ProFormTextArea} from '@ant-design/pro-form';
-import * as contentDef from "@/data/content";
+import * as contentDef from '@/data/content';
 `
 	factoryPtr := factory.NewMemoryFactor(importDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr, "ObjectVal": objPtr})
@@ -57,16 +57,16 @@ const Update: React.FC<updateProps> = (props) => {
   return (
     <DrawerForm
       title={title}
-      width="500px"
-      drawerProps={ {destroyOnClose: true,} }
-      trigger={<Button type="text" size={"small"}>{title}</Button>}
+      width='500px'
+      drawerProps={{"{{destroyOnClose: true,}}"}}
+      trigger={<Button type='text' size={'small'}>{title}</Button>}
       onVisibleChange={(visible)=>{
         if (!visible){
           return
         }
       }}
       onFinish={async (values) => {
-        onSubmitHandle("update", {
+        onSubmitHandle('update', {
           ...values,
           id: initialValue.id,
         })
@@ -75,33 +75,33 @@ const Update: React.FC<updateProps> = (props) => {
     >
       <ProForm.Group>
         <ProFormText
-          name="title"
-          label="标题"
-          width={"lg"}
-          placeholder="请输入标题"
+          name='title'
+          label='标题'
+          width={'lg'}
+          placeholder='请输入标题'
           initialValue={initialValue.title}
           rules={[{required: true, message: '请输入标题'}]}
         />
       </ProForm.Group>
       <ProForm.Group>
         <ProFormTextArea
-          name="content"
-          label="内容"
-          width={"lg"}
-          placeholder="请输入内容"
+          name='content'
+          label='内容'
+          width={'lg'}
+          placeholder='请输入内容'
           initialValue={initialValue.content}
           rules={[{required: true, message: '请输入内容'}]}
         />
       </ProForm.Group>
       <ProForm.Group>
         <ProFormSelect
-          mode="tags"
-          name="tags"
-          label="标签"
-          width={"lg"}
-          placeholder="请输入标签"
+          mode='tags'
+          name='tags'
+          label='标签'
+          width={'lg'}
+          placeholder='请输入标签'
           initialValue={initialValue?.tags?.length > 0? initialValue.tags:undefined}
-          valueEnum={ {} }
+          valueEnum={{"{{}}"}}
         />
       </ProForm.Group>
     </DrawerForm>
