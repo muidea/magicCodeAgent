@@ -2,12 +2,13 @@ package models
 
 import (
 	"fmt"
-	"github.com/muidea/magicToolkit/core/util"
 	"os"
 	"path"
 
 	log "github.com/cihub/seelog"
+
 	mu "github.com/muidea/magicToolkit/core/model/util"
+	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
 )
@@ -48,8 +49,9 @@ export interface {{formatObjectName .ObjectVal}}ModelState {
 }
 
 export interface {{formatObjectName .ObjectVal}}ModelType {
-  namespace: '{{formatObjectName .ObjectVal}}';
+  namespace: '{{formatObjectValue .ObjectVal}}';
   state: {{formatObjectName .ObjectVal}}ModelState;
+  subscriptions: { setup: Subscription };
   effects: {
     filter{{formatObjectName .ObjectVal}}: Effect;
     query{{formatObjectName .ObjectVal}}: Effect;
@@ -62,7 +64,6 @@ export interface {{formatObjectName .ObjectVal}}ModelType {
     save: Reducer<{{formatObjectName .ObjectVal}}ModelState>;
     clean: Reducer<{{formatObjectName .ObjectVal}}ModelState>;
   };
-  subscriptions: { setup: Subscription };
 }
 `
 	factoryPtr := factory.NewMemoryFactor(interfaceDeclare)
@@ -81,15 +82,15 @@ func (s *Models) declareSubscriptions(ptr *parser.Package, objPtr *parser.Object
   subscriptions: {
     setup({dispatch, history}) {
       return history.listen((location) => {
-		if (location.pathname === '/{{formatObjectActionName .ModuleVal .ObjectVal}}') {
-		  dispatch({
-			type: 'filter{{formatObjectName .ObjectVal}}',
-			payload: {
-			  value: {...defaultPagination},
-			}
-		  })
+        if (location.pathname === '/{{formatObjectActionValue .ModuleVal .ObjectVal}}') {
+          dispatch({
+            type: 'filter{{formatObjectName .ObjectVal}}',
+            payload: {
+              value: {...defaultPagination},
+            }
+          })
           return
-		}
+        }
       });
     }
   },`
@@ -111,7 +112,7 @@ func (s *Models) declareEffects(ptr *parser.Package, objPtr *parser.Object) (ret
       const data = yield call(api.filter{{formatObjectName .ObjectVal}})
       const {errorCode, reason} = data
       if (errorCode === 0) {
-        const { {{formatObjectValue .ObjectVal}} } = data
+        const { {{- formatObjectValue .ObjectVal -}} } = data
         yield put({
           type: 'save',
           payload: {
@@ -127,7 +128,7 @@ func (s *Models) declareEffects(ptr *parser.Package, objPtr *parser.Object) (ret
       const data = yield call(api.query{{formatObjectName .ObjectVal}}, {id: value.id})
       const {errorCode, reason} = data
       if (errorCode === 0) {
-        const { {{formatObjectValue .ObjectVal}} } = data
+        const { {{- formatObjectValue .ObjectVal -}} } = data
         yield put({
           type: 'save',
           payload: {
@@ -248,12 +249,12 @@ func (s *Models) declareReducers(ptr *parser.Package, objPtr *parser.Object) (re
 func (s *Models) declareObject(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	objectDeclare := `
 const {{formatObjectName .ObjectVal}}Model: {{formatObjectName .ObjectVal}}ModelType = {
-  namespace: '{{formatObjectName .ObjectVal}}',
+  namespace: '{{formatObjectValue .ObjectVal}}',
 
   state: {
     summaryList: [],
     itemSize: 0,
-  	{{formatObjectValue .ObjectVal}}List: [],
+    {{formatObjectValue .ObjectVal}}List: [],
   },
 {{declareSubscriptions .ModuleVal .ObjectVal}}
 {{declareEffects .ModuleVal .ObjectVal}}

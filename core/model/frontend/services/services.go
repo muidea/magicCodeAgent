@@ -2,12 +2,13 @@ package services
 
 import (
 	"fmt"
-	"github.com/muidea/magicToolkit/core/util"
 	"os"
 	"path"
 
 	log "github.com/cihub/seelog"
+
 	mu "github.com/muidea/magicToolkit/core/model/util"
+	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
 )
@@ -22,8 +23,7 @@ func New(rootPath, projectName string) *Services {
 }
 
 func (s *Services) declareImport(ptr *parser.Package, objPtr *parser.Object) (ret string) {
-	moduleDeclare := `
-import {genApi} from '@/utils';
+	moduleDeclare := `import {genApi} from '@/utils';
 `
 	factoryPtr := factory.NewMemoryFactor(moduleDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr, "ObjectVal": objPtr})
@@ -39,13 +39,14 @@ import {genApi} from '@/utils';
 
 func (s *Services) declareObject(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	objectDeclare := `
-const index :{[index:string]:string} = {
+const api :{[index:string]:string} = {
   filter{{formatObjectName .ObjectVal}}: 'GET /{{formatObjectActionValue .ModuleVal .ObjectVal}}/query/',
   query{{formatObjectName .ObjectVal}}: 'GET /{{formatObjectActionValue .ModuleVal .ObjectVal}}/query/:id',
   create{{formatObjectName .ObjectVal}}: 'POST /{{formatObjectActionValue .ModuleVal .ObjectVal}}/create/',
   update{{formatObjectName .ObjectVal}}: 'PUT /{{formatObjectActionValue .ModuleVal .ObjectVal}}/update/:id',
   delete{{formatObjectName .ObjectVal}}: 'DELETE /{{formatObjectActionValue .ModuleVal .ObjectVal}}/delete/:id',
-}`
+}
+`
 	factoryPtr := factory.NewMemoryFactor(objectDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr, "ObjectVal": objPtr})
 	if contentErr != nil {
@@ -60,8 +61,8 @@ const index :{[index:string]:string} = {
 func (s *Services) declareAPIFunction(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	moduleDeclare := `
 const APIFunction:{[index:string]:any} = {}
-Object.keys(index).forEach((key)=>{
-  APIFunction[key] = genApi(index[key])
+Object.keys(api).forEach((key)=>{
+  APIFunction[key] = genApi(api[key])
 })
 
 export default APIFunction
