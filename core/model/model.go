@@ -35,7 +35,13 @@ func (s *Model) Create(projectName string) (err error) {
 	factory.RegisterFunc("formatObjectActionValue", mu.FormatObjectActionValue)
 	factory.RegisterFunc("formatModulePath", mu.FormatModulePath)
 	factory.RegisterFunc("formatObjectJson", mu.FormatObjectJson)
+	factory.RegisterFunc("formatItemName", mu.FormatItemName)
+	factory.RegisterFunc("formatItemValue", mu.FormatItemValue)
+	factory.RegisterFunc("formatItemJson", mu.FormatItemJson)
 
+	defer factory.UnRegisterFunc("formatItemJson")
+	defer factory.UnRegisterFunc("formatItemValue")
+	defer factory.UnRegisterFunc("formatItemName")
 	defer factory.UnRegisterFunc("formatObjectJson")
 	defer factory.UnRegisterFunc("formatModulePath")
 	defer factory.UnRegisterFunc("formatObjectActionValue")

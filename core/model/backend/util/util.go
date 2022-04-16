@@ -1,32 +1,129 @@
 package util
 
 import (
-	"fmt"
 	log "github.com/cihub/seelog"
+	mu "github.com/muidea/magicToolkit/core/model/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
 )
 
-func DefineType(val *parser.Type) string {
-	if val.IsArray {
-		if val.IsPtr {
-			return fmt.Sprintf("[]*model.%s", val.Name)
+const (
+	BackQuote = "`"
+)
+
+func IsEntityItem(val *parser.Item) bool {
+	return mu.IsEntity(val.Type.Name)
+}
+
+func FormatItemType(val *parser.Item) string {
+	return val.Type.Name
+}
+
+func DeclareItem(val *parser.Item) string {
+	entityDeclare := `{{formatItemName .ItemVal}} *cc.EntityView {{.BackQuote}}json:"{{formatItemJson .ItemVal}}"{{.BackQuote}}`
+	arrayDeclare := `{{formatItemName .ItemVal}} []*{{formatItemType .ItemVal}}Lite {{.BackQuote}}json:"{{formatItemJson .ItemVal}}"{{.BackQuote}}`
+	itemDeclare := `{{formatItemName .ItemVal}} *{{formatItemType .ItemVal}}Lite {{.BackQuote}}json:"{{formatItemJson .ItemVal}}"{{.BackQuote}}`
+	simpleArrayDeclare := `{{formatItemName .ItemVal}} []{{formatItemType .ItemVal}} {{.BackQuote}}json:"{{formatItemJson .ItemVal}}"{{.BackQuote}}`
+	simpleDeclare := `{{formatItemName .ItemVal}} {{formatItemType .ItemVal}} {{.BackQuote}}json:"{{formatItemJson .ItemVal}}"{{.BackQuote}}`
+	if IsEntityItem(val) {
+		factoryPtr := factory.NewMemoryFactor(entityDeclare)
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val, "BackQuote": BackQuote})
+		if contentErr != nil {
+			log.Errorf("create content failed, err:%s", contentErr.Error())
+			return ""
 		}
-		return fmt.Sprintf("[]model.%s", val.Name)
+
+		return contentVal
+	}
+	if mu.IsComplex(val) {
+		if val.Type.IsArray {
+			factoryPtr := factory.NewMemoryFactor(arrayDeclare)
+			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val, "BackQuote": BackQuote})
+			if contentErr != nil {
+				log.Errorf("create content failed, err:%s", contentErr.Error())
+				return ""
+			}
+
+			return contentVal
+		}
+
+		factoryPtr := factory.NewMemoryFactor(itemDeclare)
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val, "BackQuote": BackQuote})
+		if contentErr != nil {
+			log.Errorf("create content failed, err:%s", contentErr.Error())
+			return ""
+		}
+
+		return contentVal
 	}
 
-	if val.IsPtr {
-		return fmt.Sprintf("&model.%s", val.Name)
+	if val.Type.IsArray {
+		factoryPtr := factory.NewMemoryFactor(simpleArrayDeclare)
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val, "BackQuote": BackQuote})
+		if contentErr != nil {
+			log.Errorf("create content failed, err:%s", contentErr.Error())
+			return ""
+		}
+
+		return contentVal
 	}
-	return fmt.Sprintf("model.%s", val.Name)
+
+	factoryPtr := factory.NewMemoryFactor(simpleDeclare)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val, "BackQuote": BackQuote})
+	if contentErr != nil {
+		log.Errorf("create content failed, err:%s", contentErr.Error())
+		return ""
+	}
+
+	return contentVal
 }
 
 func DefineItem(val *parser.Item) string {
-	//if val.IsPtr {
-	//	return fmt.Sprintf("%s: &%v{}", val.Name, DefineType(val.Type))
-	//}
+	arrayDeclare := `{{formatItemValue .ItemVal}} :=[]*{{formatItemType .ItemVal}}`
+	itemDeclare := `{{formatItemValue .ItemVal}} := &{{formatItemType .ItemVal}}`
+	simpleArrayDeclare := `{{formatItemValue .ItemVal}} := []{{formatItemType .ItemVal}}`
+	simpleDeclare := `{{formatItemValue .ItemVal}} := {{formatItemType .ItemVal}}`
+	if mu.IsComplex(val) {
+		if val.Type.IsArray {
+			factoryPtr := factory.NewMemoryFactor(arrayDeclare)
+			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
+			if contentErr != nil {
+				log.Errorf("create content failed, err:%s", contentErr.Error())
+				return ""
+			}
 
-	return fmt.Sprintf("%s: %v{}", val.Name, DefineType(val.Type))
+			return contentVal
+		}
+
+		factoryPtr := factory.NewMemoryFactor(itemDeclare)
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
+		if contentErr != nil {
+			log.Errorf("create content failed, err:%s", contentErr.Error())
+			return ""
+		}
+
+		return contentVal
+	}
+
+	if val.Type.IsArray {
+		factoryPtr := factory.NewMemoryFactor(simpleArrayDeclare)
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
+		if contentErr != nil {
+			log.Errorf("create content failed, err:%s", contentErr.Error())
+			return ""
+		}
+
+		return contentVal
+	}
+
+	factoryPtr := factory.NewMemoryFactor(simpleDeclare)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
+	if contentErr != nil {
+		log.Errorf("create content failed, err:%s", contentErr.Error())
+		return ""
+	}
+
+	return contentVal
 }
 
 func DefineObjectLite(ptr *parser.Object) (ret string) {

@@ -31,12 +31,16 @@ func (s *Backend) createModule(ptr *parser.Package) (ret *model.Module, err erro
 }
 
 func (s *Backend) Create(packagePtr *parser.Package) (err error) {
+	factory.RegisterFunc("formatItemType", bu.FormatItemType)
+	factory.RegisterFunc("declareItem", bu.DeclareItem)
 	factory.RegisterFunc("defineItem", bu.DefineItem)
 	factory.RegisterFunc("defineObject", bu.DefineObject)
 	factory.RegisterFunc("defineObjectLite", bu.DefineObjectLite)
 	defer factory.UnRegisterFunc("defineObjectLite")
 	defer factory.UnRegisterFunc("defineObject")
 	defer factory.UnRegisterFunc("defineItem")
+	defer factory.UnRegisterFunc("declareItem")
+	defer factory.UnRegisterFunc("formatItemType")
 
 	_, moduleErr := s.createModule(packagePtr)
 	if moduleErr != nil {

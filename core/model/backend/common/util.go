@@ -4,110 +4,23 @@ import (
 	"bytes"
 	log "github.com/cihub/seelog"
 	mu "github.com/muidea/magicToolkit/core/model/util"
-	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
 )
 
-const (
-	BackQuote = "`"
-)
-
 var liteMaxIndex = 2
 
-func DeclareItemView(val *parser.Item) string {
-	arrayDeclare := `{{.NameVal}} []*{{.TypeVal}}Lite {{.BackQuote}}json:"{{.JsonVal}}"{{.BackQuote}}
-`
-	itemDeclare := `{{.NameVal}} *{{.TypeVal}}Lite {{.BackQuote}}json:"{{.JsonVal}}"{{.BackQuote}}
-`
-	simpleArrayDeclare := `{{.NameVal}} []{{.TypeVal}} {{.BackQuote}}json:"{{.JsonVal}}"{{.BackQuote}}
-`
-	simpleDeclare := `{{.NameVal}} {{.TypeVal}} {{.BackQuote}}json:"{{.JsonVal}}"{{.BackQuote}}
-`
-	jsonVal := util.ToCamelCase(val.Name)
-	if mu.IsSpecial(val.Name) {
-		jsonVal = util.ToLower(jsonVal)
-	}
-	if mu.IsComplex(val) {
-		if val.Type.IsArray {
-			factoryPtr := factory.NewMemoryFactor(arrayDeclare)
-			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name, "JsonVal": jsonVal, "BackQuote": BackQuote})
-			if contentErr != nil {
-				log.Errorf("create content failed, err:%s", contentErr.Error())
-				return ""
-			}
-
-			return contentVal
-		}
-
-		factoryPtr := factory.NewMemoryFactor(itemDeclare)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name, "JsonVal": jsonVal, "BackQuote": BackQuote})
-		if contentErr != nil {
-			log.Errorf("create content failed, err:%s", contentErr.Error())
-			return ""
-		}
-
-		return contentVal
-	}
-
-	if val.Type.IsArray {
-		factoryPtr := factory.NewMemoryFactor(simpleArrayDeclare)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name, "JsonVal": jsonVal, "BackQuote": BackQuote})
-		if contentErr != nil {
-			log.Errorf("create content failed, err:%s", contentErr.Error())
-			return ""
-		}
-
-		return contentVal
-	}
-
-	factoryPtr := factory.NewMemoryFactor(simpleDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name, "JsonVal": jsonVal, "BackQuote": BackQuote})
-	if contentErr != nil {
-		log.Errorf("create content failed, err:%s", contentErr.Error())
-		return ""
-	}
-
-	return contentVal
-}
-
-func DeclareEntityView(val *parser.Item) string {
-	entityAssign := `{{.NameVal}}     *cc.EntityView {{.BackQuote}}json:"{{.JsonVal}}"{{.BackQuote}}
-`
-	jsonVal := util.ToCamelCase(val.Name)
-	if mu.IsSpecial(val.Name) {
-		jsonVal = util.ToLower(jsonVal)
-	}
-	factoryPtr := factory.NewMemoryFactor(entityAssign)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name, "JsonVal": jsonVal, "BackQuote": "`"})
-	if contentErr != nil {
-		log.Errorf("create content failed, err:%s", contentErr.Error())
-		return ""
-	}
-
-	return contentVal
-}
-
 func DeclareObjectView(ptr *parser.Object) (ret string) {
-	viewDefine := `
-type {{formatObjectName .ObjectVal}}View struct {
-	{{.ContentVal -}}
+	viewDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
+type {{formatObjectName $ObjectVal}}View struct {
+{{range .Items}}
+	{{declareItem .}}
+{{end}}
 }
+{{end}}
 `
-	byteBuff := bytes.Buffer{}
-	for _, val := range ptr.Items {
-		if mu.IsReserved(val.Name) {
-			continue
-		}
-		if mu.IsEntity(val.Name) {
-			byteBuff.WriteString(DeclareEntityView(val))
-			continue
-		}
-		byteBuff.WriteString(DeclareItemView(val))
-	}
-
 	factoryPtr := factory.NewMemoryFactor(viewDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String()})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -117,28 +30,16 @@ type {{formatObjectName .ObjectVal}}View struct {
 }
 
 func DeclareObjectLite(ptr *parser.Object) (ret string) {
-	liteDefine := `
-type {{formatObjectName .ObjectVal}}Lite struct {
-	{{.ContentVal -}}
+	liteDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
+type {{formatObjectName $ObjectVal}}Lite struct {
+{{range .Items}}
+	{{declareItem .}}
+{{end}}
 }
+{{end}}
 `
-	byteBuff := bytes.Buffer{}
-	for idx, val := range ptr.Items {
-		if mu.IsReserved(val.Name) {
-			continue
-		}
-		if mu.IsEntity(val.Name) {
-			byteBuff.WriteString(DeclareEntityView(val))
-			continue
-		}
-		byteBuff.WriteString(DeclareItemView(val))
-
-		if idx >= liteMaxIndex {
-			break
-		}
-	}
 	factoryPtr := factory.NewMemoryFactor(liteDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String()})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -148,30 +49,16 @@ type {{formatObjectName .ObjectVal}}Lite struct {
 }
 
 func DeclareObjectParam(ptr *parser.Object) (ret string) {
-	liteDefine := `
-type {{formatObjectName .ObjectVal}}Param struct {
-	{{.ContentVal -}}
+	paramDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
+type {{formatObjectName $ObjectVal}}Param struct {
+{{range .Items}}
+	{{declareItem .}}
+{{end}}
 }
+{{end}}
 `
-	byteBuff := bytes.Buffer{}
-	for _, val := range ptr.Items {
-		if mu.IsID(val.Name) {
-			continue
-		}
-		if mu.IsReserved(val.Name) {
-			continue
-		}
-		if mu.IsTimeStamp(val.Name) {
-			continue
-		}
-		if mu.IsEntity(val.Name) {
-			continue
-		}
-
-		byteBuff.WriteString(DeclareItemView(val))
-	}
-	factoryPtr := factory.NewMemoryFactor(liteDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String()})
+	factoryPtr := factory.NewMemoryFactor(paramDefine)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""

@@ -6,10 +6,10 @@ import (
 	"github.com/muidea/magicToolkit/parser"
 )
 
-var reserved = []string{"Namespace"}
+var reservedItem = []string{"Namespace"}
 var entityItem = []string{"Creater", "Updater"}
-var timeStamp = []string{"UpdateTime", "CreateTime", "DateTime"}
 var specialItem = []string{"ID", "URL", "SKU", "SN", "WeChat"}
+var timeStamp = []string{"UpdateTime", "CreateTime", "DateTime"}
 var innerFileName = []string{
 	"common.go",
 	"log.go",
@@ -41,7 +41,7 @@ func IsBoolean(val string) bool {
 }
 
 func IsReserved(val string) bool {
-	for _, sv := range reserved {
+	for _, sv := range reservedItem {
 		if sv == val {
 			return true
 		}
@@ -142,7 +142,7 @@ func FormatObjectValue(ptr *parser.Object) string {
 }
 
 func FormatObjectJson(ptr *parser.Object) string {
-	val := util.ToCamelCase(FormatObjectName(ptr))
+	val := util.ToCamelCase(ptr.Name)
 	return val
 }
 
@@ -164,4 +164,21 @@ func FormatObjectActionValue(modulePtr *parser.Package, ptr *parser.Object) (ret
 	}
 
 	return util.ToLower(val)
+}
+
+func FormatItemName(ptr *parser.Item) string {
+	return ptr.Name
+}
+
+func FormatItemValue(ptr *parser.Item) string {
+	val := util.ToCamelCase(ptr.Name)
+	return val
+}
+
+func FormatItemJson(ptr *parser.Item) string {
+	val := util.ToCamelCase(ptr.Name)
+	if IsSpecial(ptr.Name) {
+		val = util.ToLower(val)
+	}
+	return val
 }
