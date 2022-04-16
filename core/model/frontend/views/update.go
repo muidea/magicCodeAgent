@@ -79,8 +79,8 @@ const Update: React.FC<updateProps> = (props) => {
           label='标题'
           width={'lg'}
           placeholder='请输入标题'
-          initialValue={initialValue.title}
           rules={[{required: true, message: '请输入标题'}]}
+          initialValue={initialValue.title}
         />
       </ProForm.Group>
       <ProForm.Group>
@@ -89,8 +89,8 @@ const Update: React.FC<updateProps> = (props) => {
           label='内容'
           width={'lg'}
           placeholder='请输入内容'
-          initialValue={initialValue.content}
           rules={[{required: true, message: '请输入内容'}]}
+          initialValue={initialValue.content}
         />
       </ProForm.Group>
       <ProForm.Group>
@@ -100,8 +100,8 @@ const Update: React.FC<updateProps> = (props) => {
           label='标签'
           width={'lg'}
           placeholder='请输入标签'
-          initialValue={initialValue?.tags?.length > 0? initialValue.tags:undefined}
           valueEnum={{"{{}}"}}
+          initialValue={initialValue?.tags}
         />
       </ProForm.Group>
     </DrawerForm>

@@ -15,18 +15,19 @@ type indexer struct {
 
 func (s *indexer) declareImport(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	importDeclare := `import React, {FC, useState} from 'react';
-import { {{- formatObjectName .ObjectVal}}ModelState, connect, ConnectProps, Dispatch} from "umi";
+import { {{- formatObjectName .ObjectVal}}ModelState, connect, ConnectProps, Dispatch} from 'umi';
 import {Button, Divider, Popconfirm} from 'antd';
-import {SearchOutlined} from "@ant-design/icons";
+import {SearchOutlined} from '@ant-design/icons';
 import {PageContainer} from '@ant-design/pro-layout';
 import ProTable, {ProColumns} from '@ant-design/pro-table';
 import {formatTimeStamp, getAuthority, verifyAuthority, verifyOptions} from '@/utils';
-import {InputFilter, OptionsFilter} from "@/components";
-import {TotalizerSummary, ValueInfo} from "@/pages/components"
-import * as contentDef from "@/data/content";
-import * as baseDef from "@/data/base";
-import Create from "./create";
-import Update from "./update";
+import {InputFilter, OptionsFilter} from '@/components';
+import {TotalizerSummary, ValueInfo} from '@/pages/components';
+import {defaultPagination} from '@/data';
+import * as contentDef from '@/data/content';
+import * as baseDef from '@/data/base';
+import Create from './create';
+import Update from './update';
 `
 	factoryPtr := factory.NewMemoryFactor(importDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr, "ObjectVal": objPtr})
@@ -207,8 +208,8 @@ func (s *indexer) declareReturn(ptr *parser.Package, objPtr *parser.Object) (ret
     >
       <ProTable<contentDef.{{formatObjectName .ObjectVal}}>
         cardProps={{"{{bodyStyle: {padding: 0},}}"}}
-        size={"small"}
-        rowKey={"id"}
+        size={'small'}
+        rowKey={'id'}
         columns={columns}
         pagination={{"{{showSizeChanger: false, ...currentPagination, total: itemSize}}"}}
         search={false}
@@ -233,11 +234,10 @@ func (s *indexer) declareObject(ptr *parser.Package, objPtr *parser.Object) (ret
 	objectDeclare := `
 const {{formatObjectValue .ObjectVal}}: FC<{{formatObjectName .ObjectVal}}Props> = ({ {{- formatObjectValue .ObjectVal}},dispatch, location, children}) => {
   const [currentFilter, setCurrentFilter] = useState<any>({})
-  const [currentPagination, setCurrentPagination] = useState<any>({current: 1, pageSize: 20})
+  const [currentPagination, setCurrentPagination] = useState<any>({current: defaultPagination.pageNum, pageSize: defaultPagination.pageSize})
 
   const {summaryList, itemSize, {{formatObjectValue .ObjectVal}}List} = {{formatObjectValue .ObjectVal}}
-  const {pathname} = location
-  const authorities = getAuthority(pathname)
+  const authorities = getAuthority(location.pathname)
 {{declareFunc .ModuleVal .ObjectVal}}
 {{declareColumns .ModuleVal .ObjectVal}}
 {{declareReturn .ModuleVal .ObjectVal}}

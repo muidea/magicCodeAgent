@@ -112,11 +112,10 @@ func (s *Models) declareEffects(ptr *parser.Package, objPtr *parser.Object) (ret
       const data = yield call(api.filter{{formatObjectName .ObjectVal}})
       const {errorCode, reason} = data
       if (errorCode === 0) {
-        const { {{- formatObjectValue .ObjectVal -}} } = data
         yield put({
           type: 'save',
           payload: {
-            {{formatObjectValue .ObjectVal}}List: {{formatObjectValue .ObjectVal}},
+            {{formatObjectValue .ObjectVal}}List: data?.{{formatObjectValue .ObjectVal}},
           },
         });
         return
@@ -128,11 +127,10 @@ func (s *Models) declareEffects(ptr *parser.Package, objPtr *parser.Object) (ret
       const data = yield call(api.query{{formatObjectName .ObjectVal}}, {id: value.id})
       const {errorCode, reason} = data
       if (errorCode === 0) {
-        const { {{- formatObjectValue .ObjectVal -}} } = data
         yield put({
           type: 'save',
           payload: {
-            current{{formatObjectName .ObjectVal}}: {{formatObjectValue .ObjectVal}},
+            current{{formatObjectName .ObjectVal}}: data?.{{formatObjectValue .ObjectVal}},
           },
         });
         return
@@ -223,14 +221,14 @@ func (s *Models) declareReducers(ptr *parser.Package, objPtr *parser.Object) (re
     save(state, action) {
       return {
         ...state,
-        ...action.payload,
+        ...action?.payload,
       };
     },
 
     clean(state, action) {
       return {
         ...state,
-        ...action.payload,
+        ...action?.payload,
       };
     },
   },

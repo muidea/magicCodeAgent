@@ -18,6 +18,7 @@ func (s *creater) declareImport(ptr *parser.Package, objPtr *parser.Object) (ret
 import {Button} from 'antd';
 import ProForm, {DrawerForm, ProFormSelect, ProFormText, ProFormTextArea,} from '@ant-design/pro-form';
 import {PlusOutlined} from '@ant-design/icons';
+import * as contentDef from '@/data/content';
 `
 	factoryPtr := factory.NewMemoryFactor(importDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr, "ObjectVal": objPtr})
@@ -34,6 +35,7 @@ func (s *creater) declareInterface(ptr *parser.Package, objPtr *parser.Object) (
 	interfaceDeclare := `
 interface createProps {
   title: string;
+  initialValue?: contentDef.{{formatObjectName .ObjectVal}};
   onSubmitHandle: (action: string, value: any) => void;
 }
 `
@@ -51,7 +53,7 @@ interface createProps {
 func (s *creater) declareObject(ptr *parser.Package, objPtr *parser.Object) (ret string) {
 	objectDeclare := `
 const Create: React.FC<createProps> = (props) => {
-  const {title, onSubmitHandle} = props;
+  const {title, initialValue, onSubmitHandle} = props;
 
   return (
     <DrawerForm
@@ -81,6 +83,7 @@ const Create: React.FC<createProps> = (props) => {
           width={'lg'}
           placeholder='请输入标题'
           rules={[{required: true, message: '请输入标题'}]}
+          initialValue={initialValue?.title}
         />
       </ProForm.Group>
       <ProForm.Group>
@@ -90,6 +93,7 @@ const Create: React.FC<createProps> = (props) => {
           width={'lg'}
           placeholder='请输入内容'
           rules={[{required: true, message: '请输入内容'}]}
+          initialValue={initialValue?.content}
         />
       </ProForm.Group>
       <ProForm.Group>
@@ -100,6 +104,7 @@ const Create: React.FC<createProps> = (props) => {
           placeholder='请输入标签'
           mode='tags'
           valueEnum={{"{{}}"}}
+          initialValue={initialValue?.tags}
         />
       </ProForm.Group>
     </DrawerForm>
