@@ -72,15 +72,14 @@ const {{formatModuleName .ModuleVal}}Module = "/module/{{formatModulePath .Modul
 func (s *Common) declareAction(ptr *parser.Package) (ret string) {
 	actionDeclare := `{{$ModuleVal := .ModuleVal}}
 const ({{with .ModuleVal}}
-{{range .Objects}}
+{{- range .Objects}}
 	Filter{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/query/"
 	Query{{formatObjectActionName $ModuleVal .}}  = "/{{formatObjectActionValue $ModuleVal .}}/query/:id"
 	Create{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/create/"
 	Update{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/update/:id"
 	Delete{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/delete/:id"
 	Notify{{formatObjectActionName $ModuleVal .}} = "/{{formatObjectActionValue $ModuleVal .}}/notify/:id"
-{{end}}{{end}}
-)`
+{{end}}{{end}})`
 	factoryPtr := factory.NewMemoryFactor(actionDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr})
 	if contentErr != nil {
@@ -94,20 +93,15 @@ const ({{with .ModuleVal}}
 
 func (s *Common) declareMessage(ptr *parser.Package) (ret string) {
 	messageDeclare := `{{$BackQuote := .BackQuote}}{{$ModuleVal := .ModuleVal}}{{with $ModuleVal}}
-{{range .Objects}}
-
-{{declareObjectView .}}
-
-{{declareObjectViewAssign .}}
-
-{{declareObjectLite .}}
-
-{{declareObjectLiteAssign .}}
-
-{{declareObjectParam .}}
-
-{{declareObjectParamAssign .}}
-
+{{range .Objects }}
+{{- declareObjectView .}}
+{{- declareObjectViewAssign .}}
+{{- declareObjectLite .}}
+{{- declareObjectLiteAssign .}}
+{{- declareObjectLiteFrom .}}
+{{- declareObjectLiteTo .}}
+{{- declareObjectParam .}}
+{{- declareObjectParamAssign .}}
 type {{formatObjectName .}}Result struct {
 	cd.Result
 	{{formatObjectName .}} *{{formatObjectName .}}View {{$BackQuote}}json:"{{formatObjectJson .}}"{{$BackQuote}}
@@ -131,19 +125,29 @@ type {{formatObjectName .}}StatisticResult struct {
 }
 {{end}}{{end}}
 `
+	factory.RegisterFunc("declareItemAssign", DeclareItemAssign)
+	factory.RegisterFunc("declareItemFrom", DeclareItemFrom)
+	factory.RegisterFunc("declareItemTo", DeclareItemTo)
 	factory.RegisterFunc("declareObjectView", DeclareObjectView)
 	factory.RegisterFunc("declareObjectViewAssign", DeclareObjectViewAssign)
 	factory.RegisterFunc("declareObjectLite", DeclareObjectLite)
 	factory.RegisterFunc("declareObjectLiteAssign", DeclareObjectLiteAssign)
+	factory.RegisterFunc("declareObjectLiteFrom", DeclareObjectLiteFrom)
+	factory.RegisterFunc("declareObjectLiteTo", DeclareObjectLiteTo)
 	factory.RegisterFunc("declareObjectParam", DeclareObjectParam)
-	factory.RegisterFunc("declareObjectParamAssign", DeclareObjectParamAssign)
+	factory.RegisterFunc("declareObjectParamAssign", DeclareObjectParamTo)
 
-	defer factory.UnRegisterFunc("declareObjectParam")
 	defer factory.UnRegisterFunc("declareObjectParamAssign")
-	defer factory.UnRegisterFunc("declareObjectLite")
+	defer factory.UnRegisterFunc("declareObjectParam")
+	defer factory.UnRegisterFunc("declareObjectLiteTo")
+	defer factory.UnRegisterFunc("declareObjectLiteFrom")
 	defer factory.UnRegisterFunc("declareObjectLiteAssign")
+	defer factory.UnRegisterFunc("declareObjectLite")
 	defer factory.UnRegisterFunc("declareObjectView")
 	defer factory.UnRegisterFunc("declareObjectViewAssign")
+	defer factory.UnRegisterFunc("declareItemTo")
+	defer factory.UnRegisterFunc("declareItemFrom")
+	defer factory.UnRegisterFunc("declareItemAssign")
 
 	factoryPtr := factory.NewMemoryFactor(messageDeclare)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": ptr, "BackQuote": "`"})

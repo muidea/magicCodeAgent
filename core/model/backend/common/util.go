@@ -1,23 +1,20 @@
 package common
 
 import (
-	"bytes"
 	log "github.com/cihub/seelog"
+	"github.com/muidea/magicToolkit/core/model/backend/util"
 	mu "github.com/muidea/magicToolkit/core/model/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
 )
 
-var liteMaxIndex = 2
-
 func DeclareObjectView(ptr *parser.Object) (ret string) {
 	viewDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
 type {{formatObjectName $ObjectVal}}View struct {
-{{range .Items}}
+{{- range .Items}}
 	{{declareItem .}}
-{{end}}
-}
-{{end}}
+{{- end}}
+}{{end}}
 `
 	factoryPtr := factory.NewMemoryFactor(viewDefine)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
@@ -32,11 +29,10 @@ type {{formatObjectName $ObjectVal}}View struct {
 func DeclareObjectLite(ptr *parser.Object) (ret string) {
 	liteDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
 type {{formatObjectName $ObjectVal}}Lite struct {
-{{range .Items}}
+{{- range .Items}}
 	{{declareItem .}}
-{{end}}
-}
-{{end}}
+{{- end}}
+}{{end}}
 `
 	factoryPtr := factory.NewMemoryFactor(liteDefine)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
@@ -51,11 +47,10 @@ type {{formatObjectName $ObjectVal}}Lite struct {
 func DeclareObjectParam(ptr *parser.Object) (ret string) {
 	paramDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
 type {{formatObjectName $ObjectVal}}Param struct {
-{{range .Items}}
+{{- range .Items}}
 	{{declareItem .}}
-{{end}}
-}
-{{end}}
+{{- end}}
+}{{end}}
 `
 	factoryPtr := factory.NewMemoryFactor(paramDefine)
 	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
@@ -67,34 +62,41 @@ type {{formatObjectName $ObjectVal}}Param struct {
 	return contentVal
 }
 
-func DeclareItemViewAssign(val *parser.Item) string {
-	arrayPtrAssign := `for _, val := range ptr.{{.NameVal}} {
-		lite := &{{.TypeVal}}Lite{}
-		lite.From{{.TypeVal}}(val)
-		s.{{.NameVal}} = append(s.{{.NameVal}}, lite)
+func DeclareItemAssign(val *parser.Item) string {
+	entityAssign := `s.{{formatItemName .ItemVal}} = entityPtr`
+	arrayPtrAssign := `for _, val := range ptr.{{formatItemName .ItemVal}} {
+		lite := &{{formatItemType .ItemVal}}Lite{}
+		lite.From{{formatItemType .ItemVal}}(val)
+		s.{{formatItemName .ItemVal}} = append(s.{{formatItemName .ItemVal}}, lite)
+	}`
+	arrayAssign := `for _, val := range ptr.{{formatItemName .ItemVal}} {
+		lite := &{{formatItemType .ItemVal}}Lite{}
+		lite.From{{formatItemType .ItemVal}}(&val)
+		s.{{formatItemName .ItemVal}} = append(s.{{formatItemName .ItemVal}}, lite)
+	}`
+	itemPtrAssign := `if ptr.{{formatItemName .ItemVal}} != nil {
+		s.{{formatItemName .ItemVal}} = &{{formatItemType .ItemVal}}Lite{}
+		s.{{formatItemName .ItemVal}}.From{{formatItemType .ItemVal}}(ptr.{{formatItemName .ItemVal}})
+	}`
+	itemAssign := `s.{{formatItemName .ItemVal}} = &{{formatItemType .ItemVal}}Lite{}
+	s.{{formatItemName .ItemVal}}.From{{formatItemType .ItemVal}}(&ptr.{{formatItemName .ItemVal}})`
+	simpleAssign := `s.{{formatItemName .ItemVal}} = ptr.{{formatItemName .ItemVal}}`
+
+	if util.IsEntityItem(val) {
+		factoryPtr := factory.NewMemoryFactor(entityAssign)
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
+		if contentErr != nil {
+			log.Errorf("create content failed, err:%s", contentErr.Error())
+			return ""
+		}
+
+		return contentVal
 	}
-`
-	arrayAssign := `for _, val := range ptr.{{.NameVal}} {
-		lite := &{{.TypeVal}}Lite{}
-		lite.From{{.TypeVal}}(&val)
-		s.{{.NameVal}} = append(s.{{.NameVal}}, lite)
-	}
-`
-	itemPtrAssign := `if ptr.{{.NameVal}} != nil {
-		s.{{.NameVal}} = &{{.TypeVal}}Lite{}
-		s.{{.NameVal}}.From{{.TypeVal}}(ptr.{{.NameVal}})
-	}
-`
-	itemAssign := `s.{{.NameVal}} = &{{.TypeVal}}Lite{}
-	s.{{.NameVal}}.From{{.TypeVal}}(&ptr.{{.NameVal}})
-`
-	simpleAssign := `s.{{.NameVal}} = ptr.{{.NameVal}}
-`
 	if mu.IsComplex(val) {
 		if val.Type.IsPtr {
 			if val.Type.IsArray {
 				factoryPtr := factory.NewMemoryFactor(arrayPtrAssign)
-				contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+				contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 				if contentErr != nil {
 					log.Errorf("create content failed, err:%s", contentErr.Error())
 					return ""
@@ -104,7 +106,7 @@ func DeclareItemViewAssign(val *parser.Item) string {
 			}
 
 			factoryPtr := factory.NewMemoryFactor(itemPtrAssign)
-			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 			if contentErr != nil {
 				log.Errorf("create content failed, err:%s", contentErr.Error())
 				return ""
@@ -115,7 +117,7 @@ func DeclareItemViewAssign(val *parser.Item) string {
 
 		if val.Type.IsArray {
 			factoryPtr := factory.NewMemoryFactor(arrayAssign)
-			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 			if contentErr != nil {
 				log.Errorf("create content failed, err:%s", contentErr.Error())
 				return ""
@@ -125,7 +127,7 @@ func DeclareItemViewAssign(val *parser.Item) string {
 		}
 
 		factoryPtr := factory.NewMemoryFactor(itemAssign)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 		if contentErr != nil {
 			log.Errorf("create content failed, err:%s", contentErr.Error())
 			return ""
@@ -135,7 +137,7 @@ func DeclareItemViewAssign(val *parser.Item) string {
 	}
 
 	factoryPtr := factory.NewMemoryFactor(simpleAssign)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -144,11 +146,10 @@ func DeclareItemViewAssign(val *parser.Item) string {
 	return contentVal
 }
 
-func DeclareItemLiteAssign(val *parser.Item) string {
-	simpleAssign := `s.{{.NameVal}} = ptr.{{.NameVal}}
-`
-	factoryPtr := factory.NewMemoryFactor(simpleAssign)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+func DeclareItemFrom(val *parser.Item) string {
+	entityAssign := `s.{{formatItemName .ItemVal}} = ptr.{{formatItemName .ItemVal}}`
+	factoryPtr := factory.NewMemoryFactor(entityAssign)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -157,51 +158,43 @@ func DeclareItemLiteAssign(val *parser.Item) string {
 	return contentVal
 }
 
-func DeclareItemLiteTo(val *parser.Item) string {
-	arrayPtrAssign := `if len(s.{{.NameVal}}) > 0 {
-		ptr.{{.NameVal}} = []*model.{{.TypeVal}}{}
-		for _, val := range s.{{.NameVal}} {
-			ptr.{{.NameVal}} = append(ptr.{{.NameVal}}, val.To{{.TypeVal}}())
+func DeclareItemTo(val *parser.Item) string {
+	arrayPtrAssign := `if len(s.{{formatItemName .ItemVal}}) > 0 {
+		ptr.{{formatItemName .ItemVal}} = []*model.{{formatItemType .ItemVal}}{}
+		for _, val := range s.{{formatItemName .ItemVal}} {
+			ptr.{{formatItemName .ItemVal}} = append(ptr.{{formatItemName .ItemVal}}, val.To{{formatItemType .ItemVal}}())
 		}
-	}
-`
-	arrayAssign := `if len(s.{{.NameVal}}) > 0 {
-		ptr.{{.NameVal}} = []model.{{.TypeVal}}{}
-		for _, val := range s.{{.NameVal}} {
-			ptr.{{.NameVal}} = append(ptr.{{.NameVal}}, *val.To{{.TypeVal}}())
+	}`
+	arrayAssign := `if len(s.{{formatItemName .ItemVal}}) > 0 {
+		ptr.{{formatItemName .ItemVal}} = []model.{{formatItemType .ItemVal}}{}
+		for _, val := range s.{{formatItemName .ItemVal}} {
+			ptr.{{formatItemName .ItemVal}} = append(ptr.{{formatItemName .ItemVal}}, *val.To{{formatItemType .ItemVal}}())
 		}
-	}
-`
-	itemPtrAssign := `if s.{{.NameVal}} != nil {
-		ptr.{{.NameVal}} = s.{{.NameVal}}.To{{.TypeVal}}()
-	}
-`
-	itemAssign := `if s.{{.NameVal}} != nil {
-		ptr.{{.NameVal}} = *s.{{.NameVal}}.To{{.TypeVal}}()
-	}
-`
-	simpleNumAssign := `if s.{{.NameVal}} != 0 { 
-		ptr.{{.NameVal}} = s.{{.NameVal}}
-	}
-`
-	simpleStringAssign := `if s.{{.NameVal}} != "" { 
-		ptr.{{.NameVal}} = s.{{.NameVal}}
-	}
-`
-	simpleBooleanAssign := `if s.{{.NameVal}} { 
-		ptr.{{.NameVal}} = s.{{.NameVal}}
-	}
-`
-	simpleArrayAssign := `if len(s.{{.NameVal}}) > 0 { 
-		ptr.{{.NameVal}} = s.{{.NameVal}}
-	}
-`
+	}`
+	itemPtrAssign := `if s.{{formatItemName .ItemVal}} != nil {
+		ptr.{{formatItemName .ItemVal}} = s.{{formatItemName .ItemVal}}.To{{formatItemType .ItemVal}}()
+	}`
+	itemAssign := `if s.{{formatItemName .ItemVal}} != nil {
+		ptr.{{formatItemName .ItemVal}} = *s.{{formatItemName .ItemVal}}.To{{formatItemType .ItemVal}}()
+	}`
+	simpleNumAssign := `if s.{{formatItemName .ItemVal}} != 0 { 
+		ptr.{{formatItemName .ItemVal}} = s.{{formatItemName .ItemVal}}
+	}`
+	simpleStringAssign := `if s.{{formatItemName .ItemVal}} != "" { 
+		ptr.{{formatItemName .ItemVal}} = s.{{formatItemName .ItemVal}}
+	}`
+	simpleBooleanAssign := `if s.{{formatItemName .ItemVal}} { 
+		ptr.{{formatItemName .ItemVal}} = s.{{formatItemName .ItemVal}}
+	}`
+	simpleArrayAssign := `if len(s.{{formatItemName .ItemVal}}) > 0 { 
+		ptr.{{formatItemName .ItemVal}} = s.{{formatItemName .ItemVal}}
+	}`
 
 	if mu.IsComplex(val) {
 		if val.Type.IsPtr {
 			if val.Type.IsArray {
 				factoryPtr := factory.NewMemoryFactor(arrayPtrAssign)
-				contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+				contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 				if contentErr != nil {
 					log.Errorf("create content failed, err:%s", contentErr.Error())
 					return ""
@@ -211,7 +204,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 			}
 
 			factoryPtr := factory.NewMemoryFactor(itemPtrAssign)
-			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 			if contentErr != nil {
 				log.Errorf("create content failed, err:%s", contentErr.Error())
 				return ""
@@ -222,7 +215,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 
 		if val.Type.IsArray {
 			factoryPtr := factory.NewMemoryFactor(arrayAssign)
-			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 			if contentErr != nil {
 				log.Errorf("create content failed, err:%s", contentErr.Error())
 				return ""
@@ -232,7 +225,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 		}
 
 		factoryPtr := factory.NewMemoryFactor(itemAssign)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 		if contentErr != nil {
 			log.Errorf("create content failed, err:%s", contentErr.Error())
 			return ""
@@ -243,7 +236,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 
 	if val.Type.IsArray {
 		factoryPtr := factory.NewMemoryFactor(simpleArrayAssign)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 		if contentErr != nil {
 			log.Errorf("create content failed, err:%s", contentErr.Error())
 			return ""
@@ -253,7 +246,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 	}
 	if mu.IsNumber(val.Type.Name) {
 		factoryPtr := factory.NewMemoryFactor(simpleNumAssign)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 		if contentErr != nil {
 			log.Errorf("create content failed, err:%s", contentErr.Error())
 			return ""
@@ -263,7 +256,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 	}
 	if mu.IsString(val.Type.Name) {
 		factoryPtr := factory.NewMemoryFactor(simpleStringAssign)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 		if contentErr != nil {
 			log.Errorf("create content failed, err:%s", contentErr.Error())
 			return ""
@@ -274,7 +267,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 
 	if mu.IsBoolean(val.Type.Name) {
 		factoryPtr := factory.NewMemoryFactor(simpleBooleanAssign)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 		if contentErr != nil {
 			log.Errorf("create content failed, err:%s", contentErr.Error())
 			return ""
@@ -284,20 +277,7 @@ func DeclareItemLiteTo(val *parser.Item) string {
 	}
 
 	factoryPtr := factory.NewMemoryFactor(simpleNumAssign)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
-	if contentErr != nil {
-		log.Errorf("create content failed, err:%s", contentErr.Error())
-		return ""
-	}
-
-	return contentVal
-}
-
-func DeclareEntityViewAssign(val *parser.Item) string {
-	entityAssign := `s.{{.NameVal}} = entityPtr
-`
-	factoryPtr := factory.NewMemoryFactor(entityAssign)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"NameVal": val.Name, "TypeVal": val.Type.Name})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -307,33 +287,25 @@ func DeclareEntityViewAssign(val *parser.Item) string {
 }
 
 func DeclareObjectViewAssign(ptr *parser.Object) (ret string) {
-	viewDefine := `
-{{- if .HasEntity -}}
-func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}, entityPtr *cc.EntityView) {
-{{- else -}}
-func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) {
+	viewDefine := `{{$ObjectVal := .ObjectVal}}
+{{if .HasEntity}}
+func (s *{{formatObjectName $ObjectVal}}View) From{{formatObjectName $ObjectVal}}(ptr *model.{{formatObjectName $ObjectVal}}, entityPtr *cc.EntityView) {
+{{- else}}
+func (s *{{formatObjectName $ObjectVal}}View) From{{formatObjectName $ObjectVal}}(ptr *model.{{formatObjectName $ObjectVal}}) {
 {{- end}}
 	if ptr == nil {
 		return
 	}
-	{{.ContentVal -}}
+{{- with $ObjectVal}}
+{{range .Items}}
+	{{declareItemAssign .}}
+{{- end}}
+{{end}}
 	return
 }
 `
-	byteBuff := bytes.Buffer{}
-	for _, val := range ptr.Items {
-		if mu.IsReserved(val.Name) {
-			continue
-		}
-		if mu.IsEntity(val.Name) {
-			byteBuff.WriteString(DeclareEntityViewAssign(val))
-			continue
-		}
-		byteBuff.WriteString(DeclareItemViewAssign(val))
-	}
-
 	factoryPtr := factory.NewMemoryFactor(viewDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String(), "HasEntity": mu.HasEntity(ptr)})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -343,83 +315,25 @@ func (s *{{formatObjectName .ObjectVal}}View) From{{formatObjectName .ObjectVal}
 }
 
 func DeclareObjectLiteAssign(ptr *parser.Object) (ret string) {
-	liteDefine := `
-func (s *{{formatObjectName .ObjectVal}}Lite) From{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) {
+	liteDefine := `{{$ObjectVal := .ObjectVal}}
+{{if .HasEntity}}
+func (s *{{formatObjectName $ObjectVal}}Lite) From{{formatObjectName $ObjectVal}}(ptr *model.{{formatObjectName $ObjectVal}}, entityPtr *cc.EntityView) {
+{{- else}}
+func (s *{{formatObjectName $ObjectVal}}Lite) From{{formatObjectName $ObjectVal}}(ptr *model.{{formatObjectName $ObjectVal}}) {
+{{- end}}
 	if ptr == nil {
 		return
 	}
-	{{.ObjectAssignVal -}}
-	return
-}
-
-func (s *{{formatObjectName .ObjectVal}}Lite) FromView(ptr *{{formatObjectName .ObjectVal}}View) {
-	if ptr == nil {
-		return
-	}
-	{{.ViewAssignVal -}}
-	return
-}
-
-func (s *{{formatObjectName .ObjectVal}}Lite) To{{formatObjectName .ObjectVal}}() (ret *model.{{formatObjectName .ObjectVal}}) {
-	ptr := &{{defineObjectLite .ObjectVal}}
-	{{.ObjectToVal -}}
-	ret = ptr
+{{- with $ObjectVal}}
+{{range .Items}}
+	{{declareItemAssign .}}
+{{- end}}
+{{end}}
 	return
 }
 `
-	objectAssign := bytes.Buffer{}
-	for idx, val := range ptr.Items {
-		if mu.IsReserved(val.Name) {
-			continue
-		}
-		if mu.IsEntity(val.Name) {
-			continue
-		}
-		objectAssign.WriteString(DeclareItemViewAssign(val))
-
-		if idx >= liteMaxIndex {
-			break
-		}
-	}
-	viewAssign := bytes.Buffer{}
-	for idx, val := range ptr.Items {
-		if mu.IsReserved(val.Name) {
-			continue
-		}
-		if mu.IsEntity(val.Name) {
-			continue
-		}
-		viewAssign.WriteString(DeclareItemLiteAssign(val))
-
-		if idx >= liteMaxIndex {
-			break
-		}
-	}
-	objectTo := bytes.Buffer{}
-	for idx, val := range ptr.Items {
-		if mu.IsReserved(val.Name) {
-			continue
-		}
-		if mu.IsTimeStamp(val.Name) {
-			continue
-		}
-		if mu.IsEntity(val.Name) {
-			continue
-		}
-
-		objectTo.WriteString(DeclareItemLiteTo(val))
-
-		if idx >= liteMaxIndex {
-			break
-		}
-	}
 	factoryPtr := factory.NewMemoryFactor(liteDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{
-		"ObjectVal":       ptr,
-		"ObjectAssignVal": objectAssign.String(),
-		"ViewAssignVal":   viewAssign.String(),
-		"ObjectToVal":     objectTo.String(),
-	})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -428,39 +342,70 @@ func (s *{{formatObjectName .ObjectVal}}Lite) To{{formatObjectName .ObjectVal}}(
 	return contentVal
 }
 
-func DeclareObjectParamAssign(ptr *parser.Object) (ret string) {
-	paramToDefine := `
-func (s *{{formatObjectName .ObjectVal}}Param) To{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) (ret *model.{{formatObjectName .ObjectVal}}) {
+func DeclareObjectLiteFrom(ptr *parser.Object) (ret string) {
+	liteDefine := `{{$ObjectVal := .ObjectVal}}
+func (s *{{formatObjectName $ObjectVal}}Lite) FromView(ptr *{{formatObjectName $ObjectVal}}View) {
 	if ptr == nil {
-		ptr = &{{defineObjectLite .ObjectVal}}
+		return
+	}
+{{- with $ObjectVal}}
+{{range .Items}}
+	{{declareItemFrom .}}
+{{- end}}
+{{end}}
+	return
+}
+`
+	factoryPtr := factory.NewMemoryFactor(liteDefine)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
+	if contentErr != nil {
+		log.Errorf("create content failed, err:%s", contentErr.Error())
+		return ""
 	}
 
-	{{.ContentVal}}
+	return contentVal
+}
+
+func DeclareObjectLiteTo(ptr *parser.Object) (ret string) {
+	liteDefine := `{{$ObjectVal := .ObjectVal}}
+func (s *{{formatObjectName $ObjectVal}}Lite) To{{formatObjectName $ObjectVal}}() (ret *model.{{formatObjectName $ObjectVal}}) {
+	ptr := &model.{{formatObjectName $ObjectVal}}{}
+{{- with $ObjectVal -}}
+{{range .Items}}
+	{{declareItemTo .}}
+{{- end}}
+{{end}}
 	ret = ptr
 	return
 }
 `
-	byteBuff := bytes.Buffer{}
-	for _, val := range ptr.Items {
-		if mu.IsID(val.Name) {
-			continue
-		}
-
-		if mu.IsReserved(val.Name) {
-			continue
-		}
-		if mu.IsTimeStamp(val.Name) {
-			continue
-		}
-		if mu.IsEntity(val.Name) {
-			continue
-		}
-
-		byteBuff.WriteString(DeclareItemLiteTo(val))
+	factoryPtr := factory.NewMemoryFactor(liteDefine)
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
+	if contentErr != nil {
+		log.Errorf("create content failed, err:%s", contentErr.Error())
+		return ""
 	}
 
+	return contentVal
+}
+
+func DeclareObjectParamTo(ptr *parser.Object) (ret string) {
+	paramToDefine := `{{$ObjectVal := .ObjectVal}}
+func (s *{{formatObjectName .ObjectVal}}Param) To{{formatObjectName .ObjectVal}}(ptr *model.{{formatObjectName .ObjectVal}}) (ret *model.{{formatObjectName .ObjectVal}}) {
+	if ptr == nil {
+		ptr = &model.{{formatObjectName $ObjectVal}}{}
+	}
+{{- with $ObjectVal -}}
+{{range .Items}}
+	{{declareItemTo .}}
+{{- end}}
+{{end}}
+	ret = ptr
+	return
+}
+`
 	factoryPtr := factory.NewMemoryFactor(paramToDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "ContentVal": byteBuff.String()})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
