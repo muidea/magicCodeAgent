@@ -79,10 +79,10 @@ func DeclareItem(val *parser.Item) string {
 }
 
 func DefineItem(val *parser.Item) string {
-	arrayDeclare := `{{formatItemValue .ItemVal}} :=[]*{{formatItemType .ItemVal}}`
-	itemDeclare := `{{formatItemValue .ItemVal}} := &{{formatItemType .ItemVal}}`
-	simpleArrayDeclare := `{{formatItemValue .ItemVal}} := []{{formatItemType .ItemVal}}`
-	simpleDeclare := `{{formatItemValue .ItemVal}} := {{formatItemType .ItemVal}}`
+	arrayDeclare := `{{formatItemName .ItemVal}}: []*model.{{formatItemType .ItemVal}}{}`
+	itemDeclare := `{{formatItemName .ItemVal}}: &model.{{formatItemType .ItemVal}}{}`
+	simpleArrayDeclare := `{{formatItemName .ItemVal}}: []{{formatItemType .ItemVal}}`
+	simpleDeclare := `{{formatItemName .ItemVal}}: {{formatItemType .ItemVal}}`
 	if mu.IsComplex(val) {
 		if val.Type.IsArray {
 			factoryPtr := factory.NewMemoryFactor(arrayDeclare)
