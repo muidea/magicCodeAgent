@@ -80,7 +80,7 @@ const Create: React.FC<createProps> = (props) => {
         <ProFormText
           name='title'
           label='标题'
-          width={'lg'}
+          width='lg'
           placeholder='请输入标题'
           rules={[{required: true, message: '请输入标题'}]}
           initialValue={initialValue?.title}
@@ -90,7 +90,7 @@ const Create: React.FC<createProps> = (props) => {
         <ProFormTextArea
           name='content'
           label='内容'
-          width={'lg'}
+          width='lg'
           placeholder='请输入内容'
           rules={[{required: true, message: '请输入内容'}]}
           initialValue={initialValue?.content}
@@ -100,7 +100,7 @@ const Create: React.FC<createProps> = (props) => {
         <ProFormSelect
           name='tags'
           label='标签'
-          width={'lg'}
+          width='lg'
           placeholder='请输入标签'
           mode='tags'
           valueEnum={{"{{}}"}}
