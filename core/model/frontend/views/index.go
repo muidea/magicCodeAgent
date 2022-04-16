@@ -84,7 +84,7 @@ func (s *indexer) declareFunc(ptr *parser.Package, objPtr *parser.Object) (ret s
 
   const getUpdatePanel = (record: contentDef.{{formatObjectName .ObjectVal}}) => {
     if (verifyAuthority(authorities, baseDef.Authority.WritePrivate)) {
-      return <Update title={'更新'} initialValue={record} onSubmitHandle={onSubmit{{formatObjectName .ObjectVal}}}/>
+      return <Update key={'2'} title={'更新'} initialValue={record} onSubmitHandle={onSubmit{{formatObjectName .ObjectVal}}}/>
     }
   }
 
