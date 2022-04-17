@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -29,9 +30,10 @@ func (s *Type) String() string {
 }
 
 type Item struct {
-	Name  string `json:"name"`
-	Type  *Type  `json:"type"`
-	IsPtr bool   `json:"isPtr"`
+	Name  string              `json:"name"`
+	Type  *Type               `json:"type"`
+	Tags  map[string][]string `json:"tags"`
+	IsPtr bool                `json:"isPtr"`
 }
 
 type Object struct {
@@ -65,6 +67,42 @@ func (s ObjectsList) Less(i, j int) bool {
 
 func (s ObjectsList) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
+}
+
+var valPattern = regexp.MustCompile("([a-zA-Z|\\d])+")
+var itemPattern = regexp.MustCompile("([a-zA-Z|\\d]|\\s|,)+")
+
+func splitItems(val string) (key string, vals []string) {
+	items := itemPattern.FindAllString(val, -1)
+	if len(items) < 2 {
+		return
+	}
+
+	vals = []string{}
+	for si, sv := range items {
+		if si == 0 {
+			key = sv
+			continue
+		}
+		vals = append(vals, valPattern.FindAllString(sv, -1)...)
+	}
+	return
+}
+
+var tagPattern = regexp.MustCompile("[a-zA-Z]+:\"([a-zA-Z|\\d]|\\s|,)+\"")
+
+func splitTag(val string) (ret map[string][]string) {
+	ret = map[string][]string{}
+	items := tagPattern.FindAllString(val, -1)
+	for _, sv := range items {
+		key, vals := splitItems(sv)
+		if key == "" {
+			continue
+		}
+
+		ret[key] = vals
+	}
+	return
 }
 
 func parseIdent(ptr *ast.Ident) (ret *Type, err error) {
@@ -131,6 +169,7 @@ func parseStart(ptr *ast.StarExpr) (ret *Type, err error) {
 func parseField(ptr *ast.Field) (ret *Item, err error) {
 	ret = &Item{}
 	ret.Name = ptr.Names[0].Name
+	ret.Tags = splitTag(ptr.Tag.Value)
 
 	switch t := ptr.Type.(type) {
 	case *ast.Ident:
