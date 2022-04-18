@@ -135,10 +135,7 @@ func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(i
 
 func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(ptr *common.{{formatObjectName $ObjectVal}}Param, creater int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
 	{{formatObjectValue $ObjectVal}}Ptr := ptr.To{{formatObjectName $ObjectVal}}(nil)
-{{if .HasEntity -}}
-	{{formatObjectValue $ObjectVal}}Ptr.Creater = creater
 	{{formatObjectValue $ObjectVal}}Ptr.CreateTime = time.Now().UTC().Unix()
-{{- end}}
 	ret, err = s.{{formatModuleValue $ModuleVal}}Dao.Create{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr, namespace)
 	if err != nil {
 		return
@@ -160,10 +157,6 @@ func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(
 	}
 
 	current{{formatObjectName $ObjectVal}} = ptr.To{{formatObjectName $ObjectVal}}(current{{formatObjectName $ObjectVal}})
-{{if .HasEntity -}}
-	current{{formatObjectName $ObjectVal}}.Creater = updater
-	current{{formatObjectName $ObjectVal}}.CreateTime = time.Now().UTC().Unix()
-{{- end}}
 	ret, err = s.{{formatModuleValue $ModuleVal}}Dao.Update{{formatObjectName $ObjectVal}}(current{{formatObjectName $ObjectVal}}, namespace)
 	if err != nil {
 		return
@@ -192,7 +185,7 @@ func (s *{{formatModuleName $ModuleVal}}) Delete{{formatObjectName $ObjectVal}}(
 }
 `
 	factoryPtr := factory.NewMemoryFactor(funcDeclare)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": modulePtr, "ObjectVal": objectPtr, "HasEntity": mu.HasEntity(objectPtr)})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ModuleVal": modulePtr, "ObjectVal": objectPtr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return
