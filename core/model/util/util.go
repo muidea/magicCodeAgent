@@ -80,18 +80,6 @@ func IsTimeStamp(val string) bool {
 	return false
 }
 
-func HasEntity(ptr *parser.Object) (ret bool) {
-	ret = false
-	for _, val := range ptr.Items {
-		if IsEntity(val.Name) {
-			ret = true
-			return
-		}
-	}
-
-	return
-}
-
 func EnableView(ptr *parser.Item) bool {
 	vals, ok := ptr.Tags["tag"]
 	if !ok {

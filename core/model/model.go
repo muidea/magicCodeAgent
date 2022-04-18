@@ -26,7 +26,6 @@ func New(rootPath string, bothFlag bool) *Model {
 }
 
 func (s *Model) Create(projectName string) (err error) {
-	factory.RegisterFunc("hasEntity", mu.HasEntity)
 	factory.RegisterFunc("enableView", mu.EnableView)
 	factory.RegisterFunc("enableLite", mu.EnableLite)
 	factory.RegisterFunc("enableParam", mu.EnableParam)
@@ -58,7 +57,6 @@ func (s *Model) Create(projectName string) (err error) {
 	defer factory.UnRegisterFunc("enableParam")
 	defer factory.UnRegisterFunc("enableLite")
 	defer factory.UnRegisterFunc("enableView")
-	defer factory.UnRegisterFunc("hasEntity")
 
 	s.projectName = projectName
 	modelPath := path.Join(s.rootPath, "model")
