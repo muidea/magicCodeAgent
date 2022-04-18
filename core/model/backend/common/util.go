@@ -2,7 +2,7 @@ package common
 
 import (
 	log "github.com/cihub/seelog"
-	"github.com/muidea/magicToolkit/core/model/backend/util"
+
 	mu "github.com/muidea/magicToolkit/core/model/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
@@ -69,7 +69,6 @@ type {{formatObjectName $ObjectVal}}Param struct {
 }
 
 func DeclareItemAssign(val *parser.Item) string {
-	entityAssign := `s.{{formatItemName .ItemVal}} = entityPtr`
 	arrayPtrAssign := `for _, val := range ptr.{{formatItemName .ItemVal}} {
 		lite := &{{formatItemType .ItemVal}}Lite{}
 		lite.From{{formatItemType .ItemVal}}(val)
@@ -88,16 +87,6 @@ func DeclareItemAssign(val *parser.Item) string {
 	s.{{formatItemName .ItemVal}}.From{{formatItemType .ItemVal}}(&ptr.{{formatItemName .ItemVal}})`
 	simpleAssign := `s.{{formatItemName .ItemVal}} = ptr.{{formatItemName .ItemVal}}`
 
-	if util.IsEntityItem(val) {
-		factoryPtr := factory.NewMemoryFactor(entityAssign)
-		contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
-		if contentErr != nil {
-			log.Errorf("create content failed, err:%s", contentErr.Error())
-			return ""
-		}
-
-		return contentVal
-	}
 	if mu.IsComplex(val) {
 		if val.Type.IsPtr {
 			if val.Type.IsArray {
@@ -294,26 +283,24 @@ func DeclareItemTo(val *parser.Item) string {
 
 func DeclareObjectViewAssign(ptr *parser.Object) (ret string) {
 	viewDefine := `{{$ObjectVal := .ObjectVal}}
-{{if .HasEntity}}
-func (s *{{formatObjectName $ObjectVal}}View) From{{formatObjectName $ObjectVal}}(ptr *model.{{formatObjectName $ObjectVal}}, entityPtr *cc.EntityView) {
-{{- else}}
 func (s *{{formatObjectName $ObjectVal}}View) From{{formatObjectName $ObjectVal}}(ptr *model.{{formatObjectName $ObjectVal}}) {
-{{- end}}
 	if ptr == nil {
 		return
 	}
 {{- with $ObjectVal}}
 {{range .Items}}
 {{- if enableView .}}
+{{- if isNormalItem .}}
 	{{declareItemAssign .}}
 {{- end}}
 {{- end}}
-{{end}}
+{{- end}}
+{{- end}}
 	return
 }
 `
 	factoryPtr := factory.NewMemoryFactor(viewDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -324,26 +311,24 @@ func (s *{{formatObjectName $ObjectVal}}View) From{{formatObjectName $ObjectVal}
 
 func DeclareObjectLiteAssign(ptr *parser.Object) (ret string) {
 	liteDefine := `{{$ObjectVal := .ObjectVal}}
-{{if .HasEntity}}
-func (s *{{formatObjectName $ObjectVal}}Lite) From{{formatObjectName $ObjectVal}}(ptr *model.{{formatObjectName $ObjectVal}}, entityPtr *cc.EntityView) {
-{{- else}}
 func (s *{{formatObjectName $ObjectVal}}Lite) From{{formatObjectName $ObjectVal}}(ptr *model.{{formatObjectName $ObjectVal}}) {
-{{- end}}
 	if ptr == nil {
 		return
 	}
 {{- with $ObjectVal}}
 {{range .Items}}
 {{- if enableLite .}}
+{{- if isNormalItem .}}
 	{{declareItemAssign .}}
 {{- end}}
 {{- end}}
-{{end}}
+{{- end}}
+{{- end}}
 	return
 }
 `
 	factoryPtr := factory.NewMemoryFactor(liteDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -360,16 +345,18 @@ func (s *{{formatObjectName $ObjectVal}}Lite) FromView(ptr *{{formatObjectName $
 	}
 {{- with $ObjectVal}}
 {{range .Items}}
-{{if enableLite .}}
+{{- if enableLite .}}
+{{- if isNormalItem .}}
 	{{declareItemFrom .}}
 {{- end}}
 {{- end}}
-{{end}}
+{{- end}}
+{{- end}}
 	return
 }
 `
 	factoryPtr := factory.NewMemoryFactor(liteDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -385,7 +372,9 @@ func (s *{{formatObjectName $ObjectVal}}Lite) To{{formatObjectName $ObjectVal}}(
 {{- with $ObjectVal -}}
 {{range .Items}}
 {{- if enableLite .}}
+{{- if isNormalItem .}}
 	{{declareItemTo .}}
+{{- end}}
 {{- end}}
 {{- end}}
 {{end}}
@@ -394,7 +383,7 @@ func (s *{{formatObjectName $ObjectVal}}Lite) To{{formatObjectName $ObjectVal}}(
 }
 `
 	factoryPtr := factory.NewMemoryFactor(liteDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""
@@ -412,7 +401,9 @@ func (s *{{formatObjectName .ObjectVal}}Param) To{{formatObjectName .ObjectVal}}
 {{- with $ObjectVal -}}
 {{range .Items}}
 {{- if enableParam .}}
+{{- if isNormalItem .}}
 	{{declareItemTo .}}
+{{- end}}
 {{- end}}
 {{- end}}
 {{end}}
@@ -421,7 +412,7 @@ func (s *{{formatObjectName .ObjectVal}}Param) To{{formatObjectName .ObjectVal}}
 }
 `
 	factoryPtr := factory.NewMemoryFactor(paramToDefine)
-	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr, "HasEntity": mu.HasEntity(ptr)})
+	contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ObjectVal": ptr})
 	if contentErr != nil {
 		log.Errorf("create content failed, err:%s", contentErr.Error())
 		return ""

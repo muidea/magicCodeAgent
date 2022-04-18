@@ -15,6 +15,10 @@ func IsEntityItem(val *parser.Item) bool {
 	return mu.IsEntity(val.Name)
 }
 
+func IsNormalItem(val *parser.Item) bool {
+	return !mu.IsEntity(val.Name)
+}
+
 func FormatItemType(val *parser.Item) string {
 	return val.Type.Name
 }
