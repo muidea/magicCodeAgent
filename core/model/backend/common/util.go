@@ -12,7 +12,9 @@ func DeclareObjectView(ptr *parser.Object) (ret string) {
 	viewDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
 type {{formatObjectName $ObjectVal}}View struct {
 {{- range .Items}}
+{{- if enableView .}}
 	{{declareItem .}}
+{{- end}}
 {{- end}}
 }{{end}}
 `
@@ -30,7 +32,9 @@ func DeclareObjectLite(ptr *parser.Object) (ret string) {
 	liteDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
 type {{formatObjectName $ObjectVal}}Lite struct {
 {{- range .Items}}
+{{- if enableLite .}}
 	{{declareItem .}}
+{{- end}}
 {{- end}}
 }{{end}}
 `
@@ -48,7 +52,9 @@ func DeclareObjectParam(ptr *parser.Object) (ret string) {
 	paramDefine := `{{$ObjectVal := .ObjectVal}}{{with $ObjectVal}}
 type {{formatObjectName $ObjectVal}}Param struct {
 {{- range .Items}}
+{{- if enableParam .}}
 	{{declareItem .}}
+{{- end}}
 {{- end}}
 }{{end}}
 `
@@ -298,7 +304,9 @@ func (s *{{formatObjectName $ObjectVal}}View) From{{formatObjectName $ObjectVal}
 	}
 {{- with $ObjectVal}}
 {{range .Items}}
+{{- if enableView .}}
 	{{declareItemAssign .}}
+{{- end}}
 {{- end}}
 {{end}}
 	return
@@ -326,7 +334,9 @@ func (s *{{formatObjectName $ObjectVal}}Lite) From{{formatObjectName $ObjectVal}
 	}
 {{- with $ObjectVal}}
 {{range .Items}}
+{{- if enableLite .}}
 	{{declareItemAssign .}}
+{{- end}}
 {{- end}}
 {{end}}
 	return
@@ -350,7 +360,9 @@ func (s *{{formatObjectName $ObjectVal}}Lite) FromView(ptr *{{formatObjectName $
 	}
 {{- with $ObjectVal}}
 {{range .Items}}
+{{if enableLite .}}
 	{{declareItemFrom .}}
+{{- end}}
 {{- end}}
 {{end}}
 	return
@@ -372,7 +384,9 @@ func (s *{{formatObjectName $ObjectVal}}Lite) To{{formatObjectName $ObjectVal}}(
 	ptr := &model.{{formatObjectName $ObjectVal}}{}
 {{- with $ObjectVal -}}
 {{range .Items}}
+{{- if enableLite .}}
 	{{declareItemTo .}}
+{{- end}}
 {{- end}}
 {{end}}
 	ret = ptr
@@ -397,7 +411,9 @@ func (s *{{formatObjectName .ObjectVal}}Param) To{{formatObjectName .ObjectVal}}
 	}
 {{- with $ObjectVal -}}
 {{range .Items}}
+{{- if enableParam .}}
 	{{declareItemTo .}}
+{{- end}}
 {{- end}}
 {{end}}
 	ret = ptr

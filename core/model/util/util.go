@@ -9,7 +9,7 @@ import (
 var reservedItem = []string{"Namespace"}
 var entityItem = []string{"Creater", "Updater"}
 var specialItem = []string{"ID", "URL", "SKU", "SN", "WeChat"}
-var timeStamp = []string{"UpdateTime", "CreateTime", "DateTime"}
+var timeStampItem = []string{"UpdateTime", "CreateTime", "DateTime"}
 var innerFileName = []string{
 	"common.go",
 	"log.go",
@@ -71,7 +71,7 @@ func IsSpecial(val string) bool {
 }
 
 func IsTimeStamp(val string) bool {
-	for _, sv := range timeStamp {
+	for _, sv := range timeStampItem {
 		if sv == val {
 			return true
 		}
@@ -90,6 +90,51 @@ func HasEntity(ptr *parser.Object) (ret bool) {
 	}
 
 	return
+}
+
+func EnableView(ptr *parser.Item) bool {
+	vals, ok := ptr.Tags["tag"]
+	if !ok {
+		return false
+	}
+
+	for _, val := range vals {
+		if val == "view" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func EnableLite(ptr *parser.Item) bool {
+	vals, ok := ptr.Tags["tag"]
+	if !ok {
+		return false
+	}
+
+	for _, val := range vals {
+		if val == "lite" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func EnableParam(ptr *parser.Item) bool {
+	vals, ok := ptr.Tags["tag"]
+	if !ok {
+		return false
+	}
+
+	for _, val := range vals {
+		if val == "param" {
+			return true
+		}
+	}
+
+	return false
 }
 
 func IsInnerFile(fileName string) bool {
