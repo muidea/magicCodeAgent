@@ -19,6 +19,36 @@ func IsNormalItem(val *parser.Item) bool {
 	return !mu.IsEntity(val.Name)
 }
 
+func EnableObjectView(val *parser.Object) bool {
+	for _, val := range val.Items {
+		if mu.EnableView(val) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func EnableObjectLite(val *parser.Object) bool {
+	for _, val := range val.Items {
+		if mu.EnableLite(val) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func EnableObjectParam(val *parser.Object) bool {
+	for _, val := range val.Items {
+		if mu.EnableParam(val) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func FormatItemType(val *parser.Item) string {
 	return val.Type.Name
 }

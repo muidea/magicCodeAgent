@@ -33,6 +33,9 @@ func (s *Backend) createModule(ptr *parser.Package) (ret *model.Module, err erro
 func (s *Backend) Create(packagePtr *parser.Package) (err error) {
 	factory.RegisterFunc("isEntityItem", bu.IsEntityItem)
 	factory.RegisterFunc("isNormalItem", bu.IsNormalItem)
+	factory.RegisterFunc("enableObjectView", bu.EnableObjectView)
+	factory.RegisterFunc("enableObjectLite", bu.EnableObjectLite)
+	factory.RegisterFunc("enableObjectParam", bu.EnableObjectParam)
 	factory.RegisterFunc("formatItemType", bu.FormatItemType)
 	factory.RegisterFunc("declareItem", bu.DeclareItem)
 	factory.RegisterFunc("defineItem", bu.DefineItem)
@@ -43,6 +46,9 @@ func (s *Backend) Create(packagePtr *parser.Package) (err error) {
 	defer factory.UnRegisterFunc("defineItem")
 	defer factory.UnRegisterFunc("declareItem")
 	defer factory.UnRegisterFunc("formatItemType")
+	defer factory.UnRegisterFunc("enableObjectParam")
+	defer factory.UnRegisterFunc("enableObjectLite")
+	defer factory.UnRegisterFunc("enableObjectView")
 	defer factory.UnRegisterFunc("isNormalItem")
 	defer factory.UnRegisterFunc("isEntityItem")
 

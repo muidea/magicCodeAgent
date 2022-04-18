@@ -3,13 +3,13 @@ package common
 import (
 	"bytes"
 	"fmt"
-	mu "github.com/muidea/magicToolkit/core/model/util"
 	"os"
 	"os/exec"
 	"path"
 
 	log "github.com/cihub/seelog"
 
+	mu "github.com/muidea/magicToolkit/core/model/util"
 	"github.com/muidea/magicToolkit/core/util"
 	"github.com/muidea/magicToolkit/factory"
 	"github.com/muidea/magicToolkit/parser"
@@ -92,25 +92,29 @@ const ({{with .ModuleVal}}
 }
 
 func (s *Common) declareMessage(ptr *parser.Package) (ret string) {
-	messageDeclare := `{{$BackQuote := .BackQuote}}{{$ModuleVal := .ModuleVal}}{{with $ModuleVal}}
-{{range .Objects }}
+	messageDeclare := `{{$BackQuote := .BackQuote}}{{$ModuleVal := .ModuleVal}}
+{{- with $ModuleVal}}
+{{- range .Objects }}
+{{- if enableObjectView .}}
 {{- declareObjectView .}}
 {{- declareObjectViewAssign .}}
+{{- end}}
+{{- if enableObjectLite .}}
 {{- declareObjectLite .}}
 {{- declareObjectLiteAssign .}}
+{{- if enableObjectView .}}
 {{- declareObjectLiteFrom .}}
+{{- end}}
 {{- declareObjectLiteTo .}}
+{{- end}}
+{{- if enableObjectParam .}}
 {{- declareObjectParam .}}
 {{- declareObjectParamAssign .}}
+{{- end}}
+{{- if enableObjectView .}}
 type {{formatObjectName .}}Result struct {
 	cd.Result
 	{{formatObjectName .}} *{{formatObjectName .}}View {{$BackQuote}}json:"{{formatObjectJson .}}"{{$BackQuote}}
-}
-
-type {{formatObjectName .}}LiteListResult struct {
-	cd.Result
-	Total int64       {{$BackQuote}}json:"total"{{$BackQuote}}
-	{{formatObjectName .}}  []*{{formatObjectName .}}Lite {{$BackQuote}}json:"{{formatObjectJson .}}"{{$BackQuote}}
 }
 
 type {{formatObjectName .}}ListResult struct {
@@ -123,7 +127,16 @@ type {{formatObjectName .}}StatisticResult struct {
 	{{formatObjectName .}}ListResult
 	Summary []*TotalizerView {{$BackQuote}}json:"summary"{{$BackQuote}}
 }
-{{end}}{{end}}
+{{- end}}
+{{- if enableObjectLite .}}
+type {{formatObjectName .}}LiteListResult struct {
+	cd.Result
+	Total int64       {{$BackQuote}}json:"total"{{$BackQuote}}
+	{{formatObjectName .}}  []*{{formatObjectName .}}Lite {{$BackQuote}}json:"{{formatObjectJson .}}"{{$BackQuote}}
+}
+{{- end}}
+{{- end}}
+{{- end}}
 `
 	factory.RegisterFunc("declareItemAssign", DeclareItemAssign)
 	factory.RegisterFunc("declareItemFrom", DeclareItemFrom)
