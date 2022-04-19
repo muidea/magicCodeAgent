@@ -127,14 +127,14 @@ type {{formatObjectName .}}StatisticResult struct {
 	{{formatObjectName .}}ListResult
 	Summary []*TotalizerView {{$BackQuote}}json:"summary"{{$BackQuote}}
 }
-{{- end}}
+{{end}}
 {{- if enableObjectLite .}}
 type {{formatObjectName .}}LiteListResult struct {
 	cd.Result
 	Total int64       {{$BackQuote}}json:"total"{{$BackQuote}}
 	{{formatObjectName .}}  []*{{formatObjectName .}}Lite {{$BackQuote}}json:"{{formatObjectJson .}}"{{$BackQuote}}
 }
-{{- end}}
+{{end}}
 {{- end}}
 {{- end}}
 `

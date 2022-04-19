@@ -133,7 +133,7 @@ func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(i
 	return
 }
 
-func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(ptr *common.{{formatObjectName $ObjectVal}}Param, creater int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
+func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(ptr *common.{{formatObjectName $ObjectVal}}Param, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
 	{{formatObjectValue $ObjectVal}}Ptr := ptr.To{{formatObjectName $ObjectVal}}(nil)
 	{{formatObjectValue $ObjectVal}}Ptr.CreateTime = time.Now().UTC().Unix()
 	ret, err = s.{{formatModuleValue $ModuleVal}}Dao.Create{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr, namespace)
@@ -149,7 +149,7 @@ func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(
 	return
 }
 
-func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(id int, ptr *common.{{formatObjectName $ObjectVal}}Param, updater int, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
+func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(id int, ptr *common.{{formatObjectName $ObjectVal}}Param, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
 	current{{formatObjectName $ObjectVal}}, currentErr := s.{{formatModuleValue $ModuleVal}}Dao.Query{{formatObjectName $ObjectVal}}(id, namespace)
 	if currentErr != nil {
 		err = currentErr

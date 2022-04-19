@@ -363,15 +363,8 @@ func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(
 			result.Reason = "invalid param"
 			break
 		}
-		curEntity, curErr := s.getCurrentEntity(ctx)
-		if curErr != nil {
-			result.ErrorCode = cd.InvalidAuthority
-			result.Reason = "invalid authority"
-			break
-		}
-
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{formatObjectValue $ObjectVal}}Ptr, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Create{{formatObjectName $ObjectVal}}(param, curEntity.ID, curNamespace)
+		{{formatObjectValue $ObjectVal}}Ptr, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Create{{formatObjectName $ObjectVal}}(param, curNamespace)
 		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
 			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()
@@ -414,15 +407,8 @@ func (s *{{formatModuleName $ModuleVal}}) Update{{formatObjectName $ObjectVal}}(
 			break
 		}
 
-		curEntity, curErr := s.getCurrentEntity(ctx)
-		if curErr != nil {
-			result.ErrorCode = cd.InvalidAuthority
-			result.Reason = "invalid authority"
-			break
-		}
-
 		curNamespace := s.getCurrentNamespace(ctx, res, req)
-		{{formatObjectValue $ObjectVal}}Ptr, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Update{{formatObjectName $ObjectVal}}(id, param, curEntity.ID, curNamespace)
+		{{formatObjectValue $ObjectVal}}Ptr, {{formatObjectValue $ObjectVal}}Err := s.bizPtr.Update{{formatObjectName $ObjectVal}}(id, param, curNamespace)
 		if {{formatObjectValue $ObjectVal}}Err != nil {
 			result.ErrorCode = cd.Failed
 			result.Reason = {{formatObjectValue $ObjectVal}}Err.Error()

@@ -32,6 +32,7 @@ func (s *Backend) createModule(ptr *parser.Package) (ret *model.Module, err erro
 
 func (s *Backend) Create(packagePtr *parser.Package) (err error) {
 	factory.RegisterFunc("isEntityItem", bu.IsEntityItem)
+	factory.RegisterFunc("isTimeStampItem", bu.IsTimeStamp)
 	factory.RegisterFunc("isNormalItem", bu.IsNormalItem)
 	factory.RegisterFunc("enableObjectView", bu.EnableObjectView)
 	factory.RegisterFunc("enableObjectLite", bu.EnableObjectLite)
@@ -50,6 +51,7 @@ func (s *Backend) Create(packagePtr *parser.Package) (err error) {
 	defer factory.UnRegisterFunc("enableObjectLite")
 	defer factory.UnRegisterFunc("enableObjectView")
 	defer factory.UnRegisterFunc("isNormalItem")
+	defer factory.UnRegisterFunc("isTimeStampItem")
 	defer factory.UnRegisterFunc("isEntityItem")
 
 	_, moduleErr := s.createModule(packagePtr)

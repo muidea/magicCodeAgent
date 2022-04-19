@@ -15,6 +15,10 @@ func IsEntityItem(val *parser.Item) bool {
 	return mu.IsEntity(val.Name)
 }
 
+func IsTimeStamp(val *parser.Item) bool {
+	return mu.IsTimeStamp(val.Name)
+}
+
 func IsNormalItem(val *parser.Item) bool {
 	return !mu.IsEntity(val.Name)
 }
@@ -113,12 +117,23 @@ func DeclareItem(val *parser.Item) string {
 }
 
 func DefineItem(val *parser.Item) string {
-	arrayDeclare := `{{formatItemName .ItemVal}}: []*model.{{formatItemType .ItemVal}}{}`
+	arrayPtrDeclare := `{{formatItemName .ItemVal}}: []*model.{{formatItemType .ItemVal}}{}`
+	arrayDeclare := `{{formatItemName .ItemVal}}: []model.{{formatItemType .ItemVal}}{}`
 	itemDeclare := `{{formatItemName .ItemVal}}: &model.{{formatItemType .ItemVal}}{}`
 	simpleArrayDeclare := `{{formatItemName .ItemVal}}: []{{formatItemType .ItemVal}}`
 	simpleDeclare := `{{formatItemName .ItemVal}}: {{formatItemType .ItemVal}}`
 	if mu.IsComplex(val) {
 		if val.Type.IsArray {
+			if val.Type.IsPtr {
+				factoryPtr := factory.NewMemoryFactor(arrayPtrDeclare)
+				contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
+				if contentErr != nil {
+					log.Errorf("create content failed, err:%s", contentErr.Error())
+					return ""
+				}
+
+				return contentVal
+			}
 			factoryPtr := factory.NewMemoryFactor(arrayDeclare)
 			contentVal, contentErr := factoryPtr.Create(map[string]interface{}{"ItemVal": val})
 			if contentErr != nil {
