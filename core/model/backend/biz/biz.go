@@ -60,8 +60,6 @@ import (
 func (s *Biz) declareObjectImport(ptr *parser.Package) (ret string) {
 	importDeclare := `
 import (
-	"time"
-
 	bc "github.com/muidea/magicBatis/common"
 
 	"github.com/muidea/magicCommon/event"
@@ -135,7 +133,6 @@ func (s *{{formatModuleName $ModuleVal}}) Query{{formatObjectName $ObjectVal}}(i
 
 func (s *{{formatModuleName $ModuleVal}}) Create{{formatObjectName $ObjectVal}}(ptr *common.{{formatObjectName $ObjectVal}}Param, namespace string) (ret *model.{{formatObjectName $ObjectVal}}, err error) {
 	{{formatObjectValue $ObjectVal}}Ptr := ptr.To{{formatObjectName $ObjectVal}}(nil)
-	{{formatObjectValue $ObjectVal}}Ptr.CreateTime = time.Now().UTC().Unix()
 	ret, err = s.{{formatModuleValue $ModuleVal}}Dao.Create{{formatObjectName $ObjectVal}}({{formatObjectValue $ObjectVal}}Ptr, namespace)
 	if err != nil {
 		return
