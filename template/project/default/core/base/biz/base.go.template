@@ -19,6 +19,7 @@ import (
 type Base struct {
 	id                string
 	eventHub          event.Hub
+	simpleObserver    event.SimpleObserver
 	backgroundRoutine task.BackgroundRoutine
 }
 
@@ -37,6 +38,7 @@ func New(
 	return Base{
 		id:                id,
 		eventHub:          eventHub,
+		simpleObserver:    event.NewSimpleObserver(id, eventHub),
 		backgroundRoutine: backgroundRoutine,
 	}
 }
@@ -51,6 +53,14 @@ func (s *Base) Subscribe(eventID string, observer event.Observer) {
 
 func (s *Base) Unsubscribe(eventID string, observer event.Observer) {
 	s.eventHub.Unsubscribe(eventID, observer)
+}
+
+func (s *Base) SubscribeFunc(eventID string, observerFunc event.ObserverFunc) {
+	s.simpleObserver.Subscribe(eventID, observerFunc)
+}
+
+func (s *Base) UnsubscribeFunc(eventID string) {
+	s.simpleObserver.Unsubscribe(eventID)
 }
 
 func (s *Base) PostEvent(event event.Event) {
