@@ -1,10 +1,6 @@
 package model
 
-const (
-	TotalizeRealtime = 1
-	TotalizeWeek     = 2
-	TotalizeMonth    = 3
-)
+import "time"
 
 const (
 	TotalizeCurrent = 1
@@ -28,16 +24,24 @@ type Totalizer struct {
 	Namespace string  `json:"namespace" orm:"namespace"`
 }
 
-func (s *Totalizer) Reset() {
+func (s *Totalizer) Reset(timeStamp time.Time) {
 	s.ID = 0
 	s.Value = 0
+	s.TimeStamp = timeStamp.UTC().Unix()
 	s.Catalog = TotalizeCurrent
 }
 
-func NewTotalizer(owner string, typeVal int, namespace string) *Totalizer {
-	if typeVal < TotalizeRealtime || typeVal > TotalizeMonth {
-		return nil
+func (s *Totalizer) DuplicateHistory() *Totalizer {
+	return &Totalizer{
+		Owner:     s.Owner,
+		Type:      s.Type,
+		TimeStamp: s.TimeStamp,
+		Value:     s.Value,
+		Catalog:   TotalizeHistory,
+		Namespace: s.Namespace,
 	}
+}
 
+func NewTotalizer(owner string, typeVal int, namespace string) *Totalizer {
 	return &Totalizer{Owner: owner, Type: typeVal, Catalog: TotalizeCurrent, Namespace: namespace}
 }
