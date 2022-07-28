@@ -6,159 +6,159 @@ import (
 	log "github.com/cihub/seelog"
 
 	bc "github.com/muidea/magicBatis/common"
+
+	"github.com/muidea/magicCommon/event"
 	fn "github.com/muidea/magicCommon/foundation/net"
 
 	"github.com/muidea/{{.ProjectName}}/common"
 	"github.com/muidea/{{.ProjectName}}/model"
 )
 
-func (s *Totalizer) initializerTotalizer(totalizerPtr *model.Totalizer) {
-	type2Totalizer, ok := s.namespace2Totalizer[totalizerPtr.Namespace]
-	if !ok {
-		type2Totalizer = Type2Totalizer{}
-	}
-
-	n2Totalizer, ok := type2Totalizer[totalizerPtr.Type]
-	if !ok {
-		n2Totalizer = Owner2Totalizer{}
-	}
-
-	curTotalizer := s.loadTotalizer(totalizerPtr)
-	if curTotalizer != nil {
-		totalizerPtr = curTotalizer
-	} else {
-		totalizerPtr = s.saveTotalizer(totalizerPtr)
-	}
-
-	n2Totalizer[totalizerPtr.Owner] = totalizerPtr
-	type2Totalizer[totalizerPtr.Type] = n2Totalizer
-	s.namespace2Totalizer[totalizerPtr.Namespace] = type2Totalizer
+func EventID(ptr *common.TotalizeParam) string {
+	eventPath, _ := fn.SplitRESTURL(ptr.Trigger)
+	return fn.FormatRoutePattern(eventPath, nil)
 }
 
-func (s *Totalizer) uninitializedTotalizer(totalizerPtr *model.Totalizer) {
-	type2Totalizer, ok := s.namespace2Totalizer[totalizerPtr.Namespace]
+func (s *Totalizer) Load(owner string, typeVal, catalogVal int, namespace string) (ret *model.Totalizer, err error) {
+	curTotalizer, curErr := s.totalizerDao.QueryTotalizer(owner, typeVal, catalogVal, namespace)
+	if curErr != nil {
+		log.Errorf("query totalizer failed, totalizer owner:%v, type:%v, catalog:%v, namespace:%v, err:%v", owner, typeVal, catalogVal, namespace, curErr)
+		ptr := &model.Totalizer{
+			Owner:     owner,
+			Type:      typeVal,
+			TimeStamp: time.Now().UTC().Unix(),
+			Value:     0,
+			Catalog:   catalogVal,
+		}
+
+		curTotalizer, curErr = s.totalizerDao.CreateTotalizer(ptr, namespace)
+		if curErr != nil {
+			log.Errorf("create totalizer failed, totalizer owner:%v, type:%v, catalog:%v, namespace:%v, err:%v", owner, typeVal, catalogVal, namespace, curErr)
+			err = curErr
+			return
+		}
+	}
+
+	ret = curTotalizer
+	return
+}
+
+func (s *Totalizer) Save(ptr *model.Totalizer) (ret *model.Totalizer, err error) {
+	curTotalizer, curErr := s.totalizerDao.QueryTotalizer(ptr.Owner, ptr.Type, ptr.Catalog, ptr.Namespace)
+	if curErr != nil {
+		curTotalizer, curErr = s.totalizerDao.CreateTotalizer(ptr, ptr.Namespace)
+		if curErr != nil {
+			log.Errorf("create totalizer failed, totalizer owner:%v, type:%v, catalog:%v, namespace:%v, err:%v",
+				ptr.Owner, ptr.Type, ptr.Catalog, ptr.Namespace, curErr)
+			return
+		}
+
+		ret = curTotalizer
+		return
+	}
+
+	curTotalizer.Value = ptr.Value
+	curTotalizer.TimeStamp = ptr.TimeStamp
+	curTotalizer, curErr = s.totalizerDao.UpdateTotalizer(curTotalizer, curTotalizer.Namespace)
+	if curErr != nil {
+		log.Errorf("update totalizer failed, totalizer owner:%v, type:%v, catalog:%v, namespace:%v, err:%v",
+			ptr.Owner, ptr.Type, ptr.Catalog, ptr.Namespace, curErr)
+		err = curErr
+		return
+	}
+
+	ret = curTotalizer
+	return
+}
+
+func (s *Totalizer) initializerTotalizer(paramPtr *common.TotalizeParam, namespace string) {
+	trigger2Totalizer, ok := s.namespace2Totalizer[namespace]
+	if !ok {
+		trigger2Totalizer = Trigger2Totalizer{}
+	}
+
+	triggerEvent := EventID(paramPtr)
+	totalizerList, ok := trigger2Totalizer[triggerEvent]
+	if !ok {
+		totalizerList = TotalizerList{}
+	}
+
+	existFlag := false
+	for _, val := range totalizerList {
+		if val.Same(paramPtr.Owner, paramPtr.Trigger) {
+			existFlag = true
+			break
+		}
+	}
+	if existFlag {
+		log.Errorf("duplicate totalizer, owner:%s,trigger:%s", paramPtr.Owner, paramPtr.Trigger)
+		return
+	}
+
+	totalizerPtr := NewTotalizer(paramPtr.Owner, paramPtr.Trigger, paramPtr.Period, namespace, s)
+	totalizerList = append(totalizerList, totalizerPtr)
+	trigger2Totalizer[triggerEvent] = totalizerList
+	s.namespace2Totalizer[namespace] = trigger2Totalizer
+	s.Subscribe(triggerEvent, s)
+}
+
+func (s *Totalizer) uninitializedTotalizer(paramPtr *common.TotalizeParam, namespace string) {
+	trigger2Totalizer, ok := s.namespace2Totalizer[namespace]
 	if !ok {
 		return
 	}
 
-	n2Totalizer, ok := type2Totalizer[totalizerPtr.Type]
+	triggerEvent := EventID(paramPtr)
+	totalizerList, ok := trigger2Totalizer[triggerEvent]
 	if !ok {
 		return
 	}
 
-	delete(n2Totalizer, totalizerPtr.Owner)
-	if len(n2Totalizer) == 0 {
-		delete(type2Totalizer, totalizerPtr.Type)
+	newList := TotalizerList{}
+	for _, val := range totalizerList {
+		if val.Same(paramPtr.Owner, paramPtr.Trigger) {
+			continue
+		}
+
+		newList = append(newList, val)
 	}
-	if len(type2Totalizer) == 0 {
-		delete(s.namespace2Totalizer, totalizerPtr.Namespace)
+
+	if len(newList) == 0 {
+		delete(trigger2Totalizer, triggerEvent)
+		s.Unsubscribe(triggerEvent, s)
+	}
+	if len(trigger2Totalizer) == 0 {
+		delete(s.namespace2Totalizer, namespace)
 	}
 }
 
-func (s *Totalizer) createInternal(owner, namespace string) {
-	log.Infof("create internal totalizer, owner:%v, namespace:%v", owner, namespace)
-	ptr := model.NewTotalizer(owner, common.TotalizeRealtime, namespace)
-	ptr.Value = 1
-	s.initializerTotalizer(ptr)
-
-	ptr = model.NewTotalizer(owner, common.TotalizeWeek, namespace)
-	ptr.Value = 1
-	s.initializerTotalizer(ptr)
-
-	ptr = model.NewTotalizer(owner, common.TotalizeMonth, namespace)
-	ptr.Value = 1
-	s.initializerTotalizer(ptr)
-}
-
-func (s *Totalizer) onCreateTotalizer(totalizerPtr *model.Totalizer) {
+func (s *Totalizer) onCreateTotalizer(paramPtr *common.TotalizeParam, namespace string) {
 	s.Invoke(func() {
-		s.initializerTotalizer(totalizerPtr)
+		s.initializerTotalizer(paramPtr, namespace)
 	})
 }
 
-func (s *Totalizer) onDeleteTotalizer(totalizerPtr *model.Totalizer) {
+func (s *Totalizer) onDeleteTotalizer(paramPtr *common.TotalizeParam, namespace string) {
 	s.Invoke(func() {
-		s.uninitializedTotalizer(totalizerPtr)
+		s.uninitializedTotalizer(paramPtr, namespace)
 	})
 }
 
-func (s *Totalizer) onNotifyTotalizer(eventID string, action int, namespace string) {
-	eventPath, _ := fn.SplitRESTURL(eventID)
-	feature := fn.FormatRoutePattern(eventPath, nil)
-	switch action {
-	case common.Create:
-		s.onIncreaseTotalizer(feature, namespace)
-	case common.Delete:
-		s.onDecreaseTotalizer(feature, namespace)
-	}
-}
-
-func (s *Totalizer) onIncreaseTotalizer(owner, namespace string) {
+func (s *Totalizer) onNotifyTotalizer(event event.Event, namespace string) {
 	s.Invoke(func() {
-		type2Totalizer, ok := s.namespace2Totalizer[namespace]
+		trigger2Totalizer, ok := s.namespace2Totalizer[namespace]
 		if !ok {
-			s.createInternal(owner, namespace)
-			type2Totalizer, ok = s.namespace2Totalizer[namespace]
+			return
 		}
 
-		//ntv := Type2Totalizer{}
-		for _, tv := range type2Totalizer {
-			//nnv := Owner2Totalizer{}
-			for k, v := range tv {
-				if k != owner {
-					//nnv[k] = v
-					continue
-				}
-
-				v.Value += 1
-				v.TimeStamp = time.Now().UTC().Unix()
-
-				v = s.saveTotalizer(v)
-				if v == nil {
-					continue
-				}
-
-				//nnv[k] = v
-				tv[k] = v
+		for k, v := range trigger2Totalizer {
+			if !event.Match(k) {
+				continue
 			}
-			//ntv[tk] = nnv
-		}
-	})
-}
 
-func (s *Totalizer) onDecreaseTotalizer(owner, namespace string) {
-	s.Invoke(func() {
-		type2Totalizer, ok := s.namespace2Totalizer[namespace]
-		if !ok {
-			s.createInternal(owner, namespace)
-			type2Totalizer, ok = s.namespace2Totalizer[namespace]
-		}
-
-		//ntv := Type2Totalizer{}
-		for _, tv := range type2Totalizer {
-			//nnv := Owner2Totalizer{}
-			for k, v := range tv {
-				if k != owner {
-					//nnv[k] = v
-					continue
-				}
-
-				v.Value -= 1
-				if v.Value <= 0 {
-					v.Value = 0
-				}
-
-				v.TimeStamp = time.Now().UTC().Unix()
-
-				v = s.saveTotalizer(v)
-				if v == nil {
-					continue
-				}
-
-				//nnv[k] = v
-				tv[k] = v
+			for _, sv := range v {
+				sv.Trigger(event)
 			}
-			//ntv[tk] = nnv
 		}
 	})
 }
@@ -168,33 +168,30 @@ func (s *Totalizer) onTimerNotify(eventPtr *common.TimerNotify) {
 		_, preWeek := eventPtr.PreTime.ISOWeek()
 		_, curWeek := eventPtr.CurTime.ISOWeek()
 		refreshWeek := curWeek != preWeek
+		refreshDaily := eventPtr.PreTime.Day() != eventPtr.CurTime.Day()
 		refreshMonth := eventPtr.PreTime.Month() != eventPtr.CurTime.Month()
-		log.Infof("onTimerNotify, refreshWeek:%v, refreshMonth:%v,curWeek:%v,curMonth:%v", refreshWeek, refreshMonth, eventPtr.CurTime.Weekday(), eventPtr.CurTime.Month())
+		log.Infof("onTimerNotify, refreshDaily:%v, refreshWeek:%v, refreshMonth:%v,curWeek:%v,curMonth:%v", refreshDaily, refreshWeek, refreshMonth, eventPtr.CurTime.Weekday(), eventPtr.CurTime.Month())
 		for _, nsv := range s.namespace2Totalizer {
-			for tk, tv := range nsv {
-				if refreshWeek && tk == common.TotalizeWeek {
+			for _, tv := range nsv {
+				if refreshDaily {
+					// 每日更新
+					for _, nv := range tv {
+						nv.Period(common.TotalizeDaily, eventPtr.CurTime)
+					}
+				}
+				if refreshWeek {
 					// 每周一 更新周统计
 					if eventPtr.CurTime.Weekday() == time.Monday {
 						for _, nv := range tv {
-							nv.Catalog = model.TotalizeHistory
-							s.saveTotalizer(nv)
-
-							nv.Reset()
-							nv.TimeStamp = eventPtr.CurTime.UTC().Unix()
-							s.saveTotalizer(nv)
+							nv.Period(common.TotalizeWeek, eventPtr.CurTime)
 						}
 					}
 				}
-				if refreshMonth && tk == common.TotalizeMonth {
+				if refreshMonth {
 					// 每月第一天 更新月统计
 					if eventPtr.CurTime.Day() == 1 {
 						for _, nv := range tv {
-							nv.Catalog = model.TotalizeHistory
-							s.saveTotalizer(nv)
-
-							nv.Reset()
-							nv.TimeStamp = eventPtr.CurTime.UTC().Unix()
-							s.saveTotalizer(nv)
+							nv.Period(common.TotalizeMonth, eventPtr.CurTime)
 						}
 					}
 				}
@@ -203,34 +200,19 @@ func (s *Totalizer) onTimerNotify(eventPtr *common.TimerNotify) {
 	})
 }
 
-func (s *Totalizer) saveTotalizer(totalizerPtr *model.Totalizer) (ret *model.Totalizer) {
-	curTotalizer, curErr := s.totalizerDao.QueryTotalizer(totalizerPtr.Owner, totalizerPtr.Type, totalizerPtr.Catalog, totalizerPtr.Namespace)
-	if curErr != nil {
-		curTotalizer, curErr = s.totalizerDao.CreateTotalizer(totalizerPtr, totalizerPtr.Namespace)
-		if curErr != nil {
-			log.Errorf("create totalizer failed, totalizer:%v , err:%v", totalizerPtr, curErr)
-			return
-		}
-
-		ret = curTotalizer
+func (s *Totalizer) saveHistoryTotalizer(totalizerPtr *model.Totalizer) (ret *model.Totalizer) {
+	if totalizerPtr.Catalog != model.TotalizeHistory {
+		log.Errorf("illegal totalizer catalog, owner:%v, type:%v, catalog:%v, namespace:%v",
+			totalizerPtr.Owner,
+			totalizerPtr.Type,
+			totalizerPtr.Catalog,
+			totalizerPtr.Namespace)
 		return
 	}
 
-	curTotalizer.Value = totalizerPtr.Value
-	curTotalizer.TimeStamp = totalizerPtr.TimeStamp
-	curTotalizer, curErr = s.totalizerDao.UpdateTotalizer(curTotalizer, curTotalizer.Namespace)
+	curTotalizer, curErr := s.totalizerDao.CreateTotalizer(totalizerPtr, totalizerPtr.Namespace)
 	if curErr != nil {
-		log.Errorf("update totalizer failed, totalizer:%v, err:%v", curTotalizer, curErr)
-		return
-	}
-
-	ret = curTotalizer
-	return
-}
-
-func (s *Totalizer) loadTotalizer(totalizerPtr *model.Totalizer) (ret *model.Totalizer) {
-	curTotalizer, curErr := s.totalizerDao.QueryTotalizer(totalizerPtr.Owner, totalizerPtr.Type, totalizerPtr.Catalog, totalizerPtr.Namespace)
-	if curErr != nil {
+		log.Errorf("save history totalizer failed, totalizer:%v, err:%v", curTotalizer, curErr)
 		return
 	}
 

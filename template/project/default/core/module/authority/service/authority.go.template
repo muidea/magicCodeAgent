@@ -55,29 +55,29 @@ func (s *Authority) BindRegistry(
 
 // RegisterRoute 注册路由
 func (s *Authority) RegisterRoute() {
-	s.roleRouteRegistry.AddHandler(common.FilterAuthorityAccount, "GET", cc.ReadPrivate, s.FilterAuthorityAccount)
-	s.roleRouteRegistry.AddHandler(common.QueryAuthorityAccount, "GET", cc.ReadPrivate, s.QueryAuthorityAccount)
-	s.roleRouteRegistry.AddHandler(common.CreateAuthorityAccount, "POST", cc.WritePrivate, s.CreateAuthorityAccount)
-	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityAccount, "PUT", cc.WritePrivate, s.UpdateAuthorityAccount)
-	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityAccount, "DELETE", cc.DeletePrivate, s.DeleteAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityAccount, "GET", cc.ReadPermission, s.FilterAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityAccount, "GET", cc.ReadPermission, s.QueryAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityAccount, "POST", cc.WritePermission, s.CreateAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityAccount, "PUT", cc.WritePermission, s.UpdateAuthorityAccount)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityAccount, "DELETE", cc.DeletePermission, s.DeleteAuthorityAccount)
 
-	s.roleRouteRegistry.AddHandler(common.FilterAuthorityEndpoint, "GET", cc.ReadPrivate, s.FilterAuthorityEndpoint)
-	s.roleRouteRegistry.AddHandler(common.QueryAuthorityEndpoint, "GET", cc.ReadPrivate, s.QueryAuthorityEndpoint)
-	s.roleRouteRegistry.AddHandler(common.CreateAuthorityEndpoint, "POST", cc.WritePrivate, s.CreateAuthorityEndpoint)
-	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityEndpoint, "PUT", cc.WritePrivate, s.UpdateAuthorityEndpoint)
-	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityEndpoint, "DELETE", cc.DeletePrivate, s.DeleteAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityEndpoint, "GET", cc.ReadPermission, s.FilterAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityEndpoint, "GET", cc.ReadPermission, s.QueryAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityEndpoint, "POST", cc.WritePermission, s.CreateAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityEndpoint, "PUT", cc.WritePermission, s.UpdateAuthorityEndpoint)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityEndpoint, "DELETE", cc.DeletePermission, s.DeleteAuthorityEndpoint)
 
-	s.roleRouteRegistry.AddHandler(common.FilterAuthorityRole, "GET", cc.ReadPrivate, s.FilterAuthorityRole)
-	s.roleRouteRegistry.AddHandler(common.QueryAuthorityRole, "GET", cc.ReadPrivate, s.QueryAuthorityRole)
-	s.roleRouteRegistry.AddHandler(common.CreateAuthorityRole, "POST", cc.WritePrivate, s.CreateAuthorityRole)
-	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityRole, "PUT", cc.WritePrivate, s.UpdateAuthorityRole)
-	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityRole, "DELETE", cc.DeletePrivate, s.DeleteAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityRole, "GET", cc.ReadPermission, s.FilterAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityRole, "GET", cc.ReadPermission, s.QueryAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityRole, "POST", cc.WritePermission, s.CreateAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityRole, "PUT", cc.WritePermission, s.UpdateAuthorityRole)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityRole, "DELETE", cc.DeletePermission, s.DeleteAuthorityRole)
 
-	s.roleRouteRegistry.AddHandler(common.FilterAuthorityNamespace, "GET", cc.ReadPrivate, s.FilterAuthorityNamespace)
-	s.roleRouteRegistry.AddHandler(common.QueryAuthorityNamespace, "GET", cc.ReadPrivate, s.QueryAuthorityNamespace)
-	s.roleRouteRegistry.AddHandler(common.CreateAuthorityNamespace, "POST", cc.WritePrivate, s.CreateAuthorityNamespace)
-	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityNamespace, "PUT", cc.WritePrivate, s.UpdateAuthorityNamespace)
-	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityNamespace, "DELETE", cc.DeletePrivate, s.DeleteAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.FilterAuthorityNamespace, "GET", cc.ReadPermission, s.FilterAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.QueryAuthorityNamespace, "GET", cc.ReadPermission, s.QueryAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.CreateAuthorityNamespace, "POST", cc.WritePermission, s.CreateAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.UpdateAuthorityNamespace, "PUT", cc.WritePermission, s.UpdateAuthorityNamespace)
+	s.roleRouteRegistry.AddHandler(common.DeleteAuthorityNamespace, "DELETE", cc.DeletePermission, s.DeleteAuthorityNamespace)
 }
 
 func (s *Authority) getCurrentEntity(ctx context.Context) (ret *cc.EntityView, err error) {

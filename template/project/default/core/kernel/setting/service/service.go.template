@@ -56,9 +56,9 @@ func (s *Setting) BindRegistry(
 
 // RegisterRoute 注册路由
 func (s *Setting) RegisterRoute() {
-	s.roleRouteRegistry.AddHandler(common.ViewSetting, "GET", cc.ReadPrivate, s.ViewSetting)
+	s.roleRouteRegistry.AddHandler(common.ViewSetting, "GET", cc.ReadPermission, s.ViewSetting)
 
-	s.roleRouteRegistry.AddHandler(common.ViewSettingProfile, "GET", cc.ReadPrivate, s.ViewSettingProfile)
+	s.roleRouteRegistry.AddHandler(common.ViewSettingProfile, "GET", cc.ReadPermission, s.ViewSettingProfile)
 }
 
 func (s *Setting) getCurrentEntity(ctx context.Context, res http.ResponseWriter, req *http.Request) (ret *cc.EntityView, err error) {

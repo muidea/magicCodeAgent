@@ -57,10 +57,10 @@ func (s *Image) BindRegistry(
 
 // RegisterRoute 注册路由
 func (s *Image) RegisterRoute() {
-	s.roleRouteRegistry.AddHandler(common.FilterImage, "GET", cc.ReadPrivate, s.FilterImage)
-	s.roleRouteRegistry.AddHandler(common.QueryImage, "GET", cc.ReadPrivate, s.QueryImage)
-	s.roleRouteRegistry.AddHandler(common.UpdateImage, "PUT", cc.WritePrivate, s.UpdateImage)
-	s.roleRouteRegistry.AddHandler(common.DeleteImage, "DELETE", cc.DeletePrivate, s.DeleteImage)
+	s.roleRouteRegistry.AddHandler(common.FilterImage, "GET", cc.ReadPermission, s.FilterImage)
+	s.roleRouteRegistry.AddHandler(common.QueryImage, "GET", cc.ReadPermission, s.QueryImage)
+	s.roleRouteRegistry.AddHandler(common.UpdateImage, "PUT", cc.WritePermission, s.UpdateImage)
+	s.roleRouteRegistry.AddHandler(common.DeleteImage, "DELETE", cc.DeletePermission, s.DeleteImage)
 }
 
 func (s *Image) FilterImage(ctx context.Context, res http.ResponseWriter, req *http.Request) {

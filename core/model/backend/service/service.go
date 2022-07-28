@@ -131,11 +131,11 @@ func (s *{{formatModuleName $ModuleVal}}) BindRegistry(
 
 // RegisterRoute 注册路由
 func (s *{{formatModuleName $ModuleVal}}) RegisterRoute() { {{with .ModuleVal}}{{range .Objects}}
-	s.roleRouteRegistry.AddHandler(common.Filter{{formatObjectActionName $ModuleVal .}}, "GET", cc.ReadPrivate, s.Filter{{formatObjectName .}})
-	s.roleRouteRegistry.AddHandler(common.Query{{formatObjectActionName $ModuleVal .}}, "GET", cc.ReadPrivate, s.Query{{formatObjectName .}})
-	s.roleRouteRegistry.AddHandler(common.Create{{formatObjectActionName $ModuleVal .}}, "POST", cc.WritePrivate, s.Create{{formatObjectName .}})
-	s.roleRouteRegistry.AddHandler(common.Update{{formatObjectActionName $ModuleVal .}}, "PUT", cc.WritePrivate, s.Update{{formatObjectName .}})
-	s.roleRouteRegistry.AddHandler(common.Delete{{formatObjectActionName $ModuleVal .}}, "DELETE", cc.DeletePrivate, s.Delete{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Filter{{formatObjectActionName $ModuleVal .}}, "GET", cc.ReadPermission, s.Filter{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Query{{formatObjectActionName $ModuleVal .}}, "GET", cc.ReadPermission, s.Query{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Create{{formatObjectActionName $ModuleVal .}}, "POST", cc.WritePermission, s.Create{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Update{{formatObjectActionName $ModuleVal .}}, "PUT", cc.WritePermission, s.Update{{formatObjectName .}})
+	s.roleRouteRegistry.AddHandler(common.Delete{{formatObjectActionName $ModuleVal .}}, "DELETE", cc.DeletePermission, s.Delete{{formatObjectName .}})
 {{end}}{{end}}
 }
 

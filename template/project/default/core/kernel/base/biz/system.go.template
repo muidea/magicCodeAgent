@@ -57,13 +57,13 @@ const moduleDefine = `
         {
             "name": "Bill",
             "icon": "icon-card",
-            "title": "账单管理",
-			"content": "账单信息管理，支持账单信息、账单报告、佣金信息、佣金策略的查询操作，支持佣金支付，佣金策略新建操作，支持佣金策略的更新和删除操作。不同权限组的账号可以执行不同的操作。",
+            "title": "积分管理",
+			"content": "积分信息管理，支持积分清单、积分报告、积分兑换、积分策略的查询操作，支持积分兑换，积分策略新建操作，支持积分策略的更新和删除操作。不同权限组的账号可以执行不同的操作。",
             "child": [
                 {
                     "name": "Bill",
                     "icon": "icon-bill",
-                    "title": "账单信息",
+                    "title": "积分清单",
                     "action": [
                         "query/",
                         "query/:id",
@@ -73,7 +73,7 @@ const moduleDefine = `
                 {
                     "name": "BillReport",
                     "icon": "icon-bulletin",
-                    "title": "账单报表",
+                    "title": "积分报表",
                     "action": [
                         "query/",
                         "query/:id"
@@ -82,7 +82,7 @@ const moduleDefine = `
                 {
                     "name": "PayReward",
                     "icon": "icon-pay_collect",
-                    "title": "佣金支付",
+                    "title": "积分兑换",
                     "action": [
                         "query/",
                         "query/:id",
@@ -92,7 +92,7 @@ const moduleDefine = `
                 {
                     "name": "RewardPolicy",
                     "icon": "icon-balance",
-                    "title": "佣金策略",
+                    "title": "积分策略",
                     "action": [
                         "query/",
                         "query/:id",
@@ -317,17 +317,17 @@ const systemDefine = `
 }
 `
 
-type Content struct {
-	Name    string `json:"name"`
-	Content string `json:"content"`
+type ModuleInfo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
-func (s *Content) FromModule(modulePtr *Module) {
+func (s *ModuleInfo) FromModule(modulePtr *Module) {
 	s.Name = modulePtr.Title
-	s.Content = modulePtr.Content
+	s.Description = modulePtr.Content
 }
 
-type Authority struct {
+type Privilege struct {
 	Read   bool `json:"read"`
 	Write  bool `json:"write"`
 	Delete bool `json:"delete"`
@@ -337,7 +337,7 @@ type Route struct {
 	Name      string     `json:"name"`
 	Icon      string     `json:"icon"`
 	Path      string     `json:"path"`
-	Authority *Authority `json:"authority"`
+	Privilege *Privilege `json:"privilege"`
 	Routes    []*Route   `json:"routes"`
 }
 
@@ -346,9 +346,9 @@ func (s *Route) FromModule(prefix string, modulePtr *Module) {
 	s.Icon = modulePtr.Icon
 	if prefix != "" {
 		if prefix != modulePtr.Name {
-			s.Path = strings.ToLower(path.Join("/", prefix, modulePtr.Name))
+			s.Path = strings.ToLower(path.Join("/", prefix, modulePtr.Name) + "/")
 		} else {
-			s.Path = strings.ToLower(path.Join("/", modulePtr.Name))
+			s.Path = strings.ToLower(path.Join("/", modulePtr.Name) + "/")
 		}
 	}
 }
@@ -406,7 +406,7 @@ func (s *System) loadDefine(strDefine string) (ret *Define, err error) {
 	return
 }
 
-func (s *System) SystemInfo(ptr *cc.RoleView, isSuper bool) (route []*Route, content []*Content) {
+func (s *System) SystemInfo(ptr *cc.RoleView, isSuper bool) (route []*Route, content []*ModuleInfo) {
 	err := s.loadModule()
 	if err != nil {
 		log.Errorf("load module failed, err:%s", err.Error())
@@ -422,7 +422,7 @@ func (s *System) SystemInfo(ptr *cc.RoleView, isSuper bool) (route []*Route, con
 	//}
 
 	route = []*Route{}
-	content = []*Content{}
+	content = []*ModuleInfo{}
 	if !isSuper {
 		for _, val := range s.moduleDefine.Module {
 			rt := &Route{}
@@ -430,16 +430,16 @@ func (s *System) SystemInfo(ptr *cc.RoleView, isSuper bool) (route []*Route, con
 			for _, sv := range val.Child {
 				st := &Route{}
 				st.FromModule(val.Name, sv)
-				authorityPtr := s.checkAuthority(st.Path, ptr)
-				if authorityPtr != nil {
-					st.Authority = authorityPtr
+				privilegePtr := s.checkPrivilege(st.Path, ptr)
+				if privilegePtr != nil {
+					st.Privilege = privilegePtr
 					rt.Routes = append(rt.Routes, st)
 				}
 			}
 			if len(rt.Routes) > 0 {
 				route = append(route, rt)
 
-				cnt := &Content{}
+				cnt := &ModuleInfo{}
 				cnt.FromModule(val)
 
 				content = append(content, cnt)
@@ -462,9 +462,9 @@ func (s *System) SystemInfo(ptr *cc.RoleView, isSuper bool) (route []*Route, con
 				continue
 			}
 
-			authorityPtr := s.checkAuthority(st.Path, ptr)
-			if authorityPtr != nil {
-				st.Authority = authorityPtr
+			privilegePtr := s.checkPrivilege(st.Path, ptr)
+			if privilegePtr != nil {
+				st.Privilege = privilegePtr
 				rt.Routes = append(rt.Routes, st)
 			}
 		}
@@ -472,7 +472,7 @@ func (s *System) SystemInfo(ptr *cc.RoleView, isSuper bool) (route []*Route, con
 		if len(rt.Routes) > 0 {
 			route = append(route, rt)
 
-			cnt := &Content{}
+			cnt := &ModuleInfo{}
 			cnt.FromModule(val)
 
 			content = append(content, cnt)
@@ -484,18 +484,18 @@ func (s *System) SystemInfo(ptr *cc.RoleView, isSuper bool) (route []*Route, con
 
 var patternReg, _ = regexp.Compile("(/[a-z]+)+/(query|create|update|delete)")
 
-func (s *System) checkAuthority(prefix string, ptr *cc.RoleView) (ret *Authority) {
+func (s *System) checkPrivilege(prefix string, ptr *cc.RoleView) (ret *Privilege) {
 	if ptr == nil {
 		return
 	}
 
 	if ptr.IsSuper() {
-		ret = &Authority{Read: true, Write: true, Delete: true}
+		ret = &Privilege{Read: true, Write: true, Delete: true}
 		return
 	}
 
 	privates := map[int]int{}
-	for _, val := range ptr.Private {
+	for _, val := range ptr.Privilege {
 		subStr := patternReg.FindString(val.Path)
 		if strings.Index(subStr, prefix) == 0 {
 			privates[val.Value.Value] = val.Value.Value
@@ -506,14 +506,14 @@ func (s *System) checkAuthority(prefix string, ptr *cc.RoleView) (ret *Authority
 		return
 	}
 
-	ret = &Authority{}
+	ret = &Privilege{}
 	for k, _ := range privates {
 		switch k {
-		case cc.ReadPrivate:
+		case cc.ReadPermission:
 			ret.Read = true
-		case cc.WritePrivate:
+		case cc.WritePermission:
 			ret.Write = true
-		case cc.DeletePrivate:
+		case cc.DeletePermission:
 			ret.Delete = true
 		}
 	}
