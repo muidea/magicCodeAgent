@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	log "github.com/cihub/seelog"
+	"github.com/muidea/magicCommon/foundation/log"
 )
 
 type action struct {

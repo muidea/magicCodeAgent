@@ -1,7 +1,7 @@
 package frontend
 
 import (
-	log "github.com/cihub/seelog"
+	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicToolkit/core/model/frontend/data"
 	"github.com/muidea/magicToolkit/core/model/frontend/models"
 	"github.com/muidea/magicToolkit/core/model/frontend/services"

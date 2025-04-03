@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/cihub/seelog"
+	"github.com/muidea/magicCommon/foundation/log"
 
 	"github.com/muidea/magicBatis/client"
 	bc "github.com/muidea/magicBatis/common"

@@ -4,10 +4,7 @@ go 1.23
 
 replace github.com/muidea/magicCommon => ../magicCommon
 
-require (
-	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
-	github.com/muidea/magicCommon v0.0.0-00010101000000-000000000000
-)
+require github.com/muidea/magicCommon v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.6 // indirect

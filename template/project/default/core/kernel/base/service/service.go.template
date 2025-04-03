@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/cihub/seelog"
+	"github.com/muidea/magicCommon/foundation/log"
 
 	bc "github.com/muidea/magicBatis/common"
 	fn "github.com/muidea/magicCommon/foundation/net"

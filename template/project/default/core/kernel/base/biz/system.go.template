@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	log "github.com/cihub/seelog"
+	"github.com/muidea/magicCommon/foundation/log"
 
 	cc "github.com/muidea/magicCas/common"
 )

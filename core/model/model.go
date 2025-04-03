@@ -2,12 +2,13 @@ package model
 
 import (
 	"fmt"
-	"github.com/muidea/magicToolkit/core/model/frontend"
-	"github.com/muidea/magicToolkit/factory"
 	"io/ioutil"
 	"path"
 
-	log "github.com/cihub/seelog"
+	"github.com/muidea/magicToolkit/core/model/frontend"
+	"github.com/muidea/magicToolkit/factory"
+
+	"github.com/muidea/magicCommon/foundation/log"
 
 	"github.com/muidea/magicToolkit/core/model/backend"
 	mu "github.com/muidea/magicToolkit/core/model/util"
