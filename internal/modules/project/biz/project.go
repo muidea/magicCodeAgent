@@ -6,9 +6,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/muidea/magicToolkit/core/util"
-	"github.com/muidea/magicToolkit/model"
 	"github.com/muidea/magicToolkit/pkg/factory"
+	"github.com/muidea/magicToolkit/pkg/models"
+	"github.com/muidea/magicToolkit/pkg/util"
 )
 
 // ProjectHelper core define
@@ -43,7 +43,7 @@ func (s *ProjectHelper) cloneContent(templatePath, filePath, fileName string) (e
 }
 
 // Create create
-func (s *ProjectHelper) Create(projectName, projectType string) (ret *model.Define, err error) {
+func (s *ProjectHelper) Create(projectName, projectType string) (ret *models.Define, err error) {
 	s.projectName = projectName
 	if projectType == "" {
 		projectType = util.ProjectDefaultTemplatePath
@@ -54,10 +54,10 @@ func (s *ProjectHelper) Create(projectName, projectType string) (ret *model.Defi
 		return
 	}
 
-	ret = &model.Define{
+	ret = &models.Define{
 		ProjectName: projectName,
 		ProjectType: projectType,
-		Module:      []*model.Module{},
+		Module:      []*models.Module{},
 	}
 	return
 }

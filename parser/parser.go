@@ -1,3 +1,8 @@
+// Package parser 提供通用的文本解析功能
+//
+// 主要功能:
+// 解析go 文件, 提取出结构体定义, 并解析出结构体字段
+
 package parser
 
 import (
@@ -18,7 +23,7 @@ type Type struct {
 }
 
 func (s *Type) String() string {
-	val := fmt.Sprintf("%s", s.Name)
+	val := s.Name
 	if s.IsPtr {
 		val = fmt.Sprintf("*%s", val)
 	}
@@ -69,8 +74,8 @@ func (s ObjectsList) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-var valPattern = regexp.MustCompile("([a-zA-Z|\\d])+")
-var itemPattern = regexp.MustCompile("([a-zA-Z|\\d]|\\s|,)+")
+var valPattern = regexp.MustCompile(`([a-zA-Z|\\d])+`)
+var itemPattern = regexp.MustCompile(`([a-zA-Z|\\d]|\\s|,)+`)
 
 func splitItems(val string) (key string, vals []string) {
 	items := itemPattern.FindAllString(val, -1)
@@ -117,24 +122,17 @@ func parseArray(ptr *ast.ArrayType) (ret *Type, err error) {
 		if err != nil {
 			return
 		}
-		ret.IsArray = true
 		return
 	case *ast.StarExpr:
 		ret, err = parseStart(t)
 		if err != nil {
 			return
 		}
-		if ret.IsArray {
-			err = fmt.Errorf("illegal array, type:[]%v, pos:%v, end:%v", ret, t.Pos(), t.End())
-			return
-		}
-		ret.IsArray = true
 		return
 	default:
 		err = fmt.Errorf("illegal array, pos:%v, end:%v", t.Pos(), t.End())
 	}
 
-	err = fmt.Errorf("illegal array, pos:%v, end:%v", ptr.Pos(), ptr.End())
 	return
 }
 
@@ -152,17 +150,10 @@ func parseStart(ptr *ast.StarExpr) (ret *Type, err error) {
 		if err != nil {
 			return
 		}
-		if ret.IsPtr {
-			err = fmt.Errorf("illegal start, type:*%v, pos:%v, end:%v", ret, t.Pos(), t.End())
-			return
-		}
-		ret.IsPtr = true
 		return
 	default:
 		err = fmt.Errorf("illegal start, pos:%v, end:%v", t.Pos(), t.End())
 	}
-
-	err = fmt.Errorf("illegal start, pos:%v, end:%v", ptr.Pos(), ptr.End())
 	return
 }
 
@@ -184,8 +175,6 @@ func parseField(ptr *ast.Field) (ret *Item, err error) {
 	default:
 		err = fmt.Errorf("illegal field define,name:%v, pos:%v, end:%v", ptr.Names[0].Name, ptr.Pos(), ptr.End())
 	}
-
-	err = fmt.Errorf("illegal field define,name:%v, pos:%v, end:%v", ptr.Names[0].Name, ptr.Pos(), ptr.End())
 	return
 }
 

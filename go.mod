@@ -1,10 +1,13 @@
 module github.com/muidea/magicToolkit
 
-go 1.23
+go 1.23.0
 
 replace github.com/muidea/magicCommon => ../magicCommon
 
-require github.com/muidea/magicCommon v0.0.0-00010101000000-000000000000
+require (
+	github.com/muidea/magicCommon v1.3.122
+	golang.org/x/text v0.23.0
+)
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.6 // indirect
@@ -17,5 +20,4 @@ require (
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
 )

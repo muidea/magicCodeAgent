@@ -21,14 +21,19 @@ github.com/google/uuid
 ## explicit; go 1.18
 github.com/leodido/go-urn
 github.com/leodido/go-urn/scim/schema
-# github.com/muidea/magicCommon v0.0.0-00010101000000-000000000000 => ../magicCommon
+# github.com/muidea/magicCommon v1.3.122 => ../magicCommon
 ## explicit; go 1.23
 github.com/muidea/magicCommon/def
 github.com/muidea/magicCommon/event
 github.com/muidea/magicCommon/execute
 github.com/muidea/magicCommon/foundation/log
-github.com/muidea/magicCommon/foundation/path
+github.com/muidea/magicCommon/foundation/system
 github.com/muidea/magicCommon/foundation/util
+github.com/muidea/magicCommon/framework/application
+github.com/muidea/magicCommon/framework/plugin/common
+github.com/muidea/magicCommon/framework/plugin/initator
+github.com/muidea/magicCommon/framework/plugin/module
+github.com/muidea/magicCommon/framework/service
 github.com/muidea/magicCommon/task
 # github.com/muidea/seelog v1.0.0
 ## explicit
@@ -43,10 +48,14 @@ golang.org/x/net/html/atom
 # golang.org/x/sys v0.26.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
-# golang.org/x/text v0.19.0
-## explicit; go 1.18
+# golang.org/x/text v0.23.0
+## explicit; go 1.23.0
+golang.org/x/text/cases
+golang.org/x/text/internal
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/tag
 golang.org/x/text/language
+golang.org/x/text/transform
+golang.org/x/text/unicode/norm
 # github.com/muidea/magicCommon => ../magicCommon

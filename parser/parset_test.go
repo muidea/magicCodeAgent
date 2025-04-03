@@ -12,28 +12,28 @@ func TestParse(t *testing.T) {
 	fset := token.NewFileSet() // positions are relative to fset
 
 	/*
-		src := `package foo
+			src := `package foo
 
-	import (
-		"fmt"
-		"time"
-	)
+		import (
+			"fmt"
+			"time"
+		)
 
-	type Model struct {
-		Name   string  `json:`
-		Desc   float
-		Icon   int
-		Action []string
-	}
+		type Model struct {
+			Name   string  `json:`
+			Desc   float
+			Icon   int
+			Action []string
+		}
 
-	func bar() {
-		fmt.Println(time.Now())
-	}`
+		func bar() {
+			fmt.Println(time.Now())
+		}`
 
 
 	*/
 	// Parse src but stop after processing the imports.
-	f, err := parser.ParseFile(fset, "./module.go", nil, parser.AllErrors)
+	f, err := parser.ParseFile(fset, "./module_test.go", nil, parser.AllErrors)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -52,7 +52,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestParseObject(t *testing.T) {
-	packagePtr, packageErr := Parse("./module.go")
+	packagePtr, packageErr := Parse("./module_test.go")
 	if packageErr != nil {
 		t.Errorf("parse failed, err:%s", packageErr.Error())
 		return

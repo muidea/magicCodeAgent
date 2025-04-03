@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
-	"github.com/muidea/magicToolkit/core/util"
-	"github.com/muidea/magicToolkit/model"
 	"github.com/muidea/magicToolkit/pkg/factory"
+	"github.com/muidea/magicToolkit/pkg/models"
+	"github.com/muidea/magicToolkit/pkg/util"
 )
 
 type ModuleHelper struct {
@@ -19,7 +19,7 @@ type ModuleHelper struct {
 	moduleName  string
 }
 
-func (s *ModuleHelper) Create(projectName, moduleName string) (ret *model.Module, err error) {
+func (s *ModuleHelper) Create(projectName, moduleName string) (ret *models.Module, err error) {
 	s.projectName = projectName
 	s.moduleName = util.ToTitle(moduleName)
 	s.modulePath = util.ToLower(moduleName)
@@ -30,7 +30,7 @@ func (s *ModuleHelper) Create(projectName, moduleName string) (ret *model.Module
 		return
 	}
 
-	ret = &model.Module{
+	ret = &models.Module{
 		Name: moduleName,
 	}
 	return
