@@ -1,10 +1,13 @@
 package biz
 
 import (
+	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
+
 	"github.com/muidea/magicToolkit/internal/modules/base/biz"
 	"github.com/muidea/magicToolkit/internal/modules/module/pkg/common"
+	"github.com/muidea/magicToolkit/pkg/util"
 )
 
 type Module struct {
@@ -27,7 +30,21 @@ func New(
 }
 
 func (s *Module) create(ev event.Event, re event.Result) {
+	paramPtr, paramOK := ev.Data().(*common.CreateModuleParam)
+	if !paramOK {
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.Unexpected, "illegal create module param"))
+		}
+		return
+	}
 
+	err := util.VerifyModuleWorkPath(paramPtr.WorkPath)
+	if err != nil {
+		if re != nil {
+			re.Set(nil, err)
+		}
+		return
+	}
 }
 
 func (s *Module) refresh(ev event.Event, re event.Result) {

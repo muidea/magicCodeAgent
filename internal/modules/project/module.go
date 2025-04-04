@@ -3,11 +3,20 @@ package project
 import (
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicToolkit/internal/modules/project/biz"
 	"github.com/muidea/magicToolkit/internal/modules/project/pkg/common"
 )
+
+func init() {
+	module.Register(New())
+}
+
+func New() *Project {
+	return &Project{}
+}
 
 type Project struct {
 	bizPtr *biz.Project
