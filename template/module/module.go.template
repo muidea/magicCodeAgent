@@ -1,16 +1,18 @@
-package {{.ModulePath}}
+package panel
 
 import (
-	"github.com/muidea/magicBatis/client"
+	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/module"
+	"github.com/muidea/magicCommon/foundation/log"
+	"github.com/muidea/magicCommon/framework/plugin/initator"
+	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicCas/toolkit"
-
-	"github.com/muidea/{{.ProjectName}}/common"
-	"github.com/muidea/{{.ProjectName}}/core/module/{{.ModulePath}}/biz"
-	"github.com/muidea/{{.ProjectName}}/core/module/{{.ModulePath}}/service"
+	pc "github.com/muidea/{{.ProjectName}}/internal/initators/persistence/pkg/common"
+	rc "github.com/muidea/{{.ProjectName}}/internal/initators/routeregistry/pkg/common"
+	"github.com/muidea/{{.ProjectName}}/internal/modules/{{.ModulePath}}/biz"
+	"github.com/muidea/{{.ProjectName}}/internal/modules/{{.ModulePath}}/pkg/common"
+	"github.com/muidea/{{.ProjectName}}/internal/modules/{{.ModulePath}}/service"
 )
 
 func init() {
@@ -18,13 +20,8 @@ func init() {
 }
 
 type {{.ModuleName}} struct {
-	batisClient       client.Client
-	routeRegistry     toolkit.RouteRegistry
-	casRouteRegistry  toolkit.CasRegistry
-	roleRouteRegistry toolkit.RoleRegistry
-
-	service *service.{{.ModuleName}}
-	biz     *biz.{{.ModuleName}}
+	bizPtr     *biz.{{.ModuleName}}
+	servicePtr *service.{{.ModuleName}}
 }
 
 func New() *{{.ModuleName}} {
@@ -35,39 +32,41 @@ func (s *{{.ModuleName}}) ID() string {
 	return common.{{.ModuleName}}Module
 }
 
-func (s *{{.ModuleName}}) BindBatisClient(clnt client.Client) {
-	s.batisClient = clnt
+func (s *{{.ModuleName}}) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+	var persistenceHelperVal pc.PersistenceHelper
+	var persistenceHelperErr *cd.Error
+	persistenceHelperVal, persistenceHelperErr = initator.GetEntity(pc.PersistenceInitator, persistenceHelperVal)
+	if persistenceHelperErr != nil {
+		err = persistenceHelperErr
+		log.Errorf("{{.ModuleName}} setup failed, initator.GetEntity error:%s", persistenceHelperErr.Error())
+		return
+	}
+
+	var routeRegistryHelperVal rc.RouteRegistryHelper
+	var routeRegistryHelperErr *cd.Error
+	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(rc.RouteRegistryInitator, routeRegistryHelperVal)
+	if routeRegistryHelperErr != nil {
+		err = routeRegistryHelperErr
+		log.Errorf("{{.ModuleName}} setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
+		return
+	}
+
+	s.bizPtr = biz.New(persistenceHelperVal.GetPlatformClient(), eventHub, backgroundRoutine)
+
+	s.servicePtr = service.New(routeRegistryHelperVal.GetRoleRouteRegistry(), s.bizPtr)
+
+	return nil
 }
 
-func (s *{{.ModuleName}}) BindRegistry(
-	routeRegistry toolkit.RouteRegistry,
-	casRouteRegistry toolkit.CasRegistry,
-	roleRouteRegistry toolkit.RoleRegistry) {
+func (s *{{.ModuleName}}) Run() (err *cd.Error) {
+	err = s.bizPtr.Initialize()
+	if err != nil {
+		return
+	}
 
-	s.routeRegistry = routeRegistry
-	s.casRouteRegistry = casRouteRegistry
-	s.roleRouteRegistry = roleRouteRegistry
-
-	s.routeRegistry.SetApiVersion(common.ApiVersion)
-	s.casRouteRegistry.SetApiVersion(common.ApiVersion)
-	s.roleRouteRegistry.SetApiVersion(common.ApiVersion)
-}
-
-func (s *{{.ModuleName}}) Setup(
-	endpointName string,
-	eventHub event.Hub,
-	backgroundRoutine task.BackgroundRoutine) {
-	s.biz = biz.New(endpointName,
-		s.batisClient,
-		eventHub,
-		backgroundRoutine,
-	)
-
-	s.service = service.New(s.biz)
-	s.service.BindRegistry(s.routeRegistry, s.casRouteRegistry, s.roleRouteRegistry)
-	s.service.RegisterRoute()
+	s.servicePtr.RegisterRoute()
+	return
 }
 
 func (s *{{.ModuleName}}) Teardown() {
-
 }

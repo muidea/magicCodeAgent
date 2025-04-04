@@ -5,7 +5,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/{{.ProjectName}}/internal/modules/base/biz"
-	"github.com/muidea/{{.ProjectName}}/internal/{{.ModulePath}}/pkg/common"
+	"github.com/muidea/{{.ProjectName}}/internal/modules/{{.ModulePath}}/pkg/common"
 )
 
 type {{.ModuleName}} struct {
