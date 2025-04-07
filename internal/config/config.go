@@ -13,6 +13,10 @@ func init() {
 	currentWorkPath, _ = os.Getwd()
 }
 
+func BindPort() string {
+	return ""
+}
+
 func SetEmbedTemplateFS(fs embed.FS) {
 	templateFS = fs
 }

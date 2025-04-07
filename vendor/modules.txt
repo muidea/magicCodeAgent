@@ -17,6 +17,9 @@ github.com/go-playground/universal-translator
 # github.com/go-playground/validator/v10 v10.22.1
 ## explicit; go 1.18
 github.com/go-playground/validator/v10
+# github.com/golang-jwt/jwt/v4 v4.5.0
+## explicit; go 1.16
+github.com/golang-jwt/jwt/v4
 # github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
@@ -37,7 +40,11 @@ github.com/muidea/magicCommon/framework/plugin/common
 github.com/muidea/magicCommon/framework/plugin/initator
 github.com/muidea/magicCommon/framework/plugin/module
 github.com/muidea/magicCommon/framework/service
+github.com/muidea/magicCommon/session
 github.com/muidea/magicCommon/task
+# github.com/muidea/magicEngine v1.4.0 => ../magicEngine
+## explicit; go 1.23
+github.com/muidea/magicEngine/http
 # github.com/muidea/seelog v1.0.0
 ## explicit
 github.com/muidea/seelog
@@ -71,3 +78,4 @@ golang.org/x/text/unicode/norm
 ## explicit
 gopkg.in/yaml.v3
 # github.com/muidea/magicCommon => ../magicCommon
+# github.com/muidea/magicEngine => ../magicEngine
