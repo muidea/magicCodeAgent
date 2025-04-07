@@ -24,11 +24,21 @@ var (
 	gitCommit string
 )
 
+var configFile = ""
+
 func main() {
+	flag.StringVar(&configFile, "Config", configFile, "config file path")
 	flag.Parse()
 
 	fmt.Printf("magicCodeAgent V1.0\n")
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
+	if configFile != "" {
+		configErr := config.LoadConfig(configFile)
+		if configErr != nil {
+			log.Errorf("load config file failed, error:%s", configErr.Error())
+			return
+		}
+	}
 	err := application.Startup(service.HoldService(config.EndpointName()))
 	if err != nil {
 		log.Errorf("application.Startup err:%s", err.Error())
