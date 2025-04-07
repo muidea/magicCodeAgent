@@ -10,9 +10,9 @@ import (
 
 	pc "github.com/muidea/{{.ProjectName}}/internal/initators/persistence/pkg/common"
 	rc "github.com/muidea/{{.ProjectName}}/internal/initators/routeregistry/pkg/common"
-	"github.com/muidea/{{.ProjectName}}/internal/modules/{{.ModulePath}}/biz"
-	"github.com/muidea/{{.ProjectName}}/internal/modules/{{.ModulePath}}/pkg/common"
-	"github.com/muidea/{{.ProjectName}}/internal/modules/{{.ModulePath}}/service"
+	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/biz"
+	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/pkg/common"
+	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/service"
 )
 
 func init() {

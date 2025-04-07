@@ -72,6 +72,6 @@ func (s *Helper) cloneModuleContent(templateBasePath, relativePath, templateFile
 	}
 	factoryPtr := factory.NewFileFactory(templateBasePath, relativePath, templateFileName, contentVal)
 
-	err = factoryPtr.Create(s.workingPath, relativePath, fileName, true)
+	err = factoryPtr.Create(s.workingPath, path.Join(util.ToLower(s.moduleName), relativePath), fileName, true)
 	return
 }

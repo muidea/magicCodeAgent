@@ -5,7 +5,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
 
-	iconfig "github.com/muidea/magicToolkit/internal/config"
+	icfg "github.com/muidea/magicToolkit/internal/config"
 	"github.com/muidea/magicToolkit/internal/modules/base/biz"
 	"github.com/muidea/magicToolkit/internal/modules/executor/config"
 	"github.com/muidea/magicToolkit/internal/modules/executor/pkg/common"
@@ -54,7 +54,7 @@ func (s *Executor) runModuleAction() {
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
 		Name:          config.GetModuleName(),
-		WorkingPath:   iconfig.CurrentWorkPath(),
+		WorkingPath:   icfg.CurrentWorkPath(),
 	}
 	var ev event.Event
 	switch config.GetExecuteAction() {
@@ -76,7 +76,7 @@ func (s *Executor) runInitatorAction() {
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
 		Name:          config.GetModuleName(),
-		WorkingPath:   iconfig.CurrentWorkPath(),
+		WorkingPath:   icfg.CurrentWorkPath(),
 	}
 	var ev event.Event
 	switch config.GetExecuteAction() {
@@ -98,7 +98,7 @@ func (s *Executor) runProjectAction() {
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
 		Name:          config.GetModuleName(),
-		WorkingPath:   iconfig.CurrentWorkPath(),
+		WorkingPath:   icfg.CurrentWorkPath(),
 	}
 	var ev event.Event
 	switch config.GetExecuteAction() {

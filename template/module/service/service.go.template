@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/muidea/magicCas/pkg/toolkit"
 
-	"github.com/muidea/{{.ProjectName}}/internal/modules/{{.ModulePath}}/biz"
+	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/biz"
 )
 
 type {{.ModuleName}} struct {

@@ -8,6 +8,8 @@ import (
 	"github.com/muidea/magicCommon/framework/application"
 	"github.com/muidea/magicCommon/framework/service"
 
+	_ "github.com/muidea/magicToolkit"
+
 	"github.com/muidea/magicToolkit/internal/config"
 
 	_ "github.com/muidea/magicToolkit/internal/modules/executor"
