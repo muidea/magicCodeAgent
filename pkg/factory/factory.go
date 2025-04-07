@@ -2,15 +2,14 @@ package factory
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"os/exec"
 	"path"
 	"text/template"
 
 	"github.com/muidea/magicCommon/foundation/log"
-
 	fu "github.com/muidea/magicCommon/foundation/util"
+
 	"github.com/muidea/magicToolkit/pkg/util"
 )
 
@@ -41,18 +40,22 @@ func UnRegisterFunc(name string) {
 
 type FileFactory struct {
 	templatePath string
-	rootPath     string
 	relativePath string
 	templateName string
 	contentData  map[string]interface{}
 }
 
-func NewFileFactory(templatePath, rootPath, relativePath, templateName string, contentData map[string]interface{}) *FileFactory {
-	return &FileFactory{templatePath: templatePath, rootPath: rootPath, relativePath: relativePath, templateName: templateName, contentData: contentData}
+func NewFileFactory(templatePath, relativePath, templateName string, contentData map[string]interface{}) *FileFactory {
+	return &FileFactory{
+		templatePath: templatePath,
+		relativePath: relativePath,
+		templateName: templateName,
+		contentData:  contentData,
+	}
 }
 
 func (s *FileFactory) getTemplateName(relativePath string) string {
-	return fmt.Sprintf("%s/%s", relativePath, s.templateName)
+	return path.Join(relativePath, s.templateName)
 }
 
 func (s *FileFactory) getTemplateContent(relativePath string) (ret string, err error) {
@@ -66,8 +69,8 @@ func (s *FileFactory) getTemplateContent(relativePath string) (ret string, err e
 	return
 }
 
-func (s *FileFactory) Create(relativePath, fileName string, forceFlag bool) (err error) {
-	filePath := path.Join(s.rootPath, relativePath, fileName)
+func (s *FileFactory) Create(workingPath, relativePath, fileName string, forceFlag bool) (err error) {
+	filePath := path.Join(workingPath, relativePath, fileName)
 	filePath, fileName = path.Split(filePath)
 	existFlag := util.Exists(filePath)
 	if !existFlag {

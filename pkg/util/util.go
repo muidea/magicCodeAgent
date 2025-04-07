@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 	"golang.org/x/text/language"
 
 	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicToolkit/internal/config"
 )
 
 const (
@@ -47,57 +49,14 @@ func ToCamelCase(val string) string {
 	return strings.ToLower(val[0:1]) + val[1:]
 }
 
-func GetProjectTemplatePath(typeVal string) (ret string, err error) {
-	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
-	if toolKitPath == "" {
-		err = fmt.Errorf("no found toolkitPath")
-		return
-	}
-
-	templatePath := path.Join(toolKitPath, "template", "project", typeVal)
-	existsFlag := Exists(templatePath)
-	if !existsFlag {
-		err = fmt.Errorf("toolkit project template does not exist")
-		return
-	}
-
-	ret = templatePath
-	return
-}
-
-func GetModuleTemplatePath() (ret string, err error) {
-	toolKitPath := os.Getenv("MAGICTOOLKIT_PATH")
-	if toolKitPath == "" {
-		err = fmt.Errorf("no found toolkitPath")
-		return
-	}
-
-	templatePath := path.Join(toolKitPath, "template", "module")
-	existsFlag := Exists(templatePath)
-	if !existsFlag {
-		err = fmt.Errorf("toolkit module template does not exist")
-		return
-	}
-
-	ret = templatePath
-	return
-}
-
 func GetTemplateContent(templatePath, filePath, fileName string) (ret string, err error) {
-	var fullFilePath string
-	if filePath == "" {
-		fullFilePath = fmt.Sprintf("%s/%s", templatePath, fileName)
-	} else {
-		fullFilePath = fmt.Sprintf("%s/%s/%s", templatePath, filePath, fileName)
-	}
-
-	existsFlag := Exists(fullFilePath)
-	if !existsFlag {
-		err = fmt.Errorf("template file not exist, file:%s", fullFilePath)
+	fullFilePath := path.Join(templatePath, filePath, fileName)
+	if _, fileErr := fs.Stat(config.GetTemplateFS(), fullFilePath); fileErr != nil {
+		err = fileErr
 		return
 	}
 
-	contentVal, contentErr := os.ReadFile(fullFilePath)
+	contentVal, contentErr := fs.ReadFile(config.GetTemplateFS(), fullFilePath)
 	if contentErr != nil {
 		err = contentErr
 		return
@@ -107,40 +66,63 @@ func GetTemplateContent(templatePath, filePath, fileName string) (ret string, er
 	return
 }
 
-// VerifyModuleWorkPath 校验工作路径是否合法
-// 1.工作路径的父级路径必须是以下几种：xxx/xxx/internal/initators,xxx/xxx/internal/modules,xxx/xxx/internal/modules/blocks,xxx/xxx/xxx/internal/modules/kernel
+var sep = string(filepath.Separator)
+var validModuleParentPaths = []string{
+	filepath.Join("internal", "modules"),
+	filepath.Join("internal", "modules", "blocks"),
+	filepath.Join("internal", "modules", "kernel"),
+}
+
+// VerifyModuleWorkPath 校验工作路径是否合法，并返回路径中ProjectName
+// 1.工作路径的父级路径必须是以下几种：xxx/[ProjectName]/internal/modules,xxx/[ProjectName]/internal/modules/blocks,xxx/xxx/[ProjectName]/internal/modules/kernel
 // 2. 其他路径非法
 // 3. 工作路径不能是空
 // 4. 工作路径不能是相对路径
-// 5. 非法路径举例： /home/xxx/internal/initators/xxx/
-func VerifyModuleWorkPath(pathVal string) *cd.Error {
+// 5. 非法路径举例： /home/xxx/internal/modules/xxx/
+func VerifyModuleWorkPath(pathVal string) (projectName, prefixPath string, err *cd.Error) {
+	projectName, prefixPath, err = verifyWorkPath(pathVal, validModuleParentPaths)
+	return
+}
+
+var validInitatorParentPaths = []string{
+	filepath.Join("internal", "initators"),
+}
+
+// VerifyInitatorWorkPath 校验工作路径是否合法
+// 1.工作路径的父级路径必须是以下几种：xxx/xxx/internal/initators
+// 2. 其他路径非法
+// 3. 工作路径不能是空
+// 4. 工作路径不能是相对路径
+// 5. 非法路径举例： /home/xxx/internal/modules/xxx/
+func VerifyInitatorWorkPath(pathVal string) (projectName, prefixPath string, err *cd.Error) {
+	projectName, prefixPath, err = verifyWorkPath(pathVal, validInitatorParentPaths)
+	return
+}
+
+func verifyWorkPath(pathVal string, validParentPath []string) (projectName, prefixPath string, err *cd.Error) {
 	if pathVal == "" {
-		return cd.NewError(cd.IllegalParam, "work path cannot be empty")
+		return "", "", cd.NewError(cd.IllegalParam, "work path cannot be empty")
 	}
 
 	// 检查相对路径
 	if !filepath.IsAbs(pathVal) {
-		return cd.NewError(cd.IllegalParam, "work path must be absolute path")
-	}
-
-	validParentPaths := []string{
-		filepath.Join("internal", "initators"),
-		filepath.Join("internal", "modules"),
-		filepath.Join("internal", "modules", "blocks"),
-		filepath.Join("internal", "modules", "kernel"),
+		return "", "", cd.NewError(cd.IllegalParam, "work path must be absolute path")
 	}
 
 	// 标准化路径
 	normalizedPath := filepath.Clean(pathVal)
-	for _, validPath := range validParentPaths {
+	for _, validPath := range validParentPath {
 		// 检查路径是否以validPath结尾
 		if strings.HasSuffix(normalizedPath, validPath) {
-			return nil
+			prefix := normalizedPath[:len(normalizedPath)-len(validPath)-1]
+			projectName = prefix[strings.LastIndex(prefix, sep)+1:]
+			prefixPath = validPath
+			return
 		}
 	}
 
-	return cd.NewError(cd.IllegalParam,
-		fmt.Sprintf("invalid work path %s, parent path must be one of: %v", normalizedPath, validParentPaths))
+	return "", "", cd.NewError(cd.IllegalParam,
+		fmt.Sprintf("invalid work path %s, parent path must be one of: %v", normalizedPath, validParentPath))
 }
 
 // VerifyProjectWorkPath 校验项目工作目录

@@ -7,6 +7,7 @@ import (
 
 	"github.com/muidea/magicToolkit/internal/modules/base/biz"
 	"github.com/muidea/magicToolkit/internal/modules/module/pkg/common"
+	tc "github.com/muidea/magicToolkit/pkg/common"
 	"github.com/muidea/magicToolkit/pkg/util"
 )
 
@@ -30,7 +31,7 @@ func New(
 }
 
 func (s *Module) create(ev event.Event, re event.Result) {
-	paramPtr, paramOK := ev.Data().(*common.CreateModuleParam)
+	paramPtr, paramOK := ev.Data().(*tc.CreateParam)
 	if !paramOK {
 		if re != nil {
 			re.Set(nil, cd.NewError(cd.Unexpected, "illegal create module param"))
@@ -38,7 +39,17 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	err := util.VerifyModuleWorkPath(paramPtr.WorkPath)
+	projectName, prefixPath, err := util.VerifyModuleWorkPath(paramPtr.WorkingPath)
+	if err != nil {
+		if re != nil {
+			re.Set(nil, err)
+		}
+		return
+	}
+
+	const moduleTemplateBasePath = "template/module"
+	helper := biz.NewHelper(moduleTemplateBasePath)
+	err = helper.Create(projectName, prefixPath, paramPtr)
 	if err != nil {
 		if re != nil {
 			re.Set(nil, err)

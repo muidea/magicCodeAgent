@@ -6,7 +6,8 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicToolkit/internal/modules/base/biz"
-	"github.com/muidea/magicToolkit/internal/modules/module/pkg/common"
+	"github.com/muidea/magicToolkit/internal/modules/initator/pkg/common"
+	tc "github.com/muidea/magicToolkit/pkg/common"
 	"github.com/muidea/magicToolkit/pkg/util"
 )
 
@@ -19,18 +20,18 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Initator {
 	ptr := &Initator{
-		Base: biz.New(common.ModuleModule, eventHub, backgroundRoutine),
+		Base: biz.New(common.InitatorModule, eventHub, backgroundRoutine),
 	}
 
-	ptr.SubscribeFunc(common.CreateNewModule, ptr.create)
-	ptr.SubscribeFunc(common.RefreshModule, ptr.refresh)
-	ptr.SubscribeFunc(common.DestroyModule, ptr.destroy)
+	ptr.SubscribeFunc(common.CreateNewInitator, ptr.create)
+	ptr.SubscribeFunc(common.RefreshInitator, ptr.refresh)
+	ptr.SubscribeFunc(common.DestroyInitator, ptr.destroy)
 
 	return ptr
 }
 
 func (s *Initator) create(ev event.Event, re event.Result) {
-	paramPtr, paramOK := ev.Data().(*common.CreateModuleParam)
+	paramPtr, paramOK := ev.Data().(*tc.CreateParam)
 	if !paramOK {
 		if re != nil {
 			re.Set(nil, cd.NewError(cd.Unexpected, "illegal create module param"))
@@ -38,7 +39,17 @@ func (s *Initator) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	err := util.VerifyModuleWorkPath(paramPtr.WorkPath)
+	projectName, prefixPath, err := util.VerifyInitatorWorkPath(paramPtr.WorkingPath)
+	if err != nil {
+		if re != nil {
+			re.Set(nil, err)
+		}
+		return
+	}
+
+	const moduleTemplateBasePath = "template/initator"
+	helper := biz.NewHelper(moduleTemplateBasePath)
+	err = helper.Create(projectName, prefixPath, paramPtr)
 	if err != nil {
 		if re != nil {
 			re.Set(nil, err)

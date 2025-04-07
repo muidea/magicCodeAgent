@@ -9,6 +9,10 @@ import (
 	"github.com/muidea/magicCommon/framework/service"
 
 	"github.com/muidea/magicToolkit/internal/config"
+
+	_ "github.com/muidea/magicToolkit/internal/modules/initator"
+	_ "github.com/muidea/magicToolkit/internal/modules/module"
+	_ "github.com/muidea/magicToolkit/internal/modules/project"
 )
 
 var configFile = ""
