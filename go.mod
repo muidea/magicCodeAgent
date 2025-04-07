@@ -8,9 +8,12 @@ replace (
 )
 
 require (
+	github.com/mark3labs/mcp-go v0.17.0
 	github.com/muidea/magicCommon v1.3.122
 	github.com/muidea/magicEngine v1.4.0
 )
+
+require github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -23,7 +26,7 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/muidea/seelog v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect

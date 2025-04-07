@@ -5,13 +5,18 @@ LDFLAGS := -X 'main.buildTime=$(shell date -u --rfc-3339=seconds)' -X 'main.gitC
 
 all: fmt vet build
 
-build: cli
+build: cli codeAgent
 
-install: cli
+install: build
 	cp bin/magicCli /usr/local/bin/magicCli
+	cp bin/magicCodeAgent /usr/local/bin/magicCodeAgent
 
 cli:
 	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCli ./application/magicCli/cmd
+
+codeAgent:
+	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeAgent ./application/magicCodeAgent/cmd
+
 
 fmt:
 	go fmt ./...
