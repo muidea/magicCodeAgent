@@ -1,0 +1,116 @@
+package biz
+
+import (
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
+	"github.com/muidea/magicCommon/task"
+
+	icfg "github.com/muidea/magicToolkit/internal/config"
+	"github.com/muidea/magicToolkit/internal/modules/base/biz"
+	"github.com/muidea/magicToolkit/internal/modules/kernel/cli/config"
+	"github.com/muidea/magicToolkit/internal/modules/kernel/cli/pkg/common"
+	tc "github.com/muidea/magicToolkit/pkg/common"
+
+	ic "github.com/muidea/magicToolkit/internal/modules/blocks/initator/pkg/common"
+	mc "github.com/muidea/magicToolkit/internal/modules/blocks/module/pkg/common"
+	pc "github.com/muidea/magicToolkit/internal/modules/blocks/project/pkg/common"
+)
+
+type Cli struct {
+	biz.Base
+}
+
+func New(
+	eventHub event.Hub,
+	backgroundRoutine task.BackgroundRoutine,
+) *Cli {
+	ret := &Cli{
+		Base: biz.New(common.CliModule, eventHub, backgroundRoutine),
+	}
+	return ret
+}
+
+func (s *Cli) Run() {
+	err := config.VerifyVar()
+	if err != nil {
+		return
+	}
+
+	moduleType := config.GetModuleType()
+	switch moduleType {
+	case config.ModuleVal:
+		s.runModuleAction()
+	case config.InitatorVal:
+		s.runInitatorAction()
+	case config.ProjectVal:
+		s.runProjectAction()
+	default:
+		log.Warnf("unknown module type:%s", moduleType)
+	}
+}
+
+func (s *Cli) runModuleAction() {
+	param := &tc.CreateParam{
+		EnableDao:     config.GetEnableDao(),
+		EnableService: config.GetEnableService(),
+		Name:          config.GetModuleName(),
+		WorkingPath:   icfg.CurrentWorkPath(),
+	}
+	var ev event.Event
+	switch config.GetExecuteAction() {
+	case config.CreateVal:
+		ev = event.NewEvent(mc.CreateNewModule, s.ID(), mc.ModuleModule, nil, param)
+	case config.DestroyVal:
+		ev = event.NewEvent(mc.DestroyModule, s.ID(), mc.ModuleModule, nil, param)
+	case config.RefreshVal:
+		ev = event.NewEvent(mc.RefreshModule, s.ID(), mc.ModuleModule, nil, param)
+	default:
+		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
+	}
+
+	s.SendEvent(ev)
+}
+
+func (s *Cli) runInitatorAction() {
+	param := &tc.CreateParam{
+		EnableDao:     config.GetEnableDao(),
+		EnableService: config.GetEnableService(),
+		Name:          config.GetModuleName(),
+		WorkingPath:   icfg.CurrentWorkPath(),
+	}
+	var ev event.Event
+	switch config.GetExecuteAction() {
+	case config.CreateVal:
+		ev = event.NewEvent(ic.CreateNewInitator, s.ID(), ic.InitatorModule, nil, param)
+	case config.DestroyVal:
+		ev = event.NewEvent(ic.DestroyInitator, s.ID(), ic.InitatorModule, nil, param)
+	case config.RefreshVal:
+		ev = event.NewEvent(ic.RefreshInitator, s.ID(), ic.InitatorModule, nil, param)
+	default:
+		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
+	}
+
+	s.SendEvent(ev)
+}
+
+func (s *Cli) runProjectAction() {
+	param := &tc.CreateParam{
+		EnableDao:     config.GetEnableDao(),
+		EnableService: config.GetEnableService(),
+		Name:          config.GetModuleName(),
+		WorkingPath:   icfg.CurrentWorkPath(),
+	}
+	var ev event.Event
+	switch config.GetExecuteAction() {
+	case config.CreateVal:
+		ev = event.NewEvent(pc.CreateNewProject, s.ID(), pc.ProjectModule, nil, param)
+	case config.DestroyVal:
+		ev = event.NewEvent(pc.DestroyProject, s.ID(), pc.ProjectModule, nil, param)
+	case config.RefreshVal:
+		ev = event.NewEvent(pc.RefreshProject, s.ID(), pc.ProjectModule, nil, param)
+	default:
+		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
+	}
+
+	s.SendEvent(ev)
+}

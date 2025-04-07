@@ -5,13 +5,13 @@ LDFLAGS := -X 'main.buildTime=$(shell date -u --rfc-3339=seconds)' -X 'main.gitC
 
 all: fmt vet build
 
-build: toolkit
+build: cli
 
-install: toolkit
-	cp bin/magicToolkit /usr/local/bin/magicToolkit
+install: cli
+	cp bin/magicCli /usr/local/bin/magicCli
 
-toolkit:
-	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicToolkit ./application/magicToolkit/cmd
+cli:
+	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCli ./application/magicCli/cmd
 
 fmt:
 	go fmt ./...
