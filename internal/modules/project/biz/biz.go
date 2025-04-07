@@ -19,7 +19,7 @@ func New(
 		Base: biz.New(common.ProjectModule, eventHub, backgroundRoutine),
 	}
 
-	ret.SubscribeFunc(common.CreateProject, ret.create)
+	ret.SubscribeFunc(common.CreateNewProject, ret.create)
 	ret.SubscribeFunc(common.RefreshProject, ret.refresh)
 	ret.SubscribeFunc(common.DestroyProject, ret.destroy)
 

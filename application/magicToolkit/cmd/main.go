@@ -10,15 +10,13 @@ import (
 
 	"github.com/muidea/magicToolkit/internal/config"
 
+	_ "github.com/muidea/magicToolkit/internal/modules/executor"
 	_ "github.com/muidea/magicToolkit/internal/modules/initator"
 	_ "github.com/muidea/magicToolkit/internal/modules/module"
 	_ "github.com/muidea/magicToolkit/internal/modules/project"
 )
 
-var configFile = ""
-
 func main() {
-	flag.StringVar(&configFile, "Config", configFile, "config file path")
 	flag.Parse()
 
 	fmt.Printf("magicToolkit V1.0\n")
