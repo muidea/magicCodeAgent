@@ -18,10 +18,16 @@ import (
 	_ "github.com/muidea/magicToolkit/internal/modules/project"
 )
 
+var (
+	buildTime string
+	gitCommit string
+)
+
 func main() {
 	flag.Parse()
 
 	fmt.Printf("magicToolkit V1.0\n")
+	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
 	err := application.Startup(service.HoldService(config.EndpointName()))
 	if err != nil {
 		log.Errorf("application.Startup err:%s", err.Error())
