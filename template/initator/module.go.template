@@ -6,30 +6,30 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/initator"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/{{.ProjectName}}/internal/initators/{{.InitatorPath}}/pkg/common"
+	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/pkg/common"
 )
 
 func init() {
 	initator.Register(New())
 }
 
-type {{.InitatorName}} struct {}
+type {{.ModuleName}} struct {}
 
-func New() *{{.InitatorName}} {
-	return &{{.InitatorName}}{}
+func New() *{{.ModuleName}} {
+	return &{{.ModuleName}}{}
 }
 
-func (s *{{.InitatorName}}) ID() string {
-	return common.{{.InitatorName}}Initator
+func (s *{{.ModuleName}}) ID() string {
+	return common.{{.ModuleName}}Initator
 }
 
-func (s *{{.InitatorName}}) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+func (s *{{.ModuleName}}) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	return nil
 }
 
-func (s *{{.InitatorName}}) Run() (err *cd.Error) {
+func (s *{{.ModuleName}}) Run() (err *cd.Error) {
 	return
 }
 
-func (s *{{.InitatorName}}) Teardown() {
+func (s *{{.ModuleName}}) Teardown() {
 }
