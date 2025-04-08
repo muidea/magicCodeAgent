@@ -7,6 +7,7 @@ on:
 
 jobs:
   build:
+    timeout-minutes: 60
     strategy:
       matrix:
         platform: [linux/amd64, linux/arm64]
