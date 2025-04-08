@@ -12,6 +12,8 @@ import (
 
 	"github.com/muidea/magicToolkit/internal/config"
 
+	_ "github.com/muidea/magicToolkit/internal/initators/pprof"
+	_ "github.com/muidea/magicToolkit/internal/initators/routeregistry"
 	_ "github.com/muidea/magicToolkit/internal/modules/blocks/initator"
 	_ "github.com/muidea/magicToolkit/internal/modules/blocks/module"
 	_ "github.com/muidea/magicToolkit/internal/modules/blocks/project"
@@ -27,7 +29,7 @@ var (
 var configFile = ""
 
 func main() {
-	flag.StringVar(&configFile, "Config", configFile, "config file path")
+	flag.StringVar(&configFile, "config", configFile, "config file path")
 	flag.Parse()
 
 	fmt.Printf("magicCodeAgent V1.0\n")

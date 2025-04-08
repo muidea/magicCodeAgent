@@ -40,7 +40,7 @@ func (s *MCP) Setup(
 	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(rc.RouteRegistryInitator, routeRegistryHelperVal)
 	if routeRegistryHelperErr != nil {
 		err = routeRegistryHelperErr
-		log.Errorf("Panel setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
+		log.Errorf("MCP setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
 		return
 	}
 
