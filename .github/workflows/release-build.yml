@@ -35,11 +35,12 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Build for ${{ matrix.platform }}
+        timeout-minutes: 60
         run: |
-          mkdir -p bin
+          mkdir -p bin build/magicToolkit
           export GOOS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)
           export GOARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
-          make release
+          make release || (echo "Build failed with exit code $?"; exit 1)
 
       - name: Create Release
         id: create_release
