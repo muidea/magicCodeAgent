@@ -11,8 +11,7 @@ release: build
 	mkdir -p build/magicToolkit
 	cp bin/magicCli build/magicToolkit/magicCli
 	cp bin/magicCodeAgent build/magicToolkit/magicCodeAgent
-	cd build && zip -r magicToolkit.zip magicToolkit
-
+	cd build && ls -l magicToolkit && zip -r magicToolkit.zip magicToolkit
 
 install: build
 	cp bin/magicCli /usr/local/bin/magicCli
