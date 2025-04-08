@@ -42,23 +42,43 @@ jobs:
           export GOARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
           make release || (echo "Build failed with exit code $?"; exit 1)
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Get Release
+        id: get_release
+        uses: actions/github-script@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
+          script: |
+            try {
+              const release = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: '${{ github.ref_name }}'
+              })
+              core.setOutput('upload_url', release.data.upload_url)
+              return release.data.id
+            } catch (error) {
+              if (error.status === 404) {
+                const newRelease = await github.rest.repos.createRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag_name: '${{ github.ref_name }}',
+                  name: 'Release ${{ github.ref_name }}',
+                  draft: false,
+                  prerelease: false
+                })
+                core.setOutput('upload_url', newRelease.data.upload_url)
+                return newRelease.data.id
+              }
+              throw error
+            }
 
       - name: Upload magicToolkit
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: ./build/magicToolkit.zip
           asset_name: magicToolkit-${{ github.ref_name }}-${{ matrix.platform }}.zip
           asset_content_type: application/zip
