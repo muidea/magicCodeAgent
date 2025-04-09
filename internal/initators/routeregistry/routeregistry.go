@@ -39,7 +39,8 @@ func (s *routeRegistry) Setup(eventHub event.Hub, backgroundRoutine task.Backgro
 
 	s.eventHub = eventHub
 
-	s.httpServer = engine.NewHTTPServer(config.BindPort())
+	s.httpServer = engine.NewHTTPServer(config.BindPort(), false)
+	s.httpServer.Use(engine.NewEmbedStatic(config.GetTemplateFS(), "/embed/"))
 	s.httpServer.Bind(router)
 
 	s.routeRegistry = routeRegistry

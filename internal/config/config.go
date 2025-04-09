@@ -47,6 +47,14 @@ func BindPort() string {
 	return listenPort
 }
 
+func Workspace() []string {
+	if sysConfig != nil {
+		return sysConfig.Workspace
+	}
+
+	return []string{}
+}
+
 func SetEmbedTemplateFS(fs embed.FS) {
 	templateFS = fs
 }

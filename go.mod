@@ -14,7 +14,12 @@ require (
 	github.com/muidea/magicEngine v1.4.0
 )
 
-require github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
+require (
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

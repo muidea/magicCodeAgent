@@ -41,6 +41,7 @@ github.com/muidea/magicCommon/def
 github.com/muidea/magicCommon/event
 github.com/muidea/magicCommon/execute
 github.com/muidea/magicCommon/foundation/log
+github.com/muidea/magicCommon/foundation/net
 github.com/muidea/magicCommon/foundation/system
 github.com/muidea/magicCommon/foundation/util
 github.com/muidea/magicCommon/framework/application
@@ -72,6 +73,9 @@ golang.org/x/crypto/sha3
 ## explicit; go 1.18
 golang.org/x/net/html
 golang.org/x/net/html/atom
+# golang.org/x/sync v0.12.0
+## explicit; go 1.23.0
+golang.org/x/sync/singleflight
 # golang.org/x/sys v0.26.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
@@ -87,6 +91,12 @@ golang.org/x/text/internal/tag
 golang.org/x/text/language
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
+# gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
+## explicit
+gopkg.in/alexcesaro/quotedprintable.v3
+# gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+## explicit
+gopkg.in/gomail.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3

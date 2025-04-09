@@ -18,7 +18,7 @@ import (
 	_ "github.com/muidea/magicToolkit/internal/modules/blocks/module"
 	_ "github.com/muidea/magicToolkit/internal/modules/blocks/project"
 	_ "github.com/muidea/magicToolkit/internal/modules/kernel/mcp"
-	_ "github.com/muidea/magicToolkit/internal/modules/kernel/watcher"
+	_ "github.com/muidea/magicToolkit/internal/modules/kernel/monitor"
 )
 
 var (

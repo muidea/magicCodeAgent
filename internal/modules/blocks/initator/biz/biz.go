@@ -47,8 +47,7 @@ func (s *Initator) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	const moduleTemplateBasePath = "template/initator"
-	helper := biz.NewHelper(moduleTemplateBasePath)
+	helper := biz.NewHelper(common.InitatorTemplateBasePath)
 	err = helper.Create(projectName, prefixPath, paramPtr)
 	if err != nil {
 		if re != nil {

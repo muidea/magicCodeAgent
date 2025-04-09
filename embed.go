@@ -6,7 +6,7 @@ import (
 	"github.com/muidea/magicToolkit/internal/config"
 )
 
-//go:embed template/**
+//go:embed assets/**
 var templateFS embed.FS
 
 func init() {
