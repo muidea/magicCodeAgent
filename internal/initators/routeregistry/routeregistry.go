@@ -33,15 +33,14 @@ func (s *routeRegistry) ID() string {
 }
 
 func (s *routeRegistry) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
-	router := engine.NewRouteRegistry()
 	sessionRegistry := session.CreateRegistry()
 	routeRegistry := engine.NewRouteRegistry()
 
 	s.eventHub = eventHub
 
 	s.httpServer = engine.NewHTTPServer(config.BindPort(), false)
-	s.httpServer.Use(engine.NewEmbedStatic(config.GetTemplateFS(), "/embed/"))
-	s.httpServer.Bind(router)
+	s.httpServer.Use(engine.NewEmbedStatic(config.GetTemplateFS(), "assets", "/embed/"))
+	s.httpServer.Bind(routeRegistry)
 
 	s.routeRegistry = routeRegistry
 	s.sessionRegistry = sessionRegistry

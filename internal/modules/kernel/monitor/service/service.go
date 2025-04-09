@@ -14,20 +14,20 @@ import (
 )
 
 type Monitor struct {
-	roleRouteRegistry engine.RouteRegistry
-	bizPtr            *biz.Monitor
+	routeRegistry engine.RouteRegistry
+	bizPtr        *biz.Monitor
 }
 
 func New(roleRouteRegistry engine.RouteRegistry, bizPtr *biz.Monitor) *Monitor {
 	ptr := &Monitor{
-		roleRouteRegistry: roleRouteRegistry,
-		bizPtr:            bizPtr,
+		routeRegistry: roleRouteRegistry,
+		bizPtr:        bizPtr,
 	}
 	return ptr
 }
 
 func (s *Monitor) RegisterRoute() {
-	s.roleRouteRegistry.AddHandler(common.FilterWorkSpaceFileList, engine.POST, s.filterFiles)
+	s.routeRegistry.AddHandler(common.FilterWorkSpaceFileList, engine.GET, s.filterFiles)
 }
 
 func (s *Monitor) filterFiles(ctx context.Context, res http.ResponseWriter, req *http.Request) {
