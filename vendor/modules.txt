@@ -42,6 +42,7 @@ github.com/muidea/magicCommon/event
 github.com/muidea/magicCommon/execute
 github.com/muidea/magicCommon/foundation/log
 github.com/muidea/magicCommon/foundation/net
+github.com/muidea/magicCommon/foundation/path
 github.com/muidea/magicCommon/foundation/system
 github.com/muidea/magicCommon/foundation/util
 github.com/muidea/magicCommon/framework/application
