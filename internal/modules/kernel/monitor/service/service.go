@@ -6,7 +6,6 @@ import (
 
 	cd "github.com/muidea/magicCommon/def"
 	fn "github.com/muidea/magicCommon/foundation/net"
-	fp "github.com/muidea/magicCommon/foundation/path"
 
 	engine "github.com/muidea/magicEngine/http"
 
@@ -41,31 +40,7 @@ func (s *Monitor) filterFiles(ctx context.Context, res http.ResponseWriter, req 
 	result := &common.FileListResult{Result: cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
-	filter := &fileFilter{}
+	filter := &common.FileFilter{}
 	filter.Parse(req)
 	result.Values, result.Error = s.bizPtr.FilterWorkSpaceFileList(filter)
-}
-
-type fileFilter struct {
-	name      string
-	path      string
-	extension string
-}
-
-func (s *fileFilter) Parse(req *http.Request) {
-	s.name = req.URL.Query().Get("name")
-	s.path = req.URL.Query().Get("path")
-	s.extension = req.URL.Query().Get("extension")
-}
-
-func (s *fileFilter) Filter(val interface{}) bool {
-	filePath, fileOK := val.(string)
-	if !fileOK {
-		return false
-	}
-	if !fp.Exist(filePath) {
-		return false
-	}
-	// TODO 其他校验条件
-	return true
 }
