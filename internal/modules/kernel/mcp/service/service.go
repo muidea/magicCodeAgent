@@ -14,15 +14,15 @@ import (
 )
 
 type MCP struct {
-	roleRouteRegistry engine.RouteRegistry
-	bizPtr            *biz.MCP
-	sseServer         *server.SSEServer
+	routeRegistry engine.RouteRegistry
+	bizPtr        *biz.MCP
+	sseServer     *server.SSEServer
 }
 
 func New(roleRouteRegistry engine.RouteRegistry, bizPtr *biz.MCP) *MCP {
 	return &MCP{
-		roleRouteRegistry: roleRouteRegistry,
-		bizPtr:            bizPtr,
+		routeRegistry: roleRouteRegistry,
+		bizPtr:        bizPtr,
 		sseServer: server.NewSSEServer(
 			bizPtr.GetMCPServer(),
 			server.WithBasePath(tc.ApiVersion),
@@ -33,8 +33,8 @@ func New(roleRouteRegistry engine.RouteRegistry, bizPtr *biz.MCP) *MCP {
 }
 
 func (s *MCP) RegisterRoute() {
-	s.roleRouteRegistry.AddHandler(common.MCPSSE, engine.GET, s.sseHandler)
-	s.roleRouteRegistry.AddHandler(common.MCPMessage, engine.POST, s.messageHandler)
+	s.routeRegistry.AddHandler(common.MCPSSE, engine.GET, s.sseHandler)
+	s.routeRegistry.AddHandler(common.MCPMessage, engine.POST, s.messageHandler)
 }
 
 func (s *MCP) sseHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
