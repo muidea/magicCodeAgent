@@ -11,6 +11,7 @@ import (
 
 	"github.com/muidea/magicToolkit/internal/config"
 	"github.com/muidea/magicToolkit/internal/initators/routeregistry/pkg/common"
+	tc "github.com/muidea/magicToolkit/pkg/common"
 )
 
 func init() {
@@ -35,7 +36,7 @@ func (s *routeRegistry) ID() string {
 func (s *routeRegistry) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	sessionRegistry := session.CreateRegistry()
 	routeRegistry := engine.NewRouteRegistry()
-
+	routeRegistry.SetApiVersion(tc.ApiVersion)
 	s.eventHub = eventHub
 
 	s.httpServer = engine.NewHTTPServer(config.BindPort(), false)
