@@ -28,13 +28,13 @@ const (
 	workspaceFile     = "file"
 
 	// 工作区清单
-	workspaceResourceName = "Workspace List"
+	workspaceResourceName = "Workspace list"
 	// 工作区清单，查看当前设置的工作区清单
 	workspaceResourceDesc = "List all workspaces"
-	// 工作区文件清单
-	workspaceFileResourceName = "Workspace Files"
+	// 查询工作区文件清单
+	workspaceFileResourceName = "Workspace file list"
 	// 工作区文件清单，查看指定工作区文件清单
-	workspaceFileResourceDesc = "Browse workspace files"
+	workspaceFileResourceDesc = "Workspace file list, view the list of files in the specified workspace"
 )
 
 func (s *MCP) workspaceResourceURI() string {
