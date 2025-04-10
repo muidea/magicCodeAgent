@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -53,7 +52,7 @@ func NewMCPServer() *server.MCPServer {
 	})
 
 	mcpServer := server.NewMCPServer(
-		"example-servers/everything",
+		"mulife.vip/magicCodeAgent",
 		"1.0.0",
 		server.WithResourceCapabilities(true, true),
 		server.WithPromptCapabilities(true),
@@ -65,6 +64,7 @@ func NewMCPServer() *server.MCPServer {
 		"Static Resource",
 		mcp.WithMIMEType("text/plain"),
 	), handleReadResource)
+
 	mcpServer.AddResourceTemplate(
 		mcp.NewResourceTemplate(
 			"test://dynamic/resource/{id}",
@@ -72,9 +72,7 @@ func NewMCPServer() *server.MCPServer {
 		),
 		handleResourceTemplate,
 	)
-	mcpServer.AddPrompt(mcp.NewPrompt(string(SIMPLE),
-		mcp.WithPromptDescription("A simple prompt"),
-	), handleSimplePrompt)
+
 	mcpServer.AddPrompt(mcp.NewPrompt(string(COMPLEX),
 		mcp.WithPromptDescription("A complex prompt"),
 		mcp.WithArgument("temperature",
@@ -86,6 +84,7 @@ func NewMCPServer() *server.MCPServer {
 			mcp.RequiredArgument(),
 		),
 	), handleComplexPrompt)
+
 	mcpServer.AddTool(mcp.NewTool(string(ECHO),
 		mcp.WithDescription("Echoes back the input"),
 		mcp.WithString("message",
@@ -93,59 +92,6 @@ func NewMCPServer() *server.MCPServer {
 			mcp.Required(),
 		),
 	), handleEchoTool)
-
-	mcpServer.AddTool(
-		mcp.NewTool("notify"),
-		handleSendNotification,
-	)
-
-	mcpServer.AddTool(mcp.NewTool(string(ADD),
-		mcp.WithDescription("Adds two numbers"),
-		mcp.WithNumber("a",
-			mcp.Description("First number"),
-			mcp.Required(),
-		),
-		mcp.WithNumber("b",
-			mcp.Description("Second number"),
-			mcp.Required(),
-		),
-	), handleAddTool)
-	mcpServer.AddTool(mcp.NewTool(
-		string(LONG_RUNNING_OPERATION),
-		mcp.WithDescription(
-			"Demonstrates a long running operation with progress updates",
-		),
-		mcp.WithNumber("duration",
-			mcp.Description("Duration of the operation in seconds"),
-			mcp.DefaultNumber(10),
-		),
-		mcp.WithNumber("steps",
-			mcp.Description("Number of steps in the operation"),
-			mcp.DefaultNumber(5),
-		),
-	), handleLongRunningOperationTool)
-
-	// s.server.AddTool(mcp.Tool{
-	// 	Name:        string(SAMPLE_LLM),
-	// 	Description: "Samples from an LLM using MCP's sampling feature",
-	// 	InputSchema: mcp.ToolInputSchema{
-	// 		Type: "object",
-	// 		Properties: map[string]interface{}{
-	// 			"prompt": map[string]interface{}{
-	// 				"type":        "string",
-	// 				"description": "The prompt to send to the LLM",
-	// 			},
-	// 			"maxTokens": map[string]interface{}{
-	// 				"type":        "number",
-	// 				"description": "Maximum number of tokens to generate",
-	// 				"default":     100,
-	// 			},
-	// 		},
-	// 	},
-	// }, s.handleSampleLLMTool)
-	mcpServer.AddTool(mcp.NewTool(string(GET_TINY_IMAGE),
-		mcp.WithDescription("Returns the MCP_TINY_IMAGE"),
-	), handleGetTinyImageTool)
 
 	mcpServer.AddNotificationHandler("notification", handleNotification)
 
@@ -174,24 +120,6 @@ func handleResourceTemplate(
 			URI:      request.Params.URI,
 			MIMEType: "text/plain",
 			Text:     "This is a sample resource",
-		},
-	}, nil
-}
-
-func handleSimplePrompt(
-	ctx context.Context,
-	request mcp.GetPromptRequest,
-) (*mcp.GetPromptResult, error) {
-	return &mcp.GetPromptResult{
-		Description: "A simple prompt without arguments",
-		Messages: []mcp.PromptMessage{
-			{
-				Role: mcp.RoleUser,
-				Content: mcp.TextContent{
-					Type: "text",
-					Text: "This is a simple prompt without arguments.",
-				},
-			},
 		},
 	}, nil
 }
@@ -248,120 +176,6 @@ func handleEchoTool(
 			mcp.TextContent{
 				Type: "text",
 				Text: fmt.Sprintf("Echo: %s", message),
-			},
-		},
-	}, nil
-}
-
-func handleAddTool(
-	ctx context.Context,
-	request mcp.CallToolRequest,
-) (*mcp.CallToolResult, error) {
-	arguments := request.Params.Arguments
-	a, ok1 := arguments["a"].(float64)
-	b, ok2 := arguments["b"].(float64)
-	if !ok1 || !ok2 {
-		return nil, fmt.Errorf("invalid number arguments")
-	}
-	sum := a + b
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.TextContent{
-				Type: "text",
-				Text: fmt.Sprintf("The sum of %f and %f is %f.", a, b, sum),
-			},
-		},
-	}, nil
-}
-
-func handleSendNotification(
-	ctx context.Context,
-	request mcp.CallToolRequest,
-) (*mcp.CallToolResult, error) {
-
-	server := server.ServerFromContext(ctx)
-
-	err := server.SendNotificationToClient(
-		ctx,
-		"notifications/progress",
-		map[string]interface{}{
-			"progress":      10,
-			"total":         10,
-			"progressToken": 0,
-		},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send notification: %w", err)
-	}
-
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.TextContent{
-				Type: "text",
-				Text: "notification sent successfully",
-			},
-		},
-	}, nil
-}
-
-func handleLongRunningOperationTool(
-	ctx context.Context,
-	request mcp.CallToolRequest,
-) (*mcp.CallToolResult, error) {
-	arguments := request.Params.Arguments
-	progressToken := request.Params.Meta.ProgressToken
-	duration, _ := arguments["duration"].(float64)
-	steps, _ := arguments["steps"].(float64)
-	stepDuration := duration / steps
-	server := server.ServerFromContext(ctx)
-
-	for i := 1; i < int(steps)+1; i++ {
-		time.Sleep(time.Duration(stepDuration * float64(time.Second)))
-		if progressToken != nil {
-			server.SendNotificationToClient(
-				ctx,
-				"notifications/progress",
-				map[string]interface{}{
-					"progress":      i,
-					"total":         int(steps),
-					"progressToken": progressToken,
-				},
-			)
-		}
-	}
-
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.TextContent{
-				Type: "text",
-				Text: fmt.Sprintf(
-					"Long running operation completed. Duration: %f seconds, Steps: %d.",
-					duration,
-					int(steps),
-				),
-			},
-		},
-	}, nil
-}
-
-func handleGetTinyImageTool(
-	ctx context.Context,
-	request mcp.CallToolRequest,
-) (*mcp.CallToolResult, error) {
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.TextContent{
-				Type: "text",
-				Text: "This is a tiny image:",
-			},
-			mcp.ImageContent{
-				Type:     "image",
-				Data:     MCP_TINY_IMAGE,
-				MIMEType: "image/png",
-			},
-			mcp.TextContent{
-				Type: "text",
-				Text: "The image above is the MCP tiny image.",
 			},
 		},
 	}, nil

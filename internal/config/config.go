@@ -10,13 +10,20 @@ import (
 
 var templateFS embed.FS
 
+var currentConfigPath = ""
 var currentWorkPath = ""
 var listenPort = "8080"
 var sysConfig *Config
 
+type Workspace struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Path        string `json:"path"`
+}
+
 type Config struct {
-	BindPort  string   `json:"bindPort"`
-	Workspace []string `json:"workspace"`
+	BindPort  string       `json:"bindPort"`
+	Workspace []*Workspace `json:"workspace"`
 }
 
 func init() {
@@ -35,6 +42,7 @@ func LoadConfig(cfgFile string) (err error) {
 		return
 	}
 
+	currentConfigPath = cfgFile
 	sysConfig = cfg
 	return
 }
@@ -47,12 +55,31 @@ func BindPort() string {
 	return listenPort
 }
 
-func Workspace() []string {
+func Workspaces() []*Workspace {
 	if sysConfig != nil {
 		return sysConfig.Workspace
 	}
 
-	return []string{}
+	return []*Workspace{}
+}
+
+func AddWorkspace(workspace *Workspace) {
+	if sysConfig != nil {
+		existFlag := false
+		for idx := range sysConfig.Workspace {
+			if sysConfig.Workspace[idx].Name == workspace.Name {
+				sysConfig.Workspace[idx] = workspace
+				existFlag = true
+			}
+		}
+		if !existFlag {
+			sysConfig.Workspace = append(sysConfig.Workspace, workspace)
+		}
+		err := fu.SaveConfig(currentConfigPath, sysConfig)
+		if err != nil {
+			log.Errorf("save config failed, err:%s", err.Error())
+		}
+	}
 }
 
 func SetEmbedTemplateFS(fs embed.FS) {

@@ -27,7 +27,15 @@ func New(roleRouteRegistry engine.RouteRegistry, bizPtr *biz.Monitor) *Monitor {
 }
 
 func (s *Monitor) RegisterRoute() {
-	s.routeRegistry.AddHandler(common.FilterWorkSpaceFileList, engine.GET, s.filterFiles)
+	s.routeRegistry.AddHandler(common.FilterWorkspace, engine.GET, s.filterWorkspace)
+	s.routeRegistry.AddHandler(common.FilterWorkspaceFile, engine.GET, s.filterFile)
+}
+
+func (s *Monitor) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.WorkspaceListResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
 }
 
 /*
@@ -36,11 +44,11 @@ func (s *Monitor) RegisterRoute() {
 | `path`       | string | 否   | 文件路径前缀匹配（如 `/docs/2025` 匹配该路径下的所有文件）              |
 | `extension`  | string | 否   | 文件扩展名精确匹配（如 `pdf`，不区分大小写）                          |
 */
-func (s *Monitor) filterFiles(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Monitor) filterFile(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.FileListResult{Result: cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	filter := &common.FileFilter{}
 	filter.Parse(req)
-	result.Values, result.Error = s.bizPtr.FilterWorkSpaceFileList(filter)
+	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileList(filter.Workspace, filter)
 }

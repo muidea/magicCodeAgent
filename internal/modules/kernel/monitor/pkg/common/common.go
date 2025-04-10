@@ -8,24 +8,39 @@ import (
 
 	cd "github.com/muidea/magicCommon/def"
 	fp "github.com/muidea/magicCommon/foundation/path"
+
+	"github.com/muidea/magicToolkit/internal/config"
 )
 
 const MonitorModule = "/internal/modules/kernel/monitor"
 
 const (
-	AddWorkSpace            = "/workspace/add"
-	RemoveWorkSpace         = "/workspace/remove"
-	RefreshWorkSpace        = "/workspace/refresh"
-	FilterWorkSpaceFileList = "/workspace/file/filter"
+	AddWorkspace        = "/workspace/add"
+	RemoveWorkspace     = "/workspace/remove"
+	RefreshWorkspace    = "/workspace/refresh"
+	FilterWorkspace     = "/workspace/filter"
+	FilterWorkspaceFile = "/workspace/file/filter"
 )
 
+type WorkspaceResult struct {
+	cd.Result
+	Value *config.Workspace `json:"value"`
+}
+
+type WorkspaceListResult struct {
+	cd.Result
+	Values []*config.Workspace `json:"values"`
+}
+
 type FileFilter struct {
+	Workspace string
 	name      string
 	path      string
 	extension string
 }
 
 func (s *FileFilter) Parse(req *http.Request) {
+	s.Workspace = req.URL.Query().Get("workspace")
 	s.name = req.URL.Query().Get("name")
 	s.path = req.URL.Query().Get("path")
 	s.extension = req.URL.Query().Get("extension")
