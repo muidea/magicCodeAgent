@@ -3,7 +3,9 @@ package biz
 import (
 	"context"
 	"errors"
-	"fmt"
+	"net/url"
+	"path"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 
@@ -26,24 +28,76 @@ const (
 )
 
 func (s *MCP) workspaceResourceURI() string {
-	return fmt.Sprintf("%s://%s/%s", httpSchema, mcpServerName, workspaceResource)
+	urlVal, urlErr := url.Parse(mcpServerName)
+	if urlErr != nil {
+		return ""
+	}
+	urlVal.Scheme = httpSchema
+	urlVal.Path = path.Join(urlVal.Path, workspaceResource)
+
+	return urlVal.String()
 }
 
 func (s *MCP) workspaceResourceContentURI(name string) string {
-	return fmt.Sprintf("%s://%s/%s/%s", httpSchema, mcpServerName, workspaceResource, name)
+	urlVal, urlErr := url.Parse(mcpServerName)
+	if urlErr != nil {
+		return ""
+	}
+	urlVal.Scheme = httpSchema
+	urlVal.Path = path.Join(urlVal.Path, workspaceResource, name)
+
+	return urlVal.String()
 }
 
 func (s *MCP) workspaceFileResourceURI() string {
-	return fmt.Sprintf("%s://%s/%s/{id}/%s", httpSchema, mcpServerName, workspaceResource, workspaceFile)
+	urlVal, urlErr := url.Parse(mcpServerName)
+	if urlErr != nil {
+		return ""
+	}
+
+	urlVal.Scheme = httpSchema
+	urlVal.Path = path.Join(urlVal.Path, workspaceResource, "{id}", workspaceFile)
+
+	return urlVal.String()
 }
 
-// extractID extracts the ID from the URI(workspaceFileResourceURI)
-func (s *MCP) extractID(uri string) (ret string, err error) {
+// extractIDFromFileResourceContentURI extracts the ID from the URI(workspaceFileResourceURI)
+// 例如"http://mulife.vip/magicCodeAgent/workspace/test/file"，取出test
+// "magicCodeAgent/workspace/test/file", 取出test
+func (s *MCP) extractIDFromFileResourceContentURI(uri string) (ret string, err error) {
+	urlVal, urlErr := url.Parse(uri)
+	if urlErr != nil {
+		log.Errorf("parse url failed, urlErr:%s", urlErr.Error())
+		err = urlErr
+		return
+	}
+
+	parts := strings.Split(urlVal.Path, "/")
+	if len(parts) != 5 {
+		log.Errorf("invalid url, url:%s", urlVal.Path)
+		err = errors.New("invalid url")
+		return
+	}
+	if parts[4] != "file" || parts[2] != "workspace" {
+		log.Errorf("invalid url, url:%s", urlVal.Path)
+		err = errors.New("invalid url")
+		return
+	}
+
+	ret = parts[3]
 	return
 }
 
 func (s *MCP) workspaceFileResourceContentURI(name string) string {
-	return fmt.Sprintf("%s://%s/%s/%s/%s", httpSchema, mcpServerName, workspaceResource, name, workspaceFile)
+	urlVal, urlErr := url.Parse(mcpServerName)
+	if urlErr != nil {
+		log.Errorf("parse url failed, urlErr:%s", urlErr.Error())
+		return ""
+	}
+	urlVal.Scheme = httpSchema
+	urlVal.Path = path.Join(urlVal.Path, workspaceResource, name, workspaceFile)
+
+	return urlVal.String()
 }
 
 func (s *MCP) resourceSet() {
@@ -95,7 +149,7 @@ func (s *MCP) workspaceFileResourceHandler(
 		err = errors.New("invalid request")
 		return
 	}
-	idVal, idErr := s.extractID(request.Params.URI)
+	idVal, idErr := s.extractIDFromFileResourceContentURI(request.Params.URI)
 	if idErr != nil {
 		err = idErr
 		return

@@ -11,7 +11,7 @@ func TestWorkspaceResourceURI(t *testing.T) {
 
 	idVal := "test"
 	rawVal := ptr.workspaceFileResourceContentURI(idVal)
-	nID, nErr := ptr.extractID(rawVal)
+	nID, nErr := ptr.extractIDFromFileResourceContentURI(rawVal)
 	assert.Nil(t, nErr)
 	assert.Equal(t, idVal, nID)
 }
