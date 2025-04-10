@@ -16,9 +16,10 @@ var listenPort = "8080"
 var sysConfig *Config
 
 type Workspace struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Path        string `json:"path"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Path        string   `json:"path"`
+	Ignores     []string `json:"ignores"`
 }
 
 type Config struct {

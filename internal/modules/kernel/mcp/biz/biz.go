@@ -43,7 +43,7 @@ func (s *MCP) GetMCPServer() *server.MCPServer {
 }
 
 func (s *MCP) ToText(val any) (ret string) {
-	byteVal, byteErr := json.Marshal(val)
+	byteVal, byteErr := json.MarshalIndent(val, "  ", "  ")
 	if byteErr != nil {
 		return
 	}
