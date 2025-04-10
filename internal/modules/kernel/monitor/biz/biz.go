@@ -47,6 +47,7 @@ func New(
 	ptr.SubscribeFunc(common.RemoveWorkspace, ptr.removeWorkspace)
 	ptr.SubscribeFunc(common.RefreshWorkspace, ptr.refreshWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspace, ptr.filterWorkspace)
+	ptr.SubscribeFunc(common.FilterWorkspaceFile, ptr.filterWorkspaceFile)
 
 	return ptr
 }
@@ -281,6 +282,10 @@ func (s *Monitor) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, er
 		return true
 	})
 	return
+}
+
+func (s *Monitor) filterWorkspaceFile(ev event.Event, re event.Result) {
+	//filter := ev.GetData(mc.FilterWorkspaceFile).(fu.Filter)
 }
 
 func (s *Monitor) FilterWorkspaceFileList(workspace string, filter fu.Filter) (ret []string, err *cd.Error) {

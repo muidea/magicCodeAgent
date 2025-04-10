@@ -37,6 +37,11 @@ func (s *MCP) workspaceFileResourceURI() string {
 	return fmt.Sprintf("%s://%s/%s/{id}/%s", httpSchema, mcpServerName, workspaceResource, workspaceFile)
 }
 
+// extractID extracts the ID from the URI(workspaceFileResourceURI)
+func (s *MCP) extractID(uri string) (ret string, err error) {
+	return
+}
+
 func (s *MCP) workspaceFileResourceContentURI(name string) string {
 	return fmt.Sprintf("%s://%s/%s/%s/%s", httpSchema, mcpServerName, workspaceResource, name, workspaceFile)
 }
@@ -90,6 +95,23 @@ func (s *MCP) workspaceFileResourceHandler(
 		err = errors.New("invalid request")
 		return
 	}
-	//request.Params.URI
+	idVal, idErr := s.extractID(request.Params.URI)
+	if idErr != nil {
+		err = idErr
+		return
+	}
+
+	ev := event.NewEvent(mc.FilterWorkspaceFile, s.ID(), mc.MonitorModule, nil, idVal)
+	resultVal, resultErr := s.SendEvent(ev).Get()
+	if resultErr != nil {
+		err = errors.New(resultErr.Error())
+		log.Errorf("FilterWorkspaceFile failed, s.SendEvent error:%s", err.Error())
+		return
+	}
+	ret = append(ret, mcp.TextResourceContents{
+		URI:      s.workspaceFileResourceContentURI(idVal),
+		MIMEType: mimeType,
+		Text:     s.ToText(resultVal),
+	})
 	return
 }
