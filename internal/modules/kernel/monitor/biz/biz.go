@@ -269,14 +269,14 @@ func (s *Monitor) filterWorkspace(ev event.Event, re event.Result) {
 
 func (s *Monitor) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, err *cd.Error) {
 	s.workspaceCache.Range(func(key, value interface{}) bool {
-		workspace := value.(*config.Workspace)
+		workspace := value.(*Workspace)
 		if filter == nil {
-			ret = append(ret, workspace)
+			ret = append(ret, workspace.workspacePtr)
 			return true
 		}
 
-		if filter.Filter(workspace) {
-			ret = append(ret, workspace)
+		if filter.Filter(workspace.workspacePtr) {
+			ret = append(ret, workspace.workspacePtr)
 		}
 		return true
 	})
@@ -290,8 +290,8 @@ func (s *Monitor) FilterWorkspaceFileList(workspace string, filter fu.Filter) (r
 		return
 	}
 
-	if !fp.Exist(curWorkspace.(*config.Workspace).Path) {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspace, curWorkspace.(*config.Workspace).Path))
+	if !fp.Exist(curWorkspace.(*Workspace).workspacePtr.Path) {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspace, curWorkspace.(*Workspace).workspacePtr.Path))
 		return
 	}
 

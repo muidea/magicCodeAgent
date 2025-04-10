@@ -26,7 +26,7 @@ const (
 	COMPLEX PromptName = "complex_prompt"
 )
 
-func NewMCPServer() *server.MCPServer {
+func NewMCPServer(name,version string) *server.MCPServer {
 	hooks := &server.Hooks{}
 
 	hooks.AddBeforeAny(func(id any, method mcp.MCPMethod, message any) {
@@ -52,8 +52,8 @@ func NewMCPServer() *server.MCPServer {
 	})
 
 	mcpServer := server.NewMCPServer(
-		"mulife.vip/magicCodeAgent",
-		"1.0.0",
+		name,
+		version,
 		server.WithResourceCapabilities(true, true),
 		server.WithPromptCapabilities(true),
 		server.WithLogging(),
