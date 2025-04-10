@@ -82,6 +82,25 @@ func AddWorkspace(workspace *Workspace) {
 	}
 }
 
+func DelWorkspace(workspace *Workspace) {
+	if sysConfig != nil {
+		newWorkspace := []*Workspace{}
+		for _, val := range sysConfig.Workspace {
+			if val.Name != workspace.Name {
+				newWorkspace = append(newWorkspace, val)
+			}
+		}
+
+		if len(newWorkspace) != len(sysConfig.Workspace) {
+			sysConfig.Workspace = newWorkspace
+			err := fu.SaveConfig(currentConfigPath, sysConfig)
+			if err != nil {
+				log.Errorf("save config failed, err:%s", err.Error())
+			}
+		}
+	}
+}
+
 func SetEmbedTemplateFS(fs embed.FS) {
 	templateFS = fs
 }

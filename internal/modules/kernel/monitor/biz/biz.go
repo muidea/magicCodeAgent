@@ -162,6 +162,11 @@ func (s *Monitor) addWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.
 		return cd.NewError(cd.Unexpected, "workspace not exists")
 	}
 
+	_, ok := s.workspaceCache.Load(workspacePtr.Path)
+	if ok {
+		return
+	}
+
 	workspace := NewWorkspace(workspacePtr)
 	s.workspaceCache.Store(workspacePtr.Path, workspace)
 
@@ -178,6 +183,8 @@ func (s *Monitor) addWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.
 		workspace.AddFile(path)
 		return nil
 	})
+
+	config.AddWorkspace(workspacePtr)
 	return
 }
 
@@ -217,7 +224,10 @@ func (s *Monitor) removeWorkspaceInternal(workspacePtr *config.Workspace) (err *
 		return nil
 	})
 
-	s.workspaceCache.Delete(workspacePtr.Path)
+	if ok {
+		s.workspaceCache.Delete(workspacePtr.Path)
+		config.DelWorkspace(workspacePtr)
+	}
 	return
 }
 
