@@ -26,7 +26,7 @@ const (
 	COMPLEX PromptName = "complex_prompt"
 )
 
-func NewMCPServer(name,version string) *server.MCPServer {
+func NewMCPServer(name, version string) *server.MCPServer {
 	hooks := &server.Hooks{}
 
 	hooks.AddBeforeAny(func(id any, method mcp.MCPMethod, message any) {
@@ -60,19 +60,6 @@ func NewMCPServer(name,version string) *server.MCPServer {
 		server.WithHooks(hooks),
 	)
 
-	mcpServer.AddResource(mcp.NewResource("test://static/resource",
-		"Static Resource",
-		mcp.WithMIMEType("text/plain"),
-	), handleReadResource)
-
-	mcpServer.AddResourceTemplate(
-		mcp.NewResourceTemplate(
-			"test://dynamic/resource/{id}",
-			"Dynamic Resource",
-		),
-		handleResourceTemplate,
-	)
-
 	mcpServer.AddPrompt(mcp.NewPrompt(string(COMPLEX),
 		mcp.WithPromptDescription("A complex prompt"),
 		mcp.WithArgument("temperature",
@@ -96,32 +83,6 @@ func NewMCPServer(name,version string) *server.MCPServer {
 	mcpServer.AddNotificationHandler("notification", handleNotification)
 
 	return mcpServer
-}
-
-func handleReadResource(
-	ctx context.Context,
-	request mcp.ReadResourceRequest,
-) ([]mcp.ResourceContents, error) {
-	return []mcp.ResourceContents{
-		mcp.TextResourceContents{
-			URI:      "test://static/resource",
-			MIMEType: "text/plain",
-			Text:     "This is a sample resource",
-		},
-	}, nil
-}
-
-func handleResourceTemplate(
-	ctx context.Context,
-	request mcp.ReadResourceRequest,
-) ([]mcp.ResourceContents, error) {
-	return []mcp.ResourceContents{
-		mcp.TextResourceContents{
-			URI:      request.Params.URI,
-			MIMEType: "text/plain",
-			Text:     "This is a sample resource",
-		},
-	}, nil
 }
 
 func handleComplexPrompt(
