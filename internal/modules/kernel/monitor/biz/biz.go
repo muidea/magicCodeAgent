@@ -163,13 +163,13 @@ func (s *Monitor) addWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.
 		return cd.NewError(cd.Unexpected, "workspace not exists")
 	}
 
-	_, ok := s.workspaceCache.Load(workspacePtr.Path)
+	_, ok := s.workspaceCache.Load(workspacePtr.Name)
 	if ok {
 		return
 	}
 
 	workspace := NewWorkspace(workspacePtr)
-	s.workspaceCache.Store(workspacePtr.Path, workspace)
+	s.workspaceCache.Store(workspacePtr.Name, workspace)
 
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {
 		if isIgnored(path) {
@@ -205,11 +205,11 @@ func (s *Monitor) removeWorkspace(ev event.Event, re event.Result) {
 func (s *Monitor) removeWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
 	if !util.Exists(workspacePtr.Path) {
 		log.Warnf("remove workspace, workspace not exists:%s", workspacePtr.Path)
-		s.workspaceCache.Delete(workspacePtr.Path)
+		s.workspaceCache.Delete(workspacePtr.Name)
 		return
 	}
 
-	curWorkspace, ok := s.workspaceCache.Load(workspacePtr.Path)
+	curWorkspace, ok := s.workspaceCache.Load(workspacePtr.Name)
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {
 		if isIgnored(path) {
 			return nil
@@ -226,7 +226,7 @@ func (s *Monitor) removeWorkspaceInternal(workspacePtr *config.Workspace) (err *
 	})
 
 	if ok {
-		s.workspaceCache.Delete(workspacePtr.Path)
+		s.workspaceCache.Delete(workspacePtr.Name)
 		config.DelWorkspace(workspacePtr)
 	}
 	return
@@ -239,7 +239,7 @@ func (s *Monitor) refreshWorkspace(ev event.Event, re event.Result) {
 		return
 	}
 
-	_, ok := s.workspaceCache.Load(workspaceVal.Path)
+	_, ok := s.workspaceCache.Load(workspaceVal.Name)
 	if ok {
 		err := s.removeWorkspaceInternal(workspaceVal)
 		if err != nil {
@@ -285,18 +285,38 @@ func (s *Monitor) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, er
 }
 
 func (s *Monitor) filterWorkspaceFile(ev event.Event, re event.Result) {
-	//filter := ev.GetData(mc.FilterWorkspaceFile).(fu.Filter)
+	val := ev.Data()
+	if val == nil {
+		log.Errorf("filterWorkspaceFile failed, invalid event value")
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.Unexpected, "illegal event value"))
+		}
+		return
+	}
+	workspaceName, workspaceOK := val.(string)
+	if !workspaceOK {
+		log.Errorf("filterWorkspaceFile failed, invalid event value:%v", val)
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.Unexpected, "illegal event value"))
+		}
+		return
+	}
+
+	fileList, fileErr := s.FilterWorkspaceFileList(workspaceName, nil)
+	if re != nil {
+		re.Set(fileList, fileErr)
+	}
 }
 
-func (s *Monitor) FilterWorkspaceFileList(workspace string, filter fu.Filter) (ret []string, err *cd.Error) {
-	curWorkspace, ok := s.workspaceCache.Load(workspace)
+func (s *Monitor) FilterWorkspaceFileList(workspaceName string, filter fu.Filter) (ret []string, err *cd.Error) {
+	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
 	if !ok {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspace))
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
 		return
 	}
 
 	if !fp.Exist(curWorkspace.(*Workspace).workspacePtr.Path) {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspace, curWorkspace.(*Workspace).workspacePtr.Path))
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Workspace).workspacePtr.Path))
 		return
 	}
 
