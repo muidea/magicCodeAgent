@@ -136,7 +136,6 @@ func (s *MCP) workspaceFileResourceHandler(
 		err = idErr
 		return
 	}
-
 	ev := event.NewEvent(mc.FilterWorkspaceFile, s.ID(), mc.MonitorModule, nil, idVal)
 	resultVal, resultErr := s.SendEvent(ev).Get()
 	if resultErr != nil {

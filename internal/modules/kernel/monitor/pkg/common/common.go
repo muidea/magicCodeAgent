@@ -34,16 +34,16 @@ type WorkspaceListResult struct {
 
 type FileFilter struct {
 	Workspace string
-	name      string
-	path      string
-	extension string
+	Name      string
+	Path      string
+	Extension string
 }
 
 func (s *FileFilter) Parse(req *http.Request) {
 	s.Workspace = req.URL.Query().Get("workspace")
-	s.name = req.URL.Query().Get("name")
-	s.path = req.URL.Query().Get("path")
-	s.extension = req.URL.Query().Get("extension")
+	s.Name = req.URL.Query().Get("name")
+	s.Path = req.URL.Query().Get("path")
+	s.Extension = req.URL.Query().Get("extension")
 }
 
 func (s *FileFilter) Filter(val interface{}) bool {
@@ -56,9 +56,9 @@ func (s *FileFilter) Filter(val interface{}) bool {
 	}
 
 	// 文件名匹配检查
-	if s.name != "" {
+	if s.Name != "" {
 		fileName := filepath.Base(filePath)
-		pattern := strings.ReplaceAll(s.name, "*", ".*")
+		pattern := strings.ReplaceAll(s.Name, "*", ".*")
 		matched, _ := regexp.MatchString("(?i)"+pattern, fileName)
 		if !matched {
 			return false
@@ -66,19 +66,19 @@ func (s *FileFilter) Filter(val interface{}) bool {
 	}
 
 	// 路径前缀匹配检查
-	if s.path != "" {
-		if !strings.HasPrefix(filePath, s.path) {
+	if s.Path != "" {
+		if !strings.HasPrefix(filePath, s.Path) {
 			return false
 		}
 	}
 
 	// 扩展名匹配检查
-	if s.extension != "" {
+	if s.Extension != "" {
 		fileExt := strings.ToLower(filepath.Ext(filePath))
 		if len(fileExt) > 0 && fileExt[0] == '.' {
 			fileExt = fileExt[1:]
 		}
-		if fileExt != strings.ToLower(s.extension) {
+		if fileExt != strings.ToLower(s.Extension) {
 			return false
 		}
 	}

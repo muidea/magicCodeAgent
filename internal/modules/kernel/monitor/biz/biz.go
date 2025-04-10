@@ -301,7 +301,6 @@ func (s *Monitor) filterWorkspaceFile(ev event.Event, re event.Result) {
 		}
 		return
 	}
-
 	fileList, fileErr := s.FilterWorkspaceFileList(workspaceName, nil)
 	if re != nil {
 		re.Set(fileList, fileErr)
