@@ -20,9 +20,9 @@ type Monitor struct {
 	bizPtr        *biz.Monitor
 }
 
-func New(roleRouteRegistry engine.RouteRegistry, bizPtr *biz.Monitor) *Monitor {
+func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Monitor) *Monitor {
 	ptr := &Monitor{
-		routeRegistry: roleRouteRegistry,
+		routeRegistry: routeRegistry,
 		bizPtr:        bizPtr,
 	}
 	return ptr

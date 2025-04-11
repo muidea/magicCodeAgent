@@ -19,9 +19,9 @@ type MCP struct {
 	sseServer     *server.SSEServer
 }
 
-func New(roleRouteRegistry engine.RouteRegistry, bizPtr *biz.MCP) *MCP {
+func New(routeRegistry engine.RouteRegistry, bizPtr *biz.MCP) *MCP {
 	return &MCP{
-		routeRegistry: roleRouteRegistry,
+		routeRegistry: routeRegistry,
 		bizPtr:        bizPtr,
 		sseServer: server.NewSSEServer(
 			bizPtr.GetMCPServer(),
