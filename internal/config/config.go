@@ -15,9 +15,16 @@ var currentWorkPath = ""
 var listenPort = "8080"
 var sysConfig *Config
 
+const (
+	EnableStatus  = "enable"
+	DisableStatus = "disable"
+	OfflineStatus = "offline"
+)
+
 type Workspace struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
+	Status      string   `json:"status"`
 	Path        string   `json:"path"`
 	Ignores     []string `json:"ignores"`
 }
@@ -64,7 +71,7 @@ func Workspaces() []*Workspace {
 	return []*Workspace{}
 }
 
-func AddWorkspace(workspace *Workspace) {
+func AddWorkspace(workspace *Workspace) (err error) {
 	if sysConfig != nil {
 		existFlag := false
 		for idx := range sysConfig.Workspace {
@@ -76,14 +83,16 @@ func AddWorkspace(workspace *Workspace) {
 		if !existFlag {
 			sysConfig.Workspace = append(sysConfig.Workspace, workspace)
 		}
-		err := fu.SaveConfig(currentConfigPath, sysConfig)
+		err = fu.SaveConfig(currentConfigPath, sysConfig)
 		if err != nil {
 			log.Errorf("save config failed, err:%s", err.Error())
 		}
 	}
+
+	return
 }
 
-func DelWorkspace(workspace *Workspace) {
+func DelWorkspace(workspace *Workspace) (err error) {
 	if sysConfig != nil {
 		newWorkspace := []*Workspace{}
 		for _, val := range sysConfig.Workspace {
@@ -94,12 +103,50 @@ func DelWorkspace(workspace *Workspace) {
 
 		if len(newWorkspace) != len(sysConfig.Workspace) {
 			sysConfig.Workspace = newWorkspace
-			err := fu.SaveConfig(currentConfigPath, sysConfig)
+			err = fu.SaveConfig(currentConfigPath, sysConfig)
 			if err != nil {
 				log.Errorf("save config failed, err:%s", err.Error())
 			}
 		}
 	}
+
+	return
+}
+
+func EnableWorkspace(workspace *Workspace) (err error) {
+	if sysConfig != nil {
+		for idx := range sysConfig.Workspace {
+			if sysConfig.Workspace[idx].Name == workspace.Name {
+				sysConfig.Workspace[idx].Status = EnableStatus
+				err = fu.SaveConfig(currentConfigPath, sysConfig)
+				if err != nil {
+					log.Errorf("save config failed, err:%s", err.Error())
+				}
+
+				return
+			}
+		}
+	}
+
+	return
+}
+
+func DisableWorkspace(workspace *Workspace) (err error) {
+	if sysConfig != nil {
+		for idx := range sysConfig.Workspace {
+			if sysConfig.Workspace[idx].Name == workspace.Name {
+				sysConfig.Workspace[idx].Status = DisableStatus
+				err = fu.SaveConfig(currentConfigPath, sysConfig)
+				if err != nil {
+					log.Errorf("save config failed, err:%s", err.Error())
+				}
+
+				return
+			}
+		}
+	}
+
+	return
 }
 
 func SetEmbedTemplateFS(fs embed.FS) {

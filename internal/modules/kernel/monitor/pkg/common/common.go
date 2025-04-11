@@ -18,6 +18,8 @@ const (
 	AddWorkspace        = "/workspace/add"
 	RemoveWorkspace     = "/workspace/remove"
 	RefreshWorkspace    = "/workspace/refresh"
+	EnableWorkspace     = "/workspace/enable"
+	DisableWorkspace    = "/workspace/disable"
 	FilterWorkspace     = "/workspace/filter"
 	FilterWorkspaceFile = "/workspace/file/filter"
 )

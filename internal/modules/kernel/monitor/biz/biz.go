@@ -57,7 +57,7 @@ func (s *Monitor) Run() (err *cd.Error) {
 
 	workspace := config.Workspaces()
 	for _, v := range workspace {
-		s.addWorkspaceInternal(v)
+		s.AddWorkspace(v)
 	}
 
 	return
@@ -151,20 +151,131 @@ func (s *Monitor) addWorkspace(ev event.Event, re event.Result) {
 		log.Errorf("add workspace failed, invalid workspace:%v", ev.Data())
 		return
 	}
-	err := s.addWorkspaceInternal(workspaceVal)
+	workspacePtr, workspaceErr := s.AddWorkspace(workspaceVal)
+	if re != nil {
+		re.Set(workspacePtr, workspaceErr)
+	}
+}
+
+func (s *Monitor) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
+	workspace, ok := s.workspaceCache.Load(workspacePtr.Name)
+	if ok {
+		ret = workspace.(*Workspace).workspacePtr
+		return
+	}
+
+	if util.Exists(workspacePtr.Path) {
+		workspacePtr.Status = config.EnableStatus
+	} else {
+		workspacePtr.Status = config.OfflineStatus
+	}
+
+	if eVal := config.AddWorkspace(workspacePtr); eVal != nil {
+		log.Errorf("add workspace failed, add workspace failed:%s", workspacePtr.Path)
+		err = cd.NewError(cd.Unexpected, eVal.Error())
+		return
+	}
+
+	if workspacePtr.Status == config.EnableStatus {
+		err = s.enableWorkspaceInternal(workspacePtr)
+	}
+	if err != nil {
+		return
+	}
+
+	ret = workspacePtr
+	return
+}
+
+func (s *Monitor) removeWorkspace(ev event.Event, re event.Result) {
+	workspaceName, workspaceOK := ev.Data().(string)
+	if !workspaceOK {
+		log.Errorf("remove workspace failed, invalid workspace:%v", ev.Data())
+		return
+	}
+
+	err := s.RemoveWorkspace(workspaceName)
 	if re != nil {
 		re.Set(nil, err)
 	}
 }
 
-func (s *Monitor) addWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
-	if !util.Exists(workspacePtr.Path) {
-		log.Errorf("add workspace failed, workspace not exists:%s", workspacePtr.Path)
-		return cd.NewError(cd.Unexpected, "workspace not exists")
+func (s *Monitor) RemoveWorkspace(workspaceName string) (err *cd.Error) {
+	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
+	if !ok {
+		return
 	}
 
-	_, ok := s.workspaceCache.Load(workspacePtr.Name)
+	workspacePtr := curWorkspace.(*Workspace).workspacePtr
+	err = s.disableWorkspaceInternal(workspacePtr)
+	if err != nil {
+		return
+	}
+
+	if eVal := config.DelWorkspace(workspacePtr); eVal != nil {
+		log.Errorf("remove workspace failed, remove workspace failed:%s", workspacePtr.Path)
+		return cd.NewError(cd.Unexpected, eVal.Error())
+	}
+	return
+}
+
+func (s *Monitor) refreshWorkspace(ev event.Event, re event.Result) {
+	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	if !workspaceOK {
+		log.Errorf("refresh workspace failed, invalid workspace:%v", ev.Data())
+		return
+	}
+
+	err := s.RefreshWorkspace(workspaceVal.Name)
+	if re != nil {
+		re.Set(nil, err)
+	}
+}
+
+func (s *Monitor) RefreshWorkspace(workspaceName string) (err *cd.Error) {
+	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
 	if ok {
+		workspacePtr := curWorkspace.(*Workspace).workspacePtr
+		if workspacePtr.Status != config.EnableStatus {
+			log.Warnf("refresh workspace, workspace not enable:%s", workspacePtr.Path)
+			return
+		}
+
+		err = s.disableWorkspaceInternal(workspacePtr)
+		if err != nil {
+			return
+		}
+
+		err = s.enableWorkspaceInternal(workspacePtr)
+	}
+
+	return
+}
+
+func (s *Monitor) EnableWorkspace(workspaceName string) (err *cd.Error) {
+	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
+	if ok {
+		workspacePtr := curWorkspace.(*Workspace).workspacePtr
+		if workspacePtr.Status == config.EnableStatus {
+			log.Warnf("enable workspace, workspace already enable:%s", workspacePtr.Path)
+			return
+		}
+
+		workspacePtr.Status = config.EnableStatus
+		if eVal := config.EnableWorkspace(workspacePtr); eVal != nil {
+			log.Errorf("enable workspace failed, enable workspace failed:%s", workspacePtr.Path)
+			return cd.NewError(cd.Unexpected, eVal.Error())
+		}
+
+		err = s.enableWorkspaceInternal(workspacePtr)
+	}
+
+	return
+}
+
+func (s *Monitor) enableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
+	if !util.Exists(workspacePtr.Path) {
+		log.Warnf("enable workspace, workspace not exists:%s", workspacePtr.Path)
 		return
 	}
 
@@ -185,24 +296,26 @@ func (s *Monitor) addWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.
 		return nil
 	})
 
-	config.AddWorkspace(workspacePtr)
 	return
 }
 
-func (s *Monitor) removeWorkspace(ev event.Event, re event.Result) {
-	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
-	if !workspaceOK {
-		log.Errorf("remove workspace failed, invalid workspace:%v", ev.Data())
-		return
+func (s *Monitor) DisableWorkspace(workspaceName string) (err *cd.Error) {
+	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
+	if ok {
+		workspacePtr := curWorkspace.(*Workspace).workspacePtr
+		workspacePtr.Status = config.DisableStatus
+		if eVal := config.DisableWorkspace(workspacePtr); eVal != nil {
+			log.Errorf("disable workspace failed, disable workspace failed:%s", workspacePtr.Path)
+			return cd.NewError(cd.Unexpected, eVal.Error())
+		}
+
+		err = s.disableWorkspaceInternal(workspacePtr)
 	}
 
-	err := s.removeWorkspaceInternal(workspaceVal)
-	if re != nil {
-		re.Set(nil, err)
-	}
+	return
 }
 
-func (s *Monitor) removeWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
+func (s *Monitor) disableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
 	if !util.Exists(workspacePtr.Path) {
 		log.Warnf("remove workspace, workspace not exists:%s", workspacePtr.Path)
 		s.workspaceCache.Delete(workspacePtr.Name)
@@ -227,32 +340,8 @@ func (s *Monitor) removeWorkspaceInternal(workspacePtr *config.Workspace) (err *
 
 	if ok {
 		s.workspaceCache.Delete(workspacePtr.Name)
-		config.DelWorkspace(workspacePtr)
 	}
 	return
-}
-
-func (s *Monitor) refreshWorkspace(ev event.Event, re event.Result) {
-	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
-	if !workspaceOK {
-		log.Errorf("refresh workspace failed, invalid workspace:%v", ev.Data())
-		return
-	}
-
-	_, ok := s.workspaceCache.Load(workspaceVal.Name)
-	if ok {
-		err := s.removeWorkspaceInternal(workspaceVal)
-		if err != nil {
-			log.Errorf("refresh workspace failed, remove workspace failed:%s", workspaceVal.Path)
-			return
-		}
-
-		err = s.addWorkspaceInternal(workspaceVal)
-		if err != nil {
-			log.Errorf("refresh workspace failed, add workspace failed:%s", workspaceVal.Path)
-			return
-		}
-	}
 }
 
 func (s *Monitor) filterWorkspace(ev event.Event, re event.Result) {
@@ -271,6 +360,9 @@ func (s *Monitor) filterWorkspace(ev event.Event, re event.Result) {
 func (s *Monitor) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, err *cd.Error) {
 	s.workspaceCache.Range(func(key, value interface{}) bool {
 		workspace := value.(*Workspace)
+		if workspace.workspacePtr.Status == "" {
+			workspace.workspacePtr.Status = config.EnableStatus
+		}
 		if filter == nil {
 			ret = append(ret, workspace.workspacePtr)
 			return true
