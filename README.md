@@ -1,1 +1,1 @@
-# magicToolkit
+# magicCodeAgent

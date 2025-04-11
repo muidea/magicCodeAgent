@@ -8,14 +8,14 @@ import (
 	"github.com/muidea/magicCommon/framework/application"
 	"github.com/muidea/magicCommon/framework/service"
 
-	_ "github.com/muidea/magicToolkit"
+	_ "github.com/muidea/magicCodeAgent"
 
-	"github.com/muidea/magicToolkit/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/config"
 
-	_ "github.com/muidea/magicToolkit/internal/modules/blocks/initator"
-	_ "github.com/muidea/magicToolkit/internal/modules/blocks/module"
-	_ "github.com/muidea/magicToolkit/internal/modules/blocks/project"
-	_ "github.com/muidea/magicToolkit/internal/modules/kernel/cli"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/initator"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/module"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/cli"
 )
 
 var (
@@ -26,9 +26,9 @@ var (
 func main() {
 	flag.Parse()
 
-	fmt.Printf("magicCli V1.0\n")
+	fmt.Printf("magicCodeCli V1.0\n")
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
-	config.SetEndpoint("magicCli")
+	config.SetEndpoint("magicCodeCli")
 	err := application.Startup(service.HoldService(config.EndpointName()))
 	if err != nil {
 		log.Errorf("application.Startup err:%s", err.Error())

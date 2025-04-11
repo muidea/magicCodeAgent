@@ -37,7 +37,7 @@ jobs:
       - name: Build for ${{ matrix.platform }}
         timeout-minutes: 60
         run: |
-          mkdir -p bin build/magicToolkit
+          mkdir -p bin build/magicCodeAgent
           export GOOS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)
           export GOARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
           make release || (echo "Build failed with exit code $?"; exit 1)
@@ -73,12 +73,12 @@ jobs:
               throw error
             }
 
-      - name: Upload magicToolkit
+      - name: Upload magicCodeAgent
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ./build/magicToolkit.zip
-          asset_name: magicToolkit-${{ github.ref_name }}-${{ matrix.platform }}.zip
+          asset_path: ./build/magicCodeAgent.zip
+          asset_name: magicCodeAgent-${{ github.ref_name }}-${{ matrix.platform }}.zip
           asset_content_type: application/zip

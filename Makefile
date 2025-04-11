@@ -8,17 +8,17 @@ all: fmt vet build
 build: cli codeAgent
 
 release: build
-	mkdir -p build/magicToolkit
-	cp bin/magicCli build/magicToolkit/magicCli
-	cp bin/magicCodeAgent build/magicToolkit/magicCodeAgent
-	cd build && ls -l magicToolkit && zip -r magicToolkit.zip magicToolkit
+	mkdir -p build/magicCodeAgent
+	cp bin/magicCodeCli build/magicCodeAgent/magicCodeCli
+	cp bin/magicCodeAgent build/magicCodeAgent/magicCodeAgent
+	cd build && ls -l magicCodeAgent && zip -r magicCodeAgent.zip magicCodeAgent
 
 install: build
-	cp bin/magicCli /usr/local/bin/magicCli
+	cp bin/magicCodeCli /usr/local/bin/magicCodeCli
 	cp bin/magicCodeAgent /usr/local/bin/magicCodeAgent
 
 cli:
-	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCli ./application/magicCli/cmd
+	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeCli ./application/magicCodeCli/cmd
 
 codeAgent:
 	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeAgent ./application/magicCodeAgent/cmd

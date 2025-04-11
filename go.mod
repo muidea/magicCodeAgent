@@ -1,4 +1,4 @@
-module github.com/muidea/magicToolkit
+module github.com/muidea/magicCodeAgent
 
 go 1.23.0
 

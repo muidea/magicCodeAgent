@@ -11,5 +11,8 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-magicCli
-magicMonitor
+!magicCodeCli/cmd/main.go
+!magicCodeAgent/cmd/main.go
+
+magicCodeAgent
+magicCodeCli

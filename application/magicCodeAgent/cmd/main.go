@@ -8,17 +8,18 @@ import (
 	"github.com/muidea/magicCommon/framework/application"
 	"github.com/muidea/magicCommon/framework/service"
 
-	_ "github.com/muidea/magicToolkit"
+	_ "github.com/muidea/magicCodeAgent"
 
-	"github.com/muidea/magicToolkit/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/config"
 
-	_ "github.com/muidea/magicToolkit/internal/initators/pprof"
-	_ "github.com/muidea/magicToolkit/internal/initators/routeregistry"
-	_ "github.com/muidea/magicToolkit/internal/modules/blocks/initator"
-	_ "github.com/muidea/magicToolkit/internal/modules/blocks/module"
-	_ "github.com/muidea/magicToolkit/internal/modules/blocks/project"
-	_ "github.com/muidea/magicToolkit/internal/modules/kernel/mcp"
-	_ "github.com/muidea/magicToolkit/internal/modules/kernel/monitor"
+	_ "github.com/muidea/magicCodeAgent/internal/initators/pprof"
+	_ "github.com/muidea/magicCodeAgent/internal/initators/routeregistry"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/initator"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/module"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor"
 )
 
 var (
