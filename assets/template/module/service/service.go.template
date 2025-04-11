@@ -1,19 +1,18 @@
 package service
 
 import (
-	"github.com/muidea/magicCas/pkg/toolkit"
-
+	engine "github.com/muidea/magicEngine/http"
 	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/biz"
 )
 
 type {{.ModuleName}} struct {
-	roleRouteRegistry toolkit.RoleRouteRegistry
+	routeRegistry engine.RouteRegistry
 	bizPtr            *biz.{{.ModuleName}}
 }
 
-func New(roleRouteRegistry toolkit.RoleRouteRegistry, bizPtr *biz.{{.ModuleName}}) *{{.ModuleName}} {
+func New(routeRegistry engine.RouteRegistry, bizPtr *biz.{{.ModuleName}}) *{{.ModuleName}} {
 	ptr := &{{.ModuleName}}{
-		roleRouteRegistry: roleRouteRegistry,
+		routeRegistry: routeRegistry,
 		bizPtr:            bizPtr,
 	}
 	return ptr

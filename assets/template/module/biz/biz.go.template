@@ -1,6 +1,7 @@
 package biz
 
 import (
+	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 
@@ -21,4 +22,8 @@ func New(
 	}
 
 	return ptr
+}
+
+func (s *{{.ModuleName}}) Run() (err *cd.Error) {
+	return
 }

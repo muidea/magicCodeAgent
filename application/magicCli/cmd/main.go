@@ -26,8 +26,9 @@ var (
 func main() {
 	flag.Parse()
 
-	fmt.Printf("magicToolkit V1.0\n")
+	fmt.Printf("magicCli V1.0\n")
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
+	config.SetEndpoint("magicCli")
 	err := application.Startup(service.HoldService(config.EndpointName()))
 	if err != nil {
 		log.Errorf("application.Startup err:%s", err.Error())

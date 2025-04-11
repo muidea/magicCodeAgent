@@ -8,8 +8,7 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
-	pc "github.com/muidea/{{.ProjectName}}/internal/initators/persistence/pkg/common"
-	rc "github.com/muidea/{{.ProjectName}}/internal/initators/routeregistry/pkg/common"
+	iirc "github.com/muidea/{{.ProjectName}}/internal/initators/routeregistry/pkg/common"
 	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/biz"
 	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/pkg/common"
 	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/service"
@@ -33,33 +32,24 @@ func (s *{{.ModuleName}}) ID() string {
 }
 
 func (s *{{.ModuleName}}) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
-	var persistenceHelperVal pc.PersistenceHelper
-	var persistenceHelperErr *cd.Error
-	persistenceHelperVal, persistenceHelperErr = initator.GetEntity(pc.PersistenceInitator, persistenceHelperVal)
-	if persistenceHelperErr != nil {
-		err = persistenceHelperErr
-		log.Errorf("{{.ModuleName}} setup failed, initator.GetEntity error:%s", persistenceHelperErr.Error())
-		return
-	}
-
-	var routeRegistryHelperVal rc.RouteRegistryHelper
+	var routeRegistryHelperVal iirc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
-	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(rc.RouteRegistryInitator, routeRegistryHelperVal)
+	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(iirc.RouteRegistryInitator, routeRegistryHelperVal)
 	if routeRegistryHelperErr != nil {
 		err = routeRegistryHelperErr
 		log.Errorf("{{.ModuleName}} setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
 		return
 	}
 
-	s.bizPtr = biz.New(persistenceHelperVal.GetPlatformClient(), eventHub, backgroundRoutine)
+	s.bizPtr = biz.New(eventHub, backgroundRoutine)
 
-	s.servicePtr = service.New(routeRegistryHelperVal.GetRoleRouteRegistry(), s.bizPtr)
+	s.servicePtr = service.New(routeRegistryHelperVal.GetRouteRegistry(), s.bizPtr)
 
 	return nil
 }
 
 func (s *{{.ModuleName}}) Run() (err *cd.Error) {
-	err = s.bizPtr.Initialize()
+	err = s.bizPtr.Run()
 	if err != nil {
 		return
 	}

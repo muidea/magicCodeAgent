@@ -34,6 +34,8 @@ func main() {
 
 	fmt.Printf("magicCodeAgent V1.0\n")
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
+	config.SetEndpoint("magicCodeAgent")
+
 	if configFile != "" {
 		configErr := config.LoadConfig(configFile)
 		if configErr != nil {

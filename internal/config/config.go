@@ -12,6 +12,7 @@ var templateFS embed.FS
 
 var currentConfigPath = ""
 var currentWorkPath = ""
+var currentEndpoint = "magicToolkit"
 var listenPort = "8080"
 var sysConfig *Config
 
@@ -53,6 +54,10 @@ func LoadConfig(cfgFile string) (err error) {
 	currentConfigPath = cfgFile
 	sysConfig = cfg
 	return
+}
+
+func SetEndpoint(endpointName string) {
+	currentEndpoint = endpointName
 }
 
 func BindPort() string {
@@ -158,7 +163,7 @@ func GetTemplateFS() embed.FS {
 }
 
 func EndpointName() string {
-	return "magicToolkit"
+	return currentEndpoint
 }
 
 func CurrentWorkPath() string {
