@@ -14,27 +14,27 @@ var templateFS embed.FS
 
 // 全局配置变量
 var (
-	currentConfigPath = ""       // 当前配置文件路径
-	currentWorkPath   = ""       // 当前工作目录路径
+	currentConfigPath = ""               // 当前配置文件路径
+	currentWorkPath   = ""               // 当前工作目录路径
 	currentEndpoint   = "magicCodeAgent" // 默认端点名称
-	listenPort       = "8080"    // 默认监听端口
-	sysConfig        *Config     // 系统配置实例
+	listenPort        = "8080"           // 默认监听端口
+	sysConfig         *Config            // 系统配置实例
 )
 
 // 状态常量定义
 const (
-	EnableStatus  = "enable"   // 启用状态
-	DisableStatus = "disable"  // 禁用状态
-	OfflineStatus = "offline"  // 离线状态
+	EnableStatus  = "enable"  // 启用状态
+	DisableStatus = "disable" // 禁用状态
+	OfflineStatus = "offline" // 离线状态
 )
 
 // Workspace 定义工作区配置结构
 type Workspace struct {
-	Name        string   `json:"name"`         // 工作区名称
-	Description string   `json:"description"`  // 工作区描述
-	Status      string   `json:"status"`       // 工作区状态(enable/disable/offline)
-	Path        string   `json:"path"`         // 工作区路径
-	Ignores     []string `json:"ignores"`      // 忽略文件/目录列表
+	Name        string   `json:"name"`        // 工作区名称
+	Description string   `json:"description"` // 工作区描述
+	Status      string   `json:"status"`      // 工作区状态(enable/disable/offline)
+	Path        string   `json:"path"`        // 工作区路径
+	Ignores     []string `json:"ignores"`     // 忽略文件/目录列表
 }
 
 // Model 定义AI模型配置结构
