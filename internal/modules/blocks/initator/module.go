@@ -6,8 +6,8 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicToolkit/internal/modules/blocks/initator/biz"
-	"github.com/muidea/magicToolkit/internal/modules/blocks/initator/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/initator/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/initator/pkg/common"
 )
 
 func init() {

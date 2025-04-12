@@ -5,15 +5,15 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
 
-	icfg "github.com/muidea/magicToolkit/internal/config"
-	"github.com/muidea/magicToolkit/internal/modules/base/biz"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/cli/config"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/cli/pkg/common"
-	tc "github.com/muidea/magicToolkit/pkg/common"
+	icfg "github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/cli/config"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/cli/pkg/common"
+	tc "github.com/muidea/magicCodeAgent/pkg/common"
 
-	ic "github.com/muidea/magicToolkit/internal/modules/blocks/initator/pkg/common"
-	mc "github.com/muidea/magicToolkit/internal/modules/blocks/module/pkg/common"
-	pc "github.com/muidea/magicToolkit/internal/modules/blocks/project/pkg/common"
+	ic "github.com/muidea/magicCodeAgent/internal/modules/blocks/initator/pkg/common"
+	mc "github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
+	pc "github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
 )
 
 type Cli struct {

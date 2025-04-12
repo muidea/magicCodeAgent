@@ -10,9 +10,9 @@ import (
 
 	engine "github.com/muidea/magicEngine/http"
 
-	"github.com/muidea/magicToolkit/internal/config"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/monitor/biz"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/monitor/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
 )
 
 type Monitor struct {

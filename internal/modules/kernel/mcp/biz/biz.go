@@ -8,8 +8,8 @@ import (
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicToolkit/internal/modules/base/biz"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/mcp/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp/pkg/common"
 )
 
 const mcpServerName = "mulife.vip/magicCodeAgent"

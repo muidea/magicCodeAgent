@@ -12,7 +12,7 @@ import (
 	"golang.org/x/text/language"
 
 	cd "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicToolkit/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/config"
 )
 
 const (

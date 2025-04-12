@@ -8,9 +8,9 @@ import (
 
 	engine "github.com/muidea/magicEngine/http"
 
-	"github.com/muidea/magicToolkit/internal/modules/kernel/mcp/biz"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/mcp/pkg/common"
-	tc "github.com/muidea/magicToolkit/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp/pkg/common"
+	tc "github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 type MCP struct {

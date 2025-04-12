@@ -15,10 +15,10 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicToolkit/internal/config"
-	"github.com/muidea/magicToolkit/internal/modules/base/biz"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/monitor/pkg/common"
-	"github.com/muidea/magicToolkit/pkg/util"
+	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Monitor struct {

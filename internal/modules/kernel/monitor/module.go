@@ -8,10 +8,10 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
-	rc "github.com/muidea/magicToolkit/internal/initators/routeregistry/pkg/common"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/monitor/biz"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/monitor/pkg/common"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/monitor/service"
+	rc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/service"
 )
 
 func init() {

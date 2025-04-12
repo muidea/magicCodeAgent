@@ -3,7 +3,7 @@ package magictoolkit
 import (
 	"embed"
 
-	"github.com/muidea/magicToolkit/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/config"
 )
 
 //go:embed assets/**

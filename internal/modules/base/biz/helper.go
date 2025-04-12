@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicToolkit/internal/config"
-	tc "github.com/muidea/magicToolkit/pkg/common"
-	"github.com/muidea/magicToolkit/pkg/factory"
-	"github.com/muidea/magicToolkit/pkg/util"
+	"github.com/muidea/magicCodeAgent/internal/config"
+	tc "github.com/muidea/magicCodeAgent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/factory"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Helper struct {

@@ -10,7 +10,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
-	"github.com/muidea/magicToolkit/pkg/util"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 var functionMap template.FuncMap

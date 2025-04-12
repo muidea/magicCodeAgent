@@ -7,8 +7,8 @@ import (
 
 	"github.com/muidea/magicCommon/foundation/log"
 
-	_ "github.com/muidea/magicToolkit"
-	"github.com/muidea/magicToolkit/internal/config"
+	_ "github.com/muidea/magicCodeAgent"
+	"github.com/muidea/magicCodeAgent/internal/config"
 )
 
 func TestTempleFS(t *testing.T) {

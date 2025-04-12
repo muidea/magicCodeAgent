@@ -9,8 +9,8 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/initator"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicToolkit/internal/config"
-	"github.com/muidea/magicToolkit/internal/initators/pprof/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/initators/pprof/pkg/common"
 )
 
 func init() {

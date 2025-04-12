@@ -9,7 +9,7 @@ import (
 
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
-	"github.com/muidea/magicToolkit/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/config"
 )
 
 type FileInfo struct {

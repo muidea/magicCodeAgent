@@ -2,7 +2,7 @@ package service
 
 import (
 	engine "github.com/muidea/magicEngine/http"
-	"github.com/muidea/magicToolkit/internal/modules/kernel/agent/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz"
 )
 
 type Agent struct {

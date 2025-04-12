@@ -12,7 +12,7 @@ var templateFS embed.FS
 
 var currentConfigPath = ""
 var currentWorkPath = ""
-var currentEndpoint = "magicToolkit"
+var currentEndpoint = "magicCodeAgent"
 var listenPort = "8080"
 var sysConfig *Config
 

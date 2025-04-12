@@ -9,9 +9,9 @@ import (
 
 	engine "github.com/muidea/magicEngine/http"
 
-	"github.com/muidea/magicToolkit/internal/config"
-	"github.com/muidea/magicToolkit/internal/initators/routeregistry/pkg/common"
-	tc "github.com/muidea/magicToolkit/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
+	tc "github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 func init() {

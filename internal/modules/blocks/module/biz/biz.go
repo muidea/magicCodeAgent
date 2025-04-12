@@ -6,10 +6,10 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicToolkit/internal/modules/base/biz"
-	"github.com/muidea/magicToolkit/internal/modules/blocks/module/pkg/common"
-	tc "github.com/muidea/magicToolkit/pkg/common"
-	"github.com/muidea/magicToolkit/pkg/util"
+	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
+	tc "github.com/muidea/magicCodeAgent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Module struct {

@@ -13,8 +13,8 @@ import (
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
 
-	"github.com/muidea/magicToolkit/internal/config"
-	mc "github.com/muidea/magicToolkit/internal/modules/kernel/monitor/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/config"
+	mc "github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
 )
 
 const mimeType = "application/json; charset=utf-8"

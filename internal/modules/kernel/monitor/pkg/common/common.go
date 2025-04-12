@@ -9,7 +9,7 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 	fp "github.com/muidea/magicCommon/foundation/path"
 
-	"github.com/muidea/magicToolkit/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/config"
 )
 
 const MonitorModule = "/internal/modules/kernel/monitor"
