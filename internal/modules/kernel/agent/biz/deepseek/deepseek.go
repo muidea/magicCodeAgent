@@ -117,6 +117,7 @@ func UserBalance() (ret *common.UserBalanceResponse, err error) {
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
+	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
 	_, err = fn.HTTPGet(clnt, fullUrl, resultPtr, ctx)
 	if err != nil {
 		log.Errorf("UserBalance failed, url:%v, error:%v", fullUrl, err)
