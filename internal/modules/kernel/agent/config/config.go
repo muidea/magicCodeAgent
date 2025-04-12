@@ -13,7 +13,7 @@ const deepseekKey = ""
 func GetDeepSeekUrl() string {
 	models := config.Models()
 	for _, model := range models {
-		if model.OwnedBy == deepseek {
+		if model.Provider == deepseek {
 			return path.Join(deepseekUrl, model.BaseUrl)
 		}
 	}
@@ -23,7 +23,7 @@ func GetDeepSeekUrl() string {
 func GetDeepSeekAPIKey() string {
 	models := config.Models()
 	for _, model := range models {
-		if model.OwnedBy == deepseek {
+		if model.Provider == deepseek {
 			return model.APIKey
 		}
 	}
