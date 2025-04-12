@@ -5,11 +5,11 @@ import (
 	"path"
 	"strings"
 
-	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCodeAgent/internal/config"
 	tc "github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/factory"
 	"github.com/muidea/magicCodeAgent/pkg/util"
+	cd "github.com/muidea/magicCommon/def"
 )
 
 type Helper struct {

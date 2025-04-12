@@ -6,6 +6,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/deepseek"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
@@ -25,5 +26,25 @@ func New(
 }
 
 func (s *Agent) Run() (err *cd.Error) {
+	return
+}
+
+func (s *Agent) ChatCompletion(param *common.ChatCompletionRequest) (ret *common.ChatCompletionResponse, err error) {
+	ret, err = deepseek.ChatCompletion(param)
+	return
+}
+
+func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common.BetaCompletionResponse, err error) {
+	ret, err = deepseek.BetaCompletion(param)
+	return
+}
+
+func (s *Agent) ModelsList() (ret *common.ModelsListResponse, err error) {
+	ret, err = deepseek.ModelsList()
+	return
+}
+
+func (s *Agent) UserBalance() (ret *common.UserBalanceResponse, err error) {
+	ret, err = deepseek.UserBalance()
 	return
 }

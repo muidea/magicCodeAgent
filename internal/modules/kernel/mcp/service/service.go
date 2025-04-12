@@ -33,6 +33,7 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.MCP) *MCP {
 }
 
 func (s *MCP) RegisterRoute() {
+	s.routeRegistry.SetApiVersion(tc.ApiVersion)
 	s.routeRegistry.AddHandler(common.MCPSSE, engine.GET, s.sseHandler)
 	s.routeRegistry.AddHandler(common.MCPMessage, engine.POST, s.messageHandler)
 }

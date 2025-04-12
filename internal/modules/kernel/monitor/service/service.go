@@ -13,6 +13,7 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
+	tc "github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 type Monitor struct {
@@ -29,6 +30,7 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Monitor) *Monitor {
 }
 
 func (s *Monitor) RegisterRoute() {
+	s.routeRegistry.SetApiVersion(tc.ApiVersion)
 	s.routeRegistry.AddHandler(common.FilterWorkspace, engine.GET, s.filterWorkspace)
 	s.routeRegistry.AddHandler(common.AddWorkspace, engine.POST, s.addWorkspace)
 	s.routeRegistry.AddHandler(common.RemoveWorkspace, engine.DELETE, s.delWorkspace)

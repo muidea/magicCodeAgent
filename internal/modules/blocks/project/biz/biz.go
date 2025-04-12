@@ -1,10 +1,10 @@
 package biz
 
 import (
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/task"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/task"
 )
 
 type Project struct {

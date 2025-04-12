@@ -30,9 +30,17 @@ type Workspace struct {
 	Ignores     []string `json:"ignores"`
 }
 
+type Model struct {
+	Name    string `json:"name"`
+	BaseUrl string `json:"baseUrl"`
+	APIKey  string `json:"apiKey"`
+	OwnedBy string `json:"ownedBy"`
+}
+
 type Config struct {
 	BindPort  string       `json:"bindPort"`
 	Workspace []*Workspace `json:"workspace"`
+	Models    []*Model     `json:"models"`
 }
 
 func init() {
@@ -152,6 +160,14 @@ func DisableWorkspace(workspace *Workspace) (err error) {
 	}
 
 	return
+}
+
+func Models() []*Model {
+	if sysConfig != nil {
+		return sysConfig.Models
+	}
+
+	return []*Model{}
 }
 
 func SetEmbedTemplateFS(fs embed.FS) {

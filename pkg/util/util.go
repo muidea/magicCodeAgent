@@ -11,8 +11,8 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCodeAgent/internal/config"
+	cd "github.com/muidea/magicCommon/def"
 )
 
 const (
