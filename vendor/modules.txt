@@ -55,6 +55,7 @@ github.com/muidea/magicCommon/task
 # github.com/muidea/magicEngine v1.4.0 => ../magicEngine
 ## explicit; go 1.23
 github.com/muidea/magicEngine/http
+github.com/muidea/magicEngine/sse
 # github.com/muidea/seelog v1.0.0
 ## explicit
 github.com/muidea/seelog

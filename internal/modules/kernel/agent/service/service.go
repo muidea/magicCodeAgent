@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/muidea/magicCommon/foundation/log"
 	fn "github.com/muidea/magicCommon/foundation/net"
 
 	engine "github.com/muidea/magicEngine/http"
+	"github.com/muidea/magicEngine/sse"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
@@ -36,10 +38,37 @@ func (s *Agent) RegisterRoute() {
 func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	paramPtr := &common.ChatCompletionRequest{}
 	if err := fn.ParseJSONBody(req, nil, paramPtr); err != nil {
+		log.Errorf("parse json body error:%s", err.Error())
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	acceptType := req.Header.Get("Accept")
+	if sse.IsSSE(req) || paramPtr.IsStream() {
+		// 如果客户端要求返回的结果是json格式，则需要设置返回的响应格式为json
+		if acceptType == "application/json" && paramPtr.ResponseFormat == nil {
+			paramPtr.ResponseFormat = &common.ResponseFormat{
+				Type: "json_object",
+			}
+		}
+		holder := sse.NewHolder(res, req)
+		taskFunc := func() error {
+			return s.bizPtr.ChatCompletionStream(ctx, paramPtr, holder)
+		}
+		err := holder.Run(taskFunc)
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		//res.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// 这里强制将返回值为json，否则无法进行数据解析
+	paramPtr.ResponseFormat = &common.ResponseFormat{
+		Type: "json_object",
+	}
 	resultPtr, resultErr := s.bizPtr.ChatCompletion(paramPtr)
 	if resultErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -51,7 +80,23 @@ func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req
 func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	paramPtr := &common.BetaCompletionRequest{}
 	if err := fn.ParseJSONBody(req, nil, paramPtr); err != nil {
+		log.Errorf("parse json body error:%s", err.Error())
 		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if sse.IsSSE(req) || paramPtr.IsStream() {
+		holder := sse.NewHolder(res, req)
+		taskFunc := func() error {
+			return s.bizPtr.BetaCompletionStream(ctx, paramPtr, holder)
+		}
+		err := holder.Run(taskFunc)
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		//res.WriteHeader(http.StatusOK)
 		return
 	}
 
@@ -64,6 +109,21 @@ func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req
 }
 
 func (s *Agent) ModelsList(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	if sse.IsSSE(req) {
+		holder := sse.NewHolder(res, req)
+		taskFunc := func() error {
+			return s.bizPtr.ModelsListStream(ctx, holder)
+		}
+		err := holder.Run(taskFunc)
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		//res.WriteHeader(http.StatusOK)
+		return
+	}
+
 	resultPtr, resultErr := s.bizPtr.ModelsList()
 	if resultErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -73,6 +133,21 @@ func (s *Agent) ModelsList(ctx context.Context, res http.ResponseWriter, req *ht
 }
 
 func (s *Agent) UserBalance(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	if sse.IsSSE(req) {
+		holder := sse.NewHolder(res, req)
+		taskFunc := func() error {
+			return s.bizPtr.UserBalanceStream(ctx, holder)
+		}
+		err := holder.Run(taskFunc)
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		//res.WriteHeader(http.StatusOK)
+		return
+	}
+
 	resultPtr, resultErr := s.bizPtr.UserBalance()
 	if resultErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
