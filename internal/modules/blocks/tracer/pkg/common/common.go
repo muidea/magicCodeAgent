@@ -1,6 +1,9 @@
 package common
 
 import (
+	"net/http"
+	"strconv"
+
 	cd "github.com/muidea/magicCommon/def"
 )
 
@@ -20,8 +23,33 @@ type MessageInfo struct {
 }
 
 type MessageFilter struct {
-	Page     int `json:"page"`
-	PageSize int `json:"pageSize"`
+	PageIndex int `json:"pageIndex"`
+	PageSize  int `json:"pageSize"`
+}
+
+func (s *MessageFilter) Decode(req *http.Request) {
+	query := req.URL.Query()
+
+	// 解析pageIndex
+	if pageIndex := query.Get("pageIndex"); pageIndex != "" {
+		if idx, err := strconv.Atoi(pageIndex); err == nil && idx > 0 {
+			s.PageIndex = idx
+		}
+	} else {
+		s.PageIndex = 1 // 默认第一页
+	}
+
+	// 解析pageSize
+	if pageSize := query.Get("pageSize"); pageSize != "" {
+		if size, err := strconv.Atoi(pageSize); err == nil && size > 0 {
+			if size > 100 {
+				size = 100 // 限制最大100条/页
+			}
+			s.PageSize = size
+		}
+	} else {
+		s.PageSize = 20 // 默认每页20条
+	}
 }
 
 type MessageInfoList struct {

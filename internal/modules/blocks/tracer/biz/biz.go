@@ -60,7 +60,7 @@ func (s *Tracer) filterMessage(ev event.Event, re event.Result) {
 	if !filterOK {
 		return
 	}
-	ret, err := s.FilterMessage(filterPtr.Page, filterPtr.PageSize)
+	ret, err := s.FilterMessage(filterPtr.PageIndex, filterPtr.PageSize)
 	if re != nil {
 		re.Set(ret, err)
 	}

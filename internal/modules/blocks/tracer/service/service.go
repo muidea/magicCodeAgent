@@ -27,8 +27,8 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Tracer) *Tracer {
 }
 
 func (s *Tracer) RegisterRoute() {
-	s.routeRegistry.AddHandler(common.AppendMessage, "POST", s.AppendMessage)
-	s.routeRegistry.AddHandler(common.FilterMessage, "POST", s.FilterMessage)
+	s.routeRegistry.AddHandler(common.AppendMessage, engine.POST, s.AppendMessage)
+	s.routeRegistry.AddHandler(common.FilterMessage, engine.GET, s.FilterMessage)
 }
 
 func (s *Tracer) AppendMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -50,11 +50,7 @@ func (s *Tracer) FilterMessage(ctx context.Context, res http.ResponseWriter, req
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &common.MessageFilter{}
-	err := fn.ParseJSONBody(req, nil, param)
-	if err != nil {
-		result.Error = cd.NewError(cd.IllegalParam, "invalid filtermessage parameters")
-		return
-	}
+	param.Decode(req)
 
-	result.Values, result.Error = s.bizPtr.FilterMessage(param.Page, param.PageSize)
+	result.Values, result.Error = s.bizPtr.FilterMessage(param.PageIndex, param.PageSize)
 }
