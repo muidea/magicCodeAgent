@@ -170,6 +170,7 @@ func (s *Monitor) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Work
 		workspacePtr.Status = config.OfflineStatus
 	}
 
+	workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 	if eVal := config.AddWorkspace(workspacePtr); eVal != nil {
 		log.Errorf("add workspace failed, add workspace failed:%s", workspacePtr.Path)
 		err = cd.NewError(cd.Unexpected, eVal.Error())
@@ -262,6 +263,7 @@ func (s *Monitor) EnableWorkspace(workspaceName string) (err *cd.Error) {
 		}
 
 		workspacePtr.Status = config.EnableStatus
+		workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 		if eVal := config.EnableWorkspace(workspacePtr); eVal != nil {
 			log.Errorf("enable workspace failed, enable workspace failed:%s", workspacePtr.Path)
 			return cd.NewError(cd.Unexpected, eVal.Error())
@@ -304,6 +306,7 @@ func (s *Monitor) DisableWorkspace(workspaceName string) (err *cd.Error) {
 	if ok {
 		workspacePtr := curWorkspace.(*Workspace).workspacePtr
 		workspacePtr.Status = config.DisableStatus
+		workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 		if eVal := config.DisableWorkspace(workspacePtr); eVal != nil {
 			log.Errorf("disable workspace failed, disable workspace failed:%s", workspacePtr.Path)
 			return cd.NewError(cd.Unexpected, eVal.Error())
@@ -362,6 +365,9 @@ func (s *Monitor) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, er
 		workspace := value.(*Workspace)
 		if workspace.workspacePtr.Status == "" {
 			workspace.workspacePtr.Status = config.EnableStatus
+		}
+		if workspace.workspacePtr.UpdateTime == "" {
+			workspace.workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 		}
 		if filter == nil {
 			ret = append(ret, workspace.workspacePtr)

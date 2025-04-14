@@ -35,6 +35,7 @@ type Workspace struct {
 	Status      string   `json:"status"`      // 工作区状态(enable/disable/offline)
 	Path        string   `json:"path"`        // 工作区路径
 	Ignores     []string `json:"ignores"`     // 忽略文件/目录列表
+	UpdateTime  string   `json:"updateTime"`
 }
 
 // Model 定义AI模型配置结构
