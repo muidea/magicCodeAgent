@@ -27,6 +27,8 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Tracer) *Tracer {
 }
 
 func (s *Tracer) RegisterRoute() {
+	s.routeRegistry.AddHandler(common.AppendMessage, "POST", s.AppendMessage)
+	s.routeRegistry.AddHandler(common.FilterMessage, "POST", s.FilterMessage)
 }
 
 func (s *Tracer) AppendMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
