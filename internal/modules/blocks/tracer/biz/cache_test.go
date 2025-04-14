@@ -16,7 +16,7 @@ func TestMessageSequenceCache(t *testing.T) {
 		cache.Add(&common.MessageInfo{
 			SN:         int64(i),
 			Type:       "test",
-			ContentVal: "test message",
+			Content:    "test message",
 			CreateTime: time.Now().Format(time.RFC3339),
 		})
 	}
@@ -66,7 +66,7 @@ func TestMessageSequenceCacheConcurrent(t *testing.T) {
 				cache.Add(&common.MessageInfo{
 					SN:         int64(j),
 					Type:       "concurrent",
-					ContentVal: "concurrent message",
+					Content:    "concurrent message",
 					CreateTime: time.Now().Format(time.RFC3339),
 				})
 			}

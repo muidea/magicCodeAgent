@@ -3,35 +3,47 @@ package deepseek
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
 	fn "github.com/muidea/magicCommon/foundation/net"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	"github.com/muidea/magicEngine/sse"
 
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
 type Stream struct {
-	sseClient  *sse.Client
-	context    context.Context
-	header     url.Values
-	streamSink sse.Sinker
+	sseClient    *sse.Client
+	context      context.Context
+	header       url.Values
+	streamSink   sse.Sinker
+	streamTracer imbtc.Tracer
 }
 
 func (s *Stream) OnRecv(event string, data []byte) error {
-	if !bytes.Equal(data, []byte(" [DONE]\n")) {
-		s.streamSink.OnRecv(event, data)
+	if bytes.Equal(data, []byte(" [DONE]\n")) {
+		// 这里不需要主动断开连接可以方便后续继续使用
+		//s.sseClient.Close()
 		return nil
 	}
 
-	// 这里不需要主动断开连接可以方便后续继续使用
-	//s.sseClient.Close()
+	s.streamTracer.AppendMessage(&imbtc.MessageInfo{
+		Type:       common.RecvMsg,
+		Content:    string(data),
+		CreateTime: time.Now().UTC().Format(fu.CSTLayoutWithMillisecond),
+		Owner:      common.Deepseek,
+	})
+
+	s.streamSink.OnRecv(event, data)
 	return nil
 }
 
@@ -39,21 +51,51 @@ func (s *Stream) OnClose() {
 	s.sseClient.Close()
 }
 
-func NewStream(serverUrl string, context context.Context, header url.Values, streamSink sse.Sinker) *Stream {
+func NewStream(serverUrl string,
+	context context.Context,
+	header url.Values,
+	streamSink sse.Sinker,
+	streamTracer imbtc.Tracer,
+) *Stream {
+
+	streamTracer.AppendMessage(&imbtc.MessageInfo{
+		Type:       common.UrlMsg,
+		Content:    serverUrl,
+		CreateTime: time.Now().UTC().Format(fu.CSTLayoutWithMillisecond),
+		Owner:      common.Deepseek,
+	})
+
 	return &Stream{
 		sseClient: sse.NewClient(
 			serverUrl,
 			config.GetDeepSeekRetryInterval(),
 			config.GetDeepSeekMaxRetries(),
 		),
-		context:    context,
-		header:     header,
-		streamSink: streamSink,
+		context:      context,
+		header:       header,
+		streamSink:   streamSink,
+		streamTracer: streamTracer,
 	}
 }
 
 func (s *Stream) Run(value any) (err error) {
-	return s.sseClient.Post(s.context, value, s.header, s)
+	if value == nil {
+		return s.sseClient.Get(s.context, s.header, s)
+	}
+
+	byteVal, byteErr := json.Marshal(value)
+	if byteErr != nil {
+		return
+	}
+
+	s.streamTracer.AppendMessage(&imbtc.MessageInfo{
+		Type:       common.SendMsg,
+		Content:    string(byteVal),
+		CreateTime: time.Now().UTC().Format(fu.CSTLayoutWithMillisecond),
+		Owner:      common.Deepseek,
+	})
+
+	return s.sseClient.Post(s.context, byteVal, s.header, s)
 }
 
 // ChatCompletion 调用DeepSeek聊天补全API
@@ -88,14 +130,14 @@ func ChatCompletion(paramPtr *common.ChatCompletionRequest) (ret *common.ChatCom
 	return
 }
 
-func ChatCompletionStream(ctx context.Context, paramPtr *common.ChatCompletionRequest, sink sse.Sinker) error {
+func ChatCompletionStream(ctx context.Context, paramPtr *common.ChatCompletionRequest, sink sse.Sinker, tracer imbtc.Tracer) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.ChatCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
 
-	stream := NewStream(urlVal.String(), ctx, header, sink)
+	stream := NewStream(urlVal.String(), ctx, header, sink, tracer)
 	return stream.Run(paramPtr)
 }
 
@@ -131,14 +173,14 @@ func BetaCompletion(paramPtr *common.BetaCompletionRequest) (ret *common.BetaCom
 	return
 }
 
-func BetaCompletionStream(ctx context.Context, paramPtr *common.BetaCompletionRequest, sink sse.Sinker) error {
+func BetaCompletionStream(ctx context.Context, paramPtr *common.BetaCompletionRequest, sink sse.Sinker, tracer imbtc.Tracer) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.BetaCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
 
-	stream := NewStream(urlVal.String(), ctx, header, sink)
+	stream := NewStream(urlVal.String(), ctx, header, sink, tracer)
 	return stream.Run(paramPtr)
 }
 
@@ -169,7 +211,7 @@ func ModelsList() (ret *common.ModelsListResponse, err error) {
 	return
 }
 
-func ModelsListStream(ctx context.Context, sink sse.Sinker) error {
+func ModelsListStream(ctx context.Context, sink sse.Sinker, tracer imbtc.Tracer) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.ModelsList)
 	header := url.Values{}
@@ -177,7 +219,7 @@ func ModelsListStream(ctx context.Context, sink sse.Sinker) error {
 	header.Set("Accept", "text/event-stream")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
 
-	stream := NewStream(urlVal.String(), ctx, header, sink)
+	stream := NewStream(urlVal.String(), ctx, header, sink, tracer)
 	return stream.Run(nil)
 }
 
@@ -209,7 +251,7 @@ func UserBalance() (ret *common.UserBalanceResponse, err error) {
 	return
 }
 
-func UserBalanceStream(ctx context.Context, sink sse.Sinker) error {
+func UserBalanceStream(ctx context.Context, sink sse.Sinker, tracer imbtc.Tracer) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.UserBalance)
 	header := url.Values{}
@@ -217,6 +259,6 @@ func UserBalanceStream(ctx context.Context, sink sse.Sinker) error {
 	header.Set("Accept", "text/event-stream")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
 
-	stream := NewStream(urlVal.String(), ctx, header, sink)
+	stream := NewStream(urlVal.String(), ctx, header, sink, tracer)
 	return stream.Run(nil)
 }

@@ -12,11 +12,11 @@ const (
 )
 
 type MessageInfo struct {
-	SN          int64  `json:"sn"`
-	Type        string `json:"type"`
-	ContentType string `json:"contentType"`
-	ContentVal  string `json:"contentVal"`
-	CreateTime  string `json:"createTime"`
+	SN         int64  `json:"sn"`
+	Type       string `json:"type"`
+	Content    string `json:"content"`
+	CreateTime string `json:"createTime"`
+	Owner      string `json:"owner"`
 }
 
 type MessageFilter struct {
@@ -27,4 +27,8 @@ type MessageFilter struct {
 type MessageInfoList struct {
 	cd.Result
 	Values []*MessageInfo `json:"values"`
+}
+
+type Tracer interface {
+	AppendMessage(msg *MessageInfo)
 }
