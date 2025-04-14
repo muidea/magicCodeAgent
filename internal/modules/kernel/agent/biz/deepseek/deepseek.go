@@ -30,7 +30,8 @@ func (s *Stream) OnRecv(event string, data []byte) error {
 		return nil
 	}
 
-	s.sseClient.Close()
+	// 这里不需要主动断开连接可以方便后续继续使用
+	//s.sseClient.Close()
 	return nil
 }
 

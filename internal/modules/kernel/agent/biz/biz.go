@@ -38,8 +38,8 @@ func (s *Agent) ChatCompletion(param *common.ChatCompletionRequest) (ret *common
 	return
 }
 
-func (s *Agent) BetaCompletionStream(ctx context.Context, param *common.BetaCompletionRequest, sink sse.Sinker) error {
-	return deepseek.BetaCompletionStream(ctx, param, sink)
+func (s *Agent) ChatCompletionStream(ctx context.Context, param *common.ChatCompletionRequest, sink sse.Sinker) error {
+	return deepseek.ChatCompletionStream(ctx, param, sink)
 }
 
 func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common.BetaCompletionResponse, err error) {
@@ -47,8 +47,8 @@ func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common
 	return
 }
 
-func (s *Agent) ChatCompletionStream(ctx context.Context, param *common.ChatCompletionRequest, sink sse.Sinker) error {
-	return deepseek.ChatCompletionStream(ctx, param, sink)
+func (s *Agent) BetaCompletionStream(ctx context.Context, param *common.BetaCompletionRequest, sink sse.Sinker) error {
+	return deepseek.BetaCompletionStream(ctx, param, sink)
 }
 
 func (s *Agent) ModelsList() (ret *common.ModelsListResponse, err error) {
