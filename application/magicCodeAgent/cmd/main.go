@@ -17,6 +17,7 @@ import (
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/initator"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/module"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor"
