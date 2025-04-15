@@ -203,18 +203,16 @@ func (s *Monitor) removeWorkspace(ev event.Event, re event.Result) {
 
 func (s *Monitor) RemoveWorkspace(workspaceName string) (err *cd.Error) {
 	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
-	if !ok {
-		return
+	if ok {
+		workspacePtr := curWorkspace.(*Workspace).workspacePtr
+		err = s.disableWorkspaceInternal(workspacePtr)
+		if err != nil {
+			return
+		}
 	}
 
-	workspacePtr := curWorkspace.(*Workspace).workspacePtr
-	err = s.disableWorkspaceInternal(workspacePtr)
-	if err != nil {
-		return
-	}
-
-	if eVal := config.DelWorkspace(workspacePtr); eVal != nil {
-		log.Errorf("remove workspace failed, remove workspace failed:%s", workspacePtr.Path)
+	if eVal := config.DelWorkspace(workspaceName); eVal != nil {
+		log.Errorf("remove workspace failed, remove workspace:%s failed", workspaceName)
 		return cd.NewError(cd.Unexpected, eVal.Error())
 	}
 	return
@@ -264,7 +262,7 @@ func (s *Monitor) EnableWorkspace(workspaceName string) (err *cd.Error) {
 
 		workspacePtr.Status = config.EnableStatus
 		workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
-		if eVal := config.EnableWorkspace(workspacePtr); eVal != nil {
+		if eVal := config.EnableWorkspace(workspaceName); eVal != nil {
 			log.Errorf("enable workspace failed, enable workspace failed:%s", workspacePtr.Path)
 			return cd.NewError(cd.Unexpected, eVal.Error())
 		}
@@ -307,7 +305,7 @@ func (s *Monitor) DisableWorkspace(workspaceName string) (err *cd.Error) {
 		workspacePtr := curWorkspace.(*Workspace).workspacePtr
 		workspacePtr.Status = config.DisableStatus
 		workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
-		if eVal := config.DisableWorkspace(workspacePtr); eVal != nil {
+		if eVal := config.DisableWorkspace(workspaceName); eVal != nil {
 			log.Errorf("disable workspace failed, disable workspace failed:%s", workspacePtr.Path)
 			return cd.NewError(cd.Unexpected, eVal.Error())
 		}
@@ -361,24 +359,7 @@ func (s *Monitor) filterWorkspace(ev event.Event, re event.Result) {
 }
 
 func (s *Monitor) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, err *cd.Error) {
-	s.workspaceCache.Range(func(key, value interface{}) bool {
-		workspace := value.(*Workspace)
-		if workspace.workspacePtr.Status == "" {
-			workspace.workspacePtr.Status = config.EnableStatus
-		}
-		if workspace.workspacePtr.UpdateTime == "" {
-			workspace.workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
-		}
-		if filter == nil {
-			ret = append(ret, workspace.workspacePtr)
-			return true
-		}
-
-		if filter.Filter(workspace.workspacePtr) {
-			ret = append(ret, workspace.workspacePtr)
-		}
-		return true
-	})
+	ret = config.Workspaces()
 	return
 }
 

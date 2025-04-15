@@ -131,11 +131,11 @@ func AddWorkspace(workspace *Workspace) (err error) {
 // DelWorkspace 删除工作区配置
 // workspace: 工作区配置
 // 返回: 错误信息
-func DelWorkspace(workspace *Workspace) (err error) {
+func DelWorkspace(workspaceName string) (err error) {
 	if sysConfig != nil {
 		newWorkspace := []*Workspace{}
 		for _, val := range sysConfig.Workspace {
-			if val.Name != workspace.Name {
+			if val.Name != workspaceName {
 				newWorkspace = append(newWorkspace, val)
 			}
 		}
@@ -155,10 +155,10 @@ func DelWorkspace(workspace *Workspace) (err error) {
 // EnableWorkspace 启用工作区
 // workspace: 工作区配置
 // 返回: 错误信息
-func EnableWorkspace(workspace *Workspace) (err error) {
+func EnableWorkspace(workspaceName string) (err error) {
 	if sysConfig != nil {
 		for idx := range sysConfig.Workspace {
-			if sysConfig.Workspace[idx].Name == workspace.Name {
+			if sysConfig.Workspace[idx].Name == workspaceName {
 				sysConfig.Workspace[idx].Status = EnableStatus
 				err = fu.SaveConfig(currentConfigPath, sysConfig)
 				if err != nil {
@@ -176,10 +176,10 @@ func EnableWorkspace(workspace *Workspace) (err error) {
 // DisableWorkspace 禁用工作区
 // workspace: 工作区配置
 // 返回: 错误信息
-func DisableWorkspace(workspace *Workspace) (err error) {
+func DisableWorkspace(workspaceName string) (err error) {
 	if sysConfig != nil {
 		for idx := range sysConfig.Workspace {
-			if sysConfig.Workspace[idx].Name == workspace.Name {
+			if sysConfig.Workspace[idx].Name == workspaceName {
 				sysConfig.Workspace[idx].Status = DisableStatus
 				err = fu.SaveConfig(currentConfigPath, sysConfig)
 				if err != nil {
