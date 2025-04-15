@@ -43,14 +43,7 @@ func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req
 		return
 	}
 
-	acceptType := req.Header.Get("Accept")
 	if sse.IsSSE(req) || paramPtr.IsStream() {
-		// 如果客户端要求返回的结果是json格式，则需要设置返回的响应格式为json
-		if acceptType == "application/json" && paramPtr.ResponseFormat == nil {
-			paramPtr.ResponseFormat = &common.ResponseFormat{
-				Type: "json_object",
-			}
-		}
 		holder := sse.NewHolder(res, req)
 		taskFunc := func() error {
 			return s.bizPtr.ChatCompletionStream(ctx, paramPtr, holder)
@@ -65,10 +58,6 @@ func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req
 		return
 	}
 
-	// 这里强制将返回值为json，否则无法进行数据解析
-	paramPtr.ResponseFormat = &common.ResponseFormat{
-		Type: "json_object",
-	}
 	resultPtr, resultErr := s.bizPtr.ChatCompletion(paramPtr)
 	if resultErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)

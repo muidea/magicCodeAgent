@@ -12,6 +12,7 @@ require (
 	github.com/mark3labs/mcp-go v0.17.0
 	github.com/muidea/magicCommon v1.3.122
 	github.com/muidea/magicEngine v1.4.0
+	github.com/sashabaranov/go-openai v1.38.1
 )
 
 require (

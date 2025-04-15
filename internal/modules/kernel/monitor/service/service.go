@@ -72,14 +72,30 @@ func (s *Monitor) delWorkspace(ctx context.Context, res http.ResponseWriter, req
 func (s *Monitor) enableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &cd.Result{}
 	defer fn.PackageHTTPResponse(res, result)
-	workspaceName := req.URL.Query().Get("name")
+
+	param := &config.Workspace{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		return
+	}
+	workspaceName := param.Name
 	result.Error = s.bizPtr.EnableWorkspace(workspaceName)
 }
 
 func (s *Monitor) disableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &cd.Result{}
 	defer fn.PackageHTTPResponse(res, result)
-	workspaceName := req.URL.Query().Get("name")
+
+	param := &config.Workspace{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		return
+	}
+	workspaceName := param.Name
 	result.Error = s.bizPtr.DisableWorkspace(workspaceName)
 }
 
