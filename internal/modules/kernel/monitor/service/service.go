@@ -48,7 +48,7 @@ func (s *Monitor) filterWorkspace(ctx context.Context, res http.ResponseWriter, 
 }
 
 func (s *Monitor) addWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceResult{}
+	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &config.Workspace{}
@@ -59,18 +59,24 @@ func (s *Monitor) addWorkspace(ctx context.Context, res http.ResponseWriter, req
 		return
 	}
 
-	result.Value, result.Error = s.bizPtr.AddWorkspace(param)
+	_, result.Error = s.bizPtr.AddWorkspace(param)
+	if result.Error == nil {
+		result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
+	}
 }
 
 func (s *Monitor) delWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &cd.Result{}
+	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	workspaceName := req.URL.Query().Get("name")
 	result.Error = s.bizPtr.RemoveWorkspace(workspaceName)
+	if result.Error == nil {
+		result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
+	}
 }
 
 func (s *Monitor) enableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &cd.Result{}
+	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &config.Workspace{}
@@ -82,10 +88,13 @@ func (s *Monitor) enableWorkspace(ctx context.Context, res http.ResponseWriter, 
 	}
 	workspaceName := param.Name
 	result.Error = s.bizPtr.EnableWorkspace(workspaceName)
+	if result.Error == nil {
+		result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
+	}
 }
 
 func (s *Monitor) disableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &cd.Result{}
+	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &config.Workspace{}
@@ -97,13 +106,19 @@ func (s *Monitor) disableWorkspace(ctx context.Context, res http.ResponseWriter,
 	}
 	workspaceName := param.Name
 	result.Error = s.bizPtr.DisableWorkspace(workspaceName)
+	if result.Error == nil {
+		result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
+	}
 }
 
 func (s *Monitor) refreshWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &cd.Result{}
+	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	workspaceName := req.URL.Query().Get("name")
 	result.Error = s.bizPtr.RefreshWorkspace(workspaceName)
+	if result.Error == nil {
+		result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
+	}
 }
 
 /*

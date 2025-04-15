@@ -232,42 +232,44 @@ func (s *Monitor) refreshWorkspace(ev event.Event, re event.Result) {
 }
 
 func (s *Monitor) RefreshWorkspace(workspaceName string) (err *cd.Error) {
-	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
-	if ok {
-		workspacePtr := curWorkspace.(*Workspace).workspacePtr
-		if workspacePtr.Status != config.EnableStatus {
-			log.Warnf("refresh workspace, workspace not enable:%s", workspacePtr.Path)
-			return
-		}
-
-		err = s.disableWorkspaceInternal(workspacePtr)
-		if err != nil {
-			return
-		}
-
-		err = s.enableWorkspaceInternal(workspacePtr)
+	wPtr, wErr := config.RefreshWorkspace(workspaceName)
+	if wErr == nil {
+		log.Warnf("refresh workspace, workspace not exists:%s", workspaceName)
+		return
 	}
 
+	if wPtr.Status != config.EnableStatus {
+		log.Warnf("refresh workspace, workspace not enable:%s", wPtr.Path)
+		return
+	}
+
+	err = s.disableWorkspaceInternal(wPtr)
+	if err != nil {
+		return
+	}
+
+	err = s.enableWorkspaceInternal(wPtr)
 	return
 }
 
 func (s *Monitor) EnableWorkspace(workspaceName string) (err *cd.Error) {
-	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
-	if ok {
-		workspacePtr := curWorkspace.(*Workspace).workspacePtr
-		if workspacePtr.Status == config.EnableStatus {
-			log.Warnf("enable workspace, workspace already enable:%s", workspacePtr.Path)
-			return
-		}
+	wPtr := config.GetWorkspace(workspaceName)
+	if wPtr == nil {
+		log.Warnf("enable workspace, workspace not exists:%s", workspaceName)
+		return
+	}
 
-		workspacePtr.Status = config.EnableStatus
-		workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
-		if eVal := config.EnableWorkspace(workspaceName); eVal != nil {
-			log.Errorf("enable workspace failed, enable workspace failed:%s", workspacePtr.Path)
-			return cd.NewError(cd.Unexpected, eVal.Error())
-		}
+	err = s.enableWorkspaceInternal(wPtr)
+	if err != nil {
+		log.Errorf("enable workspace failed, enable workspace failed:%s", wPtr.Path)
+		return
+	}
 
-		err = s.enableWorkspaceInternal(workspacePtr)
+	wPtr.Status = config.EnableStatus
+	wPtr.UpdateTime = time.Now().Format(fu.CSTLayout)
+	if eVal := config.EnableWorkspace(workspaceName); eVal != nil {
+		log.Errorf("enable workspace failed, enable workspace failed:%s", wPtr.Path)
+		return cd.NewError(cd.Unexpected, eVal.Error())
 	}
 
 	return
@@ -300,17 +302,22 @@ func (s *Monitor) enableWorkspaceInternal(workspacePtr *config.Workspace) (err *
 }
 
 func (s *Monitor) DisableWorkspace(workspaceName string) (err *cd.Error) {
-	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
-	if ok {
-		workspacePtr := curWorkspace.(*Workspace).workspacePtr
-		workspacePtr.Status = config.DisableStatus
-		workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
-		if eVal := config.DisableWorkspace(workspaceName); eVal != nil {
-			log.Errorf("disable workspace failed, disable workspace failed:%s", workspacePtr.Path)
-			return cd.NewError(cd.Unexpected, eVal.Error())
-		}
+	wPtr := config.GetWorkspace(workspaceName)
+	if wPtr == nil {
+		log.Warnf("disable workspace, workspace not exists:%s", workspaceName)
+		return
+	}
 
-		err = s.disableWorkspaceInternal(workspacePtr)
+	err = s.disableWorkspaceInternal(wPtr)
+	if err != nil {
+		return
+	}
+
+	wPtr.Status = config.DisableStatus
+	wPtr.UpdateTime = time.Now().Format(fu.CSTLayout)
+	if eVal := config.DisableWorkspace(workspaceName); eVal != nil {
+		log.Errorf("disable workspace failed, disable workspace failed:%s", wPtr.Path)
+		return cd.NewError(cd.Unexpected, eVal.Error())
 	}
 
 	return

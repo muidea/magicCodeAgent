@@ -4,8 +4,10 @@ package config
 import (
 	"embed"
 	"os"
+	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
@@ -186,6 +188,42 @@ func DisableWorkspace(workspaceName string) (err error) {
 					log.Errorf("save config failed, err:%s", err.Error())
 				}
 
+				return
+			}
+		}
+	}
+
+	return
+}
+
+func RefreshWorkspace(workspaceName string) (ret *Workspace, err error) {
+	if sysConfig != nil {
+		for idx := range sysConfig.Workspace {
+			if sysConfig.Workspace[idx].Name == workspaceName {
+				if fp.Exist(sysConfig.Workspace[idx].Path) {
+					sysConfig.Workspace[idx].Status = OfflineStatus
+				} else {
+					sysConfig.Workspace[idx].Status = EnableStatus
+				}
+				sysConfig.Workspace[idx].UpdateTime = time.Now().Format(fu.CSTLayout)
+				err = fu.SaveConfig(currentConfigPath, sysConfig)
+				if err != nil {
+					log.Errorf("save config failed, err:%s", err.Error())
+					return
+				}
+				ret = sysConfig.Workspace[idx]
+				return
+			}
+		}
+	}
+	return
+}
+
+func GetWorkspace(workspaceName string) (ret *Workspace) {
+	if sysConfig != nil {
+		for idx := range sysConfig.Workspace {
+			if sysConfig.Workspace[idx].Name == workspaceName {
+				ret = sysConfig.Workspace[idx]
 				return
 			}
 		}
