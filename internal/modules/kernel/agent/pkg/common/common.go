@@ -22,7 +22,7 @@ func (s *ChatCompletionRequest) IsStream() bool {
 	return s.Stream
 }
 
-type ChatCompletionResponse struct {
+type ChatCompletionStreamResponse struct {
 	openai.ChatCompletionStreamResponse
 }
 
@@ -37,7 +37,7 @@ func (s *BetaCompletionRequest) IsStream() bool {
 	return s.Stream
 }
 
-type BetaCompletionResponse struct {
+type BetaCompletionStreamResponse struct {
 	openai.ChatCompletionStreamResponse
 }
 

@@ -37,7 +37,7 @@ func (s *Agent) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Agent) ChatCompletion(param *common.ChatCompletionRequest) (ret *common.ChatCompletionResponse, err error) {
+func (s *Agent) ChatCompletion(param *common.ChatCompletionRequest) (ret *common.ChatCompletionStreamResponse, err error) {
 	ret, err = deepseek.ChatCompletion(param)
 	return
 }
@@ -46,7 +46,7 @@ func (s *Agent) ChatCompletionStream(ctx context.Context, param *common.ChatComp
 	return deepseek.ChatCompletionStream(ctx, param, sink, s)
 }
 
-func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common.BetaCompletionResponse, err error) {
+func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common.BetaCompletionStreamResponse, err error) {
 	ret, err = deepseek.BetaCompletion(param)
 	return
 }

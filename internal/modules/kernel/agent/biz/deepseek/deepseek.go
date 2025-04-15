@@ -27,6 +27,8 @@ type Stream struct {
 	header       url.Values
 	streamSink   sse.Sinker
 	streamTracer imbtc.Tracer
+
+	packedContent string
 }
 
 func (s *Stream) OnRecv(event string, data []byte) error {
@@ -36,12 +38,24 @@ func (s *Stream) OnRecv(event string, data []byte) error {
 		return nil
 	}
 
-	s.streamTracer.AppendMessage(&imbtc.MessageInfo{
-		Type:       common.RecvMsg,
-		Content:    string(data),
-		CreateTime: time.Now().UTC().Format(fu.CSTLayoutWithMillisecond),
-		Owner:      common.Deepseek,
-	})
+	respPtr := &common.ChatCompletionStreamResponse{}
+	respErr := json.Unmarshal(data, respPtr)
+	if respErr != nil {
+		log.Errorf("OnRecv failed, error:%v", respErr)
+	} else {
+		if len(respPtr.Choices) > 0 {
+			s.packedContent += respPtr.Choices[0].Delta.Content
+		}
+		if respPtr.Choices[0].FinishReason != "" {
+			s.streamTracer.AppendMessage(&imbtc.MessageInfo{
+				Type:       common.RecvMsg,
+				Content:    s.packedContent,
+				CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+				Owner:      common.Deepseek,
+			})
+			s.packedContent = ""
+		}
+	}
 
 	s.streamSink.OnRecv(event, data)
 	return nil
@@ -61,7 +75,7 @@ func NewStream(serverUrl string,
 	streamTracer.AppendMessage(&imbtc.MessageInfo{
 		Type:       common.UrlMsg,
 		Content:    serverUrl,
-		CreateTime: time.Now().UTC().Format(fu.CSTLayoutWithMillisecond),
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Owner:      common.Deepseek,
 	})
 
@@ -91,7 +105,7 @@ func (s *Stream) Run(value any) (err error) {
 	s.streamTracer.AppendMessage(&imbtc.MessageInfo{
 		Type:       common.SendMsg,
 		Content:    string(byteVal),
-		CreateTime: time.Now().UTC().Format(fu.CSTLayoutWithMillisecond),
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Owner:      common.Deepseek,
 	})
 
@@ -111,8 +125,8 @@ func (s *Stream) Run(value any) (err error) {
 // 注意:
 //
 //	需要配置有效的DeepSeek API Key才能正常调用
-func ChatCompletion(paramPtr *common.ChatCompletionRequest) (ret *common.ChatCompletionResponse, err error) {
-	resultPtr := &common.ChatCompletionResponse{}
+func ChatCompletion(paramPtr *common.ChatCompletionRequest) (ret *common.ChatCompletionStreamResponse, err error) {
+	resultPtr := &common.ChatCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.ChatCompletion)
@@ -154,8 +168,8 @@ func ChatCompletionStream(ctx context.Context, paramPtr *common.ChatCompletionRe
 // 注意:
 //
 //	该API可能不稳定，建议仅用于测试目的
-func BetaCompletion(paramPtr *common.BetaCompletionRequest) (ret *common.BetaCompletionResponse, err error) {
-	resultPtr := &common.BetaCompletionResponse{}
+func BetaCompletion(paramPtr *common.BetaCompletionRequest) (ret *common.BetaCompletionStreamResponse, err error) {
+	resultPtr := &common.BetaCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.BetaCompletion)
