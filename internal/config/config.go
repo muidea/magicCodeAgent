@@ -200,10 +200,8 @@ func RefreshWorkspace(workspaceName string) (ret *Workspace, err error) {
 	if sysConfig != nil {
 		for idx := range sysConfig.Workspace {
 			if sysConfig.Workspace[idx].Name == workspaceName {
-				if fp.Exist(sysConfig.Workspace[idx].Path) {
+				if !fp.Exist(sysConfig.Workspace[idx].Path) {
 					sysConfig.Workspace[idx].Status = OfflineStatus
-				} else {
-					sysConfig.Workspace[idx].Status = EnableStatus
 				}
 				sysConfig.Workspace[idx].UpdateTime = time.Now().Format(fu.CSTLayout)
 				err = fu.SaveConfig(currentConfigPath, sysConfig)
