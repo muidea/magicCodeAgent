@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmagic_code_agent=self.webpackChunkmagic_code_agent||[]).push([[988],{96390:function(a,n,t){t.r(n),t.d(n,{default:function(){return c}});var o=t(67294),u=t(94272),e=t(85893);function c(){var E=(0,u.useOutletContext)();return(0,e.jsx)(u.Outlet,{context:E})}}}]);
