@@ -24,6 +24,7 @@ Example:
 */
 
 // NewTask 实现new_task工具功能
+// NewTask function implements the new_task tool functionality
 func (s *Tool) NewTask(mode, message string) (string, error) {
 	// 返回新任务创建信息
 	return fmt.Sprintf("Created new task in mode '%s' with message: %s", mode, message), nil

@@ -32,9 +32,10 @@ Examples:
 
 */
 
-// ListCodeDefinitionNames 实现list_code_definition_names工具功能
-func (s *Tool) ListCodeDefinitionNames(path string) ([]string, error) {
-	fullPath := filepath.Join(WorkspaceDir, path)
+  // ListCodeDefinitionNames 实现list_code_definition_names工具功能
+  // ListCodeDefinitionNames function implements the list_code_definition_names tool functionality
+  func (s *Tool) ListCodeDefinitionNames(path string) ([]string, error) {
+  	fullPath := filepath.Join(WorkspaceDir, path)
 	var definitions []string
 
 	info, err := os.Stat(fullPath)

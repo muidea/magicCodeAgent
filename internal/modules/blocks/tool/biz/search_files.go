@@ -30,6 +30,7 @@ Example: Requesting to search for all .ts files in the current directory
 */
 
 // SearchFiles 实现search_files工具功能
+// SearchFiles function implements the search_files tool functionality
 func (s *Tool) SearchFiles(path, regexPattern, filePattern string) ([]string, error) {
 	fullPath := filepath.Join(WorkspaceDir, path)
 	var results []string

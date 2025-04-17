@@ -19,9 +19,13 @@ If you're not confident in the exact content to search for, use the read_file to
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
 ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
 
+描述：使用搜索替换块请求替换现有代码。该工具通过精确指定要搜索的内容和替换内容，实现文件的精准修改。工具在更改时会保持正确的缩进和格式。每次工具使用仅允许单个操作。SEARCH部分必须完全匹配现有内容（包括空格和缩进）。如果不确定要搜索的确切内容，请先使用read_file工具获取准确内容。应用差异时要特别注意修改可能受影响的闭合括号或其他语法。尽量在单个apply_diff请求中使用多个SEARCH/REPLACE块完成所有更改。
+
 Parameters:
 - path: (required) The path of the file to modify (relative to the current workspace directory /home/rangh/webspace)
+  路径：(必填) 要修改的文件路径（相对于当前工作空间目录/home/rangh/webspace）
 - diff: (required) The search/replace block defining the changes.
+  差异内容：(必填) 定义更改的搜索/替换块
 
 Diff format:
 ```
@@ -38,6 +42,7 @@ Diff format:
 
 
 Example:
+示例：
 
 Original file:
 ```
