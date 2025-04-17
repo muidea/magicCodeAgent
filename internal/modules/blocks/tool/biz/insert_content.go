@@ -51,25 +51,25 @@ func (s *Tool) InsertContent(path string, operations []struct {
 	Content   string `json:"content"`
 }) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
-	
+
 	// 读取原始文件内容
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		return err
 	}
-	
+
 	lines := strings.Split(string(content), "\n")
-	
+
 	// 按start_line降序排序操作，以便从后往前插入
 	for i := len(operations) - 1; i >= 0; i-- {
 		op := operations[i]
 		if op.StartLine < 1 || op.StartLine > len(lines)+1 {
 			return fmt.Errorf("invalid start_line: %d", op.StartLine)
 		}
-		
+
 		insertPos := op.StartLine - 1
 		insertLines := strings.Split(op.Content, "\n")
-		
+
 		// 插入新内容
 		newLines := make([]string, 0, len(lines)+len(insertLines))
 		newLines = append(newLines, lines[:insertPos]...)
@@ -77,7 +77,7 @@ func (s *Tool) InsertContent(path string, operations []struct {
 		newLines = append(newLines, lines[insertPos:]...)
 		lines = newLines
 	}
-	
+
 	// 写入文件
 	return os.WriteFile(fullPath, []byte(strings.Join(lines, "\n")), 0644)
 }

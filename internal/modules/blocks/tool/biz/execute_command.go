@@ -33,17 +33,17 @@ Example: Requesting to execute ls in a specific directory if directed
 // ExecuteCommand 实现execute_command工具功能
 func (s *Tool) ExecuteCommand(command string, args []string, cwd string) (string, error) {
 	cmd := exec.Command(command, args...)
-	
+
 	if cwd != "" {
 		cmd.Dir = filepath.Join(WorkspaceDir, cwd)
 	} else {
 		cmd.Dir = WorkspaceDir
 	}
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(output), err
 	}
-	
+
 	return string(output), nil
 }

@@ -62,24 +62,24 @@ Example: Replace all occurrences of \"old\" with \"new\" using regex
 
 // SearchAndReplace 实现search_and_replace工具功能
 func (s *Tool) SearchAndReplace(path string, operations []struct {
-	Search      string `json:"search"`
-	Replace     string `json:"replace"`
-	StartLine   int    `json:"start_line"`
-	EndLine     int    `json:"end_line"`
-	UseRegex    bool   `json:"use_regex"`
-	IgnoreCase  bool   `json:"ignore_case"`
-	RegexFlags  string `json:"regex_flags"`
+	Search     string `json:"search"`
+	Replace    string `json:"replace"`
+	StartLine  int    `json:"start_line"`
+	EndLine    int    `json:"end_line"`
+	UseRegex   bool   `json:"use_regex"`
+	IgnoreCase bool   `json:"ignore_case"`
+	RegexFlags string `json:"regex_flags"`
 }) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
-	
+
 	// 读取原始文件内容
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		return err
 	}
-	
+
 	lines := strings.Split(string(content), "\n")
-	
+
 	for _, op := range operations {
 		start := op.StartLine - 1
 		if start < 0 {
@@ -89,7 +89,7 @@ func (s *Tool) SearchAndReplace(path string, operations []struct {
 		if end <= 0 || end > len(lines) {
 			end = len(lines)
 		}
-		
+
 		for i := start; i < end; i++ {
 			var newLine string
 			if op.UseRegex {
@@ -101,7 +101,7 @@ func (s *Tool) SearchAndReplace(path string, operations []struct {
 			lines[i] = newLine
 		}
 	}
-	
+
 	// 写入文件
 	return os.WriteFile(fullPath, []byte(strings.Join(lines, "\n")), 0644)
 }
