@@ -10,26 +10,36 @@ import (
 
 /*
 ## list_code_definition_names
+## 列出代码定义名称
+
 Description: Request to list definition names (classes, functions, methods, etc.) from source code. This tool can analyze either a single file or all files at the top level of a specified directory. It provides insights into the codebase structure and important constructs, encapsulating high-level concepts and relationships that are crucial for understanding the overall architecture.
+描述：请求列出源代码中的定义名称（类、函数、方法等）。此工具可以分析单个文件或指定目录顶层的所有文件。它提供了代码库结构和重要构造的洞察，封装了对理解整体架构至关重要的高级概念和关系。
+
 Parameters:
+参数：
 - path: (required) The path of the file or directory (relative to the current working directory /home/rangh/webspace) to analyze. When given a directory, it lists definitions from all top-level source files.
+- path: (必需) 要分析的文件或目录的路径（相对于当前工作目录 /home/rangh/webspace）。当给定目录时，它会列出所有顶层源文件中的定义。
+
 Usage:
+用法：
 <list_code_definition_names>
 <path>Directory path here</path>
 </list_code_definition_names>
 
 Examples:
+示例：
 
 1. List definitions from a specific file:
+1. 列出特定文件中的定义：
 <list_code_definition_names>
 <path>src/main.ts</path>
 </list_code_definition_names>
 
 2. List definitions from all files in a directory:
+2. 列出目录中所有文件的定义：
 <list_code_definition_names>
 <path>src/</path>
 </list_code_definition_names>
-
 */
 
   // ListCodeDefinitionNames 实现list_code_definition_names工具功能
