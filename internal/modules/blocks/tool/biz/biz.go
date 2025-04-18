@@ -2,6 +2,7 @@ package biz
 
 import (
 	"os"
+	"path"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -15,6 +16,8 @@ var WorkspaceDir = "/home/rangh/codespace/magicCodeAgent/internal/modules/blocks
 
 func init() {
 	WorkspaceDir, _ = os.Getwd()
+
+	WorkspaceDir = path.Join(WorkspaceDir, "temp")
 }
 
 type Tool struct {

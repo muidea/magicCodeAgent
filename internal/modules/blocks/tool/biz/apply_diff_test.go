@@ -10,6 +10,167 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestSplitDiff(t *testing.T) {
+	tests := []struct {
+		name        string
+		diff        string
+		expected    []*DiffBlock
+		expectedErr bool
+	}{
+		{
+			name: "单个diff块",
+			diff: `<<<<<<< SEARCH
+:start_line:1
+:end_line:5
+-------
+def calculate_total(items):
+    total = 0
+    for item in items:
+        total += item
+    return total
+=======
+def calculate_total(items):
+    """Calculate total with 10% markup"""
+    return sum(item * 1.1 for item in items)
+>>>>>>> REPLACE`,
+			expected: []*DiffBlock{
+				{
+					StartLine:      1,
+					EndLine:        5,
+					OriginContent:  "def calculate_total(items):\n    total = 0\n    for item in items:\n        total += item\n    return total",
+					ReplaceContent: "def calculate_total(items):\n    \"\"\"Calculate total with 10% markup\"\"\"\n    return sum(item * 1.1 for item in items)",
+				},
+			},
+		},
+		{
+			name: "多个diff块",
+			diff: `<<<<<<< SEARCH
+:start_line:10
+:end_line:12
+-------
+func foo() {
+    // do something
+}
+=======
+func foo() {
+    // do something better
+}
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+:start_line:5
+:end_line:7
+-------
+func init() {
+    // initialize
+}
+=======
+func init() {
+    // better initialization
+}
+>>>>>>> REPLACE`,
+			expected: []*DiffBlock{
+				{
+					StartLine:      5,
+					EndLine:        7,
+					OriginContent:  "func init() {\n    // initialize\n}",
+					ReplaceContent: "func init() {\n    // better initialization\n}",
+				},
+				{
+					StartLine:      10,
+					EndLine:        12,
+					OriginContent:  "func foo() {\n    // do something\n}",
+					ReplaceContent: "func foo() {\n    // do something better\n}",
+				},
+			},
+		},
+		{
+			name: "格式不正确的diff",
+			diff: `<<<<<<< SEARCH
+:start_line:1
+:end_line:3
+-------
+func bar() {
+=======
+func newBar() {
+>>>>>>> REPLACE`,
+			expected: []*DiffBlock{
+				{
+					StartLine:      1,
+					EndLine:        3,
+					OriginContent:  "func bar() {",
+					ReplaceContent: "func newBar() {",
+				},
+			},
+			expectedErr: false,
+		},
+		{
+			name: "起始行大于结束行",
+			diff: `<<<<<<< SEARCH
+:start_line:5
+:end_line:3
+-------
+func bar() {
+=======
+func newBar() {
+>>>>>>> REPLACE`,
+			expected:    nil,
+			expectedErr: true,
+		},
+		{
+			name: "缺少分隔符",
+			diff: `<<<<<<< SEARCH
+:start_line:1
+:end_line:3
+func bar() {
+=======
+func newBar() {
+>>>>>>> REPLACE`,
+			expected:    nil,
+			expectedErr: true,
+		},
+		{
+			name:        "空diff",
+			diff:        "",
+			expected:    nil,
+			expectedErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := splitDiff(tt.diff)
+
+			// 检查错误情况
+			if (err != nil) != tt.expectedErr {
+				t.Errorf("Expected error: %v, got: %v, error: %v", tt.expectedErr, err != nil, err)
+				return
+			}
+
+			if err != nil {
+				// 如果期望有错误，并且确实有错误，测试通过
+				return
+			}
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("Expected %d blocks, got %d", len(tt.expected), len(result))
+				return
+			}
+
+			for i, block := range result {
+				expected := tt.expected[i]
+				if block.StartLine != expected.StartLine ||
+					block.EndLine != expected.EndLine ||
+					block.OriginContent != expected.OriginContent ||
+					block.ReplaceContent != expected.ReplaceContent {
+					t.Errorf("Block %d mismatch:\nExpected: %+v\nGot: %+v",
+						i, expected, block)
+				}
+			}
+		})
+	}
+}
+
 func TestApplyDiff(t *testing.T) {
 	// 创建一个Tool实例用于测试
 	eventHub := event.NewHub(100)
@@ -17,7 +178,7 @@ func TestApplyDiff(t *testing.T) {
 	tool := New(eventHub, backgroundRoutine)
 
 	// 创建临时测试文件
-	tempDir := t.TempDir()
+	tempDir := WorkspaceDir
 	testFilePath := filepath.Join(tempDir, "test_file.txt")
 
 	// 写入初始内容

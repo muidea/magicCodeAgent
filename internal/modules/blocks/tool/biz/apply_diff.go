@@ -1,11 +1,14 @@
 package biz
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+
+	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
 /*
@@ -110,27 +113,221 @@ Only use a single line of '=======' between search and replacement content, beca
 
 */
 // ApplyDiff 实现apply_diff工具功能
+
+type DiffBlock struct {
+	StartLine      int    `json:"start_line"`
+	EndLine        int    `json:"end_line"`
+	OriginContent  string `json:"origin_content"`
+	ReplaceContent string `json:"replace_content"`
+}
+
+// 从diff中分解出各个待处理的diff块
+// 每个diff块的格式如下
+// <<<<<<< SEARCH
+// :start_line:1
+// :end_line:5
+// -------
+// [exact content to find including whitespace]
+// =======
+// [new content to replace with]
+// >>>>>>> REPLACE
+// 其中，SEARCH和REPLACE部分是必须的，SEARCH部分的内容必须完全匹配原始内容（包括空格和缩进）。
+// diff 可能会包含多个DiffBlock，每个DiffBlock包含一个原始内容和一个替换内容。
+// splitDiff 函数的作用是将一个完整的diff字符串分解成多个DiffBlock，每个DiffBlock包含一个原始内容和一个替换内容。
+// 并且校验分解出来的DiffBlock是否有效，包括行号是否正确、原始内容是否匹配等。
+// 将分解出来的DiffBlock按照起始行号进行排序，确保后续处理的正确性。
+func splitDiff(diff string) ([]*DiffBlock, error) {
+	var blocks []*DiffBlock
+	remaining := diff
+
+	if strings.TrimSpace(diff) == "" {
+		return nil, nil
+	}
+
+	for {
+		// 查找下一个SEARCH块的起始位置
+		searchIdx := strings.Index(remaining, "<<<<<<< SEARCH")
+		if searchIdx == -1 {
+			break
+		}
+
+		// 提取块内容
+		blockPart := remaining[searchIdx:]
+		sepIdx := strings.Index(blockPart, "=======")
+		replaceEndIdx := strings.Index(blockPart, ">>>>>>> REPLACE")
+
+		if sepIdx == -1 || replaceEndIdx == -1 {
+			return nil, fmt.Errorf("格式不正确的diff块: 缺少分隔符或结束标记")
+		}
+
+		// 提取元数据行
+		metaPart := blockPart[len("<<<<<<< SEARCH"):]
+		contentSep := strings.Index(metaPart, "-------")
+		if contentSep == -1 {
+			return nil, fmt.Errorf("格式不正确的diff块: 缺少内容分隔符")
+		}
+		metaLines := strings.Split(strings.TrimSpace(metaPart[:contentSep]), "\n")
+
+		var startLine, endLine int
+		startLineFound, endLineFound := false, false
+		for _, line := range metaLines {
+			if strings.HasPrefix(line, ":start_line:") {
+				if _, err := fmt.Sscanf(line, ":start_line:%d", &startLine); err != nil {
+					return nil, fmt.Errorf("无效的起始行号: %v", err)
+				}
+				startLineFound = true
+			} else if strings.HasPrefix(line, ":end_line:") {
+				if _, err := fmt.Sscanf(line, ":end_line:%d", &endLine); err != nil {
+					return nil, fmt.Errorf("无效的结束行号: %v", err)
+				}
+				endLineFound = true
+			}
+		}
+
+		// 验证行号
+		if !startLineFound || !endLineFound {
+			return nil, fmt.Errorf("缺少起始行号或结束行号")
+		}
+
+		if startLine <= 0 || endLine <= 0 {
+			return nil, fmt.Errorf("行号必须为正数: startLine=%d, endLine=%d", startLine, endLine)
+		}
+
+		if startLine > endLine {
+			return nil, fmt.Errorf("起始行号不能大于结束行号: startLine=%d, endLine=%d", startLine, endLine)
+		}
+
+		// 提取原始内容和替换内容
+		contentSep = strings.Index(blockPart, "-------")
+		//rawContent := strings.TrimSpace(blockPart[contentSep+len("-------") : sepIdx])
+		//replaceContent := strings.TrimSpace(blockPart[sepIdx+len("=======") : replaceEndIdx])
+		rawContent := strings.Trim(blockPart[contentSep+len("-------"):sepIdx], "\n")
+		replaceContent := strings.Trim(blockPart[sepIdx+len("======="):replaceEndIdx], "\n")
+		// 创建diff块
+		blocks = append(blocks, &DiffBlock{
+			StartLine:      startLine,
+			EndLine:        endLine,
+			OriginContent:  rawContent,
+			ReplaceContent: replaceContent,
+		})
+
+		// 移动到下一个块
+		remaining = blockPart[replaceEndIdx+len(">>>>>>> REPLACE"):]
+	}
+
+	if len(blocks) == 0 {
+		return nil, fmt.Errorf("没有找到有效的diff块")
+	}
+
+	// 对块按起始行号排序
+	sort.Slice(blocks, func(i, j int) bool {
+		return blocks[i].StartLine < blocks[j].StartLine
+	})
+
+	return blocks, nil
+}
+
+// ApplyDiff 实现apply_diff工具功能
 func (s *Tool) ApplyDiff(path string, diff string) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
+	fullPath = filepath.Clean(fullPath)
+	if !fp.Exist(fullPath) {
+		return fmt.Errorf("文件不存在: %s", fullPath)
+	}
 
-	// 读取原始文件内容
-	content, err := os.ReadFile(fullPath)
+	diffBlocks, err := splitDiff(diff)
 	if err != nil {
-		return err
+		return fmt.Errorf("解析diff失败: %v", err)
+	}
+	if len(diffBlocks) == 0 {
+		return nil
 	}
 
-	// 解析diff内容
-	diffParts := strings.Split(diff, "=======")
-	if len(diffParts) != 2 {
-		return fmt.Errorf("invalid diff format")
+	// 创建临时文件
+	tmpPath := fullPath + ".tmp"
+	tmpFile, err := os.Create(tmpPath)
+	if err != nil {
+		return fmt.Errorf("创建临时文件失败: %v", err)
+	}
+	defer tmpFile.Close()
+
+	// 打开原文件
+	origFile, err := os.Open(fullPath)
+	if err != nil {
+		return fmt.Errorf("打开原文件失败: %v", err)
+	}
+	defer origFile.Close()
+
+	// 逐行读取并处理
+	scanner := bufio.NewScanner(origFile)
+	writer := bufio.NewWriter(tmpFile)
+	lineNum := 1
+	currentBlock := 0
+
+	firstLine := true
+	for scanner.Scan() {
+		line := scanner.Text()
+		// 检查是否需要替换
+		if currentBlock < len(diffBlocks) {
+			block := diffBlocks[currentBlock]
+
+			// 如果当前行在替换范围内
+			if lineNum >= block.StartLine && lineNum <= block.EndLine {
+				// 第一行时写入替换内容
+				if lineNum == block.StartLine {
+					// 写入换行符
+					if !firstLine {
+						if _, err := writer.WriteString("\n"); err != nil {
+							return fmt.Errorf("写入换行符失败: %v", err)
+						}
+					}
+					firstLine = false
+					if _, err := writer.WriteString(block.ReplaceContent); err != nil {
+						return fmt.Errorf("写入替换内容失败: %v", err)
+					}
+				}
+
+				// 如果到达块的结束行，移动到下一个块
+				if lineNum == block.EndLine {
+					currentBlock++
+				}
+
+				lineNum++
+				continue
+			}
+		}
+
+		// 写入换行符
+		if !firstLine {
+			if _, err := writer.WriteString("\n"); err != nil {
+				return fmt.Errorf("写入换行符失败: %v", err)
+			}
+		}
+		firstLine = false
+		// 不在替换范围内，写入原始行
+		if _, err := writer.WriteString(line); err != nil {
+			return fmt.Errorf("写入原始内容失败: %v", err)
+		}
+		lineNum++
 	}
 
-	searchContent := strings.TrimSpace(diffParts[0])
-	replaceContent := strings.TrimSpace(diffParts[1])
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("读取文件失败: %v", err)
+	}
 
-	// 替换内容
-	newContent := bytes.Replace(content, []byte(searchContent), []byte(replaceContent), 1)
+	// 刷新缓冲区
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("刷新写入缓冲区失败: %v", err)
+	}
 
-	// 写入文件
-	return os.WriteFile(fullPath, newContent, 0644)
+	// 关闭文件
+	tmpFile.Close()
+	origFile.Close()
+
+	// 重命名临时文件
+	if err := os.Rename(tmpPath, fullPath); err != nil {
+		return fmt.Errorf("重命名临时文件失败: %v", err)
+	}
+
+	return nil
 }
