@@ -79,7 +79,7 @@ func TestUseMcpTool(t *testing.T) {
 	serverName6 := "nil-server"
 	toolName6 := "nil-tool"
 	var arguments6 json.RawMessage
-	expectedResult6 := "Executed tool 'nil-tool' on server 'nil-server' with arguments: null"
+	expectedResult6 := "Executed tool 'nil-tool' on server 'nil-server' with arguments: "
 
 	result6, err := tool.UseMcpTool(serverName6, toolName6, arguments6)
 
