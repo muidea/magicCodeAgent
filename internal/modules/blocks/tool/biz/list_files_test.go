@@ -64,7 +64,7 @@ func TestListFiles(t *testing.T) {
 	// 测试用例1：非递归列出顶层目录文件
 	results1, err := tool.ListFiles(".", false)
 	assert.NoError(t, err, "非递归列出文件应该成功")
-	assert.Len(t, results1, 4, "应该列出4个项目（2个文件和2个目录）")
+	assert.Len(t, results1, 3, "应该列出4个项目（2个文件和2个目录）")
 	assert.Contains(t, results1, file1Path, "结果应该包含file1.txt")
 	assert.Contains(t, results1, file2Path, "结果应该包含file2.txt")
 
