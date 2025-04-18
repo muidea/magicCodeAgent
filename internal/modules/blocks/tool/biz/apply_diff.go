@@ -133,10 +133,10 @@ type DiffBlock struct {
 // >>>>>>> REPLACE
 // 其中，SEARCH和REPLACE部分是必须的，SEARCH部分的内容必须完全匹配原始内容（包括空格和缩进）。
 // diff 可能会包含多个DiffBlock，每个DiffBlock包含一个原始内容和一个替换内容。
-// splitDiff 函数的作用是将一个完整的diff字符串分解成多个DiffBlock，每个DiffBlock包含一个原始内容和一个替换内容。
+// splitDiffBlock 函数的作用是将一个完整的diff字符串分解成多个DiffBlock，每个DiffBlock包含一个原始内容和一个替换内容。
 // 并且校验分解出来的DiffBlock是否有效，包括行号是否正确、原始内容是否匹配等。
 // 将分解出来的DiffBlock按照起始行号进行排序，确保后续处理的正确性。
-func splitDiff(diff string) ([]*DiffBlock, error) {
+func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 	var blocks []*DiffBlock
 	remaining := diff
 
@@ -235,7 +235,7 @@ func (s *Tool) ApplyDiff(path string, diff string) error {
 		return fmt.Errorf("文件不存在: %s", fullPath)
 	}
 
-	diffBlocks, err := splitDiff(diff)
+	diffBlocks, err := splitDiffBlock(diff)
 	if err != nil {
 		return fmt.Errorf("解析diff失败: %v", err)
 	}

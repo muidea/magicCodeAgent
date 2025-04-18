@@ -139,7 +139,7 @@ func newBar() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := splitDiff(tt.diff)
+			result, err := splitDiffBlock(tt.diff)
 
 			// 检查错误情况
 			if (err != nil) != tt.expectedErr {
@@ -178,7 +178,7 @@ func TestApplyDiff(t *testing.T) {
 	tool := New(eventHub, backgroundRoutine)
 
 	// 创建临时测试文件
-	tempDir := WorkspaceDir
+	tempDir := t.TempDir()
 	testFilePath := filepath.Join(tempDir, "test_file.txt")
 
 	// 写入初始内容
