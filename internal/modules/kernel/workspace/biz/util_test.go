@@ -67,7 +67,6 @@ func TestConvertPathsToTree(t *testing.T) {
 		})
 	}
 
-
 	tests = []struct {
 		name     string
 		paths    []string

@@ -124,7 +124,7 @@ func (s *WorkspaceInfo) Filter(filter fu.Filter) (ret []string) {
 	s.fileInfo.Range(func(key, value interface{}) bool {
 		if filter != nil && filter.Filter(key) {
 			ret = append(ret, key.(string))
-		} else {
+		} else if filter == nil {
 			ret = append(ret, key.(string))
 		}
 
