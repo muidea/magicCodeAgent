@@ -19,19 +19,19 @@ type FileInfo struct {
 	Modified int64
 }
 
-type Workspace struct {
+type WorkspaceInfo struct {
 	workspacePtr *config.Workspace
 	fileInfo     sync.Map
 }
 
-func NewWorkspace(workspacePtr *config.Workspace) *Workspace {
-	ret := &Workspace{
+func NewWorkspace(workspacePtr *config.Workspace) *WorkspaceInfo {
+	ret := &WorkspaceInfo{
 		workspacePtr: workspacePtr,
 	}
 	return ret
 }
 
-func (s *Workspace) checkIgnore(fileFullPath string) bool {
+func (s *WorkspaceInfo) checkIgnore(fileFullPath string) bool {
 	filePath, fileName := path.Split(fileFullPath)
 	for _, ignore := range s.workspacePtr.Ignores {
 		ignorePath := filepath.Join(s.workspacePtr.Path, ignore)
@@ -50,7 +50,7 @@ func (s *Workspace) checkIgnore(fileFullPath string) bool {
 	return false
 }
 
-func (s *Workspace) AddFile(filePath string) bool {
+func (s *WorkspaceInfo) AddFile(filePath string) bool {
 	if !strings.HasPrefix(filePath, s.workspacePtr.Path) {
 		return false
 	}
@@ -63,7 +63,7 @@ func (s *Workspace) AddFile(filePath string) bool {
 	return true
 }
 
-func (s *Workspace) AddDir(dirPath string) bool {
+func (s *WorkspaceInfo) AddDir(dirPath string) bool {
 	if !strings.HasPrefix(dirPath, s.workspacePtr.Path) {
 		return false
 	}
@@ -88,7 +88,7 @@ func (s *Workspace) AddDir(dirPath string) bool {
 	return true
 }
 
-func (s *Workspace) RemoveFile(filePath string) bool {
+func (s *WorkspaceInfo) RemoveFile(filePath string) bool {
 	if !strings.HasPrefix(filePath, s.workspacePtr.Path) {
 		return false
 	}
@@ -101,7 +101,7 @@ func (s *Workspace) RemoveFile(filePath string) bool {
 	return true
 }
 
-func (s *Workspace) ClearDir(dirPath string) bool {
+func (s *WorkspaceInfo) ClearDir(dirPath string) bool {
 	if !strings.HasPrefix(dirPath, s.workspacePtr.Path) {
 		return false
 	}
@@ -120,7 +120,7 @@ func (s *Workspace) ClearDir(dirPath string) bool {
 	return true
 }
 
-func (s *Workspace) Filter(filter fu.Filter) (ret []string) {
+func (s *WorkspaceInfo) Filter(filter fu.Filter) (ret []string) {
 	s.fileInfo.Range(func(key, value interface{}) bool {
 		if filter != nil && filter.Filter(key) {
 			ret = append(ret, key.(string))

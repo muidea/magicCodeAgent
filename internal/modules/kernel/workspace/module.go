@@ -1,4 +1,4 @@
-package monitor
+package workspace
 
 import (
 	cd "github.com/muidea/magicCommon/def"
@@ -9,35 +9,35 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	rc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/service"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/service"
 )
 
 func init() {
 	module.Register(New())
 }
 
-type Monitor struct {
-	bizPtr     *biz.Monitor
-	servicePtr *service.Monitor
+type Workspace struct {
+	bizPtr     *biz.Workspace
+	servicePtr *service.Workspace
 }
 
-func New() *Monitor {
-	return &Monitor{}
+func New() *Workspace {
+	return &Workspace{}
 }
 
-func (s *Monitor) ID() string {
-	return common.MonitorModule
+func (s *Workspace) ID() string {
+	return common.WorkspaceModule
 }
 
-func (s *Monitor) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+func (s *Workspace) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	var routeRegistryHelperVal rc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
 	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(rc.RouteRegistryInitator, routeRegistryHelperVal)
 	if routeRegistryHelperErr != nil {
 		err = routeRegistryHelperErr
-		log.Errorf("Monitor setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
+		log.Errorf("Workspace setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
 		return
 	}
 
@@ -48,7 +48,7 @@ func (s *Monitor) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRou
 	return nil
 }
 
-func (s *Monitor) Run() (err *cd.Error) {
+func (s *Workspace) Run() (err *cd.Error) {
 	err = s.bizPtr.Run()
 	if err != nil {
 		return
@@ -58,5 +58,5 @@ func (s *Monitor) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Monitor) Teardown() {
+func (s *Workspace) Teardown() {
 }

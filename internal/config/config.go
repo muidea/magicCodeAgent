@@ -36,6 +36,7 @@ type Workspace struct {
 	Description string   `json:"description"` // 工作区描述
 	Status      string   `json:"status"`      // 工作区状态(enable/disable/offline)
 	Path        string   `json:"path"`        // 工作区路径
+	TechStack   []string `json:"techStack"`   // 技术栈列表
 	Ignores     []string `json:"ignores"`     // 忽略文件/目录列表
 	UpdateTime  string   `json:"updateTime"`
 }
@@ -145,7 +146,7 @@ func UpdateWorkspace(workspace *Workspace) (err error) {
 				}
 			}
 		}
-	}	
+	}
 	return
 }
 

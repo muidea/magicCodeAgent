@@ -17,11 +17,11 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
-type Monitor struct {
+type Workspace struct {
 	biz.Base
 
 	fsWatcher      *fsnotify.Watcher
@@ -31,16 +31,16 @@ type Monitor struct {
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
-) *Monitor {
-	monitorPtr, monitorErr := fsnotify.NewWatcher()
-	if monitorErr != nil {
-		log.Errorf("new monitor failed, err:%s", monitorErr.Error())
+) *Workspace {
+	workspacePtr, workspaceErr := fsnotify.NewWatcher()
+	if workspaceErr != nil {
+		log.Errorf("new workspace failed, err:%s", workspaceErr.Error())
 		return nil
 	}
 
-	ptr := &Monitor{
-		Base:      biz.New(common.MonitorModule, eventHub, backgroundRoutine),
-		fsWatcher: monitorPtr,
+	ptr := &Workspace{
+		Base:      biz.New(common.WorkspaceModule, eventHub, backgroundRoutine),
+		fsWatcher: workspacePtr,
 	}
 
 	ptr.SubscribeFunc(common.AddWorkspace, ptr.addWorkspace)
@@ -53,8 +53,8 @@ func New(
 	return ptr
 }
 
-func (s *Monitor) Run() (err *cd.Error) {
-	s.Base.AsyncTask(s.monitorTask)
+func (s *Workspace) Run() (err *cd.Error) {
+	s.Base.AsyncTask(s.workspaceTask)
 
 	workspace := config.Workspaces()
 	for _, v := range workspace {
@@ -64,7 +64,7 @@ func (s *Monitor) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Monitor) monitorTask() {
+func (s *Workspace) workspaceTask() {
 	for {
 		select {
 		case event, ok := <-s.fsWatcher.Events:
@@ -85,16 +85,16 @@ func (s *Monitor) monitorTask() {
 				}
 			})
 		case err := <-s.fsWatcher.Errors:
-			log.Errorf("Monitor error: %v", err)
+			log.Errorf("Workspace error: %v", err)
 		}
 	}
 }
 
-func (s *Monitor) disposeCreate(event fsnotify.Event) {
+func (s *Workspace) disposeCreate(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
 		s.fsWatcher.Add(event.Name)
 		s.workspaceCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Workspace)
+			workspaceVal, workspaceOK := value.(*WorkspaceInfo)
 			if !workspaceOK {
 				return true
 			}
@@ -105,7 +105,7 @@ func (s *Monitor) disposeCreate(event fsnotify.Event) {
 		})
 	} else {
 		s.workspaceCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Workspace)
+			workspaceVal, workspaceOK := value.(*WorkspaceInfo)
 			if !workspaceOK {
 				return true
 			}
@@ -118,11 +118,11 @@ func (s *Monitor) disposeCreate(event fsnotify.Event) {
 	}
 }
 
-func (s *Monitor) disposeRemove(event fsnotify.Event) {
+func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
 		s.fsWatcher.Remove(event.Name)
 		s.workspaceCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Workspace)
+			workspaceVal, workspaceOK := value.(*WorkspaceInfo)
 			if !workspaceOK {
 				return true
 			}
@@ -134,7 +134,7 @@ func (s *Monitor) disposeRemove(event fsnotify.Event) {
 		})
 	} else {
 		s.workspaceCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Workspace)
+			workspaceVal, workspaceOK := value.(*WorkspaceInfo)
 			if !workspaceOK {
 				return true
 			}
@@ -146,7 +146,7 @@ func (s *Monitor) disposeRemove(event fsnotify.Event) {
 	}
 }
 
-func (s *Monitor) addWorkspace(ev event.Event, re event.Result) {
+func (s *Workspace) addWorkspace(ev event.Event, re event.Result) {
 	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
 	if !workspaceOK {
 		log.Errorf("add workspace failed, invalid workspace:%v", ev.Data())
@@ -158,10 +158,10 @@ func (s *Monitor) addWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Monitor) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
+func (s *Workspace) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
 	workspace, ok := s.workspaceCache.Load(workspacePtr.Name)
 	if ok {
-		ret = workspace.(*Workspace).workspacePtr
+		ret = workspace.(*WorkspaceInfo).workspacePtr
 		return
 	}
 
@@ -189,7 +189,7 @@ func (s *Monitor) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Work
 	return
 }
 
-func (s *Monitor) updateWorkspace(ev event.Event, re event.Result) {
+func (s *Workspace) updateWorkspace(ev event.Event, re event.Result) {
 	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
 	if !workspaceOK {
 		log.Errorf("update workspace failed, invalid workspace:%v", ev.Data())
@@ -202,7 +202,7 @@ func (s *Monitor) updateWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Monitor) UpdateWorkspace(workspacePtr *config.Workspace) (err *cd.Error) {
+func (s *Workspace) UpdateWorkspace(workspacePtr *config.Workspace) (err *cd.Error) {
 	if eVal := config.UpdateWorkspace(workspacePtr); eVal != nil {
 		log.Errorf("update workspace failed, update workspace failed:%s", workspacePtr.Path)
 		err = cd.NewError(cd.Unexpected, eVal.Error())
@@ -213,7 +213,7 @@ func (s *Monitor) UpdateWorkspace(workspacePtr *config.Workspace) (err *cd.Error
 	return
 }
 
-func (s *Monitor) removeWorkspace(ev event.Event, re event.Result) {
+func (s *Workspace) removeWorkspace(ev event.Event, re event.Result) {
 	workspaceName, workspaceOK := ev.Data().(string)
 	if !workspaceOK {
 		log.Errorf("remove workspace failed, invalid workspace:%v", ev.Data())
@@ -226,10 +226,10 @@ func (s *Monitor) removeWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Monitor) RemoveWorkspace(workspaceName string) (err *cd.Error) {
+func (s *Workspace) RemoveWorkspace(workspaceName string) (err *cd.Error) {
 	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
 	if ok {
-		workspacePtr := curWorkspace.(*Workspace).workspacePtr
+		workspacePtr := curWorkspace.(*WorkspaceInfo).workspacePtr
 		err = s.disableWorkspaceInternal(workspacePtr)
 		if err != nil {
 			return
@@ -243,7 +243,7 @@ func (s *Monitor) RemoveWorkspace(workspaceName string) (err *cd.Error) {
 	return
 }
 
-func (s *Monitor) refreshWorkspace(ev event.Event, re event.Result) {
+func (s *Workspace) refreshWorkspace(ev event.Event, re event.Result) {
 	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
 	if !workspaceOK {
 		log.Errorf("refresh workspace failed, invalid workspace:%v", ev.Data())
@@ -256,7 +256,7 @@ func (s *Monitor) refreshWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Monitor) RefreshWorkspace(workspaceName string) (err *cd.Error) {
+func (s *Workspace) RefreshWorkspace(workspaceName string) (err *cd.Error) {
 	wPtr, wErr := config.RefreshWorkspace(workspaceName)
 	if wErr == nil {
 		log.Warnf("refresh workspace, workspace not exists:%s", workspaceName)
@@ -277,7 +277,7 @@ func (s *Monitor) RefreshWorkspace(workspaceName string) (err *cd.Error) {
 	return
 }
 
-func (s *Monitor) EnableWorkspace(workspaceName string) (err *cd.Error) {
+func (s *Workspace) EnableWorkspace(workspaceName string) (err *cd.Error) {
 	wPtr := config.GetWorkspace(workspaceName)
 	if wPtr == nil {
 		log.Warnf("enable workspace, workspace not exists:%s", workspaceName)
@@ -300,7 +300,7 @@ func (s *Monitor) EnableWorkspace(workspaceName string) (err *cd.Error) {
 	return
 }
 
-func (s *Monitor) enableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
+func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
 	if !util.Exists(workspacePtr.Path) {
 		log.Warnf("enable workspace, workspace not exists:%s", workspacePtr.Path)
 		return
@@ -326,7 +326,7 @@ func (s *Monitor) enableWorkspaceInternal(workspacePtr *config.Workspace) (err *
 	return
 }
 
-func (s *Monitor) DisableWorkspace(workspaceName string) (err *cd.Error) {
+func (s *Workspace) DisableWorkspace(workspaceName string) (err *cd.Error) {
 	wPtr := config.GetWorkspace(workspaceName)
 	if wPtr == nil {
 		log.Warnf("disable workspace, workspace not exists:%s", workspaceName)
@@ -348,7 +348,7 @@ func (s *Monitor) DisableWorkspace(workspaceName string) (err *cd.Error) {
 	return
 }
 
-func (s *Monitor) disableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
+func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
 	if !util.Exists(workspacePtr.Path) {
 		log.Warnf("remove workspace, workspace not exists:%s", workspacePtr.Path)
 		s.workspaceCache.Delete(workspacePtr.Name)
@@ -366,7 +366,7 @@ func (s *Monitor) disableWorkspaceInternal(workspacePtr *config.Workspace) (err 
 			return nil
 		}
 		if ok {
-			curWorkspace.(*Workspace).RemoveFile(path)
+			curWorkspace.(*WorkspaceInfo).RemoveFile(path)
 		}
 		return nil
 	})
@@ -377,7 +377,7 @@ func (s *Monitor) disableWorkspaceInternal(workspacePtr *config.Workspace) (err 
 	return
 }
 
-func (s *Monitor) filterWorkspace(ev event.Event, re event.Result) {
+func (s *Workspace) filterWorkspace(ev event.Event, re event.Result) {
 	var filter fu.Filter
 	val := ev.Data()
 	if val != nil {
@@ -390,12 +390,12 @@ func (s *Monitor) filterWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Monitor) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, err *cd.Error) {
+func (s *Workspace) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, err *cd.Error) {
 	ret = config.Workspaces()
 	return
 }
 
-func (s *Monitor) filterWorkspaceFile(ev event.Event, re event.Result) {
+func (s *Workspace) filterWorkspaceFile(ev event.Event, re event.Result) {
 	val := ev.Data()
 	if val == nil {
 		log.Errorf("filterWorkspaceFile failed, invalid event value")
@@ -418,18 +418,18 @@ func (s *Monitor) filterWorkspaceFile(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Monitor) FilterWorkspaceFileList(workspaceName string, filter fu.Filter) (ret []string, err *cd.Error) {
+func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filter) (ret []string, err *cd.Error) {
 	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
 		return
 	}
 
-	if !fp.Exist(curWorkspace.(*Workspace).workspacePtr.Path) {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Workspace).workspacePtr.Path))
+	if !fp.Exist(curWorkspace.(*WorkspaceInfo).workspacePtr.Path) {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*WorkspaceInfo).workspacePtr.Path))
 		return
 	}
 
-	ret = curWorkspace.(*Workspace).Filter(filter)
+	ret = curWorkspace.(*WorkspaceInfo).Filter(filter)
 	return
 }

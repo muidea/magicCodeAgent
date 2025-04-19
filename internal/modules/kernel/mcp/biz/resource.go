@@ -14,7 +14,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-	mc "github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
+	mc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
 
 const mimeType = "application/json; charset=utf-8"
@@ -105,7 +105,7 @@ func (s *MCP) resourceSet() {
 func (s *MCP) workspaceResourceHandler(
 	ctx context.Context,
 	request mcp.ReadResourceRequest) (ret []mcp.ResourceContents, err error) {
-	ev := event.NewEvent(mc.FilterWorkspace, s.ID(), mc.MonitorModule, nil, nil)
+	ev := event.NewEvent(mc.FilterWorkspace, s.ID(), mc.WorkspaceModule, nil, nil)
 	resultVal, resultErr := s.SendEvent(ev).Get()
 	if resultErr != nil {
 		err = errors.New(resultErr.Error())
@@ -136,7 +136,7 @@ func (s *MCP) workspaceFileResourceHandler(
 		err = idErr
 		return
 	}
-	ev := event.NewEvent(mc.FilterWorkspaceFile, s.ID(), mc.MonitorModule, nil, idVal)
+	ev := event.NewEvent(mc.FilterWorkspaceFile, s.ID(), mc.WorkspaceModule, nil, idVal)
 	resultVal, resultErr := s.SendEvent(ev).Get()
 	if resultErr != nil {
 		err = errors.New(resultErr.Error())

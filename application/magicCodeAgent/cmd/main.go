@@ -20,7 +20,7 @@ import (
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp"
-	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace"
 )
 
 var (

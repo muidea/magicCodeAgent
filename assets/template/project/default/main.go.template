@@ -17,7 +17,7 @@ import (
 var listenPort = "8080"
 var endpointName = "{{toLower .ProjectName}}"
 
-func initPprofMonitor(listenPort string) error {
+func initPprofWorkspace(listenPort string) error {
 	var err error
 	addr := ":1" + listenPort
 
@@ -36,7 +36,7 @@ func main() {
 	flag.StringVar(&endpointName, "EndpointName", endpointName, "application endpoint name.")
 	flag.Parse()
 
-	initPprofMonitor(listenPort)
+	initPprofWorkspace(listenPort)
 
 	fmt.Printf("{{.ProjectName}} V1.0\n")
 

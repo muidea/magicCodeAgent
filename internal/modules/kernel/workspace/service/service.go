@@ -11,25 +11,25 @@ import (
 	engine "github.com/muidea/magicEngine/http"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/monitor/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	tc "github.com/muidea/magicCodeAgent/pkg/common"
 )
 
-type Monitor struct {
+type Workspace struct {
 	routeRegistry engine.RouteRegistry
-	bizPtr        *biz.Monitor
+	bizPtr        *biz.Workspace
 }
 
-func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Monitor) *Monitor {
-	ptr := &Monitor{
+func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Workspace) *Workspace {
+	ptr := &Workspace{
 		routeRegistry: routeRegistry,
 		bizPtr:        bizPtr,
 	}
 	return ptr
 }
 
-func (s *Monitor) RegisterRoute() {
+func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.SetApiVersion(tc.ApiVersion)
 	s.routeRegistry.AddHandler(common.FilterWorkspace, engine.GET, s.filterWorkspace)
 	s.routeRegistry.AddHandler(common.AddWorkspace, engine.POST, s.addWorkspace)
@@ -41,14 +41,14 @@ func (s *Monitor) RegisterRoute() {
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFile, engine.GET, s.filterFile)
 }
 
-func (s *Monitor) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
 }
 
-func (s *Monitor) addWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) addWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
@@ -66,7 +66,7 @@ func (s *Monitor) addWorkspace(ctx context.Context, res http.ResponseWriter, req
 	}
 }
 
-func (s *Monitor) updateWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) updateWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
@@ -81,7 +81,7 @@ func (s *Monitor) updateWorkspace(ctx context.Context, res http.ResponseWriter, 
 	}
 }
 
-func (s *Monitor) delWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) delWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	workspaceName := req.URL.Query().Get("name")
@@ -91,7 +91,7 @@ func (s *Monitor) delWorkspace(ctx context.Context, res http.ResponseWriter, req
 	}
 }
 
-func (s *Monitor) enableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) enableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
@@ -109,7 +109,7 @@ func (s *Monitor) enableWorkspace(ctx context.Context, res http.ResponseWriter, 
 	}
 }
 
-func (s *Monitor) disableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) disableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
@@ -127,7 +127,7 @@ func (s *Monitor) disableWorkspace(ctx context.Context, res http.ResponseWriter,
 	}
 }
 
-func (s *Monitor) refreshWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) refreshWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	workspaceName := req.URL.Query().Get("name")
@@ -143,7 +143,7 @@ func (s *Monitor) refreshWorkspace(ctx context.Context, res http.ResponseWriter,
 | `path`       | string | 否   | 文件路径前缀匹配（如 `/docs/2025` 匹配该路径下的所有文件）              |
 | `extension`  | string | 否   | 文件扩展名精确匹配（如 `pdf`，不区分大小写）                          |
 */
-func (s *Monitor) filterFile(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) filterFile(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.FileListResult{Result: cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 

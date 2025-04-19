@@ -12,9 +12,10 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 )
 
-const MonitorModule = "/internal/modules/kernel/monitor"
+const WorkspaceModule = "/internal/modules/kernel/workspace"
 
 const (
+	CreateWorkspace     = "/workspace/create"
 	AddWorkspace        = "/workspace/add"
 	UpdateWorkspace     = "/workspace/update"
 	RemoveWorkspace     = "/workspace/remove"
