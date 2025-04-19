@@ -130,6 +130,21 @@ func AddWorkspace(workspace *Workspace) (err error) {
 	return
 }
 
+func UpdateWorkspace(workspace *Workspace) (err error) {
+	if sysConfig != nil {
+		for idx := range sysConfig.Workspace {
+			if sysConfig.Workspace[idx].Name == workspace.Name {
+				sysConfig.Workspace[idx] = workspace
+				err = fu.SaveConfig(currentConfigPath, sysConfig)
+				if err != nil {
+					log.Errorf("save config failed,err:%s", err.Error())
+				}
+			}
+		}
+	}	
+	return
+}
+
 // DelWorkspace 删除工作区配置
 // workspace: 工作区配置
 // 返回: 错误信息

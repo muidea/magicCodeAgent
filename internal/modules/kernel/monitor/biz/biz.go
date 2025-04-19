@@ -44,6 +44,7 @@ func New(
 	}
 
 	ptr.SubscribeFunc(common.AddWorkspace, ptr.addWorkspace)
+	ptr.SubscribeFunc(common.UpdateWorkspace, ptr.updateWorkspace)
 	ptr.SubscribeFunc(common.RemoveWorkspace, ptr.removeWorkspace)
 	ptr.SubscribeFunc(common.RefreshWorkspace, ptr.refreshWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspace, ptr.filterWorkspace)
@@ -185,6 +186,26 @@ func (s *Monitor) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Work
 	}
 
 	ret = workspacePtr
+	return
+}
+
+func (s *Monitor) updateWorkspace(ev event.Event, re event.Result) {
+	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	if !workspaceOK {
+		log.Errorf("update workspace failed, invalid workspace:%v", ev.Data())
+		return
+	}
+
+	err := s.UpdateWorkspace(workspaceVal)
+	if re != nil {
+		re.Set(nil, err)
+	}
+}
+
+func (s *Monitor) UpdateWorkspace(workspacePtr *config.Workspace) (err *cd.Error) {
+	if eVal := config.UpdateWorkspace(workspacePtr); eVal != nil {
+		log.Errorf("update workspace failed, update workspace failed:%s", workspacePtr.Path)
+	}
 	return
 }
 

@@ -16,6 +16,7 @@ const MonitorModule = "/internal/modules/kernel/monitor"
 
 const (
 	AddWorkspace        = "/workspace/add"
+	UpdateWorkspace     = "/workspace/update"
 	RemoveWorkspace     = "/workspace/remove"
 	RefreshWorkspace    = "/workspace/refresh"
 	EnableWorkspace     = "/workspace/enable"
