@@ -205,7 +205,11 @@ func (s *Monitor) updateWorkspace(ev event.Event, re event.Result) {
 func (s *Monitor) UpdateWorkspace(workspacePtr *config.Workspace) (err *cd.Error) {
 	if eVal := config.UpdateWorkspace(workspacePtr); eVal != nil {
 		log.Errorf("update workspace failed, update workspace failed:%s", workspacePtr.Path)
+		err = cd.NewError(cd.Unexpected, eVal.Error())
+		return
 	}
+
+	err = s.RefreshWorkspace(workspacePtr.Name)
 	return
 }
 

@@ -134,6 +134,10 @@ func UpdateWorkspace(workspace *Workspace) (err error) {
 	if sysConfig != nil {
 		for idx := range sysConfig.Workspace {
 			if sysConfig.Workspace[idx].Name == workspace.Name {
+				if workspace.Status == "" {
+					workspace.Status = sysConfig.Workspace[idx].Status
+				}
+				workspace.UpdateTime = time.Now().Format(fu.CSTLayout)
 				sysConfig.Workspace[idx] = workspace
 				err = fu.SaveConfig(currentConfigPath, sysConfig)
 				if err != nil {
