@@ -31,6 +31,7 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Workspace) *Workspace {
 
 func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.SetApiVersion(tc.ApiVersion)
+	s.routeRegistry.AddHandler(common.CreateWorkspace, engine.POST, s.createWorkspace)
 	s.routeRegistry.AddHandler(common.FilterWorkspace, engine.GET, s.filterWorkspace)
 	s.routeRegistry.AddHandler(common.AddWorkspace, engine.POST, s.addWorkspace)
 	s.routeRegistry.AddHandler(common.UpdateWorkspace, engine.PUT, s.updateWorkspace)
@@ -46,6 +47,25 @@ func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter
 	defer fn.PackageHTTPResponse(res, result)
 
 	result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
+}
+
+func (s *Workspace) createWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.WorkspaceListResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	param := &config.Workspace{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		return
+	}
+
+	_, result.Error = s.bizPtr.CreateWorkspace(param)
+	if result.Error == nil {
+		// 创建成功后刷新工作区列表
+		result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
+	}
 }
 
 func (s *Workspace) addWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {

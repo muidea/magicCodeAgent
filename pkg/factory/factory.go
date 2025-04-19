@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
 	"github.com/muidea/magicCodeAgent/pkg/util"
@@ -72,7 +73,7 @@ func (s *FileFactory) getTemplateContent(relativePath string) (ret string, err e
 func (s *FileFactory) Create(workingPath, relativePath, fileName string, forceFlag bool) (err error) {
 	filePath := path.Join(workingPath, relativePath, fileName)
 	filePath, fileName = path.Split(filePath)
-	existFlag := util.Exists(filePath)
+	existFlag := fp.Exist(filePath)
 	if !existFlag {
 		err = os.MkdirAll(filePath, os.ModePerm)
 		if err != nil {
@@ -81,7 +82,7 @@ func (s *FileFactory) Create(workingPath, relativePath, fileName string, forceFl
 	}
 
 	fullFilePath := path.Join(filePath, fileName)
-	existFlag = util.Exists(fullFilePath)
+	existFlag = fp.Exist(fullFilePath)
 	if !existFlag || forceFlag {
 		func() {
 			fileHandle, fileErr := os.Create(fullFilePath)

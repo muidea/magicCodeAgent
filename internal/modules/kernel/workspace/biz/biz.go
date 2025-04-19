@@ -18,7 +18,6 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Workspace struct {
@@ -43,6 +42,7 @@ func New(
 		fsWatcher: workspacePtr,
 	}
 
+	ptr.SubscribeFunc(common.CreateWorkspace, ptr.createWorkspace)
 	ptr.SubscribeFunc(common.AddWorkspace, ptr.addWorkspace)
 	ptr.SubscribeFunc(common.UpdateWorkspace, ptr.updateWorkspace)
 	ptr.SubscribeFunc(common.RemoveWorkspace, ptr.removeWorkspace)
@@ -146,6 +146,51 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	}
 }
 
+func (s *Workspace) createWorkspace(ev event.Event, re event.Result) {
+	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	if !workspaceOK {
+		log.Errorf("create workspace failed, invalid workspace:%v", ev.Data())
+		return
+	}
+	workspacePtr, workspaceErr := s.CreateWorkspace(workspaceVal)
+	if re != nil {
+		re.Set(workspacePtr, workspaceErr)
+	}
+}
+
+func (s *Workspace) CreateWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
+	// 检查路径是否为空目录
+	if fp.Exist(workspacePtr.Path) {
+		emptyVal, emptyErr := fp.IsDirEmpty(workspacePtr.Path)
+		if !emptyVal || emptyErr != nil {
+			err = cd.NewError(cd.Unexpected, fmt.Sprintf("workspace path:%s is not empty", workspacePtr.Path))
+			return
+		}
+	} else {
+		// 创建目录
+		if e := os.MkdirAll(workspacePtr.Path, 0755); e != nil {
+			err = cd.NewError(cd.Unexpected, e.Error())
+			return
+		}
+	}
+
+	workspacePtr.Status = config.EnableStatus
+	workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
+	if eVal := config.AddWorkspace(workspacePtr); eVal != nil {
+		log.Errorf("create workspace failed, add workspace failed:%s", workspacePtr.Path)
+		err = cd.NewError(cd.Unexpected, eVal.Error())
+		return
+	}
+
+	err = s.enableWorkspaceInternal(workspacePtr)
+	if err != nil {
+		return
+	}
+
+	ret = workspacePtr
+	return
+}
+
 func (s *Workspace) addWorkspace(ev event.Event, re event.Result) {
 	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
 	if !workspaceOK {
@@ -165,7 +210,7 @@ func (s *Workspace) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Wo
 		return
 	}
 
-	if util.Exists(workspacePtr.Path) {
+	if fp.Exist(workspacePtr.Path) {
 		workspacePtr.Status = config.EnableStatus
 	} else {
 		workspacePtr.Status = config.OfflineStatus
@@ -301,7 +346,7 @@ func (s *Workspace) EnableWorkspace(workspaceName string) (err *cd.Error) {
 }
 
 func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
-	if !util.Exists(workspacePtr.Path) {
+	if !fp.Exist(workspacePtr.Path) {
 		log.Warnf("enable workspace, workspace not exists:%s", workspacePtr.Path)
 		return
 	}
@@ -349,7 +394,7 @@ func (s *Workspace) DisableWorkspace(workspaceName string) (err *cd.Error) {
 }
 
 func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
-	if !util.Exists(workspacePtr.Path) {
+	if !fp.Exist(workspacePtr.Path) {
 		log.Warnf("remove workspace, workspace not exists:%s", workspacePtr.Path)
 		s.workspaceCache.Delete(workspacePtr.Name)
 		return

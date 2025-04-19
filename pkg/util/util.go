@@ -13,24 +13,12 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	cd "github.com/muidea/magicCommon/def"
+	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
 const (
 	ProjectDefaultTemplatePath = "default"
 )
-
-func Exists(itemPath string) bool {
-	_, err := os.Stat(itemPath)
-	if err == nil {
-		return true
-	}
-
-	if os.IsNotExist(err) {
-		return false
-	}
-
-	return true
-}
 
 func ToLower(val string) string {
 	return strings.ToLower(val)
@@ -152,7 +140,7 @@ func VerifyProjectWorkPath(pathVal string) *cd.Error {
 	requiredFiles := []string{"go.mod", "go.sum", "Makefile"}
 	for _, file := range requiredFiles {
 		filePath := filepath.Join(pathVal, file)
-		if !Exists(filePath) {
+		if !fp.Exist(filePath) {
 			return cd.NewError(cd.IllegalParam, fmt.Sprintf("required file %s not found in project", file))
 		}
 	}
@@ -161,7 +149,7 @@ func VerifyProjectWorkPath(pathVal string) *cd.Error {
 	requiredDirs := []string{"application", "internal", "pkg", "vendor"}
 	for _, dir := range requiredDirs {
 		dirPath := filepath.Join(pathVal, dir)
-		if !Exists(dirPath) {
+		if !fp.Exist(dirPath) {
 			return cd.NewError(cd.IllegalParam, fmt.Sprintf("required directory %s not found in project", dir))
 		}
 	}
