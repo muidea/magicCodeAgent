@@ -15,15 +15,16 @@ import (
 const WorkspaceModule = "/internal/modules/kernel/workspace"
 
 const (
-	CreateWorkspace     = "/workspace/create"
-	AddWorkspace        = "/workspace/add"
-	UpdateWorkspace     = "/workspace/update"
-	RemoveWorkspace     = "/workspace/remove"
-	RefreshWorkspace    = "/workspace/refresh"
-	EnableWorkspace     = "/workspace/enable"
-	DisableWorkspace    = "/workspace/disable"
-	FilterWorkspace     = "/workspace/filter"
-	FilterWorkspaceFile = "/workspace/file/filter"
+	CreateWorkspace         = "/workspace/create"
+	AddWorkspace            = "/workspace/add"
+	UpdateWorkspace         = "/workspace/update"
+	RemoveWorkspace         = "/workspace/remove"
+	RefreshWorkspace        = "/workspace/refresh"
+	EnableWorkspace         = "/workspace/enable"
+	DisableWorkspace        = "/workspace/disable"
+	FilterWorkspace         = "/workspace/filter"
+	FilterWorkspaceFile     = "/workspace/file/filter"
+	FilterWorkspaceFileTree = "/workspace/file/tree/filter"
 )
 
 type WorkspaceResult struct {
@@ -93,4 +94,16 @@ func (s *FileFilter) Filter(val interface{}) bool {
 type FileListResult struct {
 	cd.Result
 	Values []string `json:"values"`
+}
+
+type DataNode struct {
+	Name     string      `json:"name"`
+	Path     string      `json:"path"`
+	IsDir    bool        `json:"isDir"`
+	Children []*DataNode `json:"children,omitempty"`
+}
+
+type FileTreeListResult struct {
+	cd.Result
+	Values []*DataNode `json:"values"`
 }
