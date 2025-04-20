@@ -15,7 +15,9 @@ import (
 const WorkspaceModule = "/internal/modules/kernel/workspace"
 
 const (
+	PreCheckWorkspace       = "/workspace/precheck"
 	CreateWorkspace         = "/workspace/create"
+	DestroyWorkspace        = "/workspace/destroy"
 	AddWorkspace            = "/workspace/add"
 	UpdateWorkspace         = "/workspace/update"
 	RemoveWorkspace         = "/workspace/remove"

@@ -42,7 +42,9 @@ func New(
 		fsWatcher: workspacePtr,
 	}
 
+	ptr.SubscribeFunc(common.PreCheckWorkspace, ptr.precheckWorkspace)
 	ptr.SubscribeFunc(common.CreateWorkspace, ptr.createWorkspace)
+	ptr.SubscribeFunc(common.DestroyWorkspace, ptr.destroyWorkspace)
 	ptr.SubscribeFunc(common.AddWorkspace, ptr.addWorkspace)
 	ptr.SubscribeFunc(common.UpdateWorkspace, ptr.updateWorkspace)
 	ptr.SubscribeFunc(common.RemoveWorkspace, ptr.removeWorkspace)
@@ -146,6 +148,30 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	}
 }
 
+func (s *Workspace) precheckWorkspace(ev event.Event, re event.Result) {
+	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	if !workspaceOK {
+		log.Errorf("precheck workspace failed, invalid workspace:%v", ev.Data())
+		return
+	}
+	workspacePtr, workspaceErr := s.PrecheckWorkspace(workspaceVal.Name)
+	if re != nil {
+		re.Set(workspacePtr, workspaceErr)
+	}
+}
+
+func (s *Workspace) PrecheckWorkspace(workspaceName string) (ret *config.Workspace, err *cd.Error) {
+	workspacePtr := config.GetWorkspace(workspaceName)
+	if workspacePtr == nil {
+		log.Warnf("precheck workspace, workspace not exists:%s", workspaceName)
+		err = cd.NewError(cd.Unexpected, fmt.Sprintf("precheck workspace, workspace not exists:%s", workspaceName))
+		return
+	}
+
+	ret = workspacePtr
+	return
+}
+
 func (s *Workspace) createWorkspace(ev event.Event, re event.Result) {
 	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
 	if !workspaceOK {
@@ -188,6 +214,34 @@ func (s *Workspace) CreateWorkspace(workspacePtr *config.Workspace) (ret *config
 	}
 
 	ret = workspacePtr
+	return
+}
+
+func (s *Workspace) destroyWorkspace(ev event.Event, re event.Result) {
+	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	if !workspaceOK {
+		log.Errorf("destroy workspace failed, invalid workspace:%v", ev.Data())
+		return
+	}
+	workspaceErr := s.DestroyWorkspace(workspaceVal.Name)
+	if re != nil {
+		re.Set(nil, workspaceErr)
+	}
+}
+
+func (s *Workspace) DestroyWorkspace(workspaceName string) (err *cd.Error) {
+	workspacePtr := config.GetWorkspace(workspaceName)
+	if workspacePtr == nil {
+		log.Warnf("destroy workspace, workspace not exists:%s", workspaceName)
+		return
+	}
+
+	err = s.disableWorkspaceInternal(workspacePtr)
+	if err != nil {
+		return
+	}
+	os.RemoveAll(workspacePtr.Path)
+	config.DelWorkspace(workspaceName)
 	return
 }
 

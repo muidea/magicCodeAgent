@@ -31,7 +31,9 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Workspace) *Workspace {
 
 func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.SetApiVersion(tc.ApiVersion)
+	s.routeRegistry.AddHandler(common.PreCheckWorkspace, engine.GET, s.precheckWorkspace)
 	s.routeRegistry.AddHandler(common.CreateWorkspace, engine.POST, s.createWorkspace)
+	s.routeRegistry.AddHandler(common.DestroyWorkspace, engine.DELETE, s.destroyWorkspace)
 	s.routeRegistry.AddHandler(common.FilterWorkspace, engine.GET, s.filterWorkspace)
 	s.routeRegistry.AddHandler(common.AddWorkspace, engine.POST, s.addWorkspace)
 	s.routeRegistry.AddHandler(common.UpdateWorkspace, engine.PUT, s.updateWorkspace)
@@ -50,6 +52,14 @@ func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter
 	result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
 }
 
+func (s *Workspace) precheckWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.WorkspaceResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	workspaceName := req.URL.Query().Get("name")
+	result.Value, result.Error = s.bizPtr.PrecheckWorkspace(workspaceName)
+}
+
 func (s *Workspace) createWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
@@ -65,6 +75,17 @@ func (s *Workspace) createWorkspace(ctx context.Context, res http.ResponseWriter
 	_, result.Error = s.bizPtr.CreateWorkspace(param)
 	if result.Error == nil {
 		// 创建成功后刷新工作区列表
+		result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
+	}
+}
+
+func (s *Workspace) destroyWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.WorkspaceListResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	workspaceName := req.URL.Query().Get("name")
+	result.Error = s.bizPtr.DestroyWorkspace(workspaceName)
+	if result.Error == nil {
 		result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
 	}
 }
