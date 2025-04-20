@@ -43,6 +43,7 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(common.RefreshWorkspace, engine.GET, s.refreshWorkspace)
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFile, engine.GET, s.filterFile)
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFileTree, engine.GET, s.filterFileTree)
+	s.routeRegistry.AddHandler(common.QueryWorkspaceFileContent, engine.GET, s.queryFileContent)
 }
 
 func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -201,4 +202,13 @@ func (s *Workspace) filterFileTree(ctx context.Context, res http.ResponseWriter,
 	workspace := req.URL.Query().Get("workspace")
 	basePath := req.URL.Query().Get("basePath")
 	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, basePath)
+}
+
+func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.FileContentResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	workspace := req.URL.Query().Get("workspace")
+	filePath := req.URL.Query().Get("filePath")
+	result.Value, result.Error = s.bizPtr.QueryFileContent(workspace, filePath)
 }

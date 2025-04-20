@@ -15,18 +15,19 @@ import (
 const WorkspaceModule = "/internal/modules/kernel/workspace"
 
 const (
-	PreCheckWorkspace       = "/workspace/precheck"
-	CreateWorkspace         = "/workspace/create"
-	DestroyWorkspace        = "/workspace/destroy"
-	AddWorkspace            = "/workspace/add"
-	UpdateWorkspace         = "/workspace/update"
-	RemoveWorkspace         = "/workspace/remove"
-	RefreshWorkspace        = "/workspace/refresh"
-	EnableWorkspace         = "/workspace/enable"
-	DisableWorkspace        = "/workspace/disable"
-	FilterWorkspace         = "/workspace/filter"
-	FilterWorkspaceFile     = "/workspace/file/filter"
-	FilterWorkspaceFileTree = "/workspace/file/tree/filter"
+	PreCheckWorkspace         = "/workspace/precheck"
+	CreateWorkspace           = "/workspace/create"
+	DestroyWorkspace          = "/workspace/destroy"
+	AddWorkspace              = "/workspace/add"
+	UpdateWorkspace           = "/workspace/update"
+	RemoveWorkspace           = "/workspace/remove"
+	RefreshWorkspace          = "/workspace/refresh"
+	EnableWorkspace           = "/workspace/enable"
+	DisableWorkspace          = "/workspace/disable"
+	FilterWorkspace           = "/workspace/filter"
+	FilterWorkspaceFile       = "/workspace/file/filter"
+	FilterWorkspaceFileTree   = "/workspace/file/tree/filter"
+	QueryWorkspaceFileContent = "/workspace/file/content/query"
 )
 
 type WorkspaceResult struct {
@@ -108,4 +109,14 @@ type DataNode struct {
 type FileTreeListResult struct {
 	cd.Result
 	Values []*DataNode `json:"values"`
+}
+
+type FileContent struct {
+	Type    string `json:"type"`
+	Content string `json:"content"`
+}
+
+type FileContentResult struct {
+	cd.Result
+	Value *FileContent `json:"value"`
 }

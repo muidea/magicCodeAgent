@@ -541,10 +541,45 @@ func (s *Workspace) FilterWorkspaceFileTree(workspaceName string, basePath strin
 	}
 	if !fp.Exist(curWorkspace.(*WorkspaceInfo).workspacePtr.Path) {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*WorkspaceInfo).workspacePtr.Path))
+		log.Errorf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*WorkspaceInfo).workspacePtr.Path)
 		return
 	}
 
 	filter := NewBasePathFilter(curWorkspace.(*WorkspaceInfo).workspacePtr.Path, basePath)
 	fileList := curWorkspace.(*WorkspaceInfo).Filter(filter)
 	return ConvertPathsToTree(curWorkspace.(*WorkspaceInfo).workspacePtr.Path, fileList), nil
+}
+
+func (s *Workspace) QueryFileContent(workspaceName string, filePath string) (ret *common.FileContent, err *cd.Error) {
+	workspacePtr := config.GetWorkspace(workspaceName)
+	if workspacePtr == nil {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
+		log.Errorf("QueryFileContent failed, workspace not found:%s", workspaceName)
+		return
+	}
+
+	fullFilePath := filepath.Join(workspacePtr.Path, filePath)
+	if !fp.Exist(fullFilePath) {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, fullFilePath))
+		log.Errorf("QueryFileContent failed, file not exists:%s", fullFilePath)
+		return
+	}
+
+	content, readErr := os.ReadFile(fullFilePath)
+	if readErr != nil {
+		err = cd.NewError(cd.Unexpected, readErr.Error())
+		log.Errorf("QueryFileContent failed, read file error:%s, err:%v", fullFilePath, readErr)
+		return
+	}
+
+	fileExt := filepath.Ext(fullFilePath)
+	if len(fileExt) > 0 && fileExt[0] == '.' {
+		fileExt = fileExt[1:]
+	}
+
+	ret = &common.FileContent{
+		Type:    fileExt,
+		Content: string(content),
+	}
+	return
 }
