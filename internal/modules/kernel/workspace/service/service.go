@@ -178,6 +178,6 @@ func (s *Workspace) filterFileTree(ctx context.Context, res http.ResponseWriter,
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspace := req.URL.Query().Get("workspace")
-	parentPath := req.URL.Query().Get("parentPath")
-	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, parentPath)
+	basePath := req.URL.Query().Get("basePath")
+	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, basePath)
 }

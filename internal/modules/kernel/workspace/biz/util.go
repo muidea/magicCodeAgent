@@ -31,17 +31,17 @@ func isIgnored(path string) bool {
 		strings.HasPrefix(base, ".")
 }
 
-func NewParentPath(rootPath string, parentPath string) *parentPathFilter {
-	return &parentPathFilter{
-		parentPath: filepath.Clean(path.Join(rootPath, parentPath)),
+func NewBasePathFilter(rootPath string, basePath string) *basePathFilter {
+	return &basePathFilter{
+		fullBasePath: filepath.Clean(path.Join(rootPath, basePath)),
 	}
 }
 
-type parentPathFilter struct {
-	parentPath string
+type basePathFilter struct {
+	fullBasePath string
 }
 
-func (s *parentPathFilter) Filter(val interface{}) bool {
+func (s *basePathFilter) Filter(val interface{}) bool {
 	if val == nil {
 		return false
 	}
@@ -51,7 +51,7 @@ func (s *parentPathFilter) Filter(val interface{}) bool {
 		return false
 	}
 
-	return strings.HasPrefix(pathVal, s.parentPath)
+	return strings.HasPrefix(pathVal, s.fullBasePath)
 }
 
 // ConvertPathsToTree 将文件路径列表转换为树形结构

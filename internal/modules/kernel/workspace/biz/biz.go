@@ -479,7 +479,7 @@ func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filt
 	return
 }
 
-func (s *Workspace) FilterWorkspaceFileTree(workspaceName string, parentPath string) (ret []*common.DataNode, err *cd.Error) {
+func (s *Workspace) FilterWorkspaceFileTree(workspaceName string, basePath string) (ret []*common.DataNode, err *cd.Error) {
 	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
@@ -490,7 +490,7 @@ func (s *Workspace) FilterWorkspaceFileTree(workspaceName string, parentPath str
 		return
 	}
 
-	filter := NewParentPath(curWorkspace.(*WorkspaceInfo).workspacePtr.Path, parentPath)
+	filter := NewBasePathFilter(curWorkspace.(*WorkspaceInfo).workspacePtr.Path, basePath)
 	fileList := curWorkspace.(*WorkspaceInfo).Filter(filter)
 	return ConvertPathsToTree(curWorkspace.(*WorkspaceInfo).workspacePtr.Path, fileList), nil
 }
