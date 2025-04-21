@@ -93,12 +93,26 @@ func NewStream(serverUrl string,
 }
 
 func (s *Stream) Run(value any) (err error) {
+	defer func() {
+		if err != nil {
+			s.streamTracer.AppendMessage(&imbtc.MessageInfo{
+				Type:       common.ErrorMsg,
+				Content:    err.Error(),
+				CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+				Owner:      common.Deepseek,
+			})
+		}
+	}()
+
 	if value == nil {
-		return s.sseClient.Get(s.context, s.header, s)
+		err = s.sseClient.Get(s.context, s.header, s)
+		return
 	}
 
 	byteVal, byteErr := json.Marshal(value)
 	if byteErr != nil {
+		err = byteErr
+		log.Errorf("Run failed, error:%v", err)
 		return
 	}
 
@@ -109,7 +123,8 @@ func (s *Stream) Run(value any) (err error) {
 		Owner:      common.Deepseek,
 	})
 
-	return s.sseClient.Post(s.context, byteVal, s.header, s)
+	err = s.sseClient.Post(s.context, byteVal, s.header, s)
+	return
 }
 
 // ChatCompletion 调用DeepSeek聊天补全API
