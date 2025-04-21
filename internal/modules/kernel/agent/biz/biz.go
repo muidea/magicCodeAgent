@@ -30,6 +30,7 @@ func New(
 		Base: biz.New(common.AgentModule, eventHub, backgroundRoutine),
 	}
 
+	ptr.SubscribeFunc(common.ChatCompletion, ptr.chatCompletion)
 	return ptr
 }
 
@@ -37,12 +38,37 @@ func (s *Agent) Run() (err *cd.Error) {
 	return
 }
 
+func (s *Agent) chatCompletion(ev event.Event, re event.Result) {
+	requestVal, requestOK := ev.Data().(*common.ChatCompletionRequest)
+	if !requestOK {
+		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid request"))
+		return
+	}
+	contextVal, contextOK := ev.GetData("context").(context.Context)
+	if !contextOK {
+		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid context"))
+		return
+	}
+	sinkVal, sinkOK := ev.GetData("sink").(sse.Sinker)
+	if !sinkOK {
+		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid sink"))
+		return
+	}
+	err := s.ChatCompletionStream(contextVal, requestVal, sinkVal)
+	if re != nil {
+		re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
+	}
+}
+
 func (s *Agent) ChatCompletion(param *common.ChatCompletionRequest) (ret *common.ChatCompletionStreamResponse, err error) {
 	ret, err = deepseek.ChatCompletion(param)
 	return
 }
 
-func (s *Agent) ChatCompletionStream(ctx context.Context, param *common.ChatCompletionRequest, sink sse.Sinker) error {
+func (s *Agent) ChatCompletionStream(
+	ctx context.Context,
+	param *common.ChatCompletionRequest,
+	sink sse.Sinker) error {
 	return deepseek.ChatCompletionStream(ctx, param, sink, s)
 }
 

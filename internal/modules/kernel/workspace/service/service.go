@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	cd "github.com/muidea/magicCommon/def"
@@ -9,6 +10,7 @@ import (
 	fn "github.com/muidea/magicCommon/foundation/net"
 
 	engine "github.com/muidea/magicEngine/http"
+	"github.com/muidea/magicEngine/sse"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/biz"
@@ -45,6 +47,7 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFileTree, engine.GET, s.filterFileTree)
 	s.routeRegistry.AddHandler(common.QueryWorkspaceFileContent, engine.GET, s.queryFileContent)
 	s.routeRegistry.AddHandler(common.ChatWorkspaceContentMessage, engine.POST, s.chatWorkspaceContentMessage)
+	s.routeRegistry.AddHandler(common.ChatWorkspaceContentHistory, engine.GET, s.chatWorkspaceContentHistory)
 }
 
 func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -215,15 +218,41 @@ func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWrite
 }
 
 func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.ChatMessageResult{}
-	defer fn.PackageHTTPResponse(res, result)
-
 	param := &common.ChatMessageParam{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
-		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	result.Error = s.bizPtr.ChatWorkspaceContentMessage(param)
+	if !sse.IsSSE(req) {
+		log.Errorf("not sse request")
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	holder := sse.NewHolder(res, req)
+	taskFunc := func() error {
+		errVal := s.bizPtr.ChatWorkspaceContentMessage(ctx, param, holder)
+		if errVal != nil {
+			return errors.New("chat workspace content message error")
+		}
+		
+		return nil
+	}
+	err = holder.Run(taskFunc)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s *Workspace) chatWorkspaceContentHistory(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.ChatHistoryResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	param := &common.ChatHistoryParam{}
+	param.Parse(req)
+	result.Values, result.Error = s.bizPtr.ChatWorkspaceContentHistory(param)
 }

@@ -138,3 +138,20 @@ type ChatHistoryParam struct {
 	Workspace string `json:"workspace"`
 	Path      string `json:"path"`
 }
+
+func (s *ChatHistoryParam) Parse(req *http.Request) {
+	s.Workspace = req.URL.Query().Get("workspace")
+	s.Path = req.URL.Query().Get("path")
+}
+
+type ChatMessage struct {
+	SN         int64  `json:"sn"`
+	Type       string `json:"type"`
+	Content    string `json:"content"`
+	CreateTime string `json:"createTime"`
+}
+
+type ChatHistoryResult struct {
+	cd.Result
+	Values []*ChatMessage `json:"values"`
+}
