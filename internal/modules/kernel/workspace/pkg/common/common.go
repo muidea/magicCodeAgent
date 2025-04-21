@@ -15,20 +15,21 @@ import (
 const WorkspaceModule = "/internal/modules/kernel/workspace"
 
 const (
-	PreCheckWorkspace         = "/workspace/precheck"
-	CreateWorkspace           = "/workspace/create"
-	DestroyWorkspace          = "/workspace/destroy"
-	AddWorkspace              = "/workspace/add"
-	UpdateWorkspace           = "/workspace/update"
-	RemoveWorkspace           = "/workspace/remove"
-	RefreshWorkspace          = "/workspace/refresh"
-	EnableWorkspace           = "/workspace/enable"
-	DisableWorkspace          = "/workspace/disable"
-	FilterWorkspace           = "/workspace/filter"
-	FilterWorkspaceFile       = "/workspace/file/filter"
-	FilterWorkspaceFileTree   = "/workspace/file/tree/filter"
-	QueryWorkspaceFileContent = "/workspace/file/content/query"
-	BuildWorkspaceContent     = "/workspace/content/build"
+	PreCheckWorkspace           = "/workspace/precheck"
+	CreateWorkspace             = "/workspace/create"
+	DestroyWorkspace            = "/workspace/destroy"
+	AddWorkspace                = "/workspace/add"
+	UpdateWorkspace             = "/workspace/update"
+	RemoveWorkspace             = "/workspace/remove"
+	RefreshWorkspace            = "/workspace/refresh"
+	EnableWorkspace             = "/workspace/enable"
+	DisableWorkspace            = "/workspace/disable"
+	FilterWorkspace             = "/workspace/filter"
+	FilterWorkspaceFile         = "/workspace/file/filter"
+	FilterWorkspaceFileTree     = "/workspace/file/tree/filter"
+	QueryWorkspaceFileContent   = "/workspace/file/content/query"
+	ChatWorkspaceContentMessage = "/workspace/content/chat/message"
+	ChatWorkspaceContentHistory = "/workspace/content/chat/history"
 )
 
 type WorkspaceResult struct {
@@ -122,13 +123,18 @@ type FileContentResult struct {
 	Value *FileContent `json:"value"`
 }
 
-type BuildParam struct {
+type ChatMessageParam struct {
 	Workspace string `json:"workspace"`
 	Path      string `json:"path"`
 	Type      string `json:"type"`
 	Content   string `json:"content"`
 }
 
-type BuildResult struct {
+type ChatMessageResult struct {
 	cd.Result
+}
+
+type ChatHistoryParam struct {
+	Workspace string `json:"workspace"`
+	Path      string `json:"path"`
 }

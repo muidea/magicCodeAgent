@@ -44,7 +44,7 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFile, engine.GET, s.filterFile)
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFileTree, engine.GET, s.filterFileTree)
 	s.routeRegistry.AddHandler(common.QueryWorkspaceFileContent, engine.GET, s.queryFileContent)
-	s.routeRegistry.AddHandler(common.BuildWorkspaceContent, engine.POST, s.buildWorkspaceContent)
+	s.routeRegistry.AddHandler(common.ChatWorkspaceContentMessage, engine.POST, s.chatWorkspaceContentMessage)
 }
 
 func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -214,16 +214,16 @@ func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWrite
 	result.Value, result.Error = s.bizPtr.QueryFileContent(workspace, filePath)
 }
 
-func (s *Workspace) buildWorkspaceContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.BuildResult{}
+func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.ChatMessageResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &common.BuildParam{}
+	param := &common.ChatMessageParam{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
 		return
 	}
 
-	result.Error = s.bizPtr.BuildWorkspaceContent(param)
+	result.Error = s.bizPtr.ChatWorkspaceContentMessage(param)
 }
