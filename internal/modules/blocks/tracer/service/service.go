@@ -49,8 +49,8 @@ func (s *Tracer) FilterMessage(ctx context.Context, res http.ResponseWriter, req
 	result := &common.MessageInfoList{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &common.MessageFilter{}
-	param.Decode(req)
+	filter := &common.MessageFilter{}
+	filter.Decode(req)
 
-	result.Values, result.Error = s.bizPtr.FilterMessage(param.PageIndex, param.PageSize)
+	result.Values, result.Error = s.bizPtr.FilterMessage(filter)
 }

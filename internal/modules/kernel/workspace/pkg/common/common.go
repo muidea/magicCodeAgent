@@ -28,6 +28,7 @@ const (
 	FilterWorkspaceFile       = "/workspace/file/filter"
 	FilterWorkspaceFileTree   = "/workspace/file/tree/filter"
 	QueryWorkspaceFileContent = "/workspace/file/content/query"
+	BuildWorkspaceContent     = "/workspace/content/build"
 )
 
 type WorkspaceResult struct {
@@ -119,4 +120,15 @@ type FileContent struct {
 type FileContentResult struct {
 	cd.Result
 	Value *FileContent `json:"value"`
+}
+
+type BuildParam struct {
+	Workspace string `json:"workspace"`
+	Path      string `json:"path"`
+	Type      string `json:"type"`
+	Content   string `json:"content"`
+}
+
+type BuildResult struct {
+	cd.Result
 }

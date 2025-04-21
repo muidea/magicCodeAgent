@@ -60,7 +60,7 @@ func (s *Tracer) filterMessage(ev event.Event, re event.Result) {
 	if !filterOK {
 		return
 	}
-	ret, err := s.FilterMessage(filterPtr.PageIndex, filterPtr.PageSize)
+	ret, err := s.FilterMessage(filterPtr)
 	if re != nil {
 		re.Set(ret, err)
 	}
@@ -70,7 +70,7 @@ func (s *Tracer) AppendMessage(msg *common.MessageInfo) {
 	s.messageInfoCache.Add(msg)
 }
 
-func (s *Tracer) FilterMessage(page, pageSize int) (ret []*common.MessageInfo, err *cd.Error) {
-	ret, _ = s.messageInfoCache.GetPage(page, pageSize)
+func (s *Tracer) FilterMessage(filter *common.MessageFilter) (ret []*common.MessageInfo, err *cd.Error) {
+	ret, _ = s.messageInfoCache.FilterMessage(filter)
 	return
 }

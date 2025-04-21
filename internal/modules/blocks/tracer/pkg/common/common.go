@@ -20,15 +20,21 @@ type MessageInfo struct {
 	Content    string `json:"content"`
 	CreateTime string `json:"createTime"`
 	Owner      string `json:"owner"`
+	Workspace  string `json:"workspace"`
 }
 
 type MessageFilter struct {
-	PageIndex int `json:"pageIndex"`
-	PageSize  int `json:"pageSize"`
+	Workspace string `json:"workspace"`
+	PageIndex int    `json:"pageIndex"`
+	PageSize  int    `json:"pageSize"`
 }
 
 func (s *MessageFilter) Decode(req *http.Request) {
 	query := req.URL.Query()
+
+	if workspace := query.Get("workspace"); workspace != "" {
+		s.Workspace = workspace
+	}
 
 	// 解析pageIndex
 	if pageIndex := query.Get("pageIndex"); pageIndex != "" {

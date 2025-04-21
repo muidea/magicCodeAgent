@@ -82,6 +82,41 @@ func (c *MessageSequenceCache) GetPage(page, pageSize int) ([]*MessageInfo, int)
 	return result, total
 }
 
+func (s *MessageSequenceCache) FilterMessage(filter *common.MessageFilter) (ret []*MessageInfo, err error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	pageIndex := filter.PageIndex
+	if pageIndex <= 0 {
+		pageIndex = 1
+	}
+
+	itemCount := 0
+	offsetVal := (pageIndex - 1) * pageSize
+	for _, msg := range s.messages {
+		if filter.Workspace != "" {
+			if msg.Workspace != filter.Workspace {
+				continue
+			}
+		}
+		itemCount++
+		if itemCount < offsetVal {
+			continue
+		}
+
+		ret = append(ret, msg)
+		if len(ret) >= pageSize {
+			break
+		}
+	}
+	return
+}
+
 // Clear 清空缓存
 func (c *MessageSequenceCache) Clear() {
 	c.mu.Lock()
