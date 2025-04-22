@@ -37,10 +37,11 @@ func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *openai.ChatC
 	return &request
 }
 
-func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context,
-	param *common.ChatMessage,
-	sink sse.Sinker) (err *cd.Error) {
+func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName string, sink sse.Sinker) (err error) {
+	return
+}
 
+func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *common.ChatMessage, sink sse.Sinker) (err *cd.Error) {
 	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, s.constructRequest(param))
 	ev.SetData("context", ctx)
 	ev.SetData("sink", sink)

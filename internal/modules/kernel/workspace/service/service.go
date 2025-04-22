@@ -21,12 +21,15 @@ import (
 type Workspace struct {
 	routeRegistry engine.RouteRegistry
 	bizPtr        *biz.Workspace
+
+	sseHolderRegistry *sse.HolderRegistry
 }
 
 func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Workspace) *Workspace {
 	ptr := &Workspace{
-		routeRegistry: routeRegistry,
-		bizPtr:        bizPtr,
+		routeRegistry:     routeRegistry,
+		bizPtr:            bizPtr,
+		sseHolderRegistry: sse.CreateHolderRegistry(),
 	}
 	return ptr
 }
@@ -46,6 +49,7 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFile, engine.GET, s.filterFile)
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFileTree, engine.GET, s.filterFileTree)
 	s.routeRegistry.AddHandler(common.QueryWorkspaceFileContent, engine.GET, s.queryFileContent)
+	s.routeRegistry.AddHandler(common.ChatWorkspaceContentSSE, engine.GET, s.chatWorkspaceContentSSE)
 	s.routeRegistry.AddHandler(common.ChatWorkspaceContentMessage, engine.POST, s.chatWorkspaceContentMessage)
 	s.routeRegistry.AddHandler(common.ChatWorkspaceContentHistory, engine.GET, s.chatWorkspaceContentHistory)
 }
@@ -217,6 +221,25 @@ func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWrite
 	result.Value, result.Error = s.bizPtr.QueryFileContent(workspace, filePath)
 }
 
+func (s *Workspace) chatWorkspaceContentSSE(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	if !sse.IsSSE(req) {
+		log.Errorf("invalid sse request")
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	workspaceName := req.URL.Query().Get("workspace")
+	holder := s.sseHolderRegistry.NewHolder(res, req)
+	taskFunc := func() error {
+		return s.bizPtr.ChatWorkspaceContentSSE(ctx, workspaceName, holder)
+	}
+	err := holder.Run(taskFunc)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	param := &common.ChatMessage{}
 	err := fn.ParseJSONBody(req, nil, param)
@@ -226,13 +249,9 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 		return
 	}
 
-	if !sse.IsSSE(req) {
-		log.Errorf("not sse request")
-		res.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	holder := sse.NewHolder(res, req)
+	result := &common.ChatMessageResult{}
+	defer fn.PackageHTTPResponse(res, result)
+	holder := s.sseHolderRegistry.GetHolder(res, req)
 	taskFunc := func() error {
 		errVal := s.bizPtr.ChatWorkspaceContentMessage(ctx, param, holder)
 		if errVal != nil {
@@ -243,9 +262,11 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 	}
 	err = holder.Run(taskFunc)
 	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
+		result.Error = cd.NewError(cd.Unexpected, err.Error())
 		return
 	}
+
+	result.Error = nil
 }
 
 func (s *Workspace) chatWorkspaceContentHistory(ctx context.Context, res http.ResponseWriter, req *http.Request) {

@@ -30,6 +30,7 @@ const (
 	FilterWorkspaceFile         = "/workspace/file/filter"
 	FilterWorkspaceFileTree     = "/workspace/file/tree/filter"
 	QueryWorkspaceFileContent   = "/workspace/file/content/query"
+	ChatWorkspaceContentSSE     = "/workspace/content/chat/sse"
 	ChatWorkspaceContentMessage = "/workspace/content/chat/message"
 	ChatWorkspaceContentHistory = "/workspace/content/chat/history"
 )
