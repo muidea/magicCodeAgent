@@ -123,32 +123,14 @@ type FileContentResult struct {
 	Value *FileContent `json:"value"`
 }
 
-type ChatMessageParam struct {
+type ChatMessage struct {
 	Workspace string `json:"workspace"`
-	Path      string `json:"path"`
 	Type      string `json:"type"`
 	Content   string `json:"content"`
 }
 
 type ChatMessageResult struct {
 	cd.Result
-}
-
-type ChatHistoryParam struct {
-	Workspace string `json:"workspace"`
-	Path      string `json:"path"`
-}
-
-func (s *ChatHistoryParam) Parse(req *http.Request) {
-	s.Workspace = req.URL.Query().Get("workspace")
-	s.Path = req.URL.Query().Get("path")
-}
-
-type ChatMessage struct {
-	SN         int64  `json:"sn"`
-	Type       string `json:"type"`
-	Content    string `json:"content"`
-	CreateTime string `json:"createTime"`
 }
 
 type ChatHistoryResult struct {

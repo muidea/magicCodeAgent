@@ -218,7 +218,7 @@ func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWrite
 }
 
 func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	param := &common.ChatMessageParam{}
+	param := &common.ChatMessage{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		log.Errorf("parse body error: %s", err.Error())
@@ -238,7 +238,7 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 		if errVal != nil {
 			return errors.New("chat workspace content message error")
 		}
-		
+
 		return nil
 	}
 	err = holder.Run(taskFunc)
@@ -252,7 +252,6 @@ func (s *Workspace) chatWorkspaceContentHistory(ctx context.Context, res http.Re
 	result := &common.ChatHistoryResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &common.ChatHistoryParam{}
-	param.Parse(req)
-	result.Values, result.Error = s.bizPtr.ChatWorkspaceContentHistory(param)
+	workspaceName := req.URL.Query().Get("workspace")
+	result.Values, result.Error = s.bizPtr.ChatWorkspaceContentHistory(workspaceName)
 }

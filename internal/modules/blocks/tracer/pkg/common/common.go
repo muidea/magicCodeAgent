@@ -15,12 +15,12 @@ const (
 )
 
 type MessageInfo struct {
-	SN         int64  `json:"sn"`
-	Type       string `json:"type"`
-	Content    string `json:"content"`
-	CreateTime string `json:"createTime"`
-	Owner      string `json:"owner"`
-	Workspace  string `json:"workspace"`
+	SN            int64  `json:"sn"`
+	Type          string `json:"type"`
+	Content       string `json:"content"`
+	CreateTime    string `json:"createTime"`
+	ModelProvider string `json:"modelProvider"`
+	Workspace     string `json:"workspace"`
 }
 
 type MessageFilter struct {

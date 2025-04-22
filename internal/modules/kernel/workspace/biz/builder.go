@@ -13,10 +13,19 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
 
-func (s *Workspace) constructRequest(_ *common.ChatMessageParam) *openai.ChatCompletionRequest {
+func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *openai.ChatCompletionRequest {
 	request := openai.ChatCompletionRequest{
-		Model:           imkac.DeepSeekChat,
-		Messages:        []openai.ChatCompletionMessage{},
+		Model: imkac.DeepSeekChat,
+		Messages: []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleSystem,
+				Content: "You are a helpful assistant.",
+			},
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: paramPtr.Content,
+			},
+		},
 		Temperature:     0.7,
 		TopP:            1,
 		N:               1,
@@ -28,7 +37,7 @@ func (s *Workspace) constructRequest(_ *common.ChatMessageParam) *openai.ChatCom
 }
 
 func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context,
-	param *common.ChatMessageParam,
+	param *common.ChatMessage,
 	sink sse.Sinker) (err *cd.Error) {
 
 	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, s.constructRequest(param))
@@ -40,6 +49,6 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context,
 	return
 }
 
-func (s *Workspace) ChatWorkspaceContentHistory(param *common.ChatHistoryParam) (ret []*common.ChatMessage, err *cd.Error) {
+func (s *Workspace) ChatWorkspaceContentHistory(workspaceName string) (ret []*common.ChatMessage, err *cd.Error) {
 	return
 }

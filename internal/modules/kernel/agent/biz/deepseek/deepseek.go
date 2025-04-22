@@ -48,10 +48,10 @@ func (s *Stream) OnRecv(event string, data []byte) error {
 		}
 		if respPtr.Choices[0].FinishReason != "" {
 			s.streamTracer.AppendMessage(&imbtc.MessageInfo{
-				Type:       common.RecvMsg,
-				Content:    s.packedContent,
-				CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-				Owner:      common.Deepseek,
+				Type:          common.RecvMsg,
+				Content:       s.packedContent,
+				CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+				ModelProvider: common.Deepseek,
 			})
 			s.packedContent = ""
 		}
@@ -73,10 +73,10 @@ func NewStream(serverUrl string,
 ) *Stream {
 
 	streamTracer.AppendMessage(&imbtc.MessageInfo{
-		Type:       common.UrlMsg,
-		Content:    serverUrl,
-		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		Owner:      common.Deepseek,
+		Type:          common.UrlMsg,
+		Content:       serverUrl,
+		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		ModelProvider: common.Deepseek,
 	})
 
 	return &Stream{
@@ -96,10 +96,10 @@ func (s *Stream) Run(value any) (err error) {
 	defer func() {
 		if err != nil {
 			s.streamTracer.AppendMessage(&imbtc.MessageInfo{
-				Type:       common.ErrorMsg,
-				Content:    err.Error(),
-				CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-				Owner:      common.Deepseek,
+				Type:          common.ErrorMsg,
+				Content:       err.Error(),
+				CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+				ModelProvider: common.Deepseek,
 			})
 		}
 	}()
@@ -117,10 +117,10 @@ func (s *Stream) Run(value any) (err error) {
 	}
 
 	s.streamTracer.AppendMessage(&imbtc.MessageInfo{
-		Type:       common.SendMsg,
-		Content:    string(byteVal),
-		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		Owner:      common.Deepseek,
+		Type:          common.SendMsg,
+		Content:       string(byteVal),
+		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		ModelProvider: common.Deepseek,
 	})
 
 	err = s.sseClient.Post(s.context, byteVal, s.header, s)
@@ -266,7 +266,6 @@ func UserBalance() (ret *common.UserBalanceResponse, err error) {
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.UserBalance)
-	//fullUrl := path.Join(config.GetDeepSeekUrl(), common.UserBalance)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
