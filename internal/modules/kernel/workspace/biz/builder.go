@@ -9,6 +9,7 @@ import (
 
 	"github.com/muidea/magicEngine/sse"
 
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
@@ -49,6 +50,19 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context,
 	return
 }
 
-func (s *Workspace) ChatWorkspaceContentHistory(workspaceName string) (ret []*common.ChatMessage, err *cd.Error) {
+func (s *Workspace) ChatWorkspaceContentHistory(workspaceName string) (ret []*imkac.MessageInfo, err *cd.Error) {
+	messageFilter := &imbtc.MessageFilter{
+		PageIndex: 1,
+		PageSize:  100,
+		Workspace: workspaceName,
+	}
+
+	ev := event.NewEvent(imbtc.FilterMessage, s.ID(), imbtc.TracerModule, nil, messageFilter)
+	resultVal, resultErr := s.SendEvent(ev).Get()
+	if resultErr != nil {
+		err = resultErr
+		return
+	}
+	ret = resultVal.([]*imkac.MessageInfo)
 	return
 }
