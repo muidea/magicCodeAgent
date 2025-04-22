@@ -11,6 +11,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
 type Tracer struct {
@@ -35,7 +36,7 @@ func (s *Tracer) AppendMessage(ctx context.Context, res http.ResponseWriter, req
 	result := cd.NewResult()
 	defer fn.PackageHTTPResponse(res, result)
 
-	msg := &common.MessageInfo{}
+	msg := &imkac.MessageInfo{}
 	err := fn.ParseJSONBody(req, nil, msg)
 	if err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "invalid append message parameters")

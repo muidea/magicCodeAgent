@@ -47,7 +47,7 @@ func (s *Stream) OnRecv(event string, data []byte) error {
 			s.packedContent += respPtr.Choices[0].Delta.Content
 		}
 		if respPtr.Choices[0].FinishReason != "" {
-			s.streamTracer.AppendMessage(&imbtc.MessageInfo{
+			s.streamTracer.AppendMessage(&common.MessageInfo{
 				Type:          common.RecvMsg,
 				Content:       s.packedContent,
 				CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -72,7 +72,7 @@ func NewStream(serverUrl string,
 	streamTracer imbtc.Tracer,
 ) *Stream {
 
-	streamTracer.AppendMessage(&imbtc.MessageInfo{
+	streamTracer.AppendMessage(&common.MessageInfo{
 		Type:          common.UrlMsg,
 		Content:       serverUrl,
 		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -95,7 +95,7 @@ func NewStream(serverUrl string,
 func (s *Stream) Run(value any) (err error) {
 	defer func() {
 		if err != nil {
-			s.streamTracer.AppendMessage(&imbtc.MessageInfo{
+			s.streamTracer.AppendMessage(&common.MessageInfo{
 				Type:          common.ErrorMsg,
 				Content:       err.Error(),
 				CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -116,7 +116,7 @@ func (s *Stream) Run(value any) (err error) {
 		return
 	}
 
-	s.streamTracer.AppendMessage(&imbtc.MessageInfo{
+	s.streamTracer.AppendMessage(&common.MessageInfo{
 		Type:          common.SendMsg,
 		Content:       string(byteVal),
 		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),

@@ -8,6 +8,7 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
 type Tracer struct {
@@ -41,7 +42,7 @@ func (s *Tracer) appendMessage(ev event.Event, re event.Result) {
 		return
 	}
 
-	messagePtr, messageOK := msgVal.(*common.MessageInfo)
+	messagePtr, messageOK := msgVal.(*imkac.MessageInfo)
 	if !messageOK {
 		return
 	}
@@ -66,11 +67,11 @@ func (s *Tracer) filterMessage(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Tracer) AppendMessage(msg *common.MessageInfo) {
+func (s *Tracer) AppendMessage(msg *imkac.MessageInfo) {
 	s.messageInfoCache.Add(msg)
 }
 
-func (s *Tracer) FilterMessage(filter *common.MessageFilter) (ret []*common.MessageInfo, err *cd.Error) {
+func (s *Tracer) FilterMessage(filter *common.MessageFilter) (ret []*imkac.MessageInfo, err *cd.Error) {
 	ret, _ = s.messageInfoCache.FilterMessage(filter)
 	return
 }

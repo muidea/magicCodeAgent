@@ -99,7 +99,7 @@ func (s *Agent) UserBalanceStream(ctx context.Context, sink sse.Sinker) error {
 	return deepseek.UserBalanceStream(ctx, sink, s)
 }
 
-func (s *Agent) AppendMessage(msg *imbtc.MessageInfo) {
+func (s *Agent) AppendMessage(msg *common.MessageInfo) {
 	msg.SN = atomic.AddInt64(&s.idVal, 1)
 
 	ev := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msg)

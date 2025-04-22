@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	cd "github.com/muidea/magicCommon/def"
+
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
 const TracerModule = "/internal/modules/blocks/tracer"
@@ -13,15 +15,6 @@ const (
 	FilterMessage = "/message/filter"
 	AppendMessage = "/message/append"
 )
-
-type MessageInfo struct {
-	SN            int64  `json:"sn"`
-	Type          string `json:"type"`
-	Content       string `json:"content"`
-	CreateTime    string `json:"createTime"`
-	ModelProvider string `json:"modelProvider"`
-	Workspace     string `json:"workspace"`
-}
 
 type MessageFilter struct {
 	Workspace string `json:"workspace"`
@@ -60,9 +53,9 @@ func (s *MessageFilter) Decode(req *http.Request) {
 
 type MessageInfoList struct {
 	cd.Result
-	Values []*MessageInfo `json:"values"`
+	Values []*imkac.MessageInfo `json:"values"`
 }
 
 type Tracer interface {
-	AppendMessage(msg *MessageInfo)
+	AppendMessage(msg *imkac.MessageInfo)
 }

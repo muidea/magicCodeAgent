@@ -4,9 +4,10 @@ import (
 	"sync"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
-type MessageInfo = common.MessageInfo
+type MessageInfo = imkac.MessageInfo
 
 // MessageSequenceCache 是一个MessageInfo内存顺序缓存
 // 实现将MessageInfo顺序缓存到内存中，用于快速获取消息列表

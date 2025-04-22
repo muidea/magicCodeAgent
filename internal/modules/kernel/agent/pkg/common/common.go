@@ -6,6 +6,15 @@ import (
 
 const AgentModule = "/internal/modules/kernel/agent"
 
+type MessageInfo struct {
+	SN            int64  `json:"sn"`
+	Type          string `json:"type"`
+	Content       string `json:"content"`
+	CreateTime    string `json:"createTime"`
+	ModelProvider string `json:"modelProvider"`
+	Workspace     string `json:"workspace"`
+}
+
 const (
 	ChatCompletion = "/chat/completions"
 	BetaCompletion = "/beta/completions"

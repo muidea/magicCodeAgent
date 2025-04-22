@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	"github.com/stretchr/testify/assert"
+
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
 func TestMessageSequenceCache(t *testing.T) {
@@ -13,7 +14,7 @@ func TestMessageSequenceCache(t *testing.T) {
 
 	// 测试Add和Size
 	for i := 0; i < 50; i++ {
-		cache.Add(&common.MessageInfo{
+		cache.Add(&imkac.MessageInfo{
 			SN:         int64(i),
 			Type:       "test",
 			Content:    "test message",
@@ -63,7 +64,7 @@ func TestMessageSequenceCacheConcurrent(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func() {
 			for j := 0; j < 100; j++ {
-				cache.Add(&common.MessageInfo{
+				cache.Add(&imkac.MessageInfo{
 					SN:         int64(j),
 					Type:       "concurrent",
 					Content:    "concurrent message",
