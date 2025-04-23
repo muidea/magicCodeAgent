@@ -8,8 +8,6 @@ import (
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicEngine/sse"
-
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/deepseek"
@@ -44,17 +42,18 @@ func (s *Agent) chatCompletion(ev event.Event, re event.Result) {
 		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid request"))
 		return
 	}
+	workspaceVal, workspaceOK := ev.GetData("workspace").(string)
+	if !workspaceOK {
+		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid workspace"))
+		return
+	}
+
 	contextVal, contextOK := ev.GetData("context").(context.Context)
 	if !contextOK {
 		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid context"))
 		return
 	}
-	sinkVal, sinkOK := ev.GetData("sink").(sse.Sinker)
-	if !sinkOK {
-		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid sink"))
-		return
-	}
-	err := s.ChatCompletionStream(contextVal, requestVal, sinkVal)
+	err := s.ChatCompletionStream(workspaceVal, contextVal, requestVal)
 	if re != nil {
 		re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
 	}
@@ -66,10 +65,11 @@ func (s *Agent) ChatCompletion(param *common.ChatCompletionRequest) (ret *common
 }
 
 func (s *Agent) ChatCompletionStream(
+	workspaceName string,
 	ctx context.Context,
-	param *common.ChatCompletionRequest,
-	sink sse.Sinker) error {
-	return deepseek.ChatCompletionStream(ctx, param, sink, s)
+	param *common.ChatCompletionRequest) error {
+	messageContext := context.WithValue(ctx, common.MessageSink{}, s)
+	return deepseek.ChatCompletionStream(workspaceName, messageContext, param)
 }
 
 func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common.BetaCompletionStreamResponse, err error) {
@@ -77,8 +77,12 @@ func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common
 	return
 }
 
-func (s *Agent) BetaCompletionStream(ctx context.Context, param *common.BetaCompletionRequest, sink sse.Sinker) error {
-	return deepseek.BetaCompletionStream(ctx, param, sink, s)
+func (s *Agent) BetaCompletionStream(
+	workspaceName string,
+	ctx context.Context,
+	param *common.BetaCompletionRequest) error {
+	messageContext := context.WithValue(ctx, common.MessageSink{}, s)
+	return deepseek.BetaCompletionStream(workspaceName, messageContext, param)
 }
 
 func (s *Agent) ModelsList() (ret *common.ModelsListResponse, err error) {
@@ -86,22 +90,30 @@ func (s *Agent) ModelsList() (ret *common.ModelsListResponse, err error) {
 	return
 }
 
-func (s *Agent) ModelsListStream(ctx context.Context, sink sse.Sinker) error {
-	return deepseek.ModelsListStream(ctx, sink, s)
-}
-
 func (s *Agent) UserBalance() (ret *common.UserBalanceResponse, err error) {
 	ret, err = deepseek.UserBalance()
 	return
 }
 
-func (s *Agent) UserBalanceStream(ctx context.Context, sink sse.Sinker) error {
-	return deepseek.UserBalanceStream(ctx, sink, s)
+func (s *Agent) OnCnnect(msgPtr *common.MessageInfo) {
+	s.appendMessage(msgPtr)
 }
 
-func (s *Agent) AppendMessage(msg *common.MessageInfo) {
-	msg.SN = atomic.AddInt64(&s.idVal, 1)
+func (s *Agent) OnClose(msgPtr *common.MessageInfo) {
+	s.appendMessage(msgPtr)
+}
 
-	ev := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msg)
+func (s *Agent) OnSend(msgPtr *common.MessageInfo) {
+	s.appendMessage(msgPtr)
+}
+
+func (s *Agent) OnRecv(msgPtr *common.MessageInfo) error {
+	s.appendMessage(msgPtr)
+	return nil
+}
+
+func (s *Agent) appendMessage(msgPtr *common.MessageInfo) {
+	msgPtr.SN = atomic.AddInt64(&s.idVal, 1)
+	ev := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
 	_ = s.SendEvent(ev)
 }

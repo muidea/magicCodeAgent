@@ -6,9 +6,23 @@ import (
 
 const AgentModule = "/internal/modules/kernel/agent"
 
-type AgentSink interface {
-	OnClose(name string)
-	OnRecv(name, event string, data []byte) error
+type SSESink struct{}
+
+func (s *SSESink) String() string {
+	return "sseSink"
+}
+
+type MessageSink struct{}
+
+func (s *MessageSink) String() string {
+	return "messageSink"
+}
+
+type MessageSinker interface {
+	OnCnnect(msgPtr *MessageInfo)
+	OnClose(msgPtr *MessageInfo)
+	OnSend(msgPtr *MessageInfo)
+	OnRecv(msgPtr *MessageInfo)
 }
 
 type MessageInfo struct {

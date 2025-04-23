@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
@@ -160,10 +161,16 @@ func (s *Station) UnbindObserver(observer Observer) {
 }
 
 // 处理agent的sse数据流
-func (s *Station) OnClose() {
+func (s *Station) OnCnnect(msgPtr *imkac.MessageInfo) {
 
 }
 
-func (s *Station) OnRecv(event string, data []byte) error {
-	return nil
+func (s *Station) OnClose(msgPtr *imkac.MessageInfo) {
+
+}
+
+func (s *Station) OnSend(msgPtr *imkac.MessageInfo) {
+}
+
+func (s *Station) OnRecv(msgPtr *imkac.MessageInfo) {
 }

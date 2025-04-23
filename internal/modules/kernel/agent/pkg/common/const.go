@@ -1,10 +1,11 @@
 package common
 
 const (
-	UrlMsg   = "url"
-	SendMsg  = "send"
-	RecvMsg  = "recv"
-	ErrorMsg = "error"
+	UrlMsg       = "url"
+	SendMsg      = "send"
+	RecvMsg      = "recv"
+	ErrorMsg     = "error"
+	TerminateMsg = "terminate"
 )
 
 const (

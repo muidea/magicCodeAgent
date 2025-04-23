@@ -16,18 +16,18 @@ import (
 
 	"github.com/muidea/magicEngine/sse"
 
-	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
 type Stream struct {
-	sseClient    *sse.Client
-	context      context.Context
-	header       url.Values
-	streamSink   sse.Sinker
-	streamTracer imbtc.Tracer
+	sseClient   *sse.Client
+	context     context.Context
+	header      url.Values
+	streamSink  sse.Sinker
+	messageSink common.MessageSinker
 
+	workspaceName string
 	packedContent string
 }
 
@@ -47,37 +47,63 @@ func (s *Stream) OnRecv(id, event string, data []byte) error {
 			s.packedContent += respPtr.Choices[0].Delta.Content
 		}
 		if respPtr.Choices[0].FinishReason != "" {
-			s.streamTracer.AppendMessage(&common.MessageInfo{
-				Type:          common.RecvMsg,
-				Content:       s.packedContent,
-				CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-				ModelProvider: common.Deepseek,
-			})
+			if s.messageSink != nil {
+				s.messageSink.OnRecv(&common.MessageInfo{
+					Type:          common.SendMsg,
+					Content:       s.packedContent,
+					CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+					ModelProvider: common.Deepseek,
+					Workspace:     s.workspaceName,
+				})
+			}
 			s.packedContent = ""
 		}
 	}
 
-	s.streamSink.OnRecv(id, event, data)
+	if s.streamSink != nil {
+		s.streamSink.OnRecv(id, event, data)
+	}
 	return nil
 }
 
 func (s *Stream) OnClose(id string) {
 	s.sseClient.Close()
-}
 
-func NewStream(serverUrl string,
-	context context.Context,
-	header url.Values,
-	streamSink sse.Sinker,
-	streamTracer imbtc.Tracer,
-) *Stream {
-
-	streamTracer.AppendMessage(&common.MessageInfo{
-		Type:          common.UrlMsg,
-		Content:       serverUrl,
+	s.messageSink.OnClose(&common.MessageInfo{
+		Type:          common.TerminateMsg,
+		Content:       "terminate",
 		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		ModelProvider: common.Deepseek,
+		Workspace:     s.workspaceName,
 	})
+}
+
+func NewStream(
+	workspaceName string,
+	serverUrl string,
+	context context.Context,
+	header url.Values,
+) *Stream {
+	var streamSink sse.Sinker
+	var messageSink common.MessageSinker
+	sseSinkVal := context.Value(common.SSESink{})
+	if sseSinkVal != nil {
+		streamSink = sseSinkVal.(sse.Sinker)
+	}
+	messageSinkVal := context.Value(common.MessageSink{})
+	if messageSinkVal != nil {
+		messageSink = messageSinkVal.(common.MessageSinker)
+	}
+
+	if messageSink != nil {
+		messageSink.OnCnnect(&common.MessageInfo{
+			Type:          common.UrlMsg,
+			Content:       serverUrl,
+			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+			ModelProvider: common.Deepseek,
+			Workspace:     workspaceName,
+		})
+	}
 
 	return &Stream{
 		sseClient: sse.NewClient(
@@ -85,21 +111,23 @@ func NewStream(serverUrl string,
 			config.GetDeepSeekRetryInterval(),
 			config.GetDeepSeekMaxRetries(),
 		),
-		context:      context,
-		header:       header,
-		streamSink:   streamSink,
-		streamTracer: streamTracer,
+		context:       context,
+		header:        header,
+		streamSink:    streamSink,
+		messageSink:   messageSink,
+		workspaceName: workspaceName,
 	}
 }
 
 func (s *Stream) Run(value any) (err error) {
 	defer func() {
-		if err != nil {
-			s.streamTracer.AppendMessage(&common.MessageInfo{
+		if err != nil && s.messageSink != nil {
+			s.messageSink.OnRecv(&common.MessageInfo{
 				Type:          common.ErrorMsg,
 				Content:       err.Error(),
 				CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 				ModelProvider: common.Deepseek,
+				Workspace:     s.workspaceName,
 			})
 		}
 	}()
@@ -115,13 +143,15 @@ func (s *Stream) Run(value any) (err error) {
 		log.Errorf("Run failed, error:%v", err)
 		return
 	}
-
-	s.streamTracer.AppendMessage(&common.MessageInfo{
-		Type:          common.SendMsg,
-		Content:       string(byteVal),
-		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		ModelProvider: common.Deepseek,
-	})
+	if s.messageSink != nil {
+		s.messageSink.OnSend(&common.MessageInfo{
+			Type:          common.SendMsg,
+			Content:       string(byteVal),
+			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+			ModelProvider: common.Deepseek,
+			Workspace:     s.workspaceName,
+		})
+	}
 
 	err = s.sseClient.Post(s.context, byteVal, s.header, s)
 	return
@@ -140,7 +170,8 @@ func (s *Stream) Run(value any) (err error) {
 // 注意:
 //
 //	需要配置有效的DeepSeek API Key才能正常调用
-func ChatCompletion(paramPtr *common.ChatCompletionRequest) (ret *common.ChatCompletionStreamResponse, err error) {
+func ChatCompletion(
+	paramPtr *common.ChatCompletionRequest) (ret *common.ChatCompletionStreamResponse, err error) {
 	resultPtr := &common.ChatCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
@@ -159,14 +190,18 @@ func ChatCompletion(paramPtr *common.ChatCompletionRequest) (ret *common.ChatCom
 	return
 }
 
-func ChatCompletionStream(ctx context.Context, paramPtr *common.ChatCompletionRequest, sink sse.Sinker, tracer imbtc.Tracer) error {
+func ChatCompletionStream(
+	workspaceName string,
+	ctx context.Context,
+	paramPtr *common.ChatCompletionRequest) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.ChatCompletion)
+
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
 
-	stream := NewStream(urlVal.String(), ctx, header, sink, tracer)
+	stream := NewStream(workspaceName, urlVal.String(), ctx, header)
 	return stream.Run(paramPtr)
 }
 
@@ -202,14 +237,17 @@ func BetaCompletion(paramPtr *common.BetaCompletionRequest) (ret *common.BetaCom
 	return
 }
 
-func BetaCompletionStream(ctx context.Context, paramPtr *common.BetaCompletionRequest, sink sse.Sinker, tracer imbtc.Tracer) error {
+func BetaCompletionStream(
+	workspaceName string,
+	ctx context.Context,
+	paramPtr *common.BetaCompletionRequest) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, common.BetaCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
 
-	stream := NewStream(urlVal.String(), ctx, header, sink, tracer)
+	stream := NewStream(workspaceName, urlVal.String(), ctx, header)
 	return stream.Run(paramPtr)
 }
 
@@ -240,18 +278,6 @@ func ModelsList() (ret *common.ModelsListResponse, err error) {
 	return
 }
 
-func ModelsListStream(ctx context.Context, sink sse.Sinker, tracer imbtc.Tracer) error {
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, common.ModelsList)
-	header := url.Values{}
-	header.Set("Content-Type", "application/json;charset=utf-8")
-	header.Set("Accept", "text/event-stream")
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
-
-	stream := NewStream(urlVal.String(), ctx, header, sink, tracer)
-	return stream.Run(nil)
-}
-
 // UserBalance 查询DeepSeek账户余额
 // 返回值:
 //
@@ -277,16 +303,4 @@ func UserBalance() (ret *common.UserBalanceResponse, err error) {
 	}
 	ret = resultPtr
 	return
-}
-
-func UserBalanceStream(ctx context.Context, sink sse.Sinker, tracer imbtc.Tracer) error {
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, common.UserBalance)
-	header := url.Values{}
-	header.Set("Content-Type", "application/json;charset=utf-8")
-	header.Set("Accept", "text/event-stream")
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
-
-	stream := NewStream(urlVal.String(), ctx, header, sink, tracer)
-	return stream.Run(nil)
 }

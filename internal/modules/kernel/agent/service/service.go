@@ -45,8 +45,9 @@ func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req
 
 	if sse.IsSSE(req) || paramPtr.IsStream() {
 		holder := sse.NewHolder(res, req)
+		sseSinkContext := context.WithValue(ctx, common.SSESink{}, holder)
 		taskFunc := func() error {
-			return s.bizPtr.ChatCompletionStream(ctx, paramPtr, holder)
+			return s.bizPtr.ChatCompletionStream("anonymous", sseSinkContext, paramPtr)
 		}
 		err := holder.Run(taskFunc)
 		if err != nil {
@@ -76,8 +77,9 @@ func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req
 
 	if sse.IsSSE(req) || paramPtr.IsStream() {
 		holder := sse.NewHolder(res, req)
+		sseSinkContext := context.WithValue(ctx, common.SSESink{}, holder)
 		taskFunc := func() error {
-			return s.bizPtr.BetaCompletionStream(ctx, paramPtr, holder)
+			return s.bizPtr.BetaCompletionStream("anonymous", sseSinkContext, paramPtr)
 		}
 		err := holder.Run(taskFunc)
 		if err != nil {
@@ -98,21 +100,6 @@ func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req
 }
 
 func (s *Agent) ModelsList(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	if sse.IsSSE(req) {
-		holder := sse.NewHolder(res, req)
-		taskFunc := func() error {
-			return s.bizPtr.ModelsListStream(ctx, holder)
-		}
-		err := holder.Run(taskFunc)
-		if err != nil {
-			res.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		//res.WriteHeader(http.StatusOK)
-		return
-	}
-
 	resultPtr, resultErr := s.bizPtr.ModelsList()
 	if resultErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -122,21 +109,6 @@ func (s *Agent) ModelsList(ctx context.Context, res http.ResponseWriter, req *ht
 }
 
 func (s *Agent) UserBalance(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	if sse.IsSSE(req) {
-		holder := sse.NewHolder(res, req)
-		taskFunc := func() error {
-			return s.bizPtr.UserBalanceStream(ctx, holder)
-		}
-		err := holder.Run(taskFunc)
-		if err != nil {
-			res.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		//res.WriteHeader(http.StatusOK)
-		return
-	}
-
 	resultPtr, resultErr := s.bizPtr.UserBalance()
 	if resultErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
