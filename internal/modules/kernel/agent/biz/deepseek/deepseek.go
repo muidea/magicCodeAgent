@@ -31,7 +31,7 @@ type Stream struct {
 	packedContent string
 }
 
-func (s *Stream) OnRecv(event string, data []byte) error {
+func (s *Stream) OnRecv(id, event string, data []byte) error {
 	if bytes.Equal(data, []byte(" [DONE]\n")) {
 		// 这里不需要主动断开连接可以方便后续继续使用
 		//s.sseClient.Close()
@@ -57,11 +57,11 @@ func (s *Stream) OnRecv(event string, data []byte) error {
 		}
 	}
 
-	s.streamSink.OnRecv(event, data)
+	s.streamSink.OnRecv(id, event, data)
 	return nil
 }
 
-func (s *Stream) OnClose() {
+func (s *Stream) OnClose(id string) {
 	s.sseClient.Close()
 }
 

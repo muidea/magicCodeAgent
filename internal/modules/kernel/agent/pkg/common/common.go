@@ -6,6 +6,11 @@ import (
 
 const AgentModule = "/internal/modules/kernel/agent"
 
+type AgentSink interface {
+	OnClose(name string)
+	OnRecv(name, event string, data []byte) error
+}
+
 type MessageInfo struct {
 	SN            int64  `json:"sn"`
 	Type          string `json:"type"`

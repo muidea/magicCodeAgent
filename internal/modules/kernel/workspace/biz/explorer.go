@@ -44,18 +44,18 @@ func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filt
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
 		return
 	}
-	if !curWorkspace.(*WorkspaceStation).Available() {
+	if !curWorkspace.(*Station).Available() {
 		err = cd.NewError(cd.InvalidOperation, fmt.Sprintf("workspace:%s not available", workspaceName))
 		log.Errorf("workspace:%s not available", workspaceName)
 		return
 	}
 
-	if !fp.Exist(curWorkspace.(*WorkspaceStation).workspacePtr.Path) {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*WorkspaceStation).workspacePtr.Path))
+	if !fp.Exist(curWorkspace.(*Station).configPtr.Path) {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).configPtr.Path))
 		return
 	}
 
-	ret = curWorkspace.(*WorkspaceStation).Filter(filter)
+	ret = curWorkspace.(*Station).Filter(filter)
 	return
 }
 
@@ -65,21 +65,21 @@ func (s *Workspace) FilterWorkspaceFileTree(workspaceName string, basePath strin
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
 		return
 	}
-	if !curWorkspace.(*WorkspaceStation).Available() {
+	if !curWorkspace.(*Station).Available() {
 		err = cd.NewError(cd.InvalidOperation, fmt.Sprintf("workspace:%s not available", workspaceName))
 		log.Errorf("workspace:%s not available", workspaceName)
 		return
 	}
 
-	if !fp.Exist(curWorkspace.(*WorkspaceStation).workspacePtr.Path) {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*WorkspaceStation).workspacePtr.Path))
-		log.Errorf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*WorkspaceStation).workspacePtr.Path)
+	if !fp.Exist(curWorkspace.(*Station).configPtr.Path) {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).configPtr.Path))
+		log.Errorf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).configPtr.Path)
 		return
 	}
 
-	filter := NewBasePathFilter(curWorkspace.(*WorkspaceStation).workspacePtr.Path, basePath)
-	fileList := curWorkspace.(*WorkspaceStation).Filter(filter)
-	return ConvertPathsToTree(curWorkspace.(*WorkspaceStation).workspacePtr.Path, fileList), nil
+	filter := NewBasePathFilter(curWorkspace.(*Station).configPtr.Path, basePath)
+	fileList := curWorkspace.(*Station).Filter(filter)
+	return ConvertPathsToTree(curWorkspace.(*Station).configPtr.Path, fileList), nil
 }
 
 func (s *Workspace) QueryFileContent(workspaceName string, filePath string) (ret *common.FileContent, err *cd.Error) {

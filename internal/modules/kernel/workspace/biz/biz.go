@@ -97,7 +97,7 @@ func (s *Workspace) disposeCreate(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
 		s.fsWatcher.Add(event.Name)
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*WorkspaceStation)
+			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
 				return true
 			}
@@ -108,7 +108,7 @@ func (s *Workspace) disposeCreate(event fsnotify.Event) {
 		})
 	} else {
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*WorkspaceStation)
+			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
 				return true
 			}
@@ -125,7 +125,7 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
 		s.fsWatcher.Remove(event.Name)
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*WorkspaceStation)
+			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
 				return true
 			}
@@ -137,7 +137,7 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 		})
 	} else {
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*WorkspaceStation)
+			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
 				return true
 			}
@@ -261,7 +261,7 @@ func (s *Workspace) addWorkspace(ev event.Event, re event.Result) {
 func (s *Workspace) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
 	workspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
 	if ok {
-		ret = workspace.(*WorkspaceStation).workspacePtr
+		ret = workspace.(*Station).configPtr
 		return
 	}
 
@@ -329,7 +329,7 @@ func (s *Workspace) removeWorkspace(ev event.Event, re event.Result) {
 func (s *Workspace) RemoveWorkspace(workspaceName string) (err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if ok {
-		workspacePtr := curWorkspace.(*WorkspaceStation).workspacePtr
+		workspacePtr := curWorkspace.(*Station).configPtr
 		err = s.disableWorkspaceInternal(workspacePtr)
 		if err != nil {
 			return
@@ -466,7 +466,7 @@ func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (er
 			return nil
 		}
 		if ok {
-			curWorkspace.(*WorkspaceStation).RemoveFile(path)
+			curWorkspace.(*Station).RemoveFile(path)
 		}
 		return nil
 	})
