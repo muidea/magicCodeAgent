@@ -41,6 +41,10 @@ type Workspace struct {
 	UpdateTime  string   `json:"updateTime"`
 }
 
+func (s *Workspace) Available() bool {
+	return s.Status == EnableStatus
+}
+
 // Model 定义AI模型配置结构
 type Model struct {
 	Name     string `json:"name"`     // 模型名称

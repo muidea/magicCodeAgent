@@ -4,23 +4,9 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
-
-type HybridEvent struct {
-	EventType string // "filesystem" 或 "git"
-	Path      string
-	Operation string // create/update/delete 或 commit
-	Timestamp time.Time
-}
-
-func (s HybridEvent) String() string {
-	return s.EventType + " " + s.Operation + " " + s.Path + " " + s.Timestamp.String()
-}
-
-type EventHandler func(HybridEvent)
 
 // 判断是否忽略
 // .git .tmp 隐藏文件都忽略，不用处理

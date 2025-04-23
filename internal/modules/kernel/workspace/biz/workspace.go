@@ -12,26 +12,23 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
-type FileInfo struct {
-	Name     string
-	Path     string
-	Size     int64
-	Modified int64
-}
-
-type WorkspaceInfo struct {
+type WorkspaceStation struct {
 	workspacePtr *config.Workspace
 	fileInfo     sync.Map
 }
 
-func NewWorkspace(workspacePtr *config.Workspace) *WorkspaceInfo {
-	ret := &WorkspaceInfo{
+func NewWorkspace(workspacePtr *config.Workspace) *WorkspaceStation {
+	ret := &WorkspaceStation{
 		workspacePtr: workspacePtr,
 	}
 	return ret
 }
 
-func (s *WorkspaceInfo) checkIgnore(fileFullPath string) bool {
+func (s *WorkspaceStation) Available() bool {
+	return s.workspacePtr.Available()
+}
+
+func (s *WorkspaceStation) checkIgnore(fileFullPath string) bool {
 	filePath, fileName := path.Split(fileFullPath)
 	for _, ignore := range s.workspacePtr.Ignores {
 		ignorePath := filepath.Join(s.workspacePtr.Path, ignore)
@@ -50,7 +47,7 @@ func (s *WorkspaceInfo) checkIgnore(fileFullPath string) bool {
 	return false
 }
 
-func (s *WorkspaceInfo) AddFile(filePath string) bool {
+func (s *WorkspaceStation) AddFile(filePath string) bool {
 	if !strings.HasPrefix(filePath, s.workspacePtr.Path) {
 		return false
 	}
@@ -63,7 +60,7 @@ func (s *WorkspaceInfo) AddFile(filePath string) bool {
 	return true
 }
 
-func (s *WorkspaceInfo) AddDir(dirPath string) bool {
+func (s *WorkspaceStation) AddDir(dirPath string) bool {
 	if !strings.HasPrefix(dirPath, s.workspacePtr.Path) {
 		return false
 	}
@@ -88,7 +85,7 @@ func (s *WorkspaceInfo) AddDir(dirPath string) bool {
 	return true
 }
 
-func (s *WorkspaceInfo) RemoveFile(filePath string) bool {
+func (s *WorkspaceStation) RemoveFile(filePath string) bool {
 	if !strings.HasPrefix(filePath, s.workspacePtr.Path) {
 		return false
 	}
@@ -101,7 +98,7 @@ func (s *WorkspaceInfo) RemoveFile(filePath string) bool {
 	return true
 }
 
-func (s *WorkspaceInfo) ClearDir(dirPath string) bool {
+func (s *WorkspaceStation) ClearDir(dirPath string) bool {
 	if !strings.HasPrefix(dirPath, s.workspacePtr.Path) {
 		return false
 	}
@@ -120,7 +117,7 @@ func (s *WorkspaceInfo) ClearDir(dirPath string) bool {
 	return true
 }
 
-func (s *WorkspaceInfo) Filter(filter fu.Filter) (ret []string) {
+func (s *WorkspaceStation) Filter(filter fu.Filter) (ret []string) {
 	s.fileInfo.Range(func(key, value interface{}) bool {
 		if filter != nil && filter.Filter(key) {
 			ret = append(ret, key.(string))

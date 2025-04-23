@@ -24,8 +24,8 @@ import (
 type Workspace struct {
 	biz.Base
 
-	fsWatcher      *fsnotify.Watcher
-	workspaceCache sync.Map
+	fsWatcher             *fsnotify.Watcher
+	workspaceStationCache sync.Map
 }
 
 func New(
@@ -96,8 +96,8 @@ func (s *Workspace) workspaceTask() {
 func (s *Workspace) disposeCreate(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
 		s.fsWatcher.Add(event.Name)
-		s.workspaceCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*WorkspaceInfo)
+		s.workspaceStationCache.Range(func(key, value interface{}) bool {
+			workspaceVal, workspaceOK := value.(*WorkspaceStation)
 			if !workspaceOK {
 				return true
 			}
@@ -107,8 +107,8 @@ func (s *Workspace) disposeCreate(event fsnotify.Event) {
 			return true
 		})
 	} else {
-		s.workspaceCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*WorkspaceInfo)
+		s.workspaceStationCache.Range(func(key, value interface{}) bool {
+			workspaceVal, workspaceOK := value.(*WorkspaceStation)
 			if !workspaceOK {
 				return true
 			}
@@ -124,8 +124,8 @@ func (s *Workspace) disposeCreate(event fsnotify.Event) {
 func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
 		s.fsWatcher.Remove(event.Name)
-		s.workspaceCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*WorkspaceInfo)
+		s.workspaceStationCache.Range(func(key, value interface{}) bool {
+			workspaceVal, workspaceOK := value.(*WorkspaceStation)
 			if !workspaceOK {
 				return true
 			}
@@ -136,8 +136,8 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 			return true
 		})
 	} else {
-		s.workspaceCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*WorkspaceInfo)
+		s.workspaceStationCache.Range(func(key, value interface{}) bool {
+			workspaceVal, workspaceOK := value.(*WorkspaceStation)
 			if !workspaceOK {
 				return true
 			}
@@ -259,9 +259,9 @@ func (s *Workspace) addWorkspace(ev event.Event, re event.Result) {
 }
 
 func (s *Workspace) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
-	workspace, ok := s.workspaceCache.Load(workspacePtr.Name)
+	workspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
 	if ok {
-		ret = workspace.(*WorkspaceInfo).workspacePtr
+		ret = workspace.(*WorkspaceStation).workspacePtr
 		return
 	}
 
@@ -327,9 +327,9 @@ func (s *Workspace) removeWorkspace(ev event.Event, re event.Result) {
 }
 
 func (s *Workspace) RemoveWorkspace(workspaceName string) (err *cd.Error) {
-	curWorkspace, ok := s.workspaceCache.Load(workspaceName)
+	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if ok {
-		workspacePtr := curWorkspace.(*WorkspaceInfo).workspacePtr
+		workspacePtr := curWorkspace.(*WorkspaceStation).workspacePtr
 		err = s.disableWorkspaceInternal(workspacePtr)
 		if err != nil {
 			return
@@ -401,13 +401,13 @@ func (s *Workspace) EnableWorkspace(workspaceName string) (err *cd.Error) {
 }
 
 func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
-	if !fp.Exist(workspacePtr.Path) {
+	if !fp.Exist(workspacePtr.Path) || !workspacePtr.Available() {
 		log.Warnf("enable workspace, workspace not exists:%s", workspacePtr.Path)
 		return
 	}
 
 	workspace := NewWorkspace(workspacePtr)
-	s.workspaceCache.Store(workspacePtr.Name, workspace)
+	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {
 		if isIgnored(path) {
@@ -451,11 +451,11 @@ func (s *Workspace) DisableWorkspace(workspaceName string) (err *cd.Error) {
 func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
 	if !fp.Exist(workspacePtr.Path) {
 		log.Warnf("remove workspace, workspace not exists:%s", workspacePtr.Path)
-		s.workspaceCache.Delete(workspacePtr.Name)
+		s.workspaceStationCache.Delete(workspacePtr.Name)
 		return
 	}
 
-	curWorkspace, ok := s.workspaceCache.Load(workspacePtr.Name)
+	curWorkspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {
 		if isIgnored(path) {
 			return nil
@@ -466,13 +466,13 @@ func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (er
 			return nil
 		}
 		if ok {
-			curWorkspace.(*WorkspaceInfo).RemoveFile(path)
+			curWorkspace.(*WorkspaceStation).RemoveFile(path)
 		}
 		return nil
 	})
 
 	if ok {
-		s.workspaceCache.Delete(workspacePtr.Name)
+		s.workspaceStationCache.Delete(workspacePtr.Name)
 	}
 	return
 }
