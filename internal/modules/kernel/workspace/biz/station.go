@@ -15,9 +15,10 @@ import (
 
 type Observer interface {
 	ID() string
-	OnClose(id string)
-	OnSend(id string, data []byte)
-	OnRecv(id string, data []byte)
+	OnConnect(msgPtr *imkac.MessageInfo)
+	OnClose(msgPtr *imkac.MessageInfo)
+	OnSend(msgPtr *imkac.MessageInfo)
+	OnRecv(msgPtr *imkac.MessageInfo)
 }
 
 type Station struct {
@@ -162,15 +163,37 @@ func (s *Station) UnbindObserver(observer Observer) {
 
 // 处理agent的sse数据流
 func (s *Station) OnCnnect(msgPtr *imkac.MessageInfo) {
+	s.stationMutex.RLock()
+	defer s.stationMutex.RUnlock()
 
+	for _, val := range s.observerList {
+		val.OnConnect(msgPtr)
+	}
 }
 
 func (s *Station) OnClose(msgPtr *imkac.MessageInfo) {
+	s.stationMutex.RLock()
+	defer s.stationMutex.RUnlock()
 
+	for _, val := range s.observerList {
+		val.OnClose(msgPtr)
+	}
 }
 
 func (s *Station) OnSend(msgPtr *imkac.MessageInfo) {
+	s.stationMutex.RLock()
+	defer s.stationMutex.RUnlock()
+
+	for _, val := range s.observerList {
+		val.OnSend(msgPtr)
+	}
 }
 
 func (s *Station) OnRecv(msgPtr *imkac.MessageInfo) {
+	s.stationMutex.RLock()
+	defer s.stationMutex.RUnlock()
+
+	for _, val := range s.observerList {
+		val.OnRecv(msgPtr)
+	}
 }

@@ -107,9 +107,9 @@ func (s *Agent) OnSend(msgPtr *common.MessageInfo) {
 	s.appendMessage(msgPtr)
 }
 
-func (s *Agent) OnRecv(msgPtr *common.MessageInfo) error {
+func (s *Agent) OnRecv(msgPtr *common.MessageInfo) {
 	s.appendMessage(msgPtr)
-	return nil
+	return
 }
 
 func (s *Agent) appendMessage(msgPtr *common.MessageInfo) {

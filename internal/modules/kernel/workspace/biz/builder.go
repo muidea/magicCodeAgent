@@ -2,9 +2,11 @@ package biz
 
 import (
 	"context"
+	"fmt"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/sashabaranov/go-openai"
 
 	"github.com/muidea/magicEngine/sse"
@@ -13,6 +15,73 @@ import (
 	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
+
+type sseStream struct {
+	sseID      string
+	sseContext context.Context
+	sseSink    sse.Sinker
+	streamChan chan []byte
+}
+
+func newSSEStream(id string, ctx context.Context, sink sse.Sinker) *sseStream {
+	return &sseStream{
+		sseID:      id,
+		sseContext: ctx,
+		sseSink:    sink,
+		streamChan: make(chan []byte),
+	}
+}
+
+func (s *sseStream) ID() string {
+	return s.sseID
+}
+
+func (s *sseStream) OnConnect(msgPtr *imkac.MessageInfo) {
+	//sse.Send(msgPtr.Workspace, imbtc.OnCnnect, msgPtr)
+}
+
+func (s *sseStream) OnClose(msgPtr *imkac.MessageInfo) {
+	//sse.Send(msgPtr.Workspace, imbtc.OnClose, msgPtr)
+}
+
+func (s *sseStream) OnSend(msgPtr *imkac.MessageInfo) {
+	//sse.Send(msgPtr.Workspace, imbtc.OnSend, msgPtr)
+}
+
+func (s *sseStream) OnRecv(msgPtr *imkac.MessageInfo) {
+	s.streamChan <- []byte(msgPtr.Content)
+}
+
+func (s *sseStream) Wait() error {
+	log.Infof("workspace:%s sse stream wait", s.sseID)
+
+	for {
+		select {
+		case bytes := <-s.streamChan:
+			log.Infof("workspace:%s sse stream recv：%s", s.sseID, string(bytes))
+			s.sseSink.OnRecv(s.sseID, "data", bytes)
+		case <-s.sseContext.Done():
+			log.Warnf("workspace:%s sse stream wait exit", s.sseID)
+			return nil
+		}
+	}
+}
+
+func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName string, sink sse.Sinker) (err error) {
+	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
+	if !ok {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
+		return
+	}
+
+	sseObserver := newSSEStream(s.ID(), ctx, sink)
+
+	stationPtr := curWorkspace.(*Station)
+	stationPtr.BindObserver(sseObserver)
+	defer stationPtr.UnbindObserver(sseObserver)
+	err = sseObserver.Wait()
+	return
+}
 
 func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *openai.ChatCompletionRequest {
 	request := openai.ChatCompletionRequest{
@@ -37,15 +106,17 @@ func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *openai.ChatC
 	return &request
 }
 
-func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName string, sink sse.Sinker) (err error) {
-	return
-}
-
 func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *common.ChatMessage, sink sse.Sinker) (err *cd.Error) {
-	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, s.constructRequest(param))
-	ev.SetData("context", ctx)
-	ev.SetData("sink", sink)
+	curWorkspace, ok := s.workspaceStationCache.Load(param.Workspace)
+	if !ok {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", param.Workspace))
+		return
+	}
 
+	stationPtr := curWorkspace.(*Station)
+	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, s.constructRequest(param))
+
+	ev.SetData("context", context.WithValue(ctx, imkac.MessageSink{}, stationPtr))
 	result := s.SendEvent(ev)
 	err = result.Error()
 	return
