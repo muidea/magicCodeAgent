@@ -162,7 +162,7 @@ func (s *Station) UnbindObserver(observer Observer) {
 }
 
 // 处理agent的sse数据流
-func (s *Station) OnCnnect(msgPtr *imkac.MessageInfo) {
+func (s *Station) OnConnect(msgPtr *imkac.MessageInfo) {
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 

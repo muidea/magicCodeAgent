@@ -100,7 +100,7 @@ func (s *Agent) UserBalance() (ret *common.UserBalanceResponse, err error) {
 	return
 }
 
-func (s *Agent) OnCnnect(msgPtr *common.MessageInfo) {
+func (s *Agent) OnConnect(msgPtr *common.MessageInfo) {
 	s.appendMessage(msgPtr)
 }
 

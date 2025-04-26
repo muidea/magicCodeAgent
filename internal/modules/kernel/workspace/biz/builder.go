@@ -37,7 +37,7 @@ func (s *sseStream) ID() string {
 }
 
 func (s *sseStream) OnConnect(msgPtr *imkac.MessageInfo) {
-	//sse.Send(msgPtr.Workspace, imbtc.OnCnnect, msgPtr)
+	//sse.Send(msgPtr.Workspace, imbtc.OnConnect, msgPtr)
 }
 
 func (s *sseStream) OnClose(msgPtr *imkac.MessageInfo) {
@@ -123,6 +123,7 @@ func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *imkac.ChatCo
 			N:               1,
 			Stop:            []string{"\n\n"},
 			MaxTokens:       1024,
+			Stream:          true,
 			PresencePenalty: 0,
 		},
 	}

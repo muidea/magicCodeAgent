@@ -19,7 +19,7 @@ func (s *MessageSink) String() string {
 }
 
 type MessageSinker interface {
-	OnCnnect(msgPtr *MessageInfo)
+	OnConnect(msgPtr *MessageInfo)
 	OnClose(msgPtr *MessageInfo)
 	OnSend(msgPtr *MessageInfo)
 	OnRecv(msgPtr *MessageInfo)

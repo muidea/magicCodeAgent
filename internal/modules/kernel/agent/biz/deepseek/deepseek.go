@@ -49,7 +49,7 @@ func (s *Stream) OnRecv(id, event string, data []byte) error {
 		if respPtr.Choices[0].FinishReason != "" {
 			if s.messageSink != nil {
 				s.messageSink.OnRecv(&common.MessageInfo{
-					Type:          common.SendMsg,
+					Type:          common.RecvMsg,
 					Content:       s.packedContent,
 					CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 					ModelProvider: common.Deepseek,
@@ -68,7 +68,6 @@ func (s *Stream) OnRecv(id, event string, data []byte) error {
 
 func (s *Stream) OnClose(id string) {
 	s.sseClient.Close()
-
 	s.messageSink.OnClose(&common.MessageInfo{
 		Type:          common.TerminateMsg,
 		Content:       "terminate",
@@ -96,7 +95,7 @@ func NewStream(
 	}
 
 	if messageSink != nil {
-		messageSink.OnCnnect(&common.MessageInfo{
+		messageSink.OnConnect(&common.MessageInfo{
 			Type:          common.UrlMsg,
 			Content:       serverUrl,
 			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -154,6 +153,9 @@ func (s *Stream) Run(value any) (err error) {
 	}
 
 	err = s.sseClient.Post(s.context, byteVal, s.header, s)
+	if err != nil {
+		log.Errorf("Run failed, error:%v", err)
+	}
 	return
 }
 
