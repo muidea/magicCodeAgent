@@ -260,7 +260,7 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 	defer fn.PackageHTTPResponse(res, result)
 	holder := s.sseHolderRegistry.GetHolder(res, req)
 	taskFunc := func() error {
-		errVal := s.bizPtr.ChatWorkspaceContentMessage(ctx, param, holder)
+		errVal := s.bizPtr.ChatWorkspaceContentMessage(ctx, param)
 		if errVal != nil {
 			log.Errorf("chat workspace content message error: %s", errVal.Error())
 			return errors.New("chat workspace content message error")

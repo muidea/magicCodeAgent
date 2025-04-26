@@ -73,8 +73,7 @@ func (s *Agent) ChatCompletionStream(
 	workspaceName string,
 	ctx context.Context,
 	param *common.ChatCompletionRequest) error {
-	messageContext := context.WithValue(ctx, common.MessageSink{}, s)
-	return deepseek.ChatCompletionStream(workspaceName, messageContext, param)
+	return deepseek.ChatCompletionStream(workspaceName, ctx, param)
 }
 
 func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common.BetaCompletionStreamResponse, err error) {
@@ -86,8 +85,7 @@ func (s *Agent) BetaCompletionStream(
 	workspaceName string,
 	ctx context.Context,
 	param *common.BetaCompletionRequest) error {
-	messageContext := context.WithValue(ctx, common.MessageSink{}, s)
-	return deepseek.BetaCompletionStream(workspaceName, messageContext, param)
+	return deepseek.BetaCompletionStream(workspaceName, ctx, param)
 }
 
 func (s *Agent) ModelsList() (ret *common.ModelsListResponse, err error) {

@@ -46,8 +46,9 @@ func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req
 	if sse.IsSSE(req) || paramPtr.IsStream() {
 		holder := sse.NewHolder(res, req)
 		sseSinkContext := context.WithValue(ctx, common.SSESink{}, holder)
+		messageContext := context.WithValue(sseSinkContext, common.MessageSink{}, s.bizPtr)
 		taskFunc := func() error {
-			return s.bizPtr.ChatCompletionStream("anonymous", sseSinkContext, paramPtr)
+			return s.bizPtr.ChatCompletionStream("anonymous", messageContext, paramPtr)
 		}
 		err := holder.Run(taskFunc)
 		if err != nil {
@@ -78,8 +79,9 @@ func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req
 	if sse.IsSSE(req) || paramPtr.IsStream() {
 		holder := sse.NewHolder(res, req)
 		sseSinkContext := context.WithValue(ctx, common.SSESink{}, holder)
+		messageContext := context.WithValue(sseSinkContext, common.MessageSink{}, s.bizPtr)
 		taskFunc := func() error {
-			return s.bizPtr.BetaCompletionStream("anonymous", sseSinkContext, paramPtr)
+			return s.bizPtr.BetaCompletionStream("anonymous", messageContext, paramPtr)
 		}
 		err := holder.Run(taskFunc)
 		if err != nil {

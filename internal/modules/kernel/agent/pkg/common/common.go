@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+
 	openai "github.com/sashabaranov/go-openai"
 )
 
@@ -32,6 +34,10 @@ type MessageInfo struct {
 	CreateTime    string `json:"createTime"`
 	ModelProvider string `json:"modelProvider"`
 	Workspace     string `json:"workspace"`
+}
+
+func (s *MessageInfo) String() string {
+	return fmt.Sprintf("MessageInfo:{SN:%d,Type:%s,Content:%s,CreateTime:%s,ModelProvider:%s,Workspace:%s}", s.SN, s.Type, s.Content, s.CreateTime, s.ModelProvider, s.Workspace)
 }
 
 const (

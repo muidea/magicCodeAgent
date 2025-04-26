@@ -38,14 +38,17 @@ func (s *sseStream) ID() string {
 
 func (s *sseStream) OnConnect(msgPtr *imkac.MessageInfo) {
 	//sse.Send(msgPtr.Workspace, imbtc.OnConnect, msgPtr)
+	s.streamChan <- []byte(msgPtr.Content)
 }
 
 func (s *sseStream) OnClose(msgPtr *imkac.MessageInfo) {
 	//sse.Send(msgPtr.Workspace, imbtc.OnClose, msgPtr)
+	s.streamChan <- []byte(msgPtr.Content)
 }
 
 func (s *sseStream) OnSend(msgPtr *imkac.MessageInfo) {
 	//sse.Send(msgPtr.Workspace, imbtc.OnSend, msgPtr)
+	s.streamChan <- []byte(msgPtr.Content)
 }
 
 func (s *sseStream) OnRecv(msgPtr *imkac.MessageInfo) {
@@ -59,7 +62,7 @@ func (s *sseStream) Wait() error {
 		select {
 		case bytes := <-s.streamChan:
 			log.Infof("workspace:%s sse stream recv：%s", s.sseID, string(bytes))
-			s.sseSink.OnRecv(s.sseID, "data", bytes)
+			s.sseSink.OnRecv(s.sseID, "message", fmt.Appendf(bytes, "\n\n"))
 		case <-s.sseContext.Done():
 			log.Warnf("workspace:%s sse stream wait exit", s.sseID)
 			return nil
@@ -131,7 +134,7 @@ func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *imkac.ChatCo
 	return request
 }
 
-func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *common.ChatMessage, sink sse.Sinker) (err *cd.Error) {
+func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *common.ChatMessage) (err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(param.Workspace)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", param.Workspace))

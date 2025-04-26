@@ -9,6 +9,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
@@ -163,6 +164,7 @@ func (s *Station) UnbindObserver(observer Observer) {
 
 // 处理agent的sse数据流
 func (s *Station) OnConnect(msgPtr *imkac.MessageInfo) {
+	log.Infof("OnConnect, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 
@@ -172,6 +174,7 @@ func (s *Station) OnConnect(msgPtr *imkac.MessageInfo) {
 }
 
 func (s *Station) OnClose(msgPtr *imkac.MessageInfo) {
+	log.Infof("OnClose, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 
@@ -181,6 +184,7 @@ func (s *Station) OnClose(msgPtr *imkac.MessageInfo) {
 }
 
 func (s *Station) OnSend(msgPtr *imkac.MessageInfo) {
+	log.Infof("OnSend, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 
@@ -190,6 +194,7 @@ func (s *Station) OnSend(msgPtr *imkac.MessageInfo) {
 }
 
 func (s *Station) OnRecv(msgPtr *imkac.MessageInfo) {
+	log.Infof("OnRecv, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 
