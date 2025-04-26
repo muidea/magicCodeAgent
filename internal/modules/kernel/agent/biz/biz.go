@@ -55,7 +55,12 @@ func (s *Agent) chatCompletion(ev event.Event, re event.Result) {
 	}
 	err := s.ChatCompletionStream(workspaceVal, contextVal, requestVal)
 	if re != nil {
-		re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
+		if err != nil {
+			re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
+			return
+		}
+
+		re.Set(nil, nil)
 	}
 }
 
@@ -109,7 +114,6 @@ func (s *Agent) OnSend(msgPtr *common.MessageInfo) {
 
 func (s *Agent) OnRecv(msgPtr *common.MessageInfo) {
 	s.appendMessage(msgPtr)
-	return
 }
 
 func (s *Agent) appendMessage(msgPtr *common.MessageInfo) {

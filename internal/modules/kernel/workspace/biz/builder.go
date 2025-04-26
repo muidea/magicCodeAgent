@@ -83,39 +83,65 @@ func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName s
 	return
 }
 
-func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *openai.ChatCompletionRequest {
-	request := openai.ChatCompletionRequest{
-		Model: imkac.DeepSeekChat,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleSystem,
-				Content: "You are a helpful assistant.",
+/*
+	openai.ChatCompletionRequest{
+			Model: imkac.DeepSeekChat,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: "You are a helpful assistant.",
+				},
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: paramPtr.Content,
+				},
 			},
-			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: paramPtr.Content,
+			Temperature:     0.7,
+			TopP:            1,
+			N:               1,
+			Stop:            []string{"\n\n"},
+			MaxTokens:       1024,
+			PresencePenalty: 0,
+		}
+*/
+func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *imkac.ChatCompletionRequest {
+	request := &imkac.ChatCompletionRequest{
+		ChatCompletionRequest: openai.ChatCompletionRequest{
+			Model: imkac.DeepSeekChat,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: "You are a helpful assistant.",
+				},
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: paramPtr.Content,
+				},
 			},
+			Temperature:     0.7,
+			TopP:            1,
+			N:               1,
+			Stop:            []string{"\n\n"},
+			MaxTokens:       1024,
+			PresencePenalty: 0,
 		},
-		Temperature:     0.7,
-		TopP:            1,
-		N:               1,
-		Stop:            []string{"\n\n"},
-		MaxTokens:       1024,
-		PresencePenalty: 0,
 	}
-	return &request
+
+	return request
 }
 
 func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *common.ChatMessage, sink sse.Sinker) (err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(param.Workspace)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", param.Workspace))
+		log.Errorf("workspace:%s not found", param.Workspace)
 		return
 	}
 
 	stationPtr := curWorkspace.(*Station)
 	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, s.constructRequest(param))
 
+	ev.SetData("workspace", param.Workspace)
 	ev.SetData("context", context.WithValue(ctx, imkac.MessageSink{}, stationPtr))
 	result := s.SendEvent(ev)
 	err = result.Error()

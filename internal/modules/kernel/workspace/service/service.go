@@ -233,7 +233,14 @@ func (s *Workspace) chatWorkspaceContentSSE(ctx context.Context, res http.Respon
 	taskFunc := func() error {
 		return s.bizPtr.ChatWorkspaceContentSSE(ctx, workspaceName, holder)
 	}
-	err := holder.Run(taskFunc)
+
+	err := holder.EchoSSEID()
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = holder.Run(taskFunc)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
@@ -255,6 +262,7 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 	taskFunc := func() error {
 		errVal := s.bizPtr.ChatWorkspaceContentMessage(ctx, param, holder)
 		if errVal != nil {
+			log.Errorf("chat workspace content message error: %s", errVal.Error())
 			return errors.New("chat workspace content message error")
 		}
 
