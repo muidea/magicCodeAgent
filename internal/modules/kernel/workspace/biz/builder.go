@@ -2,12 +2,14 @@ package biz
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+
+	"github.com/sashabaranov/go-openai"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
-	"github.com/sashabaranov/go-openai"
 
 	"github.com/muidea/magicEngine/sse"
 
@@ -19,15 +21,15 @@ import (
 type sseStream struct {
 	sseID      string
 	sseContext context.Context
-	sseSink    sse.Sinker
+	sseWriter  sse.Writer
 	streamChan chan []byte
 }
 
-func newSSEStream(id string, ctx context.Context, sink sse.Sinker) *sseStream {
+func newSSEStream(id string, ctx context.Context, sseWriter sse.Writer) *sseStream {
 	return &sseStream{
 		sseID:      id,
 		sseContext: ctx,
-		sseSink:    sink,
+		sseWriter:  sseWriter,
 		streamChan: make(chan []byte),
 	}
 }
@@ -36,23 +38,9 @@ func (s *sseStream) ID() string {
 	return s.sseID
 }
 
-func (s *sseStream) OnConnect(msgPtr *imkac.MessageInfo) {
-	//sse.Send(msgPtr.Workspace, imbtc.OnConnect, msgPtr)
-	s.streamChan <- []byte(msgPtr.Content)
-}
-
-func (s *sseStream) OnClose(msgPtr *imkac.MessageInfo) {
-	//sse.Send(msgPtr.Workspace, imbtc.OnClose, msgPtr)
-	s.streamChan <- []byte(msgPtr.Content)
-}
-
-func (s *sseStream) OnSend(msgPtr *imkac.MessageInfo) {
-	//sse.Send(msgPtr.Workspace, imbtc.OnSend, msgPtr)
-	s.streamChan <- []byte(msgPtr.Content)
-}
-
-func (s *sseStream) OnRecv(msgPtr *imkac.MessageInfo) {
-	s.streamChan <- []byte(msgPtr.Content)
+func (s *sseStream) OnMessage(msgPtr *imkac.MessageInfo) {
+	byteVal, _ := json.Marshal(msgPtr)
+	s.streamChan <- byteVal
 }
 
 func (s *sseStream) Wait() error {
@@ -62,7 +50,7 @@ func (s *sseStream) Wait() error {
 		select {
 		case bytes := <-s.streamChan:
 			log.Infof("workspace:%s sse stream recv：%s", s.sseID, string(bytes))
-			s.sseSink.OnRecv(s.sseID, "message", fmt.Appendf(bytes, "\n\n"))
+			s.sseWriter.SendData("message", fmt.Appendf(bytes, "\n\n"))
 		case <-s.sseContext.Done():
 			log.Warnf("workspace:%s sse stream wait exit", s.sseID)
 			return nil
@@ -70,19 +58,37 @@ func (s *sseStream) Wait() error {
 	}
 }
 
-func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName string, sink sse.Sinker) (err error) {
+func (s *Workspace) recvMessage(ev event.Event, re event.Result) {
+	msgPtr, ok := ev.Data().(*imkac.MessageInfo)
+	if !ok {
+		log.Errorf("workspace:%s recv message failed, invalid message:%v")
+		return
+	}
+	stationVal, stationOK := s.workspaceStationCache.Load(msgPtr.Workspace)
+	if !stationOK {
+		log.Errorf("workspace:%s recv message failed, station not found", msgPtr.Workspace)
+		return
+	}
+
+	stationVal.(*Station).DisposeMessage(msgPtr)
+	if re != nil {
+		re.Set(nil, nil)
+	}
+}
+
+func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName string, sseWriter sse.Writer) (err error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
 		return
 	}
 
-	sseObserver := newSSEStream(s.ID(), ctx, sink)
+	sseStream := newSSEStream(s.ID(), ctx, sseWriter)
 
 	stationPtr := curWorkspace.(*Station)
-	stationPtr.BindObserver(sseObserver)
-	defer stationPtr.UnbindObserver(sseObserver)
-	err = sseObserver.Wait()
+	stationPtr.BindObserver(sseStream)
+	defer stationPtr.UnbindObserver(sseStream)
+	err = sseStream.Wait()
 	return
 }
 
@@ -135,18 +141,16 @@ func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *imkac.ChatCo
 }
 
 func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *common.ChatMessage) (err *cd.Error) {
-	curWorkspace, ok := s.workspaceStationCache.Load(param.Workspace)
+	_, ok := s.workspaceStationCache.Load(param.Workspace)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", param.Workspace))
 		log.Errorf("workspace:%s not found", param.Workspace)
 		return
 	}
 
-	stationPtr := curWorkspace.(*Station)
 	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, s.constructRequest(param))
-
+	ev.SetData("context", ctx)
 	ev.SetData("workspace", param.Workspace)
-	ev.SetData("context", context.WithValue(ctx, imkac.MessageSink{}, stationPtr))
 	result := s.SendEvent(ev)
 	err = result.Error()
 	return

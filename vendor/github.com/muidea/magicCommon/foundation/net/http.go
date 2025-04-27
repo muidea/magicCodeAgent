@@ -24,11 +24,6 @@ type maxBytesReader struct {
 	err error         // sticky error
 }
 
-func (l *maxBytesReader) tooLarge() (n int, err error) {
-	l.err = errors.New("http: request body too large")
-	return 0, l.err
-}
-
 func (l *maxBytesReader) Read(p []byte) (n int, err error) {
 	if l.err != nil {
 		return 0, l.err
@@ -165,7 +160,7 @@ func PackageHTTPResponse(res http.ResponseWriter, result interface{}) {
 }
 
 // HTTPGet http get request
-func HTTPGet(httpClient *http.Client, url string, result interface{}, ctx ...url.Values) (ret []byte, err error) {
+func HTTPGet(httpClient *http.Client, url string, result interface{}, headers ...url.Values) (ret []byte, err error) {
 	request, requestErr := http.NewRequest("GET", url, nil)
 	if requestErr != nil {
 		err = requestErr
@@ -173,7 +168,7 @@ func HTTPGet(httpClient *http.Client, url string, result interface{}, ctx ...url
 		return
 	}
 
-	for _, val := range ctx {
+	for _, val := range headers {
 		for k, v := range val {
 			request.Header.Set(k, v[0])
 		}
@@ -212,7 +207,7 @@ func HTTPGet(httpClient *http.Client, url string, result interface{}, ctx ...url
 }
 
 // HTTPPost http post request
-func HTTPPost(httpClient *http.Client, url string, param interface{}, result interface{}, ctx ...url.Values) (ret []byte, err error) {
+func HTTPPost(httpClient *http.Client, url string, param interface{}, result interface{}, headers ...url.Values) (ret []byte, err error) {
 	byteBuff := bytes.NewBuffer(nil)
 	if param != nil {
 		data, dataErr := json.Marshal(param)
@@ -233,7 +228,7 @@ func HTTPPost(httpClient *http.Client, url string, param interface{}, result int
 	}
 
 	request.Header.Set("content-type", "application/json")
-	for _, val := range ctx {
+	for _, val := range headers {
 		for k, v := range val {
 			request.Header.Set(k, v[0])
 		}
@@ -272,7 +267,7 @@ func HTTPPost(httpClient *http.Client, url string, param interface{}, result int
 }
 
 // HTTPPut http post request
-func HTTPPut(httpClient *http.Client, url string, param interface{}, result interface{}, ctx ...url.Values) (ret []byte, err error) {
+func HTTPPut(httpClient *http.Client, url string, param interface{}, result interface{}, headers ...url.Values) (ret []byte, err error) {
 	byteBuff := bytes.NewBuffer(nil)
 	if param != nil {
 		data, dataErr := json.Marshal(param)
@@ -293,7 +288,7 @@ func HTTPPut(httpClient *http.Client, url string, param interface{}, result inte
 	}
 
 	request.Header.Set("content-type", "application/json")
-	for _, val := range ctx {
+	for _, val := range headers {
 		for k, v := range val {
 			request.Header.Set(k, v[0])
 		}
@@ -331,14 +326,14 @@ func HTTPPut(httpClient *http.Client, url string, param interface{}, result inte
 }
 
 // HTTPDelete http delete request
-func HTTPDelete(httpClient *http.Client, url string, result interface{}, ctx ...url.Values) (ret []byte, err error) {
+func HTTPDelete(httpClient *http.Client, url string, result interface{}, headers ...url.Values) (ret []byte, err error) {
 	request, requestErr := http.NewRequest("DELETE", url, nil)
 	if requestErr != nil {
 		err = requestErr
 		log.Errorf("construct request failed, url:%s, err:%s", url, err.Error())
 		return
 	}
-	for _, val := range ctx {
+	for _, val := range headers {
 		for k, v := range val {
 			request.Header.Set(k, v[0])
 		}
@@ -377,14 +372,14 @@ func HTTPDelete(httpClient *http.Client, url string, result interface{}, ctx ...
 }
 
 // HTTPDownload http download file
-func HTTPDownload(httpClient *http.Client, url string, filePath string, ctx ...url.Values) (string, error) {
+func HTTPDownload(httpClient *http.Client, url string, filePath string, headers ...url.Values) (string, error) {
 	request, requestErr := http.NewRequest("GET", url, nil)
 	if requestErr != nil {
 		log.Errorf("construct request failed, url:%s, err:%s", url, requestErr.Error())
 		return "", requestErr
 	}
 
-	for _, val := range ctx {
+	for _, val := range headers {
 		for k, v := range val {
 			request.Header.Set(k, v[0])
 		}
@@ -419,7 +414,7 @@ func HTTPDownload(httpClient *http.Client, url string, filePath string, ctx ...u
 }
 
 // HTTPUpload http upload file
-func HTTPUpload(httpClient *http.Client, url, fileItem, filePath string, result interface{}, ctx ...url.Values) error {
+func HTTPUpload(httpClient *http.Client, url, fileItem, filePath string, result interface{}, headers ...url.Values) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -455,7 +450,7 @@ func HTTPUpload(httpClient *http.Client, url, fileItem, filePath string, result 
 	}
 
 	request.Header.Set("content-type", contentType)
-	for _, val := range ctx {
+	for _, val := range headers {
 		for k, v := range val {
 			request.Header.Set(k, v[0])
 		}

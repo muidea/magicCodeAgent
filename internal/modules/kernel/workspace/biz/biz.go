@@ -18,6 +18,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
 
@@ -52,6 +53,7 @@ func New(
 	ptr.SubscribeFunc(common.RefreshWorkspace, ptr.refreshWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspace, ptr.filterWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspaceFile, ptr.filterWorkspaceFile)
+	ptr.SubscribeFunc(imkac.BroadcastMessageInfo, ptr.recvMessage)
 
 	return ptr
 }

@@ -8,23 +8,14 @@ import (
 
 const AgentModule = "/internal/modules/kernel/agent"
 
-type SSESink struct{}
+type SSEWriter struct{}
 
-func (s *SSESink) String() string {
-	return "sseSink"
+func (s *SSEWriter) String() string {
+	return "sseWriter"
 }
 
-type MessageSink struct{}
-
-func (s *MessageSink) String() string {
-	return "messageSink"
-}
-
-type MessageSinker interface {
-	OnConnect(msgPtr *MessageInfo)
-	OnClose(msgPtr *MessageInfo)
-	OnSend(msgPtr *MessageInfo)
-	OnRecv(msgPtr *MessageInfo)
+type MessageSink interface {
+	OnMessage(msgPtr *MessageInfo)
 }
 
 type MessageInfo struct {
@@ -41,10 +32,11 @@ func (s *MessageInfo) String() string {
 }
 
 const (
-	ChatCompletion = "/chat/completions"
-	BetaCompletion = "/beta/completions"
-	ModelsList     = "/models"
-	UserBalance    = "/user/balance"
+	ChatCompletion       = "/chat/completions"
+	BetaCompletion       = "/beta/completions"
+	ModelsList           = "/models"
+	UserBalance          = "/user/balance"
+	BroadcastMessageInfo = "/message/broadcast"
 )
 
 // ChatCompletionRequest 兼容OpenAI的聊天完成请求结构

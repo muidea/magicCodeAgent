@@ -2,22 +2,22 @@ package biz
 
 import (
 	"context"
-	"sync/atomic"
+	"sync"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/deepseek"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/provider"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 )
 
 type Agent struct {
 	biz.Base
 
-	idVal int64
+	workspaceProvider sync.Map
 }
 
 func New(
@@ -64,28 +64,60 @@ func (s *Agent) chatCompletion(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Agent) ChatCompletion(param *common.ChatCompletionRequest) (ret *common.ChatCompletionStreamResponse, err error) {
-	ret, err = deepseek.ChatCompletion(param)
-	return
+func (s *Agent) ChatCompletion(
+	workspaceName string,
+	ctx context.Context,
+	param *common.ChatCompletionRequest) (ret *common.ChatCompletionStreamResponse, err error) {
+	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
+	if !providerOK {
+		providerPtr := provider.NewProvider(workspaceName, s)
+		s.workspaceProvider.Store(workspaceName, providerPtr)
+		return providerPtr.ChatCompletion(workspaceName, ctx, param)
+	}
+	providerPtr := providerVal.(*provider.Provider)
+	return providerPtr.ChatCompletion(workspaceName, ctx, param)
 }
 
 func (s *Agent) ChatCompletionStream(
 	workspaceName string,
-	ctx context.Context,
+	chatContext context.Context,
 	param *common.ChatCompletionRequest) error {
-	return deepseek.ChatCompletionStream(workspaceName, ctx, param)
+	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
+	if !providerOK {
+		providerPtr := provider.NewProvider(workspaceName, s)
+		s.workspaceProvider.Store(workspaceName, providerPtr)
+		return providerPtr.ChatCompletionStream(workspaceName, chatContext, param)
+	}
+	providerPtr := providerVal.(*provider.Provider)
+	return providerPtr.ChatCompletionStream(workspaceName, chatContext, param)
 }
 
-func (s *Agent) BetaCompletion(param *common.BetaCompletionRequest) (ret *common.BetaCompletionStreamResponse, err error) {
-	ret, err = deepseek.BetaCompletion(param)
-	return
+func (s *Agent) BetaCompletion(
+	workspaceName string,
+	ctx context.Context,
+	param *common.BetaCompletionRequest) (ret *common.BetaCompletionStreamResponse, err error) {
+	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
+	if !providerOK {
+		providerPtr := provider.NewProvider(workspaceName, s)
+		s.workspaceProvider.Store(workspaceName, providerPtr)
+		return providerPtr.BetaCompletion(workspaceName, ctx, param)
+	}
+	providerPtr := providerVal.(*provider.Provider)
+	return providerPtr.BetaCompletion(workspaceName, ctx, param)
 }
 
 func (s *Agent) BetaCompletionStream(
 	workspaceName string,
 	ctx context.Context,
 	param *common.BetaCompletionRequest) error {
-	return deepseek.BetaCompletionStream(workspaceName, ctx, param)
+	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
+	if !providerOK {
+		providerPtr := provider.NewProvider(workspaceName, s)
+		s.workspaceProvider.Store(workspaceName, providerPtr)
+		return providerPtr.BetaCompletionStream(workspaceName, ctx, param)
+	}
+	providerPtr := providerVal.(*provider.Provider)
+	return providerPtr.BetaCompletionStream(workspaceName, ctx, param)
 }
 
 func (s *Agent) ModelsList() (ret *common.ModelsListResponse, err error) {
@@ -98,24 +130,11 @@ func (s *Agent) UserBalance() (ret *common.UserBalanceResponse, err error) {
 	return
 }
 
-func (s *Agent) OnConnect(msgPtr *common.MessageInfo) {
-	s.appendMessage(msgPtr)
+func (s *Agent) OnMessage(msgPtr *common.MessageInfo) {
+	s.broadCastMessage(msgPtr)
 }
 
-func (s *Agent) OnClose(msgPtr *common.MessageInfo) {
-	s.appendMessage(msgPtr)
-}
-
-func (s *Agent) OnSend(msgPtr *common.MessageInfo) {
-	s.appendMessage(msgPtr)
-}
-
-func (s *Agent) OnRecv(msgPtr *common.MessageInfo) {
-	s.appendMessage(msgPtr)
-}
-
-func (s *Agent) appendMessage(msgPtr *common.MessageInfo) {
-	msgPtr.SN = atomic.AddInt64(&s.idVal, 1)
-	ev := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
-	_ = s.SendEvent(ev)
+func (s *Agent) broadCastMessage(msgPtr *common.MessageInfo) {
+	ev := event.NewEvent(common.BroadcastMessageInfo, s.ID(), s.RootDestination(), nil, msgPtr)
+	s.PostEvent(ev)
 }

@@ -16,10 +16,7 @@ import (
 
 type Observer interface {
 	ID() string
-	OnConnect(msgPtr *imkac.MessageInfo)
-	OnClose(msgPtr *imkac.MessageInfo)
-	OnSend(msgPtr *imkac.MessageInfo)
-	OnRecv(msgPtr *imkac.MessageInfo)
+	OnMessage(msgPtr *imkac.MessageInfo)
 }
 
 type Station struct {
@@ -163,42 +160,12 @@ func (s *Station) UnbindObserver(observer Observer) {
 }
 
 // 处理agent的sse数据流
-func (s *Station) OnConnect(msgPtr *imkac.MessageInfo) {
-	log.Infof("OnConnect, :%v", msgPtr)
+func (s *Station) DisposeMessage(msgPtr *imkac.MessageInfo) {
+	log.Infof("OnMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 
 	for _, val := range s.observerList {
-		val.OnConnect(msgPtr)
-	}
-}
-
-func (s *Station) OnClose(msgPtr *imkac.MessageInfo) {
-	log.Infof("OnClose, :%v", msgPtr)
-	s.stationMutex.RLock()
-	defer s.stationMutex.RUnlock()
-
-	for _, val := range s.observerList {
-		val.OnClose(msgPtr)
-	}
-}
-
-func (s *Station) OnSend(msgPtr *imkac.MessageInfo) {
-	log.Infof("OnSend, :%v", msgPtr)
-	s.stationMutex.RLock()
-	defer s.stationMutex.RUnlock()
-
-	for _, val := range s.observerList {
-		val.OnSend(msgPtr)
-	}
-}
-
-func (s *Station) OnRecv(msgPtr *imkac.MessageInfo) {
-	log.Infof("OnRecv, :%v", msgPtr)
-	s.stationMutex.RLock()
-	defer s.stationMutex.RUnlock()
-
-	for _, val := range s.observerList {
-		val.OnRecv(msgPtr)
+		val.OnMessage(msgPtr)
 	}
 }

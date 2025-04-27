@@ -26,6 +26,7 @@ func New(
 		messageInfoCache: NewMessageSequenceCache(config.MaxCacheItemSize()),
 	}
 
+	ptr.SubscribeFunc(imkac.BroadcastMessageInfo, ptr.appendMessage)
 	ptr.SubscribeFunc(common.AppendMessage, ptr.appendMessage)
 	ptr.SubscribeFunc(common.FilterMessage, ptr.filterMessage)
 
