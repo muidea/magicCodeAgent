@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/sashabaranov/go-openai"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	"github.com/muidea/magicEngine/sse"
 
@@ -70,7 +72,7 @@ func (s *Workspace) recvMessage(ev event.Event, re event.Result) {
 		return
 	}
 
-	stationVal.(*Station).DisposeMessage(msgPtr)
+	stationVal.(*Station).DisposeRecvMessage(msgPtr)
 	if re != nil {
 		re.Set(nil, nil)
 	}
@@ -141,12 +143,20 @@ func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *imkac.ChatCo
 }
 
 func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *common.ChatMessage) (err *cd.Error) {
-	_, ok := s.workspaceStationCache.Load(param.Workspace)
+	curWorkspace, ok := s.workspaceStationCache.Load(param.Workspace)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", param.Workspace))
 		log.Errorf("workspace:%s not found", param.Workspace)
 		return
 	}
+
+	stationPtr := curWorkspace.(*Station)
+	stationPtr.DisposeSendMessage(&imkac.MessageInfo{
+		Type:       imkac.SendMsg,
+		Content:    param.Content,
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		Workspace:  param.Workspace,
+	})
 
 	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, s.constructRequest(param))
 	ev.SetData("context", ctx)

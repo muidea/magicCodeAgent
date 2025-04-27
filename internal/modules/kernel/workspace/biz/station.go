@@ -160,8 +160,18 @@ func (s *Station) UnbindObserver(observer Observer) {
 }
 
 // 处理agent的sse数据流
-func (s *Station) DisposeMessage(msgPtr *imkac.MessageInfo) {
-	log.Infof("OnMessage, :%v", msgPtr)
+func (s *Station) DisposeRecvMessage(msgPtr *imkac.MessageInfo) {
+	log.Infof("DisposeRecvMessage, :%v", msgPtr)
+	s.stationMutex.RLock()
+	defer s.stationMutex.RUnlock()
+
+	for _, val := range s.observerList {
+		val.OnMessage(msgPtr)
+	}
+}
+
+func (s *Station) DisposeSendMessage(msgPtr *imkac.MessageInfo) {
+	log.Infof("DisposeSendMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 
