@@ -2,6 +2,7 @@ package cache
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -11,6 +12,7 @@ import (
 // 实现将MessageInfo顺序缓存到内存中，用于快速获取消息列表
 // 实际最大缓存记录条数为1w条(暂定，可以通过配置项来调整)
 type MessageSequenceCache struct {
+	snVal    int64
 	mu       sync.RWMutex
 	messages []*models.MessageInfo
 	maxSize  int
@@ -29,6 +31,7 @@ func NewMessageSequenceCache(maxSize int) *MessageSequenceCache {
 
 // Add 添加消息到缓存
 func (c *MessageSequenceCache) Add(msg *models.MessageInfo) {
+	msg.SN = atomic.AddInt64(&c.snVal, 1)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 

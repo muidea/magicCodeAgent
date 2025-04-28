@@ -9,6 +9,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/deepseek"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/provider"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
@@ -132,10 +133,10 @@ func (s *Agent) UserBalance() (ret *common.UserBalanceResponse, err error) {
 }
 
 func (s *Agent) OnMessage(msgPtr *models.MessageInfo) {
-	s.broadCastMessage(msgPtr)
+	s.appendMessage(msgPtr)
 }
 
-func (s *Agent) broadCastMessage(msgPtr *models.MessageInfo) {
-	ev := event.NewEvent(common.BroadcastMessageInfo, s.ID(), s.RootDestination(), nil, msgPtr)
+func (s *Agent) appendMessage(msgPtr *models.MessageInfo) {
+	ev := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
 	s.PostEvent(ev)
 }

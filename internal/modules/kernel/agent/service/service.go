@@ -11,7 +11,8 @@ import (
 	"github.com/muidea/magicEngine/sse"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 type Agent struct {
@@ -29,14 +30,14 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Agent) *Agent {
 
 func (s *Agent) RegisterRoute() {
 	s.routeRegistry.SetApiVersion("")
-	s.routeRegistry.AddHandler(common.ChatCompletion, engine.POST, s.ChatCompletion)
-	s.routeRegistry.AddHandler(common.BetaCompletion, engine.POST, s.BetaCompletion)
-	s.routeRegistry.AddHandler(common.ModelsList, engine.GET, s.ModelsList)
-	s.routeRegistry.AddHandler(common.UserBalance, engine.GET, s.UserBalance)
+	s.routeRegistry.AddHandler(imkac.ChatCompletion, engine.POST, s.ChatCompletion)
+	s.routeRegistry.AddHandler(imkac.BetaCompletion, engine.POST, s.BetaCompletion)
+	s.routeRegistry.AddHandler(imkac.ModelsList, engine.GET, s.ModelsList)
+	s.routeRegistry.AddHandler(imkac.UserBalance, engine.GET, s.UserBalance)
 }
 
 func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	paramPtr := &common.ChatCompletionRequest{}
+	paramPtr := &imkac.ChatCompletionRequest{}
 	if err := fn.ParseJSONBody(req, nil, paramPtr); err != nil {
 		log.Errorf("parse json body error:%s", err.Error())
 		res.WriteHeader(http.StatusBadRequest)
@@ -68,7 +69,7 @@ func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req
 }
 
 func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	paramPtr := &common.BetaCompletionRequest{}
+	paramPtr := &imkac.BetaCompletionRequest{}
 	if err := fn.ParseJSONBody(req, nil, paramPtr); err != nil {
 		log.Errorf("parse json body error:%s", err.Error())
 		res.WriteHeader(http.StatusBadRequest)

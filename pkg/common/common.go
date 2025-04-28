@@ -3,13 +3,25 @@ package common
 import (
 	"net/http"
 	"strconv"
+
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
+
+type SSEWriter struct{}
+
+func (s *SSEWriter) String() string {
+	return "sseWriter"
+}
 
 type CreateParam struct {
 	Name          string `json:"name"`
 	WorkingPath   string `json:"workingPath"`
 	EnableService bool   `json:"enableService"`
 	EnableDao     bool   `json:"enableDao"`
+}
+
+type MessageSink interface {
+	OnMessage(msgPtr *models.MessageInfo)
 }
 
 type MessageFilter struct {

@@ -32,7 +32,7 @@ type Station struct {
 	localMessageCache *cache.MessageSequenceCache
 }
 
-func NewWorkspace(workspacePtr *config.Workspace) *Station {
+func NewStation(workspacePtr *config.Workspace) *Station {
 	ret := &Station{
 		configPtr:         workspacePtr,
 		localMessageCache: cache.NewMessageSequenceCache(500),
@@ -195,4 +195,9 @@ func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.Mes
 
 	ret = messageList
 	return
+}
+
+// sse.Writer Agent SSE数据流处理
+func (s *Station) SendData(event string, data []byte) {
+
 }

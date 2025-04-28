@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"sync/atomic"
 	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -18,7 +17,8 @@ import (
 	"github.com/muidea/magicEngine/sse"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/config"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -58,7 +58,7 @@ func (s *StreamTunnel) OnRecv(event string, data []byte) {
 		return
 	}
 
-	respPtr := &common.ChatCompletionStreamResponse{}
+	respPtr := &imkac.ChatCompletionStreamResponse{}
 	respErr := json.Unmarshal(data, respPtr)
 	if respErr != nil {
 		log.Errorf("OnRecv failed, error:%v", respErr)
@@ -126,9 +126,7 @@ func NewStream(
 
 type Provider struct {
 	workspaceName string
-	snVal         int64
-
-	messageSink common.MessageSink
+	messageSink   common.MessageSink
 }
 
 func NewProvider(
@@ -141,18 +139,12 @@ func NewProvider(
 	}
 }
 
-func (s *Provider) SN() int64 {
-	atomic.AddInt64(&s.snVal, 1)
-	return s.snVal
-}
-
 func (s *Provider) OnClose() {
 	closeMsg := &models.MessageInfo{
-		SN:            s.SN(),
 		Type:          common.TerminateMsg,
 		Content:       "terminate",
 		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		ModelProvider: common.Deepseek,
+		ModelProvider: imkac.Deepseek,
 		Workspace:     s.workspaceName,
 	}
 	if s.messageSink != nil {
@@ -162,11 +154,10 @@ func (s *Provider) OnClose() {
 
 func (s *Provider) OnRecv(content string) {
 	recvMsg := &models.MessageInfo{
-		SN:            s.SN(),
 		Type:          common.RecvMsg,
 		Content:       content,
 		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		ModelProvider: common.Deepseek,
+		ModelProvider: imkac.Deepseek,
 		Workspace:     s.workspaceName,
 	}
 	if s.messageSink != nil {
@@ -190,11 +181,11 @@ func (s *Provider) OnRecv(content string) {
 func (s *Provider) ChatCompletion(
 	workspaceName string,
 	ctx context.Context,
-	paramPtr *common.ChatCompletionRequest) (ret *common.ChatCompletionStreamResponse, err error) {
-	resultPtr := &common.ChatCompletionStreamResponse{}
+	paramPtr *imkac.ChatCompletionRequest) (ret *imkac.ChatCompletionStreamResponse, err error) {
+	resultPtr := &imkac.ChatCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, common.ChatCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imkac.ChatCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Accept", "application/json;charset=utf-8")
@@ -212,13 +203,24 @@ func (s *Provider) ChatCompletion(
 func (s *Provider) ChatCompletionStream(
 	workspaceName string,
 	chatContext context.Context,
-	paramPtr *common.ChatCompletionRequest) error {
+	paramPtr *imkac.ChatCompletionRequest) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, common.ChatCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imkac.ChatCompletion)
 
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+
+	byteVal, byteErr := json.Marshal(paramPtr)
+	if byteErr == nil && s.messageSink != nil {
+		s.messageSink.OnMessage(&models.MessageInfo{
+			Type:          common.SendMsg,
+			Content:       string(byteVal),
+			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+			ModelProvider: imkac.Deepseek,
+			Workspace:     workspaceName,
+		})
+	}
 
 	stream := NewStream(
 		urlVal.String(),
@@ -246,11 +248,11 @@ func (s *Provider) ChatCompletionStream(
 func (s *Provider) BetaCompletion(
 	workspaceName string,
 	ctx context.Context,
-	paramPtr *common.BetaCompletionRequest) (ret *common.BetaCompletionStreamResponse, err error) {
-	resultPtr := &common.BetaCompletionStreamResponse{}
+	paramPtr *imkac.BetaCompletionRequest) (ret *imkac.BetaCompletionStreamResponse, err error) {
+	resultPtr := &imkac.BetaCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, common.BetaCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imkac.BetaCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Accept", "application/json;charset=utf-8")
@@ -268,12 +270,23 @@ func (s *Provider) BetaCompletion(
 func (s *Provider) BetaCompletionStream(
 	workspaceName string,
 	ctx context.Context,
-	paramPtr *common.BetaCompletionRequest) error {
+	paramPtr *imkac.BetaCompletionRequest) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, common.BetaCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imkac.BetaCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+
+	byteVal, byteErr := json.Marshal(paramPtr)
+	if byteErr == nil && s.messageSink != nil {
+		s.messageSink.OnMessage(&models.MessageInfo{
+			Type:          common.SendMsg,
+			Content:       string(byteVal),
+			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+			ModelProvider: imkac.Deepseek,
+			Workspace:     workspaceName,
+		})
+	}
 
 	stream := NewStream(urlVal.String(),
 		config.GetDeepSeekRetryInterval(),
@@ -294,11 +307,11 @@ func (s *Provider) BetaCompletionStream(
 // 注意:
 //
 //	需要配置有效的DeepSeek API Key才能正常调用
-func (s *Provider) ModelsList() (ret *common.ModelsListResponse, err error) {
-	resultPtr := &common.ModelsListResponse{}
+func (s *Provider) ModelsList() (ret *imkac.ModelsListResponse, err error) {
+	resultPtr := &imkac.ModelsListResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, common.ModelsList)
+	urlVal.Path = path.Join(urlVal.Path, imkac.ModelsList)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
@@ -321,11 +334,11 @@ func (s *Provider) ModelsList() (ret *common.ModelsListResponse, err error) {
 // 注意:
 //
 //	该接口不需要API Key认证
-func (s *Provider) UserBalance() (ret *common.UserBalanceResponse, err error) {
-	resultPtr := &common.UserBalanceResponse{}
+func (s *Provider) UserBalance() (ret *imkac.UserBalanceResponse, err error) {
+	resultPtr := &imkac.UserBalanceResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, common.UserBalance)
+	urlVal.Path = path.Join(urlVal.Path, imkac.UserBalance)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")

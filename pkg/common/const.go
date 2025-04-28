@@ -6,3 +6,11 @@ const (
 )
 
 const ApiVersion = defaultVersion
+
+const (
+	UrlMsg       = "url"
+	SendMsg      = "send"
+	RecvMsg      = "recv"
+	ErrorMsg     = "error"
+	TerminateMsg = "terminate"
+)

@@ -153,7 +153,7 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 
 	stationPtr := curWorkspace.(*Station)
 	stationPtr.DisposeSendMessage(&models.MessageInfo{
-		Type:       imkac.SendMsg,
+		Type:       common.SendMsg,
 		Content:    param.Content,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  param.Workspace,

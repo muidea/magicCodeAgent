@@ -18,7 +18,6 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
 
@@ -53,7 +52,7 @@ func New(
 	ptr.SubscribeFunc(common.RefreshWorkspace, ptr.refreshWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspace, ptr.filterWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspaceFile, ptr.filterWorkspaceFile)
-	ptr.SubscribeFunc(imkac.BroadcastMessageInfo, ptr.recvMessage)
+	//ptr.SubscribeFunc(imkac.BroadcastMessageInfo, ptr.recvMessage)
 
 	return ptr
 }
@@ -408,7 +407,7 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err
 		return
 	}
 
-	workspace := NewWorkspace(workspacePtr)
+	workspace := NewStation(workspacePtr)
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {

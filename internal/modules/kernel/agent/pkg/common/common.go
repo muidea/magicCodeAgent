@@ -1,28 +1,16 @@
 package common
 
 import (
-	"github.com/muidea/magicCodeAgent/pkg/models"
 	openai "github.com/sashabaranov/go-openai"
 )
 
 const AgentModule = "/internal/modules/kernel/agent"
 
-type SSEWriter struct{}
-
-func (s *SSEWriter) String() string {
-	return "sseWriter"
-}
-
-type MessageSink interface {
-	OnMessage(msgPtr *models.MessageInfo)
-}
-
 const (
-	ChatCompletion       = "/chat/completions"
-	BetaCompletion       = "/beta/completions"
-	ModelsList           = "/models"
-	UserBalance          = "/user/balance"
-	BroadcastMessageInfo = "/message/broadcast"
+	ChatCompletion = "/chat/completions"
+	BetaCompletion = "/beta/completions"
+	ModelsList     = "/models"
+	UserBalance    = "/user/balance"
 )
 
 // ChatCompletionRequest 兼容OpenAI的聊天完成请求结构
