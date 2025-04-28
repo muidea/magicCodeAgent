@@ -3,7 +3,7 @@ package cache
 import (
 	"sync"
 
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 

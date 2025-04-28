@@ -7,7 +7,11 @@ import (
 	"strings"
 	"sync"
 
+	cd "github.com/muidea/magicCommon/def"
+
 	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/pkg/cache"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
@@ -24,11 +28,14 @@ type Station struct {
 
 	stationMutex sync.RWMutex
 	observerList []Observer
+
+	localMessageCache *cache.MessageSequenceCache
 }
 
 func NewWorkspace(workspacePtr *config.Workspace) *Station {
 	ret := &Station{
-		configPtr: workspacePtr,
+		configPtr:         workspacePtr,
+		localMessageCache: cache.NewMessageSequenceCache(500),
 	}
 	return ret
 }
@@ -177,4 +184,15 @@ func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo) {
 	for _, val := range s.observerList {
 		val.OnMessage(msgPtr)
 	}
+}
+
+func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.MessageInfo, err *cd.Error) {
+	messageList, messageErr := s.localMessageCache.FilterMessage(filter)
+	if messageErr != nil {
+		err = cd.NewError(cd.Unexpected, messageErr.Error())
+		return
+	}
+
+	ret = messageList
+	return
 }

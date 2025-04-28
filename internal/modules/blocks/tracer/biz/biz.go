@@ -7,9 +7,10 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/config"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/cache"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -24,13 +25,13 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Tracer {
 	ptr := &Tracer{
-		Base:             biz.New(common.TracerModule, eventHub, backgroundRoutine),
+		Base:             biz.New(imbtc.TracerModule, eventHub, backgroundRoutine),
 		messageInfoCache: cache.NewMessageSequenceCache(config.MaxCacheItemSize()),
 	}
 
 	ptr.SubscribeFunc(imkac.BroadcastMessageInfo, ptr.appendMessage)
-	ptr.SubscribeFunc(common.AppendMessage, ptr.appendMessage)
-	ptr.SubscribeFunc(common.FilterMessage, ptr.filterMessage)
+	ptr.SubscribeFunc(imbtc.AppendMessage, ptr.appendMessage)
+	ptr.SubscribeFunc(imbtc.FilterMessage, ptr.filterMessage)
 
 	return ptr
 }

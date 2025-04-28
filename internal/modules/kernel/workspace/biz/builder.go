@@ -15,9 +15,9 @@ import (
 
 	"github.com/muidea/magicEngine/sse"
 
-	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -116,7 +116,7 @@ func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName s
 			PresencePenalty: 0,
 		}
 */
-func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *imkac.ChatCompletionRequest {
+func (s *Workspace) constructRequest(paramPtr *imkwc.ChatMessage) *imkac.ChatCompletionRequest {
 	request := &imkac.ChatCompletionRequest{
 		ChatCompletionRequest: openai.ChatCompletionRequest{
 			Model: imkac.DeepSeekChat,
@@ -143,7 +143,7 @@ func (s *Workspace) constructRequest(paramPtr *common.ChatMessage) *imkac.ChatCo
 	return request
 }
 
-func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *common.ChatMessage) (err *cd.Error) {
+func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkwc.ChatMessage) (err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(param.Workspace)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", param.Workspace))
@@ -168,18 +168,21 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *comm
 }
 
 func (s *Workspace) ChatWorkspaceContentHistory(workspaceName string) (ret []*models.MessageInfo, err *cd.Error) {
-	messageFilter := &imbtc.MessageFilter{
+	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
+	if !ok {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
+		log.Errorf("workspace:%s not found", workspaceName)
+		return
+	}
+
+	stationPtr := curWorkspace.(*Station)
+
+	messageFilter := &common.MessageFilter{
 		PageIndex: 1,
 		PageSize:  100,
 		Workspace: workspaceName,
 	}
 
-	ev := event.NewEvent(imbtc.FilterMessage, s.ID(), imbtc.TracerModule, nil, messageFilter)
-	resultVal, resultErr := s.SendEvent(ev).Get()
-	if resultErr != nil {
-		err = resultErr
-		return
-	}
-	ret = resultVal.([]*models.MessageInfo)
+	ret, err = stationPtr.FilterMessage(messageFilter)
 	return
 }

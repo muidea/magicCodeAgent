@@ -10,7 +10,8 @@ import (
 	fn "github.com/muidea/magicCommon/foundation/net"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -28,8 +29,8 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Tracer) *Tracer {
 }
 
 func (s *Tracer) RegisterRoute() {
-	s.routeRegistry.AddHandler(common.AppendMessage, engine.POST, s.AppendMessage)
-	s.routeRegistry.AddHandler(common.FilterMessage, engine.GET, s.FilterMessage)
+	s.routeRegistry.AddHandler(imbtc.AppendMessage, engine.POST, s.AppendMessage)
+	s.routeRegistry.AddHandler(imbtc.FilterMessage, engine.GET, s.FilterMessage)
 }
 
 func (s *Tracer) AppendMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -47,7 +48,7 @@ func (s *Tracer) AppendMessage(ctx context.Context, res http.ResponseWriter, req
 }
 
 func (s *Tracer) FilterMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.MessageInfoList{}
+	result := &imbtc.MessageInfoList{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	filter := &common.MessageFilter{}
