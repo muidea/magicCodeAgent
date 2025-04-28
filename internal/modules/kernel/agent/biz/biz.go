@@ -12,6 +12,7 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/deepseek"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/provider"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Agent struct {
@@ -130,11 +131,11 @@ func (s *Agent) UserBalance() (ret *common.UserBalanceResponse, err error) {
 	return
 }
 
-func (s *Agent) OnMessage(msgPtr *common.MessageInfo) {
+func (s *Agent) OnMessage(msgPtr *models.MessageInfo) {
 	s.broadCastMessage(msgPtr)
 }
 
-func (s *Agent) broadCastMessage(msgPtr *common.MessageInfo) {
+func (s *Agent) broadCastMessage(msgPtr *models.MessageInfo) {
 	ev := event.NewEvent(common.BroadcastMessageInfo, s.ID(), s.RootDestination(), nil, msgPtr)
 	s.PostEvent(ev)
 }

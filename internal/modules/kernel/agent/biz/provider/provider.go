@@ -19,6 +19,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type ContentSink interface {
@@ -146,7 +147,7 @@ func (s *Provider) SN() int64 {
 }
 
 func (s *Provider) OnClose() {
-	closeMsg := &common.MessageInfo{
+	closeMsg := &models.MessageInfo{
 		SN:            s.SN(),
 		Type:          common.TerminateMsg,
 		Content:       "terminate",
@@ -160,7 +161,7 @@ func (s *Provider) OnClose() {
 }
 
 func (s *Provider) OnRecv(content string) {
-	recvMsg := &common.MessageInfo{
+	recvMsg := &models.MessageInfo{
 		SN:            s.SN(),
 		Type:          common.RecvMsg,
 		Content:       content,

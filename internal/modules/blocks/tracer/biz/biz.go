@@ -9,12 +9,14 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/cache"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Tracer struct {
 	biz.Base
 
-	messageInfoCache *MessageSequenceCache
+	messageInfoCache *cache.MessageSequenceCache
 }
 
 func New(
@@ -23,7 +25,7 @@ func New(
 ) *Tracer {
 	ptr := &Tracer{
 		Base:             biz.New(common.TracerModule, eventHub, backgroundRoutine),
-		messageInfoCache: NewMessageSequenceCache(config.MaxCacheItemSize()),
+		messageInfoCache: cache.NewMessageSequenceCache(config.MaxCacheItemSize()),
 	}
 
 	ptr.SubscribeFunc(imkac.BroadcastMessageInfo, ptr.appendMessage)
@@ -43,7 +45,7 @@ func (s *Tracer) appendMessage(ev event.Event, re event.Result) {
 		return
 	}
 
-	messagePtr, messageOK := msgVal.(*imkac.MessageInfo)
+	messagePtr, messageOK := msgVal.(*models.MessageInfo)
 	if !messageOK {
 		return
 	}
@@ -68,11 +70,11 @@ func (s *Tracer) filterMessage(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Tracer) AppendMessage(msg *imkac.MessageInfo) {
+func (s *Tracer) AppendMessage(msg *models.MessageInfo) {
 	s.messageInfoCache.Add(msg)
 }
 
-func (s *Tracer) FilterMessage(filter *common.MessageFilter) (ret []*imkac.MessageInfo, err *cd.Error) {
+func (s *Tracer) FilterMessage(filter *common.MessageFilter) (ret []*models.MessageInfo, err *cd.Error) {
 	ret, _ = s.messageInfoCache.FilterMessage(filter)
 	return
 }

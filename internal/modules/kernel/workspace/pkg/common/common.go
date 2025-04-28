@@ -10,8 +10,7 @@ import (
 	fp "github.com/muidea/magicCommon/foundation/path"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-
-	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 const WorkspaceModule = "/internal/modules/kernel/workspace"
@@ -138,5 +137,5 @@ type ChatMessageResult struct {
 
 type ChatHistoryResult struct {
 	cd.Result
-	Values []*imkac.MessageInfo `json:"values"`
+	Values []*models.MessageInfo `json:"values"`
 }

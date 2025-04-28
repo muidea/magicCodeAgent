@@ -8,15 +8,14 @@ import (
 	"sync"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
-	"github.com/muidea/magicCommon/foundation/log"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 type Observer interface {
 	ID() string
-	OnMessage(msgPtr *imkac.MessageInfo)
+	OnMessage(msgPtr *models.MessageInfo)
 }
 
 type Station struct {
@@ -160,8 +159,8 @@ func (s *Station) UnbindObserver(observer Observer) {
 }
 
 // 处理agent的sse数据流
-func (s *Station) DisposeRecvMessage(msgPtr *imkac.MessageInfo) {
-	log.Infof("DisposeRecvMessage, :%v", msgPtr)
+func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
+	//log.Infof("DisposeRecvMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 
@@ -170,8 +169,8 @@ func (s *Station) DisposeRecvMessage(msgPtr *imkac.MessageInfo) {
 	}
 }
 
-func (s *Station) DisposeSendMessage(msgPtr *imkac.MessageInfo) {
-	log.Infof("DisposeSendMessage, :%v", msgPtr)
+func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo) {
+	//log.Infof("DisposeSendMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
 
