@@ -37,7 +37,7 @@ func (s *Agent) RegisterRoute() {
 }
 
 func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	paramPtr := &imkac.ChatCompletionRequest{}
+	paramPtr := &imkac.ChatCompletionStreamRequest{}
 	if err := fn.ParseJSONBody(req, nil, paramPtr); err != nil {
 		log.Errorf("parse json body error:%s", err.Error())
 		res.WriteHeader(http.StatusBadRequest)

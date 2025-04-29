@@ -141,8 +141,7 @@ func NewProvider(
 
 func (s *Provider) OnClose() {
 	closeMsg := &models.MessageInfo{
-		Type:          common.TerminateMsg,
-		Content:       "terminate",
+		Item:          &models.MessageItem{Role: common.Recorder, Content: "terminate"},
 		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		ModelProvider: imkac.Deepseek,
 		Workspace:     s.workspaceName,
@@ -154,8 +153,7 @@ func (s *Provider) OnClose() {
 
 func (s *Provider) OnRecv(content string) {
 	recvMsg := &models.MessageInfo{
-		Type:          common.RecvMsg,
-		Content:       content,
+		Item:          &models.MessageItem{Role: common.Assistant, Content: content},
 		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		ModelProvider: imkac.Deepseek,
 		Workspace:     s.workspaceName,
@@ -181,7 +179,7 @@ func (s *Provider) OnRecv(content string) {
 func (s *Provider) ChatCompletion(
 	workspaceName string,
 	ctx context.Context,
-	paramPtr *imkac.ChatCompletionRequest) (ret *imkac.ChatCompletionStreamResponse, err error) {
+	paramPtr *imkac.ChatCompletionStreamRequest) (ret *imkac.ChatCompletionStreamResponse, err error) {
 	resultPtr := &imkac.ChatCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
@@ -203,24 +201,13 @@ func (s *Provider) ChatCompletion(
 func (s *Provider) ChatCompletionStream(
 	workspaceName string,
 	chatContext context.Context,
-	paramPtr *imkac.ChatCompletionRequest) error {
+	paramPtr *imkac.ChatCompletionStreamRequest) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
 	urlVal.Path = path.Join(urlVal.Path, imkac.ChatCompletion)
 
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
-
-	byteVal, byteErr := json.Marshal(paramPtr)
-	if byteErr == nil && s.messageSink != nil {
-		s.messageSink.OnMessage(&models.MessageInfo{
-			Type:          common.SendMsg,
-			Content:       string(byteVal),
-			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-			ModelProvider: imkac.Deepseek,
-			Workspace:     workspaceName,
-		})
-	}
 
 	stream := NewStream(
 		urlVal.String(),
@@ -276,17 +263,6 @@ func (s *Provider) BetaCompletionStream(
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
-
-	byteVal, byteErr := json.Marshal(paramPtr)
-	if byteErr == nil && s.messageSink != nil {
-		s.messageSink.OnMessage(&models.MessageInfo{
-			Type:          common.SendMsg,
-			Content:       string(byteVal),
-			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-			ModelProvider: imkac.Deepseek,
-			Workspace:     workspaceName,
-		})
-	}
 
 	stream := NewStream(urlVal.String(),
 		config.GetDeepSeekRetryInterval(),

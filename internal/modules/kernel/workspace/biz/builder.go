@@ -116,8 +116,8 @@ func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName s
 			PresencePenalty: 0,
 		}
 */
-func (s *Workspace) constructRequest(paramPtr *imkwc.ChatMessage) *imkac.ChatCompletionRequest {
-	request := &imkac.ChatCompletionRequest{
+func (s *Workspace) constructRequest(paramPtr *imkwc.ChatMessage) *imkac.ChatCompletionStreamRequest {
+	request := &imkac.ChatCompletionStreamRequest{
 		ChatCompletionRequest: openai.ChatCompletionRequest{
 			Model: imkac.DeepSeekChat,
 			Messages: []openai.ChatCompletionMessage{
@@ -151,15 +151,19 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 		return
 	}
 
+	messageItem := &models.MessageItem{
+		Role:    common.User,
+		Content: param.Content,
+	}
 	stationPtr := curWorkspace.(*Station)
 	stationPtr.DisposeSendMessage(&models.MessageInfo{
-		Type:       common.SendMsg,
-		Content:    param.Content,
+		Item:       messageItem,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  param.Workspace,
 	})
 
-	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, s.constructRequest(param))
+	messageList := []*models.MessageItem{messageItem}
+	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, messageList)
 	ev.SetData("context", ctx)
 	ev.SetData("workspace", param.Workspace)
 	result := s.SendEvent(ev)

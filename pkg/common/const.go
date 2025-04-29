@@ -14,3 +14,11 @@ const (
 	ErrorMsg     = "error"
 	TerminateMsg = "terminate"
 )
+
+const (
+	System    = "system"
+	User      = "user"
+	Assistant = "assistant"
+	Tool      = "tool"
+	Recorder  = "recorder"
+)

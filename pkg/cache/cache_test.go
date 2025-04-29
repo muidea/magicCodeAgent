@@ -15,8 +15,7 @@ func TestMessageSequenceCache(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		cache.Add(&models.MessageInfo{
 			SN:         int64(i),
-			Type:       "test",
-			Content:    "test message",
+			Item:       &models.MessageItem{Role: "user", Content: "test"},
 			CreateTime: time.Now().Format(time.RFC3339),
 		})
 	}
@@ -65,8 +64,7 @@ func TestMessageSequenceCacheConcurrent(t *testing.T) {
 			for j := 0; j < 100; j++ {
 				cache.Add(&models.MessageInfo{
 					SN:         int64(j),
-					Type:       "concurrent",
-					Content:    "concurrent message",
+					Item:       &models.MessageItem{Role: "user", Content: "test"},
 					CreateTime: time.Now().Format(time.RFC3339),
 				})
 			}

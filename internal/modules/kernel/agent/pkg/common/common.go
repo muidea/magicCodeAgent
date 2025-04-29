@@ -13,12 +13,12 @@ const (
 	UserBalance    = "/user/balance"
 )
 
-// ChatCompletionRequest 兼容OpenAI的聊天完成请求结构
-type ChatCompletionRequest struct {
+// ChatCompletionStreamRequest 兼容OpenAI的聊天完成请求结构
+type ChatCompletionStreamRequest struct {
 	openai.ChatCompletionRequest
 }
 
-func (s *ChatCompletionRequest) IsStream() bool {
+func (s *ChatCompletionStreamRequest) IsStream() bool {
 	return s.Stream
 }
 
