@@ -168,6 +168,7 @@ func (s *Station) UnbindObserver(observer Observer) {
 
 // 处理agent的sse数据流
 func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
+	s.localMessageCache.Add(msgPtr)
 	//log.Infof("DisposeRecvMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
@@ -178,6 +179,7 @@ func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 }
 
 func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo) {
+	s.localMessageCache.Add(msgPtr)
 	//log.Infof("DisposeSendMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
