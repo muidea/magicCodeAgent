@@ -12,7 +12,6 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz"
 	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 type Agent struct {
@@ -46,7 +45,7 @@ func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req
 
 	if sse.IsSSE(req) || paramPtr.IsStream() {
 		holder := sse.NewHolder(res, req)
-		sseWriterContext := context.WithValue(ctx, common.SSEWriter{}, holder)
+		sseWriterContext := context.WithValue(ctx, sse.StreamSink{}, holder)
 		taskFunc := func() error {
 			return s.bizPtr.ChatCompletionStream("anonymous", sseWriterContext, paramPtr)
 		}
@@ -78,7 +77,7 @@ func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req
 
 	if sse.IsSSE(req) || paramPtr.IsStream() {
 		holder := sse.NewHolder(res, req)
-		sseWriterContext := context.WithValue(ctx, common.SSEWriter{}, holder)
+		sseWriterContext := context.WithValue(ctx, sse.StreamSink{}, holder)
 		taskFunc := func() error {
 			return s.bizPtr.BetaCompletionStream("anonymous", sseWriterContext, paramPtr)
 		}

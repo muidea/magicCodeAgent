@@ -12,13 +12,12 @@ func (s *MessageItem) String() string {
 }
 
 type MessageInfo struct {
-	SN            int64        `json:"sn"`
-	Item          *MessageItem `json:"item"`
-	CreateTime    string       `json:"createTime"`
-	ModelProvider string       `json:"modelProvider"`
-	Workspace     string       `json:"workspace"`
+	SN         int64        `json:"sn"`
+	Item       *MessageItem `json:"item"`
+	CreateTime string       `json:"createTime"`
+	Workspace  string       `json:"workspace"`
 }
 
 func (s *MessageInfo) String() string {
-	return fmt.Sprintf("MessageInfo:{SN:%d,Content:[%v],CreateTime:%s,ModelProvider:%s,Workspace:%s}", s.SN, s.Item, s.CreateTime, s.ModelProvider, s.Workspace)
+	return fmt.Sprintf("MessageInfo:{SN:%d,Content:[%v],CreateTime:%s,Workspace:%s}", s.SN, s.Item, s.CreateTime, s.Workspace)
 }

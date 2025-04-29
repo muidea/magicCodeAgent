@@ -22,25 +22,27 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type ContentSink interface {
-	OnClose()
-	OnRecv(content string)
-}
-
 type StreamTunnel struct {
-	sseClient    *sse.Client
-	context      context.Context
-	header       url.Values
-	streamWriter sse.Writer
-	contentSink  ContentSink
+	sseClient            *sse.Client
+	context              context.Context
+	header               url.Values
+	contextStreamSinker  sse.StreamSinker
+	contextContentSinker common.ContentSinker
 
-	packedContent string
+	localContentSinker common.ContentSinker
+	packedContent      string
 }
 
 func (s *StreamTunnel) OnClose() {
 	s.sseClient.Close()
-	if s.contentSink != nil {
-		s.contentSink.OnClose()
+	if s.contextStreamSinker != nil {
+		s.contextStreamSinker.OnClose()
+	}
+	if s.contextContentSinker != nil {
+		s.contextContentSinker.OnClose()
+	}
+	if s.localContentSinker != nil {
+		s.localContentSinker.OnClose()
 	}
 }
 
@@ -51,11 +53,8 @@ func (s *StreamTunnel) OnRecv(event string, data []byte) {
 		return
 	}
 
-	if s.streamWriter != nil {
-		s.streamWriter.SendData(event, data)
-	}
-	if s.contentSink == nil {
-		return
+	if s.contextStreamSinker != nil {
+		s.contextStreamSinker.OnRecv(event, data)
 	}
 
 	respPtr := &imkac.ChatCompletionStreamResponse{}
@@ -67,8 +66,11 @@ func (s *StreamTunnel) OnRecv(event string, data []byte) {
 			s.packedContent += respPtr.Choices[0].Delta.Content
 		}
 		if respPtr.Choices[0].FinishReason != "" {
-			if s.contentSink != nil {
-				s.contentSink.OnRecv(s.packedContent)
+			if s.contextContentSinker != nil {
+				s.contextContentSinker.OnRecv(event, s.packedContent)
+			}
+			if s.localContentSinker != nil {
+				s.localContentSinker.OnRecv(event, s.packedContent)
 			}
 			s.packedContent = ""
 		}
@@ -100,15 +102,20 @@ func NewStream(
 	retryWait time.Duration,
 	maxRetries int,
 	context context.Context,
-	contentSink ContentSink,
+	localContentSinker common.ContentSinker,
 	header url.Values,
 ) *StreamTunnel {
-	var sseWriter sse.Writer
-
-	writerVal := context.Value(common.SSEWriter{})
-	sseWriterVal, sseWriterOK := writerVal.(sse.Writer)
-	if sseWriterOK {
-		sseWriter = sseWriterVal
+	var streamSinker sse.StreamSinker
+	var cotentSinker common.ContentSinker
+	streamVal := context.Value(sse.StreamSink{})
+	streamSinkVal, streamSinkOK := streamVal.(sse.StreamSinker)
+	if streamSinkOK {
+		streamSinker = streamSinkVal
+	}
+	contentVal := context.Value(common.ContentSink{})
+	cotentSinkVal, cotentSinkOK := contentVal.(common.ContentSinker)
+	if cotentSinkOK {
+		cotentSinker = cotentSinkVal
 	}
 
 	return &StreamTunnel{
@@ -117,10 +124,11 @@ func NewStream(
 			retryWait,
 			maxRetries,
 		),
-		context:      context,
-		header:       header,
-		streamWriter: sseWriter,
-		contentSink:  contentSink,
+		context:              context,
+		header:               header,
+		contextStreamSinker:  streamSinker,
+		contextContentSinker: cotentSinker,
+		localContentSinker:   localContentSinker,
 	}
 }
 
@@ -141,22 +149,20 @@ func NewProvider(
 
 func (s *Provider) OnClose() {
 	closeMsg := &models.MessageInfo{
-		Item:          &models.MessageItem{Role: common.Recorder, Content: "terminate"},
-		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		ModelProvider: imkac.Deepseek,
-		Workspace:     s.workspaceName,
+		Item:       &models.MessageItem{Role: common.Recorder, Content: "terminate"},
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		Workspace:  s.workspaceName,
 	}
 	if s.messageSink != nil {
 		s.messageSink.OnMessage(closeMsg)
 	}
 }
 
-func (s *Provider) OnRecv(content string) {
+func (s *Provider) OnRecv(event string, content string) {
 	recvMsg := &models.MessageInfo{
-		Item:          &models.MessageItem{Role: common.Assistant, Content: content},
-		CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		ModelProvider: imkac.Deepseek,
-		Workspace:     s.workspaceName,
+		Item:       &models.MessageItem{Role: common.Assistant, Content: content},
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		Workspace:  s.workspaceName,
 	}
 	if s.messageSink != nil {
 		s.messageSink.OnMessage(recvMsg)
@@ -212,10 +218,9 @@ func (s *Provider) ChatCompletionStream(
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
 		s.messageSink.OnMessage(&models.MessageInfo{
-			Item:          &models.MessageItem{Role: common.User, Content: string(byteVal)},
-			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-			ModelProvider: imkac.Deepseek,
-			Workspace:     workspaceName,
+			Item:       &models.MessageItem{Role: common.User, Content: string(byteVal)},
+			CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+			Workspace:  workspaceName,
 		})
 	}
 
@@ -277,10 +282,9 @@ func (s *Provider) BetaCompletionStream(
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
 		s.messageSink.OnMessage(&models.MessageInfo{
-			Item:          &models.MessageItem{Role: common.User, Content: string(byteVal)},
-			CreateTime:    time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-			ModelProvider: imkac.Deepseek,
-			Workspace:     workspaceName,
+			Item:       &models.MessageItem{Role: common.User, Content: string(byteVal)},
+			CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+			Workspace:  workspaceName,
 		})
 	}
 

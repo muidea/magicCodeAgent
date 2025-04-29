@@ -7,10 +7,15 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type SSEWriter struct{}
+type ContentSink struct{}
 
-func (s *SSEWriter) String() string {
-	return "sseWriter"
+func (s *ContentSink) String() string {
+	return "ContentSink"
+}
+
+type ContentSinker interface {
+	OnClose()
+	OnRecv(event, content string)
 }
 
 type CreateParam struct {

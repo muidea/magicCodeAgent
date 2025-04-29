@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	cd "github.com/muidea/magicCommon/def"
 
@@ -197,7 +198,28 @@ func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.Mes
 	return
 }
 
-// sse.Writer Agent SSE数据流处理
-func (s *Station) SendData(event string, data []byte) {
+func (s *Station) OnClose() {
+	msgPtr := &models.MessageInfo{
+		Item: &models.MessageItem{
+			Role:    common.Recorder,
+			Content: "terminate",
+		},
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		Workspace:  s.configPtr.Name,
+	}
 
+	s.DisposeRecvMessage(msgPtr)
+}
+
+func (s *Station) OnRecv(event string, content string) {
+	msgPtr := &models.MessageInfo{
+		Item: &models.MessageItem{
+			Role:    common.Assistant,
+			Content: content,
+		},
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		Workspace:  s.configPtr.Name,
+	}
+
+	s.DisposeRecvMessage(msgPtr)
 }
