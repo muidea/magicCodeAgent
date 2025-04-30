@@ -5,20 +5,25 @@ LDFLAGS := -X 'main.buildTime=$(shell date -u --rfc-3339=seconds)' -X 'main.gitC
 
 all: fmt vet build
 
-build: cli codeAgent
+build: cli debugTool codeAgent
 
 release: build
 	mkdir -p build/magicCodeAgent
 	cp bin/magicCodeCli build/magicCodeAgent/magicCodeCli
+	cp bin/magicCodeDebug build/magicCodeAgent/magicCodeDebug
 	cp bin/magicCodeAgent build/magicCodeAgent/magicCodeAgent
 	cd build && ls -l magicCodeAgent && zip -r magicCodeAgent.zip magicCodeAgent
 
 install: build
 	cp bin/magicCodeCli /usr/local/bin/magicCodeCli
+	cp bin/magicCodeDebug /usr/local/bin/magicCodeDebug
 	cp bin/magicCodeAgent /usr/local/bin/magicCodeAgent
 
 cli:
 	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeCli ./application/magicCodeCli/cmd
+
+debugTool:
+	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeDebug ./application/magicCodeDebug/cmd
 
 codeAgent:
 	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeAgent ./application/magicCodeAgent/cmd
