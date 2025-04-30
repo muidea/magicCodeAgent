@@ -13,7 +13,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tool/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 var WorkspaceDir = "/home/rangh/codespace/magicCodeAgent/internal/modules/blocks/tool/biz/temp"
@@ -24,22 +24,22 @@ func init() {
 	WorkspaceDir = path.Join(WorkspaceDir, "temp")
 }
 
-type Tool struct {
+type Tools struct {
 	biz.Base
 }
 
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
-) *Tool {
-	ptr := &Tool{
-		Base: biz.New(common.ToolModule, eventHub, backgroundRoutine),
+) *Tools {
+	ptr := &Tools{
+		Base: biz.New(common.ToolsModule, eventHub, backgroundRoutine),
 	}
 
 	return ptr
 }
 
-func (s *Tool) Run() (err *cd.Error) {
+func (s *Tools) Run() (err *cd.Error) {
 	return
 }
 
@@ -49,7 +49,7 @@ func (s *Tool) Run() (err *cd.Error) {
 // 执行函数是xml的root节点名
 // 执行函数的参数是root的子节点及子节点的值
 // 参照示例参见各个工具函数对应的注释信息
-func (s *Tool) parseParamContent(content string) (ret string, param map[string]any, err error) {
+func (s *Tools) parseParamContent(content string) (ret string, param map[string]any, err error) {
 	// 解析XML内容
 	decoder := xml.NewDecoder(strings.NewReader(content))
 	param = make(map[string]any)

@@ -13,10 +13,12 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 
 	_ "github.com/muidea/magicCodeAgent/internal/initators/pprof"
+	_ "github.com/muidea/magicCodeAgent/internal/initators/prompts"
 	_ "github.com/muidea/magicCodeAgent/internal/initators/routeregistry"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/initator"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/module"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp"

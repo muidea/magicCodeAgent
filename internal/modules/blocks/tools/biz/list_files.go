@@ -33,7 +33,7 @@ Example 示例: Requesting to list all files in the current directory
 */
 
 // ListFiles 实现list_files工具功能
-func (s *Tool) ListFiles(path string, recursive bool) ([]string, error) {
+func (s *Tools) ListFiles(path string, recursive bool) ([]string, error) {
 	fullPath := filepath.Join(WorkspaceDir, path)
 	var results []string
 

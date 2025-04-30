@@ -28,7 +28,7 @@ Please specify which API endpoint you want to test
 */
 
 // AskFollowupQuestion 实现ask_followup_question工具功能
-func (s *Tool) AskFollowupQuestion(question string, followUp []string) (string, error) {
+func (s *Tools) AskFollowupQuestion(question string, followUp []string) (string, error) {
 	// 返回问题和建议的回答
 	result := fmt.Sprintf("Question: %s\nSuggested answers:\n", question)
 	for i, suggestion := range followUp {

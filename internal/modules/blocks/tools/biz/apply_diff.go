@@ -228,7 +228,7 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 }
 
 // ApplyDiff 实现apply_diff工具功能
-func (s *Tool) ApplyDiff(path string, diff string) error {
+func (s *Tools) ApplyDiff(path string, diff string) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
 	fullPath = filepath.Clean(fullPath)
 	if !fp.Exist(fullPath) {

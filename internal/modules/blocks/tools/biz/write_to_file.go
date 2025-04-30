@@ -46,7 +46,7 @@ Example: Requesting to write to frontend-config.json
 */
 
 // WriteToFile 实现write_to_file工具功能
-func (s *Tool) WriteToFile(path, content string, lineCount int) error {
+func (s *Tools) WriteToFile(path, content string, lineCount int) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
 
 	// 创建必要的目录

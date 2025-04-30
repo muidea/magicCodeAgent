@@ -23,7 +23,7 @@ Example: Requesting to switch to code mode
 
 // SwitchMode 实现switch_mode工具功能
 // SwitchMode function implements the switch_mode tool functionality
-func (s *Tool) SwitchMode(modeSlug, reason string) (string, error) {
+func (s *Tools) SwitchMode(modeSlug, reason string) (string, error) {
 	// 返回模式切换信息
 	if reason != "" {
 		return fmt.Sprintf("Switching to mode '%s' because: %s", modeSlug, reason), nil

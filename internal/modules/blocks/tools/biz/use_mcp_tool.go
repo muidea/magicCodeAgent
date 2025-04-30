@@ -45,7 +45,7 @@ Example 示例: Requesting to use an MCP tool 请求使用MCP工具
 */
 
 // UseMcpTool 实现use_mcp_tool工具功能
-func (s *Tool) UseMcpTool(serverName, toolName string, arguments json.RawMessage) (string, error) {
+func (s *Tools) UseMcpTool(serverName, toolName string, arguments json.RawMessage) (string, error) {
 	// 这里应该实现与MCP服务器的通信逻辑
 	// 由于这是一个模拟实现，我们只返回一个示例响应
 	return fmt.Sprintf("Executed tool '%s' on server '%s' with arguments: %s", toolName, serverName, string(arguments)), nil

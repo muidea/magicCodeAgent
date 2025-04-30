@@ -60,7 +60,7 @@ type InsertBlock struct {
 }
 
 // InsertContent 实现insert_content工具功能
-func (s *Tool) InsertContent(path string, operations []*InsertBlock) error {
+func (s *Tools) InsertContent(path string, operations []*InsertBlock) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
 
 	// 读取原始文件内容

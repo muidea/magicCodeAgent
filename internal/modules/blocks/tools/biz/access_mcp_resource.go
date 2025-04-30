@@ -29,7 +29,7 @@ Usage:
 
 // AccessMcpResource 实现access_mcp_resource工具功能
 // AccessMcpResource function implements the access_mcp_resource tool functionality
-func (s *Tool) AccessMcpResource(serverName, uri string) (string, error) {
+func (s *Tools) AccessMcpResource(serverName, uri string) (string, error) {
 	// 这里应该实现与MCP服务器的资源访问逻辑
 	// 由于这是一个模拟实现，我们只返回一个示例响应
 	return fmt.Sprintf("Accessed resource '%s' on server '%s'", uri, serverName), nil

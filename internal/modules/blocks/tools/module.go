@@ -1,4 +1,4 @@
-package tool
+package tools
 
 import (
 	cd "github.com/muidea/magicCommon/def"
@@ -9,29 +9,29 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	iirc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tool/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tool/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tool/service"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/service"
 )
 
 func init() {
 	module.Register(New())
 }
 
-type Tool struct {
-	bizPtr     *biz.Tool
-	servicePtr *service.Tool
+type Tools struct {
+	bizPtr     *biz.Tools
+	servicePtr *service.Tools
 }
 
-func New() *Tool {
-	return &Tool{}
+func New() *Tools {
+	return &Tools{}
 }
 
-func (s *Tool) ID() string {
-	return common.ToolModule
+func (s *Tools) ID() string {
+	return common.ToolsModule
 }
 
-func (s *Tool) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+func (s *Tools) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	var routeRegistryHelperVal iirc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
 	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(iirc.RouteRegistryInitator, routeRegistryHelperVal)
@@ -48,7 +48,7 @@ func (s *Tool) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutin
 	return nil
 }
 
-func (s *Tool) Run() (err *cd.Error) {
+func (s *Tools) Run() (err *cd.Error) {
 	err = s.bizPtr.Run()
 	if err != nil {
 		return
@@ -58,5 +58,5 @@ func (s *Tool) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Tool) Teardown() {
+func (s *Tools) Teardown() {
 }

@@ -36,7 +36,7 @@ Example: Requesting to execute ls in a specific directory if directed
 */
 
 // ExecuteCommand 实现execute_command工具功能
-func (s *Tool) ExecuteCommand(command string, args []string, cwd string) (string, error) {
+func (s *Tools) ExecuteCommand(command string, args []string, cwd string) (string, error) {
 	cmd := exec.Command(command, args...)
 
 	if cwd != "" {

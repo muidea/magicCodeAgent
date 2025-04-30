@@ -45,7 +45,7 @@ func TestSearchFiles(t *testing.T) {
 	}
 
 	// 创建测试工具实例
-	tool := &Tool{}
+	tool := &Tools{}
 
 	// 测试用例
 	tests := []struct {

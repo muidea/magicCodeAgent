@@ -19,7 +19,7 @@ Example: Requesting instructions to create an MCP Server
 
 // FetchInstructions 实现fetch_instructions工具功能
 // FetchInstructions function implements the fetch_instructions tool functionality
-func (s *Tool) FetchInstructions(task string) (string, error) {
+func (s *Tools) FetchInstructions(task string) (string, error) {
 	// 根据任务类型返回相应的指令
 	switch task {
 	case "create_mcp_server":

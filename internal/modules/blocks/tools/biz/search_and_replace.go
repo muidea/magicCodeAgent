@@ -61,7 +61,7 @@ Example: Replace all occurrences of \"old\" with \"new\" using regex
 */
 
 // SearchAndReplace 实现search_and_replace工具功能
-func (s *Tool) SearchAndReplace(path string, operations []struct {
+func (s *Tools) SearchAndReplace(path string, operations []struct {
 	Search     string `json:"search"`
 	Replace    string `json:"replace"`
 	StartLine  int    `json:"start_line"`
