@@ -1,13 +1,15 @@
 # 功能说明
-实现对openai request数据里messagess数据风格
-要求将message里各个Item的content进行拆分，以md格式输出到单个文件中以用于分析.
+实现对MessageInfo的Item数据的拆分，并将其保存至单个独立的md文件
 拆分规则如下
-1. 不同role的content分别保存至role对应的目录
-2. 如果该role对应的content下有多条text,则将text拆分到各个单独的md文件中
-3. 拆分结果输出到当前工作目录下的data目录，如果data目录不为空，则先清空目录有再进行拆分
-4. request的测试数据如下
-5. 被拆分的数据通过命令行参数以文件的方式输入
+0. 将拆分数据保存至工作目录下的data目录，如果data不为空，则先清空data目录
+1. 按sn创建子目录
 
+2. 如果Item数据的role是assistant、recorder，则Item数据的Content是MD格式的数据直接将其保存至MD格式的文件，将其保存至对应sn目录下
+3. 如果Item数据的role是user，则Item数据的Content是openai.ChatCompletionRequest格式，需要进一步将对应的message进行拆解
+3.1. 如果该role对应的content下有多条text,则将text拆分到各个单独的md文件中
+3.2. 拆分数据保存至对应的sn目录下
+
+3.3 Item数据的role是user, 对应Item数据的Content测试数据如下：
 # 测试数据举例
 ```
 {

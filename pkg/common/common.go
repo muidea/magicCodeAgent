@@ -2,6 +2,7 @@ package common
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -62,4 +63,17 @@ func (s *MessageFilter) Decode(req *http.Request) {
 	} else {
 		s.PageSize = 20 // 默认每页20条
 	}
+}
+
+func (s *MessageFilter) Encode(vals url.Values) url.Values {
+	if s.Workspace != "" {
+		vals.Add("workspace", s.Workspace)
+	}
+	if s.PageIndex > 0 {
+		vals.Add("pageIndex", strconv.Itoa(s.PageIndex))
+	}
+	if s.PageSize > 0 {
+		vals.Add("pageSize", strconv.Itoa(s.PageSize))
+	}
+	return vals
 }

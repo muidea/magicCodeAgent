@@ -48,7 +48,7 @@ func (s *Tracer) AppendMessage(ctx context.Context, res http.ResponseWriter, req
 }
 
 func (s *Tracer) FilterMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imbtc.MessageInfoList{}
+	result := &imbtc.MessageInfoListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	filter := &common.MessageFilter{}

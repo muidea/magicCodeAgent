@@ -13,7 +13,7 @@ const (
 	AppendMessage = "/message/append"
 )
 
-type MessageInfoList struct {
+type MessageInfoListResult struct {
 	cd.Result
 	Values []*models.MessageInfo `json:"values"`
 }
