@@ -13,7 +13,7 @@ import (
 
 	"github.com/muidea/magicEngine/sse"
 
-	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -97,7 +97,7 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 
 	contentContext := context.WithValue(ctx, common.ContentSink{}, stationPtr)
 	messageList := []*models.MessageItem{messageItem}
-	ev := event.NewEvent(imkac.ChatCompletion, s.ID(), imkac.AgentModule, nil, messageList)
+	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, messageList)
 	ev.SetData("context", contentContext)
 	ev.SetData("workspace", param.Workspace)
 	result := s.SendEvent(ev)

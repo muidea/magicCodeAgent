@@ -10,33 +10,33 @@ import (
 	engine "github.com/muidea/magicEngine/http"
 	"github.com/muidea/magicEngine/sse"
 
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz"
-	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz"
+	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 )
 
-type Agent struct {
+type LLM struct {
 	routeRegistry engine.RouteRegistry
-	bizPtr        *biz.Agent
+	bizPtr        *biz.LLM
 }
 
-func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Agent) *Agent {
-	ptr := &Agent{
+func New(routeRegistry engine.RouteRegistry, bizPtr *biz.LLM) *LLM {
+	ptr := &LLM{
 		routeRegistry: routeRegistry,
 		bizPtr:        bizPtr,
 	}
 	return ptr
 }
 
-func (s *Agent) RegisterRoute() {
+func (s *LLM) RegisterRoute() {
 	s.routeRegistry.SetApiVersion("")
-	s.routeRegistry.AddHandler(imkac.ChatCompletion, engine.POST, s.ChatCompletion)
-	s.routeRegistry.AddHandler(imkac.BetaCompletion, engine.POST, s.BetaCompletion)
-	s.routeRegistry.AddHandler(imkac.ModelsList, engine.GET, s.ModelsList)
-	s.routeRegistry.AddHandler(imkac.UserBalance, engine.GET, s.UserBalance)
+	s.routeRegistry.AddHandler(imklc.ChatCompletion, engine.POST, s.ChatCompletion)
+	s.routeRegistry.AddHandler(imklc.BetaCompletion, engine.POST, s.BetaCompletion)
+	s.routeRegistry.AddHandler(imklc.ModelsList, engine.GET, s.ModelsList)
+	s.routeRegistry.AddHandler(imklc.UserBalance, engine.GET, s.UserBalance)
 }
 
-func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	paramPtr := &imkac.ChatCompletionStreamRequest{}
+func (s *LLM) ChatCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	paramPtr := &imklc.ChatCompletionStreamRequest{}
 	if err := fn.ParseJSONBody(req, nil, paramPtr); err != nil {
 		log.Errorf("parse json body error:%s", err.Error())
 		res.WriteHeader(http.StatusBadRequest)
@@ -67,8 +67,8 @@ func (s *Agent) ChatCompletion(ctx context.Context, res http.ResponseWriter, req
 	fn.PackageHTTPResponse(res, resultPtr)
 }
 
-func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	paramPtr := &imkac.BetaCompletionRequest{}
+func (s *LLM) BetaCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	paramPtr := &imklc.BetaCompletionRequest{}
 	if err := fn.ParseJSONBody(req, nil, paramPtr); err != nil {
 		log.Errorf("parse json body error:%s", err.Error())
 		res.WriteHeader(http.StatusBadRequest)
@@ -99,7 +99,7 @@ func (s *Agent) BetaCompletion(ctx context.Context, res http.ResponseWriter, req
 	fn.PackageHTTPResponse(res, resultPtr)
 }
 
-func (s *Agent) ModelsList(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *LLM) ModelsList(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	resultPtr, resultErr := s.bizPtr.ModelsList()
 	if resultErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -108,7 +108,7 @@ func (s *Agent) ModelsList(ctx context.Context, res http.ResponseWriter, req *ht
 	fn.PackageHTTPResponse(res, resultPtr)
 }
 
-func (s *Agent) UserBalance(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *LLM) UserBalance(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	resultPtr, resultErr := s.bizPtr.UserBalance()
 	if resultErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)

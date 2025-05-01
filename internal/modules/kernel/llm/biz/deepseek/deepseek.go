@@ -9,8 +9,8 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	fn "github.com/muidea/magicCommon/foundation/net"
 
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/config"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/config"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 )
 
 // ModelsList 获取DeepSeek可用模型列表

@@ -4,7 +4,7 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-const AgentModule = "/internal/modules/kernel/agent"
+const LLMModule = "/internal/modules/kernel/llm"
 
 const (
 	ChatCompletion = "/chat/completions"

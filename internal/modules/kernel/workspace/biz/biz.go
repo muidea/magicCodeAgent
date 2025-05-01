@@ -52,7 +52,7 @@ func New(
 	ptr.SubscribeFunc(common.RefreshWorkspace, ptr.refreshWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspace, ptr.filterWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspaceFile, ptr.filterWorkspaceFile)
-	//ptr.SubscribeFunc(imkac.BroadcastMessageInfo, ptr.recvMessage)
+	//ptr.SubscribeFunc(imklc.BroadcastMessageInfo, ptr.recvMessage)
 
 	return ptr
 }

@@ -12,13 +12,13 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/deepseek"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz/provider"
-	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz/deepseek"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz/provider"
+	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type Agent struct {
+type LLM struct {
 	biz.Base
 
 	workspaceProvider sync.Map
@@ -27,23 +27,23 @@ type Agent struct {
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
-) *Agent {
-	ptr := &Agent{
-		Base: biz.New(imkac.AgentModule, eventHub, backgroundRoutine),
+) *LLM {
+	ptr := &LLM{
+		Base: biz.New(imklc.LLMModule, eventHub, backgroundRoutine),
 	}
 
-	ptr.SubscribeFunc(imkac.ChatCompletion, ptr.chatCompletion)
+	ptr.SubscribeFunc(imklc.ChatCompletion, ptr.chatCompletion)
 	return ptr
 }
 
-func (s *Agent) Run() (err *cd.Error) {
+func (s *LLM) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Agent) constructRequest(messageList []*models.MessageItem) *imkac.ChatCompletionStreamRequest {
-	request := &imkac.ChatCompletionStreamRequest{
+func (s *LLM) constructRequest(messageList []*models.MessageItem) *imklc.ChatCompletionStreamRequest {
+	request := &imklc.ChatCompletionStreamRequest{
 		ChatCompletionRequest: openai.ChatCompletionRequest{
-			Model: imkac.DeepSeekChat,
+			Model: imklc.DeepSeekChat,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
@@ -70,7 +70,7 @@ func (s *Agent) constructRequest(messageList []*models.MessageItem) *imkac.ChatC
 	return request
 }
 
-func (s *Agent) chatCompletion(ev event.Event, re event.Result) {
+func (s *LLM) chatCompletion(ev event.Event, re event.Result) {
 	messageListVal, messageListOK := ev.Data().([]*models.MessageItem)
 	if !messageListOK {
 		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid message list"))
@@ -100,10 +100,10 @@ func (s *Agent) chatCompletion(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Agent) ChatCompletion(
+func (s *LLM) ChatCompletion(
 	workspaceName string,
 	ctx context.Context,
-	param *imkac.ChatCompletionStreamRequest) (ret *imkac.ChatCompletionStreamResponse, err error) {
+	param *imklc.ChatCompletionStreamRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
 	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
 	if !providerOK {
 		providerPtr := provider.NewProvider(workspaceName, s)
@@ -114,10 +114,10 @@ func (s *Agent) ChatCompletion(
 	return providerPtr.ChatCompletion(workspaceName, ctx, param)
 }
 
-func (s *Agent) ChatCompletionStream(
+func (s *LLM) ChatCompletionStream(
 	workspaceName string,
 	chatContext context.Context,
-	param *imkac.ChatCompletionStreamRequest) error {
+	param *imklc.ChatCompletionStreamRequest) error {
 	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
 	if !providerOK {
 		providerPtr := provider.NewProvider(workspaceName, s)
@@ -128,10 +128,10 @@ func (s *Agent) ChatCompletionStream(
 	return providerPtr.ChatCompletionStream(workspaceName, chatContext, param)
 }
 
-func (s *Agent) BetaCompletion(
+func (s *LLM) BetaCompletion(
 	workspaceName string,
 	ctx context.Context,
-	param *imkac.BetaCompletionRequest) (ret *imkac.BetaCompletionStreamResponse, err error) {
+	param *imklc.BetaCompletionRequest) (ret *imklc.BetaCompletionStreamResponse, err error) {
 	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
 	if !providerOK {
 		providerPtr := provider.NewProvider(workspaceName, s)
@@ -142,10 +142,10 @@ func (s *Agent) BetaCompletion(
 	return providerPtr.BetaCompletion(workspaceName, ctx, param)
 }
 
-func (s *Agent) BetaCompletionStream(
+func (s *LLM) BetaCompletionStream(
 	workspaceName string,
 	ctx context.Context,
-	param *imkac.BetaCompletionRequest) error {
+	param *imklc.BetaCompletionRequest) error {
 	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
 	if !providerOK {
 		providerPtr := provider.NewProvider(workspaceName, s)
@@ -156,21 +156,21 @@ func (s *Agent) BetaCompletionStream(
 	return providerPtr.BetaCompletionStream(workspaceName, ctx, param)
 }
 
-func (s *Agent) ModelsList() (ret *imkac.ModelsListResponse, err error) {
+func (s *LLM) ModelsList() (ret *imklc.ModelsListResponse, err error) {
 	ret, err = deepseek.ModelsList()
 	return
 }
 
-func (s *Agent) UserBalance() (ret *imkac.UserBalanceResponse, err error) {
+func (s *LLM) UserBalance() (ret *imklc.UserBalanceResponse, err error) {
 	ret, err = deepseek.UserBalance()
 	return
 }
 
-func (s *Agent) OnMessage(msgPtr *models.MessageInfo) {
+func (s *LLM) OnMessage(msgPtr *models.MessageInfo) {
 	s.appendMessage(msgPtr)
 }
 
-func (s *Agent) appendMessage(msgPtr *models.MessageInfo) {
+func (s *LLM) appendMessage(msgPtr *models.MessageInfo) {
 	ev := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
 	s.PostEvent(ev)
 }

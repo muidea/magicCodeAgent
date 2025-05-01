@@ -1,4 +1,4 @@
-package agent
+package llm
 
 import (
 	cd "github.com/muidea/magicCommon/def"
@@ -9,35 +9,35 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	iirc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/service"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/service"
 )
 
 func init() {
 	module.Register(New())
 }
 
-type Agent struct {
-	bizPtr     *biz.Agent
-	servicePtr *service.Agent
+type LLM struct {
+	bizPtr     *biz.LLM
+	servicePtr *service.LLM
 }
 
-func New() *Agent {
-	return &Agent{}
+func New() *LLM {
+	return &LLM{}
 }
 
-func (s *Agent) ID() string {
-	return common.AgentModule
+func (s *LLM) ID() string {
+	return common.LLMModule
 }
 
-func (s *Agent) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+func (s *LLM) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	var routeRegistryHelperVal iirc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
 	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(iirc.RouteRegistryInitator, routeRegistryHelperVal)
 	if routeRegistryHelperErr != nil {
 		err = routeRegistryHelperErr
-		log.Errorf("Agent setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
+		log.Errorf("LLM setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
 		return
 	}
 
@@ -48,7 +48,7 @@ func (s *Agent) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRouti
 	return nil
 }
 
-func (s *Agent) Run() (err *cd.Error) {
+func (s *LLM) Run() (err *cd.Error) {
 	err = s.bizPtr.Run()
 	if err != nil {
 		return
@@ -58,5 +58,5 @@ func (s *Agent) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Agent) Teardown() {
+func (s *LLM) Teardown() {
 }

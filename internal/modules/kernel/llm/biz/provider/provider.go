@@ -16,8 +16,8 @@ import (
 
 	"github.com/muidea/magicEngine/sse"
 
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/config"
-	imkac "github.com/muidea/magicCodeAgent/internal/modules/kernel/agent/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/config"
+	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
@@ -57,7 +57,7 @@ func (s *StreamTunnel) OnRecv(event string, data []byte) {
 		s.contextStreamSinker.OnRecv(event, data)
 	}
 
-	respPtr := &imkac.ChatCompletionStreamResponse{}
+	respPtr := &imklc.ChatCompletionStreamResponse{}
 	respErr := json.Unmarshal(data, respPtr)
 	if respErr != nil {
 		log.Errorf("OnRecv failed, error:%v", respErr)
@@ -185,11 +185,11 @@ func (s *Provider) OnRecv(event string, content string) {
 func (s *Provider) ChatCompletion(
 	workspaceName string,
 	ctx context.Context,
-	paramPtr *imkac.ChatCompletionStreamRequest) (ret *imkac.ChatCompletionStreamResponse, err error) {
-	resultPtr := &imkac.ChatCompletionStreamResponse{}
+	paramPtr *imklc.ChatCompletionStreamRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
+	resultPtr := &imklc.ChatCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, imkac.ChatCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Accept", "application/json;charset=utf-8")
@@ -207,9 +207,9 @@ func (s *Provider) ChatCompletion(
 func (s *Provider) ChatCompletionStream(
 	workspaceName string,
 	chatContext context.Context,
-	paramPtr *imkac.ChatCompletionStreamRequest) error {
+	paramPtr *imklc.ChatCompletionStreamRequest) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, imkac.ChatCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletion)
 
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
@@ -250,11 +250,11 @@ func (s *Provider) ChatCompletionStream(
 func (s *Provider) BetaCompletion(
 	workspaceName string,
 	ctx context.Context,
-	paramPtr *imkac.BetaCompletionRequest) (ret *imkac.BetaCompletionStreamResponse, err error) {
-	resultPtr := &imkac.BetaCompletionStreamResponse{}
+	paramPtr *imklc.BetaCompletionRequest) (ret *imklc.BetaCompletionStreamResponse, err error) {
+	resultPtr := &imklc.BetaCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, imkac.BetaCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imklc.BetaCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Accept", "application/json;charset=utf-8")
@@ -272,9 +272,9 @@ func (s *Provider) BetaCompletion(
 func (s *Provider) BetaCompletionStream(
 	workspaceName string,
 	ctx context.Context,
-	paramPtr *imkac.BetaCompletionRequest) error {
+	paramPtr *imklc.BetaCompletionRequest) error {
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, imkac.BetaCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imklc.BetaCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
@@ -307,11 +307,11 @@ func (s *Provider) BetaCompletionStream(
 // 注意:
 //
 //	需要配置有效的DeepSeek API Key才能正常调用
-func (s *Provider) ModelsList() (ret *imkac.ModelsListResponse, err error) {
-	resultPtr := &imkac.ModelsListResponse{}
+func (s *Provider) ModelsList() (ret *imklc.ModelsListResponse, err error) {
+	resultPtr := &imklc.ModelsListResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, imkac.ModelsList)
+	urlVal.Path = path.Join(urlVal.Path, imklc.ModelsList)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
@@ -334,11 +334,11 @@ func (s *Provider) ModelsList() (ret *imkac.ModelsListResponse, err error) {
 // 注意:
 //
 //	该接口不需要API Key认证
-func (s *Provider) UserBalance() (ret *imkac.UserBalanceResponse, err error) {
-	resultPtr := &imkac.UserBalanceResponse{}
+func (s *Provider) UserBalance() (ret *imklc.UserBalanceResponse, err error) {
+	resultPtr := &imklc.UserBalanceResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
-	urlVal.Path = path.Join(urlVal.Path, imkac.UserBalance)
+	urlVal.Path = path.Join(urlVal.Path, imklc.UserBalance)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
