@@ -14,6 +14,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/foundation/net"
 	"github.com/muidea/magicCommon/task"
+	"github.com/sashabaranov/go-openai"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
@@ -44,10 +45,22 @@ func (s *Debug) Run() (err *cd.Error) {
 		PageSize:  100,
 	}
 
+	dataDir := filepath.Join(".", "data")
+
+	// 清空或创建data目录
+	if errVal := os.RemoveAll(dataDir); errVal != nil {
+		log.Errorf("clear data dir failed, err:%s", errVal)
+		return
+	}
+	if errVal := os.MkdirAll(dataDir, 0755); errVal != nil {
+		log.Errorf("create data dir failed, err:%s", errVal)
+		return
+	}
+
 	for {
 		messageList := s.filterMessage(filter)
 		for _, message := range messageList {
-			s.traceContent(message)
+			s.traceContent(dataDir, message)
 		}
 		if len(messageList) < filter.PageSize {
 			break
@@ -58,19 +71,7 @@ func (s *Debug) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Debug) traceContent(message *models.MessageInfo) {
-	dataDir := filepath.Join(".", "data")
-
-	// 清空或创建data目录
-	if err := os.RemoveAll(dataDir); err != nil {
-		log.Errorf("clear data dir failed, err:%s", err)
-		return
-	}
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		log.Errorf("create data dir failed, err:%s", err)
-		return
-	}
-
+func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 	// 按sn创建子目录
 	snStr := strconv.FormatInt(message.SN, 10)
 	snDir := filepath.Join(dataDir, snStr)
@@ -87,39 +88,35 @@ func (s *Debug) traceContent(message *models.MessageInfo) {
 	// 处理Item
 	item := message.Item
 	switch item.Role {
-	case "assistant", "recorder":
+	case common.Assistant, common.Recorder:
 		// 直接保存MD内容
 		fileName := filepath.Join(snDir, fmt.Sprintf("%s.md", item.Role))
 		if err := os.WriteFile(fileName, []byte(item.Content), 0644); err != nil {
 			log.Errorf("save assistant content failed, role:%s, err:%s", item.Role, err)
 		}
-
-	case "user":
+	case common.User:
 		// 解析ChatCompletionRequest
-		var chatReq struct {
-			Messages []struct {
-				Role    string `json:"role"`
-				Content string `json:"content"`
-			} `json:"messages"`
-		}
-
-		if err := json.Unmarshal([]byte(item.Content), &chatReq); err != nil {
+		chatReq := &openai.ChatCompletionRequest{}
+		if err := json.Unmarshal([]byte(item.Content), chatReq); err != nil {
 			log.Errorf("unmarshal chat request failed, err:%s", err)
 			return
 		}
-
 		// 保存每条message
 		for i, msg := range chatReq.Messages {
-			// 尝试解析为text content数组
-			var textContents []struct {
-				Type string `json:"type"`
-				Text string `json:"text"`
+			content := []byte(msg.Content)
+			if msg.Role == openai.ChatMessageRoleSystem {
+				// 普通字符串内容
+				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s.md", item.Role, i, msg.Role))
+				if err := os.WriteFile(fileName, content, 0644); err != nil {
+					log.Errorf("save user message failed, role:%s, index:%d, err:%s",
+						item.Role, i, err)
+				}
+				continue
 			}
 
-			if err := json.Unmarshal([]byte(msg.Content), &textContents); err == nil {
-				// 是text content数组，保存每个text
-				for j, textItem := range textContents {
-					if textItem.Type == "text" {
+			if msg.Role == openai.ChatMessageRoleUser {
+				for j, textItem := range msg.MultiContent {
+					if textItem.Type == "text" && textItem.Text != "" {
 						fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s_%d.md", item.Role, i, msg.Role, j))
 						if err := os.WriteFile(fileName, []byte(textItem.Text), 0644); err != nil {
 							log.Errorf("save user text content failed, role:%s, index:%d, textIndex:%d, err:%s",
@@ -127,13 +124,8 @@ func (s *Debug) traceContent(message *models.MessageInfo) {
 						}
 					}
 				}
-			} else {
-				// 普通字符串内容
-				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s.md", item.Role, i, msg.Role))
-				if err := os.WriteFile(fileName, []byte(msg.Content), 0644); err != nil {
-					log.Errorf("save user message failed, role:%s, index:%d, err:%s",
-						item.Role, i, err)
-				}
+
+				continue
 			}
 		}
 	}
