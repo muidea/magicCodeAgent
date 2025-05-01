@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -22,17 +23,25 @@ func (s *FetchInstructionsTool) Prompts() string {
 }
 
 func (s *FetchInstructionsTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	// 参数校验
 	task, ok := param["task"].(string)
 	if !ok || task == "" {
-		return fmt.Errorf("缺少或无效的任务类型参数")
+		return nil, fmt.Errorf("缺少或无效的任务类型参数")
 	}
 
-	_, err = s.FetchInstructions(task)
+	// 调用工具函数
+	result, err := FetchInstructions(task)
 	if err != nil {
-		return fmt.Errorf("获取指令失败: %v", err)
+		return nil, fmt.Errorf("获取指令失败: %v", err)
 	}
 
-	return nil
+	// 处理返回值
+	ret, err := json.Marshal(result)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return ret, nil
 }
 
 /*

@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -24,12 +25,13 @@ func (s *ExecuteCommandTool) Prompts() string {
 }
 
 func (s *ExecuteCommandTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	// 参数校验
 	command, ok := param["command"].(string)
 	if !ok || command == "" {
 		return nil, fmt.Errorf("缺少或无效的命令参数")
 	}
 
-	// 获取参数列表
+	// 获取可选参数
 	var args []string
 	if argsParam, ok := param["args"].([]interface{}); ok {
 		for _, arg := range argsParam {
@@ -40,12 +42,20 @@ func (s *ExecuteCommandTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, e
 	}
 
 	cwd, _ := param["cwd"].(string)
+
+	// 调用工具函数
 	output, err := ExecuteCommand(command, args, cwd)
 	if err != nil {
 		return nil, fmt.Errorf("执行命令失败: %v", err)
 	}
 
-	return output, nil
+	// 处理返回值
+	result, err := json.Marshal(output)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*

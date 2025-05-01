@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -23,17 +24,25 @@ func (s *AskFollowupQuestionTool) Prompts() string {
 }
 
 func (s *AskFollowupQuestionTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	// 参数校验
 	question, ok := param["question"].(string)
 	if !ok || question == "" {
 		return nil, fmt.Errorf("缺少或无效的问题参数")
 	}
 
+	// 调用工具函数
 	ret, err := AskFollowupQuestion(question)
 	if err != nil {
 		return nil, fmt.Errorf("提问失败: %v", err)
 	}
 
-	return ret, nil
+	// 处理返回值
+	result, err := json.Marshal(ret)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*
@@ -60,11 +69,7 @@ Please specify which API endpoint you want to test
 */
 
 // AskFollowupQuestion 实现ask_followup_question工具功能
-func AskFollowupQuestion(question string, followUp []string) (string, error) {
-	// 返回问题和建议的回答
-	result := fmt.Sprintf("Question: %s\nSuggested answers:\n", question)
-	for i, suggestion := range followUp {
-		result += fmt.Sprintf("%d. %s\n", i+1, suggestion)
-	}
-	return result, nil
+func AskFollowupQuestion(question string) (string, error) {
+	// 返回问题
+	return fmt.Sprintf("Follow-up question: %s", question), nil
 }

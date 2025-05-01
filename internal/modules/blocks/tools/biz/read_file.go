@@ -29,7 +29,56 @@ func (s *ReadFileTool) Prompts() string {
 }
 
 func (s *ReadFileTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
-	return
+	// 检查路径参数
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		return nil, fmt.Errorf("缺少或无效的文件路径参数")
+	}
+
+	// 检查路径安全性，防止路径遍历攻击
+	if strings.Contains(path, "..") || strings.HasPrefix(path, "/") {
+		return nil, fmt.Errorf("非法文件路径，禁止访问上级目录或绝对路径")
+	}
+
+	// 处理起始行参数
+	startLine := 1
+	if startLineParam, exists := param["start_line"]; exists {
+		switch v := startLineParam.(type) {
+		case float64:
+			startLine = int(v)
+		case int:
+			startLine = v
+		default:
+			return nil, fmt.Errorf("start_line参数必须是数字类型")
+		}
+		if startLine < 1 {
+			return nil, fmt.Errorf("起始行号不能小于1")
+		}
+	}
+
+	// 处理结束行参数
+	endLine := 0 // 0表示读取到文件末尾
+	if endLineParam, exists := param["end_line"]; exists {
+		switch v := endLineParam.(type) {
+		case float64:
+			endLine = int(v)
+		case int:
+			endLine = v
+		default:
+			return nil, fmt.Errorf("end_line参数必须是数字类型")
+		}
+		if endLine > 0 && endLine < startLine {
+			return nil, fmt.Errorf("结束行号不能小于起始行号")
+		}
+	}
+
+	ret, err := ReadFile(path, startLine, endLine)
+	if err != nil {
+		return nil, fmt.Errorf("读取文件失败: %w", err)
+	}
+
+	// 将字符串结果转换为[]byte作为ToolResult返回
+	return []byte(ret), nil
 }
 
 /*

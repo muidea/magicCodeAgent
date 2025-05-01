@@ -26,34 +26,52 @@ func (s *InsertContentTool) Prompts() string {
 }
 
 func (s *InsertContentTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
 		return nil, fmt.Errorf("缺少或无效的文件路径参数")
 	}
 
-	operationsStr, ok := param["operations"].(string)
-	if !ok || operationsStr == "" {
+	operations, ok := param["operations"].(string)
+	if !ok || operations == "" {
 		return nil, fmt.Errorf("缺少或无效的操作参数")
 	}
 
 	// 解析JSON格式的operations参数
-	var operations []*InsertBlock
-	err := json.Unmarshal([]byte(operationsStr), &operations)
-	if err != nil {
+	var ops []struct {
+		StartLine int    `json:"start_line"`
+		Content   string `json:"content"`
+	}
+	
+	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
 		return nil, fmt.Errorf("解析操作参数失败: %v", err)
 	}
 
-	// 验证操作参数
-	if len(operations) == 0 {
+	if len(ops) == 0 {
 		return nil, fmt.Errorf("操作参数不能为空")
 	}
 
-	err = InsertContent(path, operations)
-	if err != nil {
+	// 转换参数格式
+	var insertBlocks []*InsertBlock
+	for _, op := range ops {
+		insertBlocks = append(insertBlocks, &InsertBlock{
+			StartLine: op.StartLine,
+			Content:   op.Content,
+		})
+	}
+
+	// 调用工具函数
+	if err := InsertContent(path, insertBlocks); err != nil {
 		return nil, fmt.Errorf("插入内容失败: %v", err)
 	}
 
-	return nil, nil
+	// 处理返回值
+	result, err := json.Marshal("内容插入成功")
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*

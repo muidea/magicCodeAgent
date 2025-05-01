@@ -1,6 +1,8 @@
 package biz
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,7 +26,34 @@ func (s *SearchFilesTool) Prompts() string {
 }
 
 func (s *SearchFilesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
-	return
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		return nil, fmt.Errorf("缺少或无效的目录路径参数")
+	}
+
+	regex, ok := param["regex"].(string)
+	if !ok || regex == "" {
+		return nil, fmt.Errorf("缺少或无效的正则表达式参数")
+	}
+
+	// 获取可选参数
+	filePattern := "*"
+	if filePatternParam, ok := param["file_pattern"].(string); ok && filePatternParam != "" {
+		filePattern = filePatternParam
+	}
+
+	results, err := SearchFiles(path, regex, filePattern)
+	if err != nil {
+		return nil, fmt.Errorf("搜索文件失败: %v", err)
+	}
+
+	// 将结果转换为JSON格式
+	resultJSON, err := json.Marshal(results)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return resultJSON, nil
 }
 
 /*

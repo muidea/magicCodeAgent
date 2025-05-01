@@ -29,12 +29,12 @@ func (s *SearchAndReplaceTool) Prompts() string {
 func (s *SearchAndReplaceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return fmt.Errorf("缺少或无效的文件路径参数")
+		return nil, fmt.Errorf("缺少或无效的文件路径参数")
 	}
 
 	operations, ok := param["operations"].(string)
 	if !ok || operations == "" {
-		return fmt.Errorf("缺少或无效的操作参数")
+		return nil, fmt.Errorf("缺少或无效的操作参数")
 	}
 
 	var ops []struct {
@@ -48,19 +48,25 @@ func (s *SearchAndReplaceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult,
 	}
 
 	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
-		return fmt.Errorf("解析操作参数失败: %v", err)
+		return nil, fmt.Errorf("解析操作参数失败: %v", err)
 	}
 
 	if len(ops) == 0 {
-		return fmt.Errorf("缺少有效的操作")
+		return nil, fmt.Errorf("缺少有效的操作")
 	}
 
-	err = s.SearchAndReplace(path, ops)
+	err := SearchAndReplace(path, ops)
 	if err != nil {
-		return fmt.Errorf("搜索替换失败: %v", err)
+		return nil, err
 	}
 
-	return nil
+	// 返回结果需要转换为ToolResult格式
+	result, err := json.Marshal("替换操作成功完成")
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*

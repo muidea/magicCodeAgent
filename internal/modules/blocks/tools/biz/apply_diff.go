@@ -2,6 +2,7 @@ package biz
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,6 +29,7 @@ func (s *ApplyDiffTool) Prompts() string {
 }
 
 func (s *ApplyDiffTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
 		return nil, fmt.Errorf("缺少或无效的文件路径参数")
@@ -38,12 +40,18 @@ func (s *ApplyDiffTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error)
 		return nil, fmt.Errorf("缺少或无效的diff参数")
 	}
 
+	// 调用工具函数
 	err := ApplyDiff(path, diff)
 	if err != nil {
-		return nil, fmt.Errorf("应用diff失败: %v", err)
+		return nil, fmt.Errorf("应用差异失败: %v", err)
 	}
 
-	return nil, nil
+	// 处理返回值
+	result, err := json.Marshal("差异应用成功")
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+	return result, nil
 }
 
 /*

@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -22,7 +23,27 @@ func (s *NewTaskTool) Prompts() string {
 }
 
 func (s *NewTaskTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
-	return
+	mode, ok := param["mode"].(string)
+	if !ok || mode == "" {
+		return nil, fmt.Errorf("缺少或无效的模式参数")
+	}
+
+	message, ok := param["message"].(string)
+	if !ok || message == "" {
+		return nil, fmt.Errorf("缺少或无效的消息参数")
+	}
+
+	ret, err := NewTask(mode, message)
+	if err != nil {
+		return nil, fmt.Errorf("创建新任务失败: %v", err)
+	}
+
+	result, err := json.Marshal(ret)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*

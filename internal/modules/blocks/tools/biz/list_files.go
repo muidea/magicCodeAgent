@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,18 +25,28 @@ func (s *ListFilesTool) Prompts() string {
 }
 
 func (s *ListFilesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
 		return nil, fmt.Errorf("缺少或无效的路径参数")
 	}
 
+	// 获取可选参数
 	recursive, _ := param["recursive"].(bool)
+
+	// 调用工具函数
 	result, err := ListFiles(path, recursive)
 	if err != nil {
 		return nil, fmt.Errorf("列出文件失败: %v", err)
 	}
 
-	return result, nil
+	// 处理返回值
+	ret, err := json.Marshal(result)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return ret, nil
 }
 
 /*

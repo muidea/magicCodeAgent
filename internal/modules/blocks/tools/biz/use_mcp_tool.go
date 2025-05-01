@@ -25,25 +25,30 @@ func (s *UseMcpToolTool) Prompts() string {
 func (s *UseMcpToolTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
-		return fmt.Errorf("缺少或无效的服务器名称参数")
+		return nil, fmt.Errorf("缺少或无效的服务器名称参数")
 	}
 
 	toolName, ok := param["tool_name"].(string)
 	if !ok || toolName == "" {
-		return fmt.Errorf("缺少或无效的工具名称参数")
+		return nil, fmt.Errorf("缺少或无效的工具名称参数")
 	}
 
 	arguments, ok := param["arguments"].(string)
 	if !ok || arguments == "" {
-		return fmt.Errorf("缺少或无效的参数")
+		return nil, fmt.Errorf("缺少或无效的参数")
 	}
 
-	_, err = UseMcpTool(serverName, toolName, json.RawMessage(arguments))
+	ret, err := UseMcpTool(serverName, toolName, json.RawMessage(arguments))
 	if err != nil {
-		return fmt.Errorf("使用MCP工具失败: %v", err)
+		return nil, fmt.Errorf("使用MCP工具失败: %v", err)
 	}
 
-	return nil
+	result, err := json.Marshal(ret)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*

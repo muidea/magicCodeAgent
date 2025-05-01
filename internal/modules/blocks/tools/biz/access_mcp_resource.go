@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -22,6 +23,7 @@ func (s *AccessMcpResourceTool) Prompts() string {
 }
 
 func (s *AccessMcpResourceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	// 参数校验
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
 		return nil, fmt.Errorf("缺少或无效的服务器名称参数")
@@ -32,12 +34,19 @@ func (s *AccessMcpResourceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult
 		return nil, fmt.Errorf("缺少或无效的URI参数")
 	}
 
+	// 调用工具函数
 	ret, err := AccessMcpResource(serverName, uri)
 	if err != nil {
 		return nil, fmt.Errorf("访问MCP资源失败: %v", err)
 	}
 
-	return ret, nil
+	// 处理返回值
+	result, err := json.Marshal(ret)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*

@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -22,7 +23,24 @@ func (s *SwitchModeTool) Prompts() string {
 }
 
 func (s *SwitchModeTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
-	return
+	modeSlug, ok := param["mode_slug"].(string)
+	if !ok || modeSlug == "" {
+		return nil, fmt.Errorf("缺少或无效的模式标识参数")
+	}
+
+	reason, _ := param["reason"].(string)
+
+	ret, err := SwitchMode(modeSlug, reason)
+	if err != nil {
+		return nil, fmt.Errorf("切换模式失败: %v", err)
+	}
+
+	result, err := json.Marshal(ret)
+	if err != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*

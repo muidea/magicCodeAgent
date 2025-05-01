@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -23,7 +24,28 @@ func (s *WriteToFileTool) Prompts() string {
 }
 
 func (s *WriteToFileTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
-	return
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		return nil, fmt.Errorf("缺少或无效的文件路径参数")
+	}
+
+	content, ok := param["content"].(string)
+	if !ok || content == "" {
+		return nil, fmt.Errorf("缺少或无效的文件内容参数")
+	}
+
+	// 获取行数参数
+	lineCount := 0
+	if lineCountParam, ok := param["line_count"].(float64); ok {
+		lineCount = int(lineCountParam)
+	}
+
+	err := WriteToFile(path, content, lineCount)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
 /*

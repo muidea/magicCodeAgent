@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -22,17 +23,27 @@ func (s *AttemptCompletionTool) Prompts() string {
 }
 
 func (s *AttemptCompletionTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	// 参数校验
 	result, ok := param["result"].(string)
 	if !ok || result == "" {
-		return fmt.Errorf("缺少或无效的结果参数")
+		return nil, fmt.Errorf("缺少或无效的结果参数")
 	}
 
+	// 获取可选参数
 	command, _ := param["command"].(string)
-	if err = AttemptCompletion(result, command); err != nil {
-		return fmt.Errorf("尝试完成任务失败: %v", err)
+
+	// 调用工具函数
+	ret, err := AttemptCompletion(result, command)
+	if err != nil {
+		return nil, fmt.Errorf("尝试完成任务失败: %v", err)
 	}
 
-	return nil
+	// 处理返回值
+	byteVal, byeErr := json.Marshal(ret)
+	if byeErr != nil {
+		return nil, fmt.Errorf("序列化结果失败: %v", byeErr)
+	}
+	return byteVal, nil
 }
 
 /*

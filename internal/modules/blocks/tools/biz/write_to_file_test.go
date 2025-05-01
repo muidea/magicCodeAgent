@@ -5,17 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/task"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteToFile(t *testing.T) {
-	// 创建一个Tool实例用于测试
-	eventHub := event.NewHub(100)
-	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine, nil)
-
 	// 保存原始的WorkspaceDir
 	originalWorkspaceDir := WorkspaceDir
 	// 临时修改WorkspaceDir为测试目录
