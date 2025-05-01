@@ -8,6 +8,7 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	iirc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -41,7 +42,16 @@ func (s *Tools) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRouti
 		return
 	}
 
-	s.bizPtr = biz.New(eventHub, backgroundRoutine)
+	var promptsRegistryVal iipc.PromptsRegistry
+	var promptsRegistryErr *cd.Error
+	promptsRegistryVal, promptsRegistryErr = initator.GetEntity(iipc.PromptsInitator, promptsRegistryVal)
+	if promptsRegistryErr != nil {
+		err = promptsRegistryErr
+		log.Errorf("Tool setup failed, initator.GetEntity error:%s", promptsRegistryErr.Error())
+		return
+	}
+
+	s.bizPtr = biz.New(eventHub, backgroundRoutine, promptsRegistryVal)
 
 	s.servicePtr = service.New(routeRegistryHelperVal.GetRouteRegistry(), s.bizPtr)
 

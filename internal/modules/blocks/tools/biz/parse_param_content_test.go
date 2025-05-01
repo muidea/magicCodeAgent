@@ -12,7 +12,7 @@ func TestParseParamContent(t *testing.T) {
 	// 创建一个Tool实例用于测试
 	eventHub := event.NewHub(100)
 	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine)
+	tool := New(eventHub, backgroundRoutine, nil)
 
 	// 测试用例1：readFile工具 - 正常XML格式，包含多个参数
 	content1 := `<readFile>

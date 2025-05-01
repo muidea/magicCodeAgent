@@ -12,6 +12,7 @@ import (
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
@@ -31,9 +32,14 @@ type Tools struct {
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
+	promptsRegistry iipc.PromptsRegistry,
 ) *Tools {
 	ptr := &Tools{
 		Base: biz.New(common.ToolsModule, eventHub, backgroundRoutine),
+	}
+
+	if promptsRegistry != nil {
+		promptsRegistry.AddPrompts("tools", &ReadFile{})
 	}
 
 	return ptr

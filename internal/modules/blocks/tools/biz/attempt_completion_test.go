@@ -12,7 +12,7 @@ func TestAttemptCompletion(t *testing.T) {
 	// 创建一个Tool实例用于测试
 	eventHub := event.NewHub(100)
 	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine)
+	tool := New(eventHub, backgroundRoutine, nil)
 
 	// 测试用例1：只有结果，没有命令
 	result1 := "Task completed successfully"

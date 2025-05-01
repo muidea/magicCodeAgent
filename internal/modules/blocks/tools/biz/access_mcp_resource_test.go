@@ -13,7 +13,7 @@ func TestAccessMcpResource(t *testing.T) {
 	// 创建一个Tool实例用于测试
 	eventHub := event.NewHub(100)
 	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine)
+	tool := New(eventHub, backgroundRoutine, nil)
 
 	// 测试用例1：正常情况
 	serverName := "weather-server"

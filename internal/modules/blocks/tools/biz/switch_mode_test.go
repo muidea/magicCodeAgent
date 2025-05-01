@@ -12,7 +12,7 @@ func TestSwitchMode(t *testing.T) {
 	// 创建一个Tool实例用于测试
 	eventHub := event.NewHub(100)
 	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine)
+	tool := New(eventHub, backgroundRoutine, nil)
 
 	// 测试用例1：有理由的模式切换
 	modeSlug1 := "code"
