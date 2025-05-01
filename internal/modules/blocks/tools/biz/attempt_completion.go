@@ -2,6 +2,14 @@ package biz
 
 import "fmt"
 
+type AttemptCompletion struct{}
+
+func (s *AttemptCompletion) Name() string { return "attempt_completion" }
+func (s *AttemptCompletion) Prompts() string {
+	return `
+`
+}
+
 /*
 ## attempt_completion
 ## 尝试完成

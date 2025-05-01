@@ -40,6 +40,21 @@ func New(
 
 	if promptsRegistry != nil {
 		promptsRegistry.AddPrompts("tools", &ReadFile{})
+		promptsRegistry.AddPrompts("tools", &FetchInstructions{})
+		promptsRegistry.AddPrompts("tools", &SearchFiles{})
+		promptsRegistry.AddPrompts("tools", &ListFiles{})
+		promptsRegistry.AddPrompts("tools", &ListCodeDefinitionNames{})
+		promptsRegistry.AddPrompts("tools", &ApplyDiff{})
+		promptsRegistry.AddPrompts("tools", &WriteToFile{})
+		promptsRegistry.AddPrompts("tools", &InsertContent{})
+		promptsRegistry.AddPrompts("tools", &SearchAndReplace{})
+		promptsRegistry.AddPrompts("tools", &ExecuteCommand{})
+		promptsRegistry.AddPrompts("tools", &UseMcpTool{})
+		promptsRegistry.AddPrompts("tools", &AccessMcpResource{})
+		promptsRegistry.AddPrompts("tools", &AskFollowupQuestion{})
+		promptsRegistry.AddPrompts("tools", &AttemptCompletion{})
+		promptsRegistry.AddPrompts("tools", &SwitchMode{})
+		promptsRegistry.AddPrompts("tools", &NewTask{})
 	}
 
 	return ptr

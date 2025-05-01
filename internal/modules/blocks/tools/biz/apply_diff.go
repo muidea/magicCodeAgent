@@ -11,6 +11,14 @@ import (
 	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
+type ApplyDiff struct{}
+
+func (s *ApplyDiff) Name() string { return "apply_diff" }
+func (s *ApplyDiff) Prompts() string {
+	return `
+`
+}
+
 /*
 ## apply_diff
 Description: Request to replace existing code using a search and replace block.

@@ -1,5 +1,13 @@
 package biz
 
+type FetchInstructions struct{}
+
+func (s *FetchInstructions) Name() string { return "fetch_instructions" }
+func (s *FetchInstructions) Prompts() string {
+	return `
+`
+}
+
 /*
 ## fetch_instructions
 Description: Request to fetch instructions to perform a task

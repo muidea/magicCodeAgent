@@ -6,6 +6,14 @@ import (
 	"regexp"
 )
 
+type SearchFiles struct{}
+
+func (s *SearchFiles) Name() string { return "search_files" }
+func (s *SearchFiles) Prompts() string {
+	return `
+`
+}
+
 /*
 ## search_files
 ## 搜索文件
