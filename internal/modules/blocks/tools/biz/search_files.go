@@ -10,8 +10,7 @@ type SearchFiles struct{}
 
 func (s *SearchFiles) Name() string { return "search_files" }
 func (s *SearchFiles) Prompts() string {
-	return `
-`
+	return ``
 }
 
 /*

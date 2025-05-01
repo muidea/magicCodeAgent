@@ -9,8 +9,7 @@ type ExecuteCommand struct{}
 
 func (s *ExecuteCommand) Name() string { return "execute_command" }
 func (s *ExecuteCommand) Prompts() string {
-	return `
-`
+	return ``
 }
 
 /*

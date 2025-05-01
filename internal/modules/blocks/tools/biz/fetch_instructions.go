@@ -4,8 +4,7 @@ type FetchInstructions struct{}
 
 func (s *FetchInstructions) Name() string { return "fetch_instructions" }
 func (s *FetchInstructions) Prompts() string {
-	return `
-`
+	return ``
 }
 
 /*

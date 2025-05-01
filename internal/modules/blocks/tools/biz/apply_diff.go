@@ -15,8 +15,7 @@ type ApplyDiff struct{}
 
 func (s *ApplyDiff) Name() string { return "apply_diff" }
 func (s *ApplyDiff) Prompts() string {
-	return `
-`
+	return ``
 }
 
 /*
