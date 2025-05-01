@@ -1,3 +1,5 @@
+### insert_content
+
 Description: Inserts content at specific line positions in a file. This is the primary tool for adding new content and code (functions/methods/classes, imports, attributes etc.) as it allows for precise insertions without overwriting existing content. The tool uses an efficient line-based insertion system that maintains file integrity and proper ordering of multiple insertions. Beware to use the proper indentation. This tool is the preferred way to add new content and code to files.
 Parameters:
 - path: (required) The path of the file to insert content into (relative to the current workspace directory /home/rangh/webspace)

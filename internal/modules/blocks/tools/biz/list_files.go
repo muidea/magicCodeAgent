@@ -3,13 +3,27 @@ package biz
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type ListFiles struct{}
 
 func (s *ListFiles) Name() string { return "list_files" }
 func (s *ListFiles) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *ListFiles) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

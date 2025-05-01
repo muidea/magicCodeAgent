@@ -1,12 +1,28 @@
 package biz
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+)
 
 type AttemptCompletion struct{}
 
 func (s *AttemptCompletion) Name() string { return "attempt_completion" }
 func (s *AttemptCompletion) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *AttemptCompletion) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

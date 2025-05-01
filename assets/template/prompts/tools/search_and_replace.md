@@ -1,3 +1,5 @@
+### search_and_replace
+
 Description: Request to perform search and replace operations on a file. Each operation can specify a search pattern (string or regex) and replacement text, with optional line range restrictions and regex flags. Shows a diff preview before applying changes.
 Parameters:
 - path: (required) The path of the file to modify (relative to the current workspace directory /home/rangh/webspace)

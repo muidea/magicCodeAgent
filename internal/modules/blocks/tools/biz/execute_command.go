@@ -3,13 +3,27 @@ package biz
 import (
 	"os/exec"
 	"path/filepath"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type ExecuteCommand struct{}
 
 func (s *ExecuteCommand) Name() string { return "execute_command" }
 func (s *ExecuteCommand) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *ExecuteCommand) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

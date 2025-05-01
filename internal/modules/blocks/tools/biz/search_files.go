@@ -4,13 +4,27 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type SearchFiles struct{}
 
 func (s *SearchFiles) Name() string { return "search_files" }
 func (s *SearchFiles) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *SearchFiles) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

@@ -3,13 +3,27 @@ package biz
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type UseMcpTool struct{}
 
 func (s *UseMcpTool) Name() string { return "use_mcp_tool" }
 func (s *UseMcpTool) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *UseMcpTool) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

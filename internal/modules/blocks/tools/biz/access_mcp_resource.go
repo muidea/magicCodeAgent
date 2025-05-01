@@ -2,13 +2,27 @@ package biz
 
 import (
 	"fmt"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type AccessMcpResource struct{}
 
 func (s *AccessMcpResource) Name() string { return "access_mcp_resource" }
 func (s *AccessMcpResource) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *AccessMcpResource) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

@@ -5,13 +5,27 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type SearchAndReplace struct{}
 
 func (s *SearchAndReplace) Name() string { return "search_and_replace" }
 func (s *SearchAndReplace) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *SearchAndReplace) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

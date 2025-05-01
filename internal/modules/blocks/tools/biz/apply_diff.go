@@ -8,14 +8,27 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type ApplyDiff struct{}
 
 func (s *ApplyDiff) Name() string { return "apply_diff" }
 func (s *ApplyDiff) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *ApplyDiff) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

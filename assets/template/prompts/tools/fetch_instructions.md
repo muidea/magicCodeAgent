@@ -1,3 +1,5 @@
+### fetch_instructions
+
 Description: Request to fetch instructions to perform a task
 Parameters:
 - task: (required) The task to get instructions for.  This can take the following values:

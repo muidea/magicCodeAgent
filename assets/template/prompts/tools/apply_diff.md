@@ -1,4 +1,5 @@
 ### apply_diff
+
 Description: Request to replace existing code using a search and replace block.
 This tool allows for precise, surgical replaces to files by specifying exactly what content to search for and what to replace it with.
 The tool will maintain proper indentation and formatting while making changes.

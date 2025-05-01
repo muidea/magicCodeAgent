@@ -1,12 +1,28 @@
 package biz
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+)
 
 type SwitchMode struct{}
 
 func (s *SwitchMode) Name() string { return "switch_mode" }
 func (s *SwitchMode) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *SwitchMode) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

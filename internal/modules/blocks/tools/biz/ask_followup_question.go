@@ -2,13 +2,28 @@ package biz
 
 import (
 	"fmt"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type AskFollowupQuestion struct{}
 
 func (s *AskFollowupQuestion) Name() string { return "ask_followup_question" }
+
 func (s *AskFollowupQuestion) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *AskFollowupQuestion) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

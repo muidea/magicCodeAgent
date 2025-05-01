@@ -5,13 +5,27 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type InsertContent struct{}
 
 func (s *InsertContent) Name() string { return "insert_content" }
 func (s *InsertContent) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *InsertContent) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

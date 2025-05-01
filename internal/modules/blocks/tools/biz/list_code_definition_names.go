@@ -6,13 +6,27 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+
+	"github.com/muidea/magicCommon/foundation/log"
+
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
 type ListCodeDefinitionNames struct{}
 
 func (s *ListCodeDefinitionNames) Name() string { return "list_code_definition_names" }
 func (s *ListCodeDefinitionNames) Prompts() string {
-	return ``
+	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	if promptsErr != nil {
+		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		return ""
+	}
+
+	return promptsVal
+}
+
+func (s *ListCodeDefinitionNames) Execute(param imbtc.ToolParam) (err error) {
+	return
 }
 
 /*

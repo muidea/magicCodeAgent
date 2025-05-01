@@ -1,3 +1,5 @@
+### search_files
+
 Description: Request to perform a regex search across files in a specified directory, providing context-rich results. This tool searches for patterns or specific content across multiple files, displaying each match with encapsulating context.
 Parameters:
 - path: (required) The path of the directory to search in (relative to the current workspace directory /home/rangh/webspace). This directory will be recursively searched.
