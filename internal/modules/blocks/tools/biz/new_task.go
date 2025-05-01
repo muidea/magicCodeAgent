@@ -21,7 +21,7 @@ func (s *NewTaskTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *NewTaskTool) Execute(param imbtc.ToolParam) (err error) {
+func (s *NewTaskTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	return
 }
 
@@ -53,7 +53,7 @@ Example 示例:
 
 // NewTask 实现new_task工具功能
 // NewTask function implements the new_task tool functionality
-func (s *Tools) NewTask(mode, message string) (string, error) {
+func NewTask(mode, message string) (string, error) {
 	// 返回新任务创建信息
 	return fmt.Sprintf("Created new task in mode '%s' with message: %s", mode, message), nil
 }

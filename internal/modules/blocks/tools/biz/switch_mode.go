@@ -21,7 +21,7 @@ func (s *SwitchModeTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *SwitchModeTool) Execute(param imbtc.ToolParam) (err error) {
+func (s *SwitchModeTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	return
 }
 
@@ -46,7 +46,7 @@ Example: Requesting to switch to code mode
 
 // SwitchMode 实现switch_mode工具功能
 // SwitchMode function implements the switch_mode tool functionality
-func (s *Tools) SwitchMode(modeSlug, reason string) (string, error) {
+func SwitchMode(modeSlug, reason string) (string, error) {
 	// 返回模式切换信息
 	if reason != "" {
 		return fmt.Sprintf("Switching to mode '%s' because: %s", modeSlug, reason), nil

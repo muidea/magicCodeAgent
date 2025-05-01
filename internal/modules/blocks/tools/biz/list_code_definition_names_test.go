@@ -5,17 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/task"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestListCodeDefinitionNames(t *testing.T) {
-	// 创建一个Tool实例用于测试
-	eventHub := event.NewHub(100)
-	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine, nil)
-
 	// 保存原始的WorkspaceDir
 	originalWorkspaceDir := WorkspaceDir
 	// 临时修改WorkspaceDir为测试目录
@@ -42,7 +35,7 @@ var TestVar = "test"
 	assert.NoError(t, err, "写入测试文件应该成功")
 
 	// 测试用例1：分析单个文件
-	definitions, err := tool.ListCodeDefinitionNames("test_file.go")
+	definitions, err := ListCodeDefinitionNames("test_file.go")
 	assert.NoError(t, err, "分析单个文件应该成功")
 	assert.Contains(t, definitions, "TestFunction", "应该包含函数定义")
 	assert.Contains(t, definitions, "TestStruct", "应该包含结构体定义")
@@ -76,7 +69,7 @@ var File2Var = 42
 	assert.NoError(t, err, "写入第二个测试文件应该成功")
 
 	// 测试用例2：分析目录
-	definitions2, err := tool.ListCodeDefinitionNames("testdir")
+	definitions2, err := ListCodeDefinitionNames("testdir")
 	assert.NoError(t, err, "分析目录应该成功")
 	assert.Contains(t, definitions2, "File1Function", "应该包含第一个文件中的函数定义")
 	assert.Contains(t, definitions2, "File1Struct", "应该包含第一个文件中的结构体定义")
@@ -84,7 +77,7 @@ var File2Var = 42
 	assert.Contains(t, definitions2, "File2Var", "应该包含第二个文件中的变量定义")
 
 	// 测试用例3：分析不存在的路径
-	_, err = tool.ListCodeDefinitionNames("nonexistent_path")
+	_, err = ListCodeDefinitionNames("nonexistent_path")
 	assert.Error(t, err, "分析不存在的路径应该返回错误")
 
 	// 测试用例4：分析非Go文件
@@ -92,6 +85,6 @@ var File2Var = 42
 	err = os.WriteFile(nonGoFilePath, []byte("This is not a Go file"), 0644)
 	assert.NoError(t, err, "写入非Go文件应该成功")
 
-	_, err = tool.ListCodeDefinitionNames("test.txt")
+	_, err = ListCodeDefinitionNames("test.txt")
 	assert.Error(t, err, "分析非Go文件应该返回错误")
 }

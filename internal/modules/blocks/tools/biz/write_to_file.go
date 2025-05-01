@@ -22,7 +22,7 @@ func (s *WriteToFileTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *WriteToFileTool) Execute(param imbtc.ToolParam) (err error) {
+func (s *WriteToFileTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	return
 }
 
@@ -67,7 +67,7 @@ Example: Requesting to write to frontend-config.json
 */
 
 // WriteToFile 实现write_to_file工具功能
-func (s *Tools) WriteToFile(path, content string, lineCount int) error {
+func WriteToFile(path, content string, lineCount int) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
 
 	// 创建必要的目录

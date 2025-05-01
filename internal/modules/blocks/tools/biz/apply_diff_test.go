@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/task"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -172,11 +170,6 @@ func newBar() {
 }
 
 func TestApplyDiff(t *testing.T) {
-	// 创建一个Tool实例用于测试
-	eventHub := event.NewHub(100)
-	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine, nil)
-
 	// 创建临时测试文件
 	tempDir := t.TempDir()
 	testFilePath := filepath.Join(tempDir, "test_file.txt")
@@ -211,7 +204,7 @@ def calculate_total(items):
 	defer func() { WorkspaceDir = originalWorkspaceDir }()
 
 	// 应用差异
-	err = tool.ApplyDiff("test_file.txt", diff1)
+	err = ApplyDiff("test_file.txt", diff1)
 	assert.NoError(t, err, "应用差异应该成功")
 
 	// 读取修改后的文件内容
@@ -252,7 +245,7 @@ def calculate_sum(items):
 `
 
 	// 应用差异
-	err = tool.ApplyDiff("test_file.txt", diff2)
+	err = ApplyDiff("test_file.txt", diff2)
 	assert.NoError(t, err, "应用多个替换块应该成功")
 
 	// 读取修改后的文件内容
@@ -264,11 +257,11 @@ def calculate_sum(items):
 	assert.Equal(t, expectedContent2, string(modifiedContent2), "文件内容应该被正确修改")
 
 	// 测试用例3：文件不存在
-	err = tool.ApplyDiff("non_existent_file.txt", diff1)
+	err = ApplyDiff("non_existent_file.txt", diff1)
 	assert.Error(t, err, "对不存在的文件应用差异应该返回错误")
 
 	// 测试用例4：无效的差异格式
 	invalidDiff := "This is not a valid diff format"
-	err = tool.ApplyDiff("test_file.txt", invalidDiff)
+	err = ApplyDiff("test_file.txt", invalidDiff)
 	assert.Error(t, err, "应用无效的差异格式应该返回错误")
 }

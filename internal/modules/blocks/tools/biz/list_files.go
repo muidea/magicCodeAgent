@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -22,8 +23,19 @@ func (s *ListFilesTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *ListFilesTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *ListFilesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		return nil, fmt.Errorf("缺少或无效的路径参数")
+	}
+
+	recursive, _ := param["recursive"].(bool)
+	result, err := ListFiles(path, recursive)
+	if err != nil {
+		return nil, fmt.Errorf("列出文件失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*
@@ -54,7 +66,7 @@ Example 示例: Requesting to list all files in the current directory
 */
 
 // ListFiles 实现list_files工具功能
-func (s *Tools) ListFiles(path string, recursive bool) ([]string, error) {
+func ListFiles(path string, recursive bool) ([]string, error) {
 	fullPath := filepath.Join(WorkspaceDir, path)
 	var results []string
 

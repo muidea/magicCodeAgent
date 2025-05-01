@@ -27,8 +27,23 @@ func (s *ApplyDiffTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *ApplyDiffTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *ApplyDiffTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		return nil, fmt.Errorf("缺少或无效的文件路径参数")
+	}
+
+	diff, ok := param["diff"].(string)
+	if !ok || diff == "" {
+		return nil, fmt.Errorf("缺少或无效的diff参数")
+	}
+
+	err := ApplyDiff(path, diff)
+	if err != nil {
+		return nil, fmt.Errorf("应用diff失败: %v", err)
+	}
+
+	return nil, nil
 }
 
 /*
@@ -248,7 +263,7 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 }
 
 // ApplyDiff 实现apply_diff工具功能
-func (s *Tools) ApplyDiff(path string, diff string) error {
+func ApplyDiff(path string, diff string) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
 	fullPath = filepath.Clean(fullPath)
 	if !fp.Exist(fullPath) {

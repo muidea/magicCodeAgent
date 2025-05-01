@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,8 +25,35 @@ func (s *InsertContentTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *InsertContentTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *InsertContentTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		return nil, fmt.Errorf("缺少或无效的文件路径参数")
+	}
+
+	operationsStr, ok := param["operations"].(string)
+	if !ok || operationsStr == "" {
+		return nil, fmt.Errorf("缺少或无效的操作参数")
+	}
+
+	// 解析JSON格式的operations参数
+	var operations []*InsertBlock
+	err := json.Unmarshal([]byte(operationsStr), &operations)
+	if err != nil {
+		return nil, fmt.Errorf("解析操作参数失败: %v", err)
+	}
+
+	// 验证操作参数
+	if len(operations) == 0 {
+		return nil, fmt.Errorf("操作参数不能为空")
+	}
+
+	err = InsertContent(path, operations)
+	if err != nil {
+		return nil, fmt.Errorf("插入内容失败: %v", err)
+	}
+
+	return nil, nil
 }
 
 /*
@@ -81,7 +109,7 @@ type InsertBlock struct {
 }
 
 // InsertContent 实现insert_content工具功能
-func (s *Tools) InsertContent(path string, operations []*InsertBlock) error {
+func InsertContent(path string, operations []*InsertBlock) error {
 	fullPath := filepath.Join(WorkspaceDir, path)
 
 	// 读取原始文件内容

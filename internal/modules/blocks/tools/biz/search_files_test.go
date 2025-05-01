@@ -44,9 +44,6 @@ func TestSearchFiles(t *testing.T) {
 		}
 	}
 
-	// 创建测试工具实例
-	tool := &Tools{}
-
 	// 测试用例
 	tests := []struct {
 		name        string
@@ -132,7 +129,7 @@ func TestSearchFiles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := tool.SearchFiles(tt.path, tt.regex, tt.filePattern)
+			results, err := SearchFiles(tt.path, tt.regex, tt.filePattern)
 
 			if tt.isError {
 				assert.Error(t, err)

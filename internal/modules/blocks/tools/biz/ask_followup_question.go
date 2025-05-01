@@ -22,8 +22,18 @@ func (s *AskFollowupQuestionTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *AskFollowupQuestionTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *AskFollowupQuestionTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	question, ok := param["question"].(string)
+	if !ok || question == "" {
+		return nil, fmt.Errorf("缺少或无效的问题参数")
+	}
+
+	ret, err := AskFollowupQuestion(question)
+	if err != nil {
+		return nil, fmt.Errorf("提问失败: %v", err)
+	}
+
+	return ret, nil
 }
 
 /*
@@ -50,7 +60,7 @@ Please specify which API endpoint you want to test
 */
 
 // AskFollowupQuestion 实现ask_followup_question工具功能
-func (s *Tools) AskFollowupQuestion(question string, followUp []string) (string, error) {
+func AskFollowupQuestion(question string, followUp []string) (string, error) {
 	// 返回问题和建议的回答
 	result := fmt.Sprintf("Question: %s\nSuggested answers:\n", question)
 	for i, suggestion := range followUp {

@@ -3,23 +3,16 @@ package biz
 import (
 	"testing"
 
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/task"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSwitchMode(t *testing.T) {
-	// 创建一个Tool实例用于测试
-	eventHub := event.NewHub(100)
-	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine, nil)
-
 	// 测试用例1：有理由的模式切换
 	modeSlug1 := "code"
 	reason1 := "Need to make code changes"
 	expectedResult1 := "Switching to mode 'code' because: Need to make code changes"
 
-	result1, err := tool.SwitchMode(modeSlug1, reason1)
+	result1, err := SwitchMode(modeSlug1, reason1)
 
 	// 验证结果
 	assert.NoError(t, err, "模式切换应该成功")
@@ -30,7 +23,7 @@ func TestSwitchMode(t *testing.T) {
 	reason2 := ""
 	expectedResult2 := "Switching to mode 'ask'"
 
-	result2, err := tool.SwitchMode(modeSlug2, reason2)
+	result2, err := SwitchMode(modeSlug2, reason2)
 
 	// 验证结果
 	assert.NoError(t, err, "无理由的模式切换应该成功")
@@ -41,7 +34,7 @@ func TestSwitchMode(t *testing.T) {
 	reason3 := "Testing empty mode"
 	expectedResult3 := "Switching to mode '' because: Testing empty mode"
 
-	result3, err := tool.SwitchMode(modeSlug3, reason3)
+	result3, err := SwitchMode(modeSlug3, reason3)
 
 	// 验证结果
 	assert.NoError(t, err, "空模式名应该不会导致错误")
@@ -52,7 +45,7 @@ func TestSwitchMode(t *testing.T) {
 	reason4 := "Special chars: !@#$%^&*()"
 	expectedResult4 := "Switching to mode 'special!@#' because: Special chars: !@#$%^&*()"
 
-	result4, err := tool.SwitchMode(modeSlug4, reason4)
+	result4, err := SwitchMode(modeSlug4, reason4)
 
 	// 验证结果
 	assert.NoError(t, err, "特殊字符应该不会导致错误")

@@ -22,8 +22,28 @@ func (s *UseMcpToolTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *UseMcpToolTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *UseMcpToolTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	serverName, ok := param["server_name"].(string)
+	if !ok || serverName == "" {
+		return fmt.Errorf("缺少或无效的服务器名称参数")
+	}
+
+	toolName, ok := param["tool_name"].(string)
+	if !ok || toolName == "" {
+		return fmt.Errorf("缺少或无效的工具名称参数")
+	}
+
+	arguments, ok := param["arguments"].(string)
+	if !ok || arguments == "" {
+		return fmt.Errorf("缺少或无效的参数")
+	}
+
+	_, err = UseMcpTool(serverName, toolName, json.RawMessage(arguments))
+	if err != nil {
+		return fmt.Errorf("使用MCP工具失败: %v", err)
+	}
+
+	return nil
 }
 
 /*
@@ -66,7 +86,7 @@ Example 示例: Requesting to use an MCP tool 请求使用MCP工具
 */
 
 // UseMcpTool 实现use_mcp_tool工具功能
-func (s *Tools) UseMcpTool(serverName, toolName string, arguments json.RawMessage) (string, error) {
+func UseMcpTool(serverName, toolName string, arguments json.RawMessage) (string, error) {
 	// 这里应该实现与MCP服务器的通信逻辑
 	// 由于这是一个模拟实现，我们只返回一个示例响应
 	return fmt.Sprintf("Executed tool '%s' on server '%s' with arguments: %s", toolName, serverName, string(arguments)), nil

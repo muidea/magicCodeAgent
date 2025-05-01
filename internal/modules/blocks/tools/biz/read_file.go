@@ -28,7 +28,7 @@ func (s *ReadFileTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *ReadFileTool) Execute(param imbtc.ToolParam) (err error) {
+func (s *ReadFileTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	return
 }
 
@@ -81,7 +81,7 @@ Note: When both start_line and end_line are provided, this tool efficiently stre
 注意：当同时提供start_line和end_line时，此工具会高效地仅流式传输请求的行，使其适合处理大型文件（如日志、CSV文件和其他大型数据集）而不会出现内存问题。
 */
 // ReadFile 读取文件内容
-func (s *Tools) ReadFile(path string, startLine, endLine int) (string, error) {
+func ReadFile(path string, startLine, endLine int) (string, error) {
 	fullPath := filepath.Join(WorkspaceDir, path)
 	file, err := os.Open(fullPath)
 	if err != nil {

@@ -1,6 +1,8 @@
 package biz
 
 import (
+	"fmt"
+
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -19,8 +21,18 @@ func (s *FetchInstructionsTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *FetchInstructionsTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *FetchInstructionsTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	task, ok := param["task"].(string)
+	if !ok || task == "" {
+		return fmt.Errorf("缺少或无效的任务类型参数")
+	}
+
+	_, err = s.FetchInstructions(task)
+	if err != nil {
+		return fmt.Errorf("获取指令失败: %v", err)
+	}
+
+	return nil
 }
 
 /*
@@ -42,7 +54,7 @@ Example: Requesting instructions to create an MCP Server
 
 // FetchInstructions 实现fetch_instructions工具功能
 // FetchInstructions function implements the fetch_instructions tool functionality
-func (s *Tools) FetchInstructions(task string) (string, error) {
+func FetchInstructions(task string) (string, error) {
 	// 根据任务类型返回相应的指令
 	switch task {
 	case "create_mcp_server":

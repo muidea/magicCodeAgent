@@ -5,17 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/task"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSearchAndReplace(t *testing.T) {
-	// 创建一个Tool实例用于测试
-	eventHub := event.NewHub(100)
-	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine, nil)
-
 	// 保存原始的WorkspaceDir
 	originalWorkspaceDir := WorkspaceDir
 	// 临时修改WorkspaceDir为测试目录
@@ -46,7 +39,7 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = tool.SearchAndReplace("test_file.txt", op1)
+	err = SearchAndReplace("test_file.txt", op1)
 	assert.NoError(t, err, "简单字符串替换应该成功")
 
 	// 验证替换结果
@@ -77,7 +70,7 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = tool.SearchAndReplace("test_file.txt", op2)
+	err = SearchAndReplace("test_file.txt", op2)
 	assert.NoError(t, err, "指定行范围的替换应该成功")
 
 	// 验证替换结果
@@ -109,7 +102,7 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = tool.SearchAndReplace("test_file.txt", op3)
+	err = SearchAndReplace("test_file.txt", op3)
 	assert.NoError(t, err, "使用正则表达式替换应该成功")
 
 	// 验证替换结果
@@ -142,7 +135,7 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = tool.SearchAndReplace("test_file.txt", op4)
+	err = SearchAndReplace("test_file.txt", op4)
 	assert.NoError(t, err, "多个替换操作应该成功")
 
 	// 验证替换结果
@@ -167,6 +160,6 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = tool.SearchAndReplace("nonexistent_file.txt", op5)
+	err = SearchAndReplace("nonexistent_file.txt", op5)
 	assert.Error(t, err, "替换不存在的文件应该返回错误")
 }

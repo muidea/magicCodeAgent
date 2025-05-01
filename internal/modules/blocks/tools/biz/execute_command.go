@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"fmt"
 	"os/exec"
 	"path/filepath"
 
@@ -22,8 +23,29 @@ func (s *ExecuteCommandTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *ExecuteCommandTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *ExecuteCommandTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	command, ok := param["command"].(string)
+	if !ok || command == "" {
+		return nil, fmt.Errorf("缺少或无效的命令参数")
+	}
+
+	// 获取参数列表
+	var args []string
+	if argsParam, ok := param["args"].([]interface{}); ok {
+		for _, arg := range argsParam {
+			if strArg, ok := arg.(string); ok {
+				args = append(args, strArg)
+			}
+		}
+	}
+
+	cwd, _ := param["cwd"].(string)
+	output, err := ExecuteCommand(command, args, cwd)
+	if err != nil {
+		return nil, fmt.Errorf("执行命令失败: %v", err)
+	}
+
+	return output, nil
 }
 
 /*
@@ -57,7 +79,7 @@ Example: Requesting to execute ls in a specific directory if directed
 */
 
 // ExecuteCommand 实现execute_command工具功能
-func (s *Tools) ExecuteCommand(command string, args []string, cwd string) (string, error) {
+func ExecuteCommand(command string, args []string, cwd string) (string, error) {
 	cmd := exec.Command(command, args...)
 
 	if cwd != "" {

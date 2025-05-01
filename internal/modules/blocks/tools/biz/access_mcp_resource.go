@@ -21,8 +21,23 @@ func (s *AccessMcpResourceTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *AccessMcpResourceTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *AccessMcpResourceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	serverName, ok := param["server_name"].(string)
+	if !ok || serverName == "" {
+		return nil, fmt.Errorf("缺少或无效的服务器名称参数")
+	}
+
+	uri, ok := param["uri"].(string)
+	if !ok || uri == "" {
+		return nil, fmt.Errorf("缺少或无效的URI参数")
+	}
+
+	ret, err := AccessMcpResource(serverName, uri)
+	if err != nil {
+		return nil, fmt.Errorf("访问MCP资源失败: %v", err)
+	}
+
+	return ret, nil
 }
 
 /*
@@ -50,7 +65,7 @@ Usage:
 
 // AccessMcpResource 实现access_mcp_resource工具功能
 // AccessMcpResource function implements the access_mcp_resource tool functionality
-func (s *Tools) AccessMcpResource(serverName, uri string) (string, error) {
+func AccessMcpResource(serverName, uri string) (string, error) {
 	// 这里应该实现与MCP服务器的资源访问逻辑
 	// 由于这是一个模拟实现，我们只返回一个示例响应
 	return fmt.Sprintf("Accessed resource '%s' on server '%s'", uri, serverName), nil

@@ -5,17 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/task"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAskFollowupQuestion(t *testing.T) {
-	// 创建一个Tool实例用于测试
-	eventHub := event.NewHub(100)
-	backgroundRoutine := task.NewBackgroundRoutine(100)
-	tool := New(eventHub, backgroundRoutine, nil)
-
 	// 测试用例1：正常情况 - 多个建议答案
 	question := "What is the path to the frontend-config.json file?"
 	followUp := []string{
@@ -24,7 +17,7 @@ func TestAskFollowupQuestion(t *testing.T) {
 		"./frontend-config.json",
 	}
 
-	result, err := tool.AskFollowupQuestion(question, followUp)
+	result, err := AskFollowupQuestion(question, followUp)
 
 	// 验证结果
 	assert.NoError(t, err, "应该没有错误")
@@ -38,7 +31,7 @@ func TestAskFollowupQuestion(t *testing.T) {
 	emptyQuestion := ""
 	followUp2 := []string{"Answer 1", "Answer 2"}
 
-	result2, err2 := tool.AskFollowupQuestion(emptyQuestion, followUp2)
+	result2, err2 := AskFollowupQuestion(emptyQuestion, followUp2)
 
 	// 验证结果
 	assert.NoError(t, err2, "空问题应该不会导致错误")
@@ -51,7 +44,7 @@ func TestAskFollowupQuestion(t *testing.T) {
 	question3 := "What is your name?"
 	emptyFollowUp := []string{}
 
-	result3, err3 := tool.AskFollowupQuestion(question3, emptyFollowUp)
+	result3, err3 := AskFollowupQuestion(question3, emptyFollowUp)
 
 	// 验证结果
 	assert.NoError(t, err3, "空建议答案列表应该不会导致错误")
@@ -66,7 +59,7 @@ func TestAskFollowupQuestion(t *testing.T) {
 		"Python because of its simplicity and readability",
 	}
 
-	result4, err4 := tool.AskFollowupQuestion(question4, followUp4)
+	result4, err4 := AskFollowupQuestion(question4, followUp4)
 
 	// 验证结果
 	assert.NoError(t, err4, "特殊字符应该不会导致错误")
@@ -79,7 +72,7 @@ func TestAskFollowupQuestion(t *testing.T) {
 	question5 := "Simple question?"
 	followUp5 := []string{"Answer A", "Answer B"}
 
-	result5, err5 := tool.AskFollowupQuestion(question5, followUp5)
+	result5, err5 := AskFollowupQuestion(question5, followUp5)
 
 	// 验证结果
 	assert.NoError(t, err5, "应该没有错误")

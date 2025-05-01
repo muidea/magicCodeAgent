@@ -21,8 +21,18 @@ func (s *AttemptCompletionTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *AttemptCompletionTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *AttemptCompletionTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	result, ok := param["result"].(string)
+	if !ok || result == "" {
+		return fmt.Errorf("缺少或无效的结果参数")
+	}
+
+	command, _ := param["command"].(string)
+	if err = AttemptCompletion(result, command); err != nil {
+		return fmt.Errorf("尝试完成任务失败: %v", err)
+	}
+
+	return nil
 }
 
 /*
@@ -65,7 +75,7 @@ I've updated the CSS
 */
 
 // AttemptCompletion 实现attempt_completion工具功能
-func (s *Tools) AttemptCompletion(result, command string) (string, error) {
+func AttemptCompletion(result, command string) (string, error) {
 	// 返回完成结果和可选的命令
 	if command != "" {
 		return fmt.Sprintf("Result: %s\nCommand: %s", result, command), nil

@@ -10,10 +10,11 @@ const ToolsModule = "/internal/modules/blocks/tools"
 const ToolsPromptsBasePath = "assets/template/prompts/tools"
 
 type ToolParam map[string]any
+type ToolResult []byte
 
 type Tool interface {
 	iipc.Prompts
-	Execute(param ToolParam) error
+	Execute(param ToolParam) (ToolResult, error)
 }
 
 func ReadToolsPrompts(toolName string) (ret string, err error) {

@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -25,8 +26,18 @@ func (s *ListCodeDefinitionNamesTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *ListCodeDefinitionNamesTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *ListCodeDefinitionNamesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		return nil, fmt.Errorf("缺少或无效的路径参数")
+	}
+
+	result, err := ListCodeDefinitionNames(path)
+	if err != nil {
+		return nil, fmt.Errorf("列出代码定义名称失败: %v", err)
+	}
+
+	return result, nil
 }
 
 /*
@@ -65,7 +76,7 @@ Examples:
 
 // ListCodeDefinitionNames 实现list_code_definition_names工具功能
 // ListCodeDefinitionNames function implements the list_code_definition_names tool functionality
-func (s *Tools) ListCodeDefinitionNames(path string) ([]string, error) {
+func ListCodeDefinitionNames(path string) ([]string, error) {
 	fullPath := filepath.Join(WorkspaceDir, path)
 	var definitions []string
 

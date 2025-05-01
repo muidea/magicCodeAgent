@@ -1,6 +1,8 @@
 package biz
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,8 +26,41 @@ func (s *SearchAndReplaceTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *SearchAndReplaceTool) Execute(param imbtc.ToolParam) (err error) {
-	return
+func (s *SearchAndReplaceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		return fmt.Errorf("缺少或无效的文件路径参数")
+	}
+
+	operations, ok := param["operations"].(string)
+	if !ok || operations == "" {
+		return fmt.Errorf("缺少或无效的操作参数")
+	}
+
+	var ops []struct {
+		Search     string `json:"search"`
+		Replace    string `json:"replace"`
+		StartLine  int    `json:"start_line"`
+		EndLine    int    `json:"end_line"`
+		UseRegex   bool   `json:"use_regex"`
+		IgnoreCase bool   `json:"ignore_case"`
+		RegexFlags string `json:"regex_flags"`
+	}
+
+	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
+		return fmt.Errorf("解析操作参数失败: %v", err)
+	}
+
+	if len(ops) == 0 {
+		return fmt.Errorf("缺少有效的操作")
+	}
+
+	err = s.SearchAndReplace(path, ops)
+	if err != nil {
+		return fmt.Errorf("搜索替换失败: %v", err)
+	}
+
+	return nil
 }
 
 /*
@@ -82,7 +117,7 @@ Example: Replace all occurrences of \"old\" with \"new\" using regex
 */
 
 // SearchAndReplace 实现search_and_replace工具功能
-func (s *Tools) SearchAndReplace(path string, operations []struct {
+func SearchAndReplace(path string, operations []struct {
 	Search     string `json:"search"`
 	Replace    string `json:"replace"`
 	StartLine  int    `json:"start_line"`

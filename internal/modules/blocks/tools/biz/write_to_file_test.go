@@ -29,7 +29,7 @@ func TestWriteToFile(t *testing.T) {
 	content := "Hello, World!\nThis is a test file.\nLine 3"
 	lineCount := 3
 
-	err := tool.WriteToFile(filePath, content, lineCount)
+	err := WriteToFile(filePath, content, lineCount)
 	assert.NoError(t, err, "写入新文件应该成功")
 
 	// 验证文件内容
@@ -42,7 +42,7 @@ func TestWriteToFile(t *testing.T) {
 	newContent := "This is new content.\nReplacing the old content."
 	newLineCount := 2
 
-	err = tool.WriteToFile(filePath, newContent, newLineCount)
+	err = WriteToFile(filePath, newContent, newLineCount)
 	assert.NoError(t, err, "覆盖现有文件应该成功")
 
 	// 验证文件内容已更新
@@ -55,7 +55,7 @@ func TestWriteToFile(t *testing.T) {
 	nestedContent := "Content in nested directory"
 	nestedLineCount := 1
 
-	err = tool.WriteToFile(nestedFilePath, nestedContent, nestedLineCount)
+	err = WriteToFile(nestedFilePath, nestedContent, nestedLineCount)
 	assert.NoError(t, err, "写入嵌套目录中的文件应该成功")
 
 	// 验证嵌套目录和文件已创建
@@ -69,7 +69,7 @@ func TestWriteToFile(t *testing.T) {
 	emptyContent := ""
 	emptyLineCount := 0
 
-	err = tool.WriteToFile(emptyFilePath, emptyContent, emptyLineCount)
+	err = WriteToFile(emptyFilePath, emptyContent, emptyLineCount)
 	assert.NoError(t, err, "写入空内容应该成功")
 
 	// 验证空文件已创建
@@ -83,7 +83,7 @@ func TestWriteToFile(t *testing.T) {
 	specialContent := "Line with special chars: !@#$%^&*()\nUnicode: 你好，世界\nTab:\tIndented"
 	specialLineCount := 3
 
-	err = tool.WriteToFile(specialFilePath, specialContent, specialLineCount)
+	err = WriteToFile(specialFilePath, specialContent, specialLineCount)
 	assert.NoError(t, err, "写入包含特殊字符的内容应该成功")
 
 	// 验证特殊字符文件内容

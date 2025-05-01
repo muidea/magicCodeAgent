@@ -70,7 +70,7 @@ func (s *Tools) Run() (err *cd.Error) {
 // 执行函数是xml的root节点名
 // 执行函数的参数是root的子节点及子节点的值
 // 参照示例参见各个工具函数对应的注释信息
-func (s *Tools) parseParamContent(content string) (ret string, param map[string]any, err error) {
+func parseParamContent(content string) (ret string, param map[string]any, err error) {
 	// 解析XML内容
 	decoder := xml.NewDecoder(strings.NewReader(content))
 	param = make(map[string]any)
