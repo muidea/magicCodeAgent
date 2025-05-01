@@ -11,10 +11,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type SearchAndReplace struct{}
+type SearchAndReplaceTool struct{}
 
-func (s *SearchAndReplace) Name() string { return "search_and_replace" }
-func (s *SearchAndReplace) Prompts() string {
+func (s *SearchAndReplaceTool) Name() string { return "search_and_replace" }
+func (s *SearchAndReplaceTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -24,7 +24,7 @@ func (s *SearchAndReplace) Prompts() string {
 	return promptsVal
 }
 
-func (s *SearchAndReplace) Execute(param imbtc.ToolParam) (err error) {
+func (s *SearchAndReplaceTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

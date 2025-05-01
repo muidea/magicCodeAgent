@@ -9,10 +9,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type ExecuteCommand struct{}
+type ExecuteCommandTool struct{}
 
-func (s *ExecuteCommand) Name() string { return "execute_command" }
-func (s *ExecuteCommand) Prompts() string {
+func (s *ExecuteCommandTool) Name() string { return "execute_command" }
+func (s *ExecuteCommandTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -22,7 +22,7 @@ func (s *ExecuteCommand) Prompts() string {
 	return promptsVal
 }
 
-func (s *ExecuteCommand) Execute(param imbtc.ToolParam) (err error) {
+func (s *ExecuteCommandTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

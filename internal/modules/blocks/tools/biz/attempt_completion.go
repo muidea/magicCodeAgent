@@ -8,10 +8,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type AttemptCompletion struct{}
+type AttemptCompletionTool struct{}
 
-func (s *AttemptCompletion) Name() string { return "attempt_completion" }
-func (s *AttemptCompletion) Prompts() string {
+func (s *AttemptCompletionTool) Name() string { return "attempt_completion" }
+func (s *AttemptCompletionTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -21,7 +21,7 @@ func (s *AttemptCompletion) Prompts() string {
 	return promptsVal
 }
 
-func (s *AttemptCompletion) Execute(param imbtc.ToolParam) (err error) {
+func (s *AttemptCompletionTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

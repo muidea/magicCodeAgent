@@ -9,10 +9,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type WriteToFile struct{}
+type WriteToFileTool struct{}
 
-func (s *WriteToFile) Name() string { return "write_to_file" }
-func (s *WriteToFile) Prompts() string {
+func (s *WriteToFileTool) Name() string { return "write_to_file" }
+func (s *WriteToFileTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -22,7 +22,7 @@ func (s *WriteToFile) Prompts() string {
 	return promptsVal
 }
 
-func (s *WriteToFile) Execute(param imbtc.ToolParam) (err error) {
+func (s *WriteToFileTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

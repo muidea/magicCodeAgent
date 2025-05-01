@@ -8,10 +8,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type AccessMcpResource struct{}
+type AccessMcpResourceTool struct{}
 
-func (s *AccessMcpResource) Name() string { return "access_mcp_resource" }
-func (s *AccessMcpResource) Prompts() string {
+func (s *AccessMcpResourceTool) Name() string { return "access_mcp_resource" }
+func (s *AccessMcpResourceTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -21,7 +21,7 @@ func (s *AccessMcpResource) Prompts() string {
 	return promptsVal
 }
 
-func (s *AccessMcpResource) Execute(param imbtc.ToolParam) (err error) {
+func (s *AccessMcpResourceTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

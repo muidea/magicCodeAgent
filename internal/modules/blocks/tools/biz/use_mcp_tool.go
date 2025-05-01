@@ -9,10 +9,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type UseMcpTool struct{}
+type UseMcpToolTool struct{}
 
-func (s *UseMcpTool) Name() string { return "use_mcp_tool" }
-func (s *UseMcpTool) Prompts() string {
+func (s *UseMcpToolTool) Name() string { return "use_mcp_tool" }
+func (s *UseMcpToolTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -22,7 +22,7 @@ func (s *UseMcpTool) Prompts() string {
 	return promptsVal
 }
 
-func (s *UseMcpTool) Execute(param imbtc.ToolParam) (err error) {
+func (s *UseMcpToolTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

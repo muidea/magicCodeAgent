@@ -9,10 +9,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type ListFiles struct{}
+type ListFilesTool struct{}
 
-func (s *ListFiles) Name() string { return "list_files" }
-func (s *ListFiles) Prompts() string {
+func (s *ListFilesTool) Name() string { return "list_files" }
+func (s *ListFilesTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -22,7 +22,7 @@ func (s *ListFiles) Prompts() string {
 	return promptsVal
 }
 
-func (s *ListFiles) Execute(param imbtc.ToolParam) (err error) {
+func (s *ListFilesTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

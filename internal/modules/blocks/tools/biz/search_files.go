@@ -10,10 +10,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type SearchFiles struct{}
+type SearchFilesTool struct{}
 
-func (s *SearchFiles) Name() string { return "search_files" }
-func (s *SearchFiles) Prompts() string {
+func (s *SearchFilesTool) Name() string { return "search_files" }
+func (s *SearchFilesTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -23,7 +23,7 @@ func (s *SearchFiles) Prompts() string {
 	return promptsVal
 }
 
-func (s *SearchFiles) Execute(param imbtc.ToolParam) (err error) {
+func (s *SearchFilesTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

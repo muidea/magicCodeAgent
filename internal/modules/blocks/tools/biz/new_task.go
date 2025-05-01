@@ -8,10 +8,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type NewTask struct{}
+type NewTaskTool struct{}
 
-func (s *NewTask) Name() string { return "new_task" }
-func (s *NewTask) Prompts() string {
+func (s *NewTaskTool) Name() string { return "new_task" }
+func (s *NewTaskTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -21,7 +21,7 @@ func (s *NewTask) Prompts() string {
 	return promptsVal
 }
 
-func (s *NewTask) Execute(param imbtc.ToolParam) (err error) {
+func (s *NewTaskTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

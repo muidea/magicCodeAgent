@@ -12,13 +12,13 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type ReadFile struct{}
+type ReadFileTool struct{}
 
-func (s *ReadFile) Name() string {
+func (s *ReadFileTool) Name() string {
 	return "read_file"
 }
 
-func (s *ReadFile) Prompts() string {
+func (s *ReadFileTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -28,7 +28,7 @@ func (s *ReadFile) Prompts() string {
 	return promptsVal
 }
 
-func (s *ReadFile) Execute(param imbtc.ToolParam) (err error) {
+func (s *ReadFileTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

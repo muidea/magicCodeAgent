@@ -8,11 +8,11 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type AskFollowupQuestion struct{}
+type AskFollowupQuestionTool struct{}
 
-func (s *AskFollowupQuestion) Name() string { return "ask_followup_question" }
+func (s *AskFollowupQuestionTool) Name() string { return "ask_followup_question" }
 
-func (s *AskFollowupQuestion) Prompts() string {
+func (s *AskFollowupQuestionTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -22,7 +22,7 @@ func (s *AskFollowupQuestion) Prompts() string {
 	return promptsVal
 }
 
-func (s *AskFollowupQuestion) Execute(param imbtc.ToolParam) (err error) {
+func (s *AskFollowupQuestionTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

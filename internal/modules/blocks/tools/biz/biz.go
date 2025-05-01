@@ -39,22 +39,22 @@ func New(
 	}
 
 	if promptsRegistry != nil {
-		promptsRegistry.AddPrompts("tools", &ReadFile{})
-		promptsRegistry.AddPrompts("tools", &FetchInstructions{})
-		promptsRegistry.AddPrompts("tools", &SearchFiles{})
-		promptsRegistry.AddPrompts("tools", &ListFiles{})
-		promptsRegistry.AddPrompts("tools", &ListCodeDefinitionNames{})
-		promptsRegistry.AddPrompts("tools", &ApplyDiff{})
-		promptsRegistry.AddPrompts("tools", &WriteToFile{})
-		promptsRegistry.AddPrompts("tools", &InsertContent{})
-		promptsRegistry.AddPrompts("tools", &SearchAndReplace{})
-		promptsRegistry.AddPrompts("tools", &ExecuteCommand{})
-		promptsRegistry.AddPrompts("tools", &UseMcpTool{})
-		promptsRegistry.AddPrompts("tools", &AccessMcpResource{})
-		promptsRegistry.AddPrompts("tools", &AskFollowupQuestion{})
-		promptsRegistry.AddPrompts("tools", &AttemptCompletion{})
-		promptsRegistry.AddPrompts("tools", &SwitchMode{})
-		promptsRegistry.AddPrompts("tools", &NewTask{})
+		promptsRegistry.AddPrompts("tools", &ReadFileTool{})
+		promptsRegistry.AddPrompts("tools", &FetchInstructionsTool{})
+		promptsRegistry.AddPrompts("tools", &SearchFilesTool{})
+		promptsRegistry.AddPrompts("tools", &ListFilesTool{})
+		promptsRegistry.AddPrompts("tools", &ListCodeDefinitionNamesTool{})
+		promptsRegistry.AddPrompts("tools", &ApplyDiffTool{})
+		promptsRegistry.AddPrompts("tools", &WriteToFileTool{})
+		promptsRegistry.AddPrompts("tools", &InsertContentTool{})
+		promptsRegistry.AddPrompts("tools", &SearchAndReplaceTool{})
+		promptsRegistry.AddPrompts("tools", &ExecuteCommandTool{})
+		promptsRegistry.AddPrompts("tools", &UseMcpToolTool{})
+		promptsRegistry.AddPrompts("tools", &AccessMcpResourceTool{})
+		promptsRegistry.AddPrompts("tools", &AskFollowupQuestionTool{})
+		promptsRegistry.AddPrompts("tools", &AttemptCompletionTool{})
+		promptsRegistry.AddPrompts("tools", &SwitchModeTool{})
+		promptsRegistry.AddPrompts("tools", &NewTaskTool{})
 	}
 
 	return ptr

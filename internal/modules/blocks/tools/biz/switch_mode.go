@@ -8,10 +8,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type SwitchMode struct{}
+type SwitchModeTool struct{}
 
-func (s *SwitchMode) Name() string { return "switch_mode" }
-func (s *SwitchMode) Prompts() string {
+func (s *SwitchModeTool) Name() string { return "switch_mode" }
+func (s *SwitchModeTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -21,7 +21,7 @@ func (s *SwitchMode) Prompts() string {
 	return promptsVal
 }
 
-func (s *SwitchMode) Execute(param imbtc.ToolParam) (err error) {
+func (s *SwitchModeTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

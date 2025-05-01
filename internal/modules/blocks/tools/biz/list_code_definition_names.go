@@ -12,10 +12,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type ListCodeDefinitionNames struct{}
+type ListCodeDefinitionNamesTool struct{}
 
-func (s *ListCodeDefinitionNames) Name() string { return "list_code_definition_names" }
-func (s *ListCodeDefinitionNames) Prompts() string {
+func (s *ListCodeDefinitionNamesTool) Name() string { return "list_code_definition_names" }
+func (s *ListCodeDefinitionNamesTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -25,7 +25,7 @@ func (s *ListCodeDefinitionNames) Prompts() string {
 	return promptsVal
 }
 
-func (s *ListCodeDefinitionNames) Execute(param imbtc.ToolParam) (err error) {
+func (s *ListCodeDefinitionNamesTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

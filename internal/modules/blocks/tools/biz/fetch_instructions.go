@@ -6,10 +6,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type FetchInstructions struct{}
+type FetchInstructionsTool struct{}
 
-func (s *FetchInstructions) Name() string { return "fetch_instructions" }
-func (s *FetchInstructions) Prompts() string {
+func (s *FetchInstructionsTool) Name() string { return "fetch_instructions" }
+func (s *FetchInstructionsTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -19,7 +19,7 @@ func (s *FetchInstructions) Prompts() string {
 	return promptsVal
 }
 
-func (s *FetchInstructions) Execute(param imbtc.ToolParam) (err error) {
+func (s *FetchInstructionsTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 

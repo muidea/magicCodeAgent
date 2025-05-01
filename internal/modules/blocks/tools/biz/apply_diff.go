@@ -14,10 +14,10 @@ import (
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
-type ApplyDiff struct{}
+type ApplyDiffTool struct{}
 
-func (s *ApplyDiff) Name() string { return "apply_diff" }
-func (s *ApplyDiff) Prompts() string {
+func (s *ApplyDiffTool) Name() string { return "apply_diff" }
+func (s *ApplyDiffTool) Prompts() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -27,7 +27,7 @@ func (s *ApplyDiff) Prompts() string {
 	return promptsVal
 }
 
-func (s *ApplyDiff) Execute(param imbtc.ToolParam) (err error) {
+func (s *ApplyDiffTool) Execute(param imbtc.ToolParam) (err error) {
 	return
 }
 
