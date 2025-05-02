@@ -169,16 +169,23 @@ func (s *Station) UnbindObserver(observer Observer) {
 	}
 }
 
+func (s *Station) GetCurrentFlow() *models.Flow {
+	return s.localFlowManger.GetCurrentFlow()
+}
+
 func (s *Station) GetFlow(id string) *models.Flow {
 	return s.localFlowManger.GetFlow(id)
 }
 
-func (s *Station) GetFlowPath(id string) []*models.Flow {
-	return s.localFlowManger.GetFlowPath(id)
+func (s *Station) GetFlowPath(flowPtr *models.Flow) []*models.Flow {
+	return s.localFlowManger.GetFlowPath(flowPtr)
 }
 
 // 处理agent的sse数据流
 func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
+	curFlow := s.localFlowManger.GetCurrentFlow()
+	curFlow.AppendRecv(msgPtr)
+
 	s.localMessageCache.Add(msgPtr)
 	//log.Infof("DisposeRecvMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
@@ -189,7 +196,14 @@ func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 	}
 }
 
-func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo) {
+func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models.Flow) {
+	curFlow := s.localFlowManger.GetCurrentFlow()
+	if curFlow == nil {
+		s.localFlowManger.NewFlow(msgPtr, flowPtr)
+	} else {
+		curFlow.AppendSend(msgPtr)
+	}
+
 	s.localMessageCache.Add(msgPtr)
 	//log.Infof("DisposeSendMessage, :%v", msgPtr)
 	s.stationMutex.RLock()

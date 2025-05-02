@@ -85,13 +85,14 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 	}
 	stationPtr := curWorkspace.(*Station)
 
-	var flowPath []*models.Flow
+	var curFlow *models.Flow
 	flowIDVal := ctx.Value(common.FlowID{})
 	if flowIDVal != nil {
-		flowPath = stationPtr.GetFlowPath(flowIDVal.(string))
+		curFlow = stationPtr.GetFlow(flowIDVal.(string))
 	} else {
-		flowPath = stationPtr.GetFlowPath("")
+		curFlow = stationPtr.GetCurrentFlow()
 	}
+	flowPath := stationPtr.GetFlowPath(curFlow)
 
 	messageList := []*models.MessageItem{}
 	for _, flow := range flowPath {
@@ -105,11 +106,14 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 		Role:    common.User,
 		Content: param.Content,
 	}
-	stationPtr.DisposeSendMessage(&models.MessageInfo{
-		Item:       messageItem,
-		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		Workspace:  param.Workspace,
-	})
+	stationPtr.DisposeSendMessage(
+		&models.MessageInfo{
+			Item:       messageItem,
+			CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+			Workspace:  param.Workspace,
+		},
+		curFlow,
+	)
 
 	contentContext := context.WithValue(ctx, common.ContentSink{}, stationPtr)
 	messageList = append(messageList, messageItem)

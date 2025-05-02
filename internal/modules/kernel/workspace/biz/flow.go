@@ -1,6 +1,10 @@
 package biz
 
-import "github.com/muidea/magicCodeAgent/pkg/models"
+import (
+	"fmt"
+
+	"github.com/muidea/magicCodeAgent/pkg/models"
+)
 
 type FlowManager struct {
 	localFlows     []*models.Flow
@@ -12,6 +16,48 @@ func NewFlowManager() *FlowManager {
 		localFlows:     make([]*models.Flow, 0),
 		currentFlowPtr: nil,
 	}
+}
+
+func (s *FlowManager) newRootFlow(msgPtr *models.MessageInfo) {
+	flowPtr := &models.Flow{
+		Id:    fmt.Sprintf("flow_%d", len(s.localFlows)),
+		Title: msgPtr.Item.Content,
+		Message: []*models.MessagePair{
+			{
+				Send: msgPtr,
+			},
+		},
+		Status:    models.FLOW_STATUS_WAIT,
+		Parent:    nil,
+		Childrens: make([]*models.Flow, 0),
+	}
+
+	s.AppendFlow(flowPtr, nil)
+}
+
+func (s *FlowManager) NewFlow(msgPtr *models.MessageInfo, parentPtr *models.Flow) {
+	if parentPtr == nil {
+		parentPtr = s.currentFlowPtr
+	}
+
+	if parentPtr == nil {
+		s.newRootFlow(msgPtr)
+		return
+	}
+
+	flowPtr := &models.Flow{
+		Id:    fmt.Sprintf("%s_%d", parentPtr.Id, len(parentPtr.Childrens)),
+		Title: msgPtr.Item.Content,
+		Message: []*models.MessagePair{
+			{
+				Send: msgPtr,
+			},
+		},
+		Status: models.FLOW_STATUS_WAIT,
+		Parent: parentPtr,
+	}
+
+	s.AppendFlow(flowPtr, parentPtr)
 }
 
 func (s *FlowManager) GetCurrentFlow() *models.Flow {
@@ -32,15 +78,9 @@ func (s *FlowManager) GetFlow(flowID string) *models.Flow {
 	return nil
 }
 
-func (s *FlowManager) GetFlowPath(flowID string) []*models.Flow {
-	var flowPtr *models.Flow
-	if flowID == "" {
-		flowPtr = s.GetCurrentFlow()
-	} else {
-		flowPtr := s.GetFlow(flowID)
-		if flowPtr == nil {
-			return nil
-		}
+func (s *FlowManager) GetFlowPath(flowPtr *models.Flow) []*models.Flow {
+	if flowPtr == nil {
+		return nil
 	}
 
 	// 先收集所有节点
