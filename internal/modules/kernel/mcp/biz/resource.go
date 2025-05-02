@@ -28,11 +28,11 @@ const (
 	workspaceFile     = "file"
 
 	// 工作区清单
-	workspaceResourceName = "Workspace list"
+	workspaceResourceName = "Workspace_list"
 	// 工作区清单，查看当前设置的工作区清单
 	workspaceResourceDesc = "List all workspaces"
 	// 查询工作区文件清单
-	workspaceFileResourceName = "Workspace file list"
+	workspaceFileResourceName = "Workspace_file_list"
 	// 工作区文件清单，查看指定工作区文件清单
 	workspaceFileResourceDesc = "Workspace file list, view the list of files in the specified workspace"
 )
@@ -58,7 +58,7 @@ func (s *MCP) extractIDFromFileResourceContentURI(uri string) (ret string, err e
 		err = errors.New("invalid url")
 		return
 	}
-	if parts[6] != "file" || parts[4] != "workspace" {
+	if parts[6] != workspaceFileResourceName || parts[4] != workspaceResourceName {
 		log.Errorf("invalid url, url:%s", uri)
 		err = errors.New("invalid url")
 		return

@@ -14,7 +14,6 @@ func TestMessageSequenceCache(t *testing.T) {
 	// 测试Add和Size
 	for i := 0; i < 50; i++ {
 		cache.Add(&models.MessageInfo{
-			SN:         int64(i),
 			Item:       &models.MessageItem{Role: "user", Content: "test"},
 			CreateTime: time.Now().Format(time.RFC3339),
 		})
@@ -25,7 +24,7 @@ func TestMessageSequenceCache(t *testing.T) {
 	all := cache.GetAll()
 	assert.Equal(t, 50, len(all))
 	for i, msg := range all {
-		assert.Equal(t, int64(i), msg.SN)
+		assert.Equal(t, int64(i+1), msg.SN)
 	}
 
 	// 测试GetPage
@@ -34,7 +33,7 @@ func TestMessageSequenceCache(t *testing.T) {
 		page1, total := cache.GetPage(1, 10)
 		assert.Equal(t, 50, total)
 		assert.Equal(t, 10, len(page1))
-		assert.Equal(t, int64(0), page1[0].SN)
+		assert.Equal(t, int64(1), page1[0].SN)
 
 		// 最后一页不足
 		page5, _ := cache.GetPage(5, 10)
@@ -63,7 +62,6 @@ func TestMessageSequenceCacheConcurrent(t *testing.T) {
 		go func() {
 			for j := 0; j < 100; j++ {
 				cache.Add(&models.MessageInfo{
-					SN:         int64(j),
 					Item:       &models.MessageItem{Role: "user", Content: "test"},
 					CreateTime: time.Now().Format(time.RFC3339),
 				})
