@@ -31,13 +31,16 @@ type Station struct {
 	observerList []Observer
 
 	localMessageCache *cache.MessageSequenceCache
+	localFlowManger   *FlowManager
 }
 
 func NewStation(workspacePtr *config.Workspace) *Station {
 	ret := &Station{
 		configPtr:         workspacePtr,
 		localMessageCache: cache.NewMessageSequenceCache(500),
+		localFlowManger:   NewFlowManager(),
 	}
+
 	return ret
 }
 
