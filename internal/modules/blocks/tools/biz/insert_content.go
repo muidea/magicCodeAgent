@@ -42,7 +42,7 @@ func (s *InsertContentTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, er
 		StartLine int    `json:"start_line"`
 		Content   string `json:"content"`
 	}
-	
+
 	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
 		return nil, fmt.Errorf("解析操作参数失败: %v", err)
 	}

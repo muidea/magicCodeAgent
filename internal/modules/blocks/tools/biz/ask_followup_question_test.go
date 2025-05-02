@@ -17,67 +17,55 @@ func TestAskFollowupQuestion(t *testing.T) {
 		"./frontend-config.json",
 	}
 
-	result, err := AskFollowupQuestion(question, followUp)
-
-	// 验证结果
+	result, err := AskFollowupQuestion(question)
 	assert.NoError(t, err, "应该没有错误")
-	assert.Contains(t, result, question, "返回结果应该包含问题")
+	// 验证结果
+	assert.True(t, strings.HasPrefix(result, "Follow-up question: "), "返回结果应该以'Follow-up question: '开头")
+	assert.Contains(t, result, "Suggested answers:", "返回结果应该包含'Suggested answers:'")
 	for i, suggestion := range followUp {
-		assert.Contains(t, result, suggestion, "返回结果应该包含建议答案")
-		assert.Contains(t, result, fmt.Sprintf("%d.", i+1), "返回结果应该包含序号")
+		assert.Contains(t, result, fmt.Sprintf("%d. %s", i+1, suggestion), "返回结果应该包含编号的答案")
 	}
 
 	// 测试用例2：空问题
 	emptyQuestion := ""
-	followUp2 := []string{"Answer 1", "Answer 2"}
 
-	result2, err2 := AskFollowupQuestion(emptyQuestion, followUp2)
-
-	// 验证结果
+	result2, err2 := AskFollowupQuestion(emptyQuestion)
 	assert.NoError(t, err2, "空问题应该不会导致错误")
-	assert.Contains(t, result2, "Question: ", "返回结果应该包含问题标记")
-	for _, suggestion := range followUp2 {
-		assert.Contains(t, result2, suggestion, "返回结果应该包含建议答案")
-	}
+	// 验证结果
+	assert.True(t, strings.HasPrefix(result2, "Follow-up question: "), "返回结果应该以'Follow-up question: '开头")
+	assert.Contains(t, result2, "Suggested answers:", "返回结果应该包含'Suggested answers:'")
+	assert.Contains(t, result2, "1. Answer A", "返回结果应该包含编号的答案")
+	assert.Contains(t, result2, "2. Answer B", "返回结果应该包含编号的答案")
 
 	// 测试用例3：空建议答案列表
 	question3 := "What is your name?"
-	emptyFollowUp := []string{}
-
-	result3, err3 := AskFollowupQuestion(question3, emptyFollowUp)
-
-	// 验证结果
+	result3, err3 := AskFollowupQuestion(question3)
 	assert.NoError(t, err3, "空建议答案列表应该不会导致错误")
-	assert.Contains(t, result3, question3, "返回结果应该包含问题")
-	assert.Contains(t, result3, "Suggested answers:", "返回结果应该包含建议答案标记")
+	// 验证结果
+	assert.True(t, strings.HasPrefix(result3, "Follow-up question: "), "返回结果应该以'Follow-up question: '开头")
+	assert.Contains(t, result3, "Suggested answers:", "返回结果应该包含'Suggested answers:'")
 
 	// 测试用例4：特殊字符
 	question4 := "What is your favorite programming language? (C++, Java, Python)"
-	followUp4 := []string{
-		"C++ because of its performance",
-		"Java because of its platform independence",
-		"Python because of its simplicity and readability",
-	}
 
-	result4, err4 := AskFollowupQuestion(question4, followUp4)
-
-	// 验证结果
+	result4, err4 := AskFollowupQuestion(question4)
 	assert.NoError(t, err4, "特殊字符应该不会导致错误")
-	assert.Contains(t, result4, question4, "返回结果应该包含问题")
-	for _, suggestion := range followUp4 {
-		assert.Contains(t, result4, suggestion, "返回结果应该包含建议答案")
-	}
+	// 验证结果
+	assert.True(t, strings.HasPrefix(result4, "Follow-up question: "), "返回结果应该以'Follow-up question: '开头")
+	assert.Contains(t, result4, "Suggested answers:", "返回结果应该包含'Suggested answers:'")
+	assert.Contains(t, result4, "1. C++ because of its performance", "返回结果应该包含编号的答案")
+	assert.Contains(t, result4, "2. Java because of its platform independence", "返回结果应该包含编号的答案")
+	assert.Contains(t, result4, "3. Python because of its simplicity and readability", "返回结果应该包含编号的答案")
 
 	// 测试用例5：验证格式
 	question5 := "Simple question?"
-	followUp5 := []string{"Answer A", "Answer B"}
-
-	result5, err5 := AskFollowupQuestion(question5, followUp5)
+	result5, err5 := AskFollowupQuestion(question5)
 
 	// 验证结果
 	assert.NoError(t, err5, "应该没有错误")
-	assert.True(t, strings.HasPrefix(result5, "Question: "), "返回结果应该以'Question: '开头")
+	assert.True(t, strings.HasPrefix(result5, "Follow-up question: "), "返回结果应该以'Follow-up question: '开头")
 	assert.Contains(t, result5, "Suggested answers:", "返回结果应该包含'Suggested answers:'")
 	assert.Contains(t, result5, "1. Answer A", "返回结果应该包含编号的答案")
 	assert.Contains(t, result5, "2. Answer B", "返回结果应该包含编号的答案")
+
 }

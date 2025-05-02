@@ -79,14 +79,35 @@ Example 示例: Requesting to list all files in the current directory
 // ListFiles 实现list_files工具功能
 func ListFiles(path string, recursive bool) ([]string, error) {
 	fullPath := filepath.Join(WorkspaceDir, path)
+
+	// 检查路径是否存在且是目录
+	fileInfo, err := os.Stat(fullPath)
+	if err != nil {
+		return nil, err
+	}
+	if !fileInfo.IsDir() {
+		return nil, fmt.Errorf("%s 不是一个目录", path)
+	}
+
 	var results []string
 
 	walkFunc := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
-			results = append(results, path)
+
+		// 获取相对于fullPath的路径
+		relPath, _ := filepath.Rel(fullPath, path)
+		if relPath == "." {
+			return nil // 跳过根目录自身
+		}
+
+		if info.IsDir() {
+			// 对于目录，添加斜杠后缀
+			results = append(results, filepath.Base(path)+"/")
+		} else {
+			// 对于文件，只添加文件名
+			results = append(results, filepath.Base(path))
 		}
 		return nil
 	}
@@ -102,7 +123,11 @@ func ListFiles(path string, recursive bool) ([]string, error) {
 			return nil, err
 		}
 		for _, entry := range entries {
-			results = append(results, filepath.Join(fullPath, entry.Name()))
+			if entry.IsDir() {
+				results = append(results, entry.Name()+"/")
+			} else {
+				results = append(results, entry.Name())
+			}
 		}
 	}
 

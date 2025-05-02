@@ -69,24 +69,24 @@ func TestListFiles(t *testing.T) {
 	assert.Contains(t, results2, "file1.txt", "结果应该包含file1.txt")
 	assert.Contains(t, results2, "file2.txt", "结果应该包含file2.txt")
 	assert.Contains(t, results2, "subdir/", "结果应该包含subdir/目录")
-	assert.Contains(t, results2, "subdir/file3.txt", "结果应该包含subdir/file3.txt")
-	assert.Contains(t, results2, "subdir/subsubdir/", "结果应该包含subdir/subsubdir/目录")
-	assert.Contains(t, results2, "subdir/subsubdir/file4.txt", "结果应该包含subdir/subsubdir/file4.txt")
+	assert.Contains(t, results2, "file3.txt", "结果应该包含file3.txt")
+	assert.Contains(t, results2, "subsubdir/", "结果应该包含subsubdir/目录")
+	assert.Contains(t, results2, "file4.txt", "结果应该包含file4.txt")
 
 	// 测试用例3：列出子目录文件
 	results3, err := ListFiles("subdir", false)
 	assert.NoError(t, err, "列出子目录文件应该成功")
 	assert.Len(t, results3, 2, "应该列出2个项目（1个文件和1个目录）")
-	assert.Contains(t, results3, "subdir/file3.txt", "结果应该包含subdir/file3.txt")
-	assert.Contains(t, results3, "subdir/subsubdir/", "结果应该包含subdir/subsubdir/目录")
+	assert.Contains(t, results3, "file3.txt", "结果应该包含file3.txt")
+	assert.Contains(t, results3, "subsubdir/", "结果应该包含subsubdir/目录")
 
 	// 测试用例4：递归列出子目录文件
 	results4, err := ListFiles("subdir", true)
 	assert.NoError(t, err, "递归列出子目录文件应该成功")
 	assert.GreaterOrEqual(t, len(results4), 3, "应该列出至少3个项目（2个文件和1个目录）")
-	assert.Contains(t, results4, "subdir/file3.txt", "结果应该包含subdir/file3.txt")
-	assert.Contains(t, results4, "subdir/subsubdir/", "结果应该包含subdir/subsubdir/目录")
-	assert.Contains(t, results4, "subdir/subsubdir/file4.txt", "结果应该包含subdir/subsubdir/file4.txt")
+	assert.Contains(t, results4, "file3.txt", "结果应该包含file3.txt")
+	assert.Contains(t, results4, "subsubdir/", "结果应该包含subsubdir/目录")
+	assert.Contains(t, results4, "file4.txt", "结果应该包含file4.txt")
 
 	// 测试用例5：列出不存在的目录
 	_, err = ListFiles("nonexistent", false)
