@@ -8,6 +8,12 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
+type FlowID struct{}
+
+func (s *FlowID) String() string {
+	return "FlowID"
+}
+
 type ContentSink struct{}
 
 func (s *ContentSink) String() string {

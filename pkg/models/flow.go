@@ -5,13 +5,18 @@ const (
 	FLOW_STATUS_FINISH
 )
 
+type MessagePair struct {
+	Send *MessageInfo `json:"send"`
+	Recv *MessageInfo `json:"recv"`
+}
+
 type Flow struct {
-	Id        string       `json:"id"`
-	Title     string       `json:"title"`
-	Message   *MessageInfo `json:"message"`
-	Status    int          `json:"status"`
-	Parent    *Flow        `json:"parent"`
-	Childrens []*Flow      `json:"childrens"`
+	Id        string         `json:"id"`
+	Title     string         `json:"title"`
+	Message   []*MessagePair `json:"message"`
+	Status    int            `json:"status"`
+	Parent    *Flow          `json:"parent"`
+	Childrens []*Flow        `json:"childrens"`
 }
 
 func (s *Flow) GetChildrens() []*Flow {

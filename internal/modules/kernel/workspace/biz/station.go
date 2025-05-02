@@ -169,6 +169,14 @@ func (s *Station) UnbindObserver(observer Observer) {
 	}
 }
 
+func (s *Station) GetFlow(id string) *models.Flow {
+	return s.localFlowManger.GetFlow(id)
+}
+
+func (s *Station) GetFlowPath(id string) []*models.Flow {
+	return s.localFlowManger.GetFlowPath(id)
+}
+
 // 处理agent的sse数据流
 func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 	s.localMessageCache.Add(msgPtr)

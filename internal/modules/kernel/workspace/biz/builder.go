@@ -83,12 +83,28 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 		log.Errorf("workspace:%s not found", param.Workspace)
 		return
 	}
+	stationPtr := curWorkspace.(*Station)
+
+	var flowPath []*models.Flow
+	flowIDVal := ctx.Value(common.FlowID{})
+	if flowIDVal != nil {
+		flowPath = stationPtr.GetFlowPath(flowIDVal.(string))
+	} else {
+		flowPath = stationPtr.GetFlowPath("")
+	}
+
+	messageList := []*models.MessageItem{}
+	for _, flow := range flowPath {
+		for _, message := range flow.Message {
+			messageList = append(messageList, message.Send.Item)
+			messageList = append(messageList, message.Recv.Item)
+		}
+	}
 
 	messageItem := &models.MessageItem{
 		Role:    common.User,
 		Content: param.Content,
 	}
-	stationPtr := curWorkspace.(*Station)
 	stationPtr.DisposeSendMessage(&models.MessageInfo{
 		Item:       messageItem,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -96,7 +112,7 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 	})
 
 	contentContext := context.WithValue(ctx, common.ContentSink{}, stationPtr)
-	messageList := []*models.MessageItem{messageItem}
+	messageList = append(messageList, messageItem)
 	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, messageList)
 	ev.SetData("context", contentContext)
 	ev.SetData("workspace", param.Workspace)
