@@ -8,10 +8,12 @@ import (
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
+	imkdc "github.com/muidea/magicCodeAgent/internal/modules/kernel/debug/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz/deepseek"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz/provider"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
@@ -167,10 +169,14 @@ func (s *LLM) UserBalance() (ret *imklc.UserBalanceResponse, err error) {
 }
 
 func (s *LLM) OnMessage(msgPtr *models.MessageInfo) {
-	s.appendMessage(msgPtr)
-}
+	appendEvent := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
+	appendResult := s.SendEvent(appendEvent)
+	appendVal, appendErr := appendResult.Get()
+	if appendErr != nil {
+		log.Errorf("append message failed: %v", appendVal)
+		return
+	}
 
-func (s *LLM) appendMessage(msgPtr *models.MessageInfo) {
-	ev := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
-	s.PostEvent(ev)
+	debugEvent := event.NewEvent(imkdc.DebugRealtimeMessage, s.ID(), imkdc.DebugModule, nil, appendVal)
+	s.PostEvent(debugEvent)
 }

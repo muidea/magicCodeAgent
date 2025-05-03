@@ -44,13 +44,13 @@ func (s *Tracer) appendMessage(ev event.Event, re event.Result) {
 		return
 	}
 
-	messagePtr, messageOK := msgVal.(*models.MessageInfo)
-	if !messageOK {
+	msgPtr, msgOK := msgVal.(*models.MessageInfo)
+	if !msgOK {
 		return
 	}
-	s.AppendMessage(messagePtr)
+	msgPtr = s.AppendMessage(msgPtr)
 	if re != nil {
-		re.Set(nil, nil)
+		re.Set(msgPtr, nil)
 	}
 }
 
@@ -69,8 +69,8 @@ func (s *Tracer) filterMessage(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Tracer) AppendMessage(msg *models.MessageInfo) {
-	s.messageInfoCache.Add(msg)
+func (s *Tracer) AppendMessage(msg *models.MessageInfo) *models.MessageInfo {
+	return s.messageInfoCache.Add(msg)
 }
 
 func (s *Tracer) FilterMessage(filter *common.MessageFilter) (ret []*models.MessageInfo, err *cd.Error) {

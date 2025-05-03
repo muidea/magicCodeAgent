@@ -42,16 +42,16 @@ func (s *Tools) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRouti
 		return
 	}
 
-	var promptsRegistryVal iipc.PromptsRegistry
-	var promptsRegistryErr *cd.Error
-	promptsRegistryVal, promptsRegistryErr = initator.GetEntity(iipc.PromptsInitator, promptsRegistryVal)
-	if promptsRegistryErr != nil {
-		err = promptsRegistryErr
-		log.Errorf("Tool setup failed, initator.GetEntity error:%s", promptsRegistryErr.Error())
+	var promptsRegistryHelperVal iipc.PromptsRegistryHeper
+	var promptsRegistryHelperErr *cd.Error
+	promptsRegistryHelperVal, promptsRegistryHelperErr = initator.GetEntity(iipc.PromptsInitator, promptsRegistryHelperVal)
+	if promptsRegistryHelperErr != nil {
+		err = promptsRegistryHelperErr
+		log.Errorf("Tool setup failed, initator.GetEntity error:%s", promptsRegistryHelperErr.Error())
 		return
 	}
 
-	s.bizPtr = biz.New(eventHub, backgroundRoutine, promptsRegistryVal)
+	s.bizPtr = biz.New(eventHub, backgroundRoutine, promptsRegistryHelperVal.GetPromptsRegistry())
 
 	s.servicePtr = service.New(routeRegistryHelperVal.GetRouteRegistry(), s.bizPtr)
 

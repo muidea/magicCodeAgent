@@ -37,9 +37,9 @@ func New(
 	}
 
 	if config.DebugFlag() {
-		ptr.SubscribeFunc(imkdc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
+		ptr.SubscribeFunc(imkdc.DebugRealtimeMessage, ptr.recordRealtimeMessage)
 
-		ptr.SubscribeFunc(imkdc.RecordHistoryMessage, ptr.recordHistoryMessage)
+		ptr.SubscribeFunc(imkdc.DebugHistoryMessage, ptr.recordHistoryMessage)
 	}
 
 	return ptr

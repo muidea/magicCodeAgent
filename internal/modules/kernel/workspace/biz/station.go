@@ -182,12 +182,13 @@ func (s *Station) GetFlowPath(flowPtr *models.Flow) []*models.Flow {
 }
 
 func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
+	msgPtr = s.localMessageCache.Add(msgPtr)
+
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	if curFlow != nil {
 		curFlow.AppendRecv(msgPtr)
 	}
 
-	s.localMessageCache.Add(msgPtr)
 	//log.Infof("DisposeRecvMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
@@ -198,6 +199,8 @@ func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 }
 
 func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models.Flow) {
+	msgPtr = s.localMessageCache.Add(msgPtr)
+
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	if curFlow == nil {
 		s.localFlowManger.NewFlow(msgPtr, flowPtr)
@@ -205,7 +208,6 @@ func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models
 		curFlow.AppendSend(msgPtr)
 	}
 
-	s.localMessageCache.Add(msgPtr)
 	//log.Infof("DisposeSendMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()

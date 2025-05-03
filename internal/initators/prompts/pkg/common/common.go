@@ -2,6 +2,10 @@ package common
 
 const PromptsInitator = "/internal/initators/prompts"
 
+type PromptsRegistryHeper interface {
+	GetPromptsRegistry() (ret PromptsRegistry)
+}
+
 type Prompts interface {
 	Name() string
 	Prompts() string

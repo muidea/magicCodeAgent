@@ -30,7 +30,7 @@ func NewMessageSequenceCache(maxSize int) *MessageSequenceCache {
 }
 
 // Add 添加消息到缓存
-func (c *MessageSequenceCache) Add(msg *models.MessageInfo) {
+func (c *MessageSequenceCache) Add(msg *models.MessageInfo) *models.MessageInfo {
 	msg.SN = atomic.AddInt64(&c.snVal, 1)
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -40,6 +40,7 @@ func (c *MessageSequenceCache) Add(msg *models.MessageInfo) {
 		c.messages = c.messages[1:]
 	}
 	c.messages = append(c.messages, msg)
+	return msg
 }
 
 // GetAll 获取所有缓存消息（按添加顺序）
