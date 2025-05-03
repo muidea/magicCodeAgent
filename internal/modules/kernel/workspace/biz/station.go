@@ -181,10 +181,11 @@ func (s *Station) GetFlowPath(flowPtr *models.Flow) []*models.Flow {
 	return s.localFlowManger.GetFlowPath(flowPtr)
 }
 
-// 处理agent的sse数据流
 func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 	curFlow := s.localFlowManger.GetCurrentFlow()
-	curFlow.AppendRecv(msgPtr)
+	if curFlow != nil {
+		curFlow.AppendRecv(msgPtr)
+	}
 
 	s.localMessageCache.Add(msgPtr)
 	//log.Infof("DisposeRecvMessage, :%v", msgPtr)
