@@ -20,6 +20,7 @@ import (
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/debug"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace"

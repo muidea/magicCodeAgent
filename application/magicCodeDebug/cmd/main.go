@@ -29,6 +29,7 @@ func main() {
 	fmt.Printf("magicCodeDebug V1.0\n")
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
 	config.SetEndpoint("magicCodeDebug")
+	config.EnableDebug()
 
 	if configFile != "" {
 		configErr := config.LoadConfig(configFile)

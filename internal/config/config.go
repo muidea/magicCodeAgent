@@ -21,6 +21,7 @@ var (
 	currentEndpoint   = "magicCodeAgent" // 默认端点名称
 	listenPort        = "8080"           // 默认监听端口
 	sysConfig         *Config            // 系统配置实例
+	debugWorkspace    = false
 )
 
 // 状态常量定义
@@ -58,6 +59,7 @@ type Config struct {
 	BindPort  string       `json:"bindPort"`  // 绑定端口
 	Workspace []*Workspace `json:"workspace"` // 工作区列表
 	Models    []*Model     `json:"models"`    // AI模型列表
+	DebugFlag bool         `json:"debugFlag"`
 }
 
 // init 初始化当前工作目录路径
@@ -89,6 +91,10 @@ func LoadConfig(cfgFile string) (err error) {
 // endpointName: 端点名称
 func SetEndpoint(endpointName string) {
 	currentEndpoint = endpointName
+}
+
+func EnableDebug() {
+	debugWorkspace = true
 }
 
 // BindPort 获取绑定端口
@@ -286,4 +292,12 @@ func EndpointName() string {
 // 返回: 路径字符串
 func CurrentWorkPath() string {
 	return currentWorkPath
+}
+
+func DebugFlag() bool {
+	if sysConfig != nil {
+		return sysConfig.DebugFlag || debugWorkspace
+	}
+
+	return debugWorkspace
 }

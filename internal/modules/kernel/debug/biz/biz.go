@@ -36,14 +36,20 @@ func New(
 		Base: biz.New(imkdc.DebugModule, eventHub, backgroundRoutine),
 	}
 
-	ptr.SubscribeFunc(imkdc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
+	if config.DebugFlag() {
+		ptr.SubscribeFunc(imkdc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
 
-	ptr.SubscribeFunc(imkdc.RecordHistoryMessage, ptr.recordHistoryMessage)
+		ptr.SubscribeFunc(imkdc.RecordHistoryMessage, ptr.recordHistoryMessage)
+	}
 
 	return ptr
 }
 
 func (s *Debug) Run() (err *cd.Error) {
+	if !config.DebugFlag() {
+		return
+	}
+
 	s.traceAllHistoryContent()
 	return
 }
@@ -78,7 +84,7 @@ func (s *Debug) recordRealtimeMessage(ev event.Event, re event.Result) {
 		return
 	}
 
-	dataDir := filepath.Join(".", "data")
+	dataDir := filepath.Join(config.CurrentWorkPath(), "data")
 	if err := s.checkDataDir(dataDir); err != nil {
 		return
 	}
@@ -103,7 +109,7 @@ func (s *Debug) traceAllHistoryContent() (err *cd.Error) {
 		PageSize:  100,
 	}
 
-	dataDir := filepath.Join(".", "data")
+	dataDir := filepath.Join(config.CurrentWorkPath(), "data")
 	if err = s.checkDataDir(dataDir); err != nil {
 		return
 	}
