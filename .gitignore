@@ -11,6 +11,7 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+data
 
 !application/magicCodeCli/cmd/main.go
 !application/magicCodeDebug/cmd/main.go

@@ -26,6 +26,8 @@ import (
 
 type Debug struct {
 	biz.Base
+
+	dataDir string
 }
 
 func New(
@@ -33,7 +35,8 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Debug {
 	ptr := &Debug{
-		Base: biz.New(imkdc.DebugModule, eventHub, backgroundRoutine),
+		Base:    biz.New(imkdc.DebugModule, eventHub, backgroundRoutine),
+		dataDir: filepath.Join(config.CurrentWorkPath(), "data"),
 	}
 
 	if config.DebugFlag() {
@@ -49,8 +52,11 @@ func (s *Debug) Run() (err *cd.Error) {
 	if !config.DebugFlag() {
 		return
 	}
+	if err := s.checkDataDir(s.dataDir); err != nil {
+		log.Errorf("check data dir failed, err:%s", err)
+	}
 
-	s.traceAllHistoryContent()
+	s.traceAllHistoryContent(s.dataDir)
 	return
 }
 
@@ -84,12 +90,7 @@ func (s *Debug) recordRealtimeMessage(ev event.Event, re event.Result) {
 		return
 	}
 
-	dataDir := filepath.Join(config.CurrentWorkPath(), "data")
-	if err := s.checkDataDir(dataDir); err != nil {
-		return
-	}
-
-	s.traceContent(dataDir, msgPtr)
+	s.traceContent(s.dataDir, msgPtr)
 }
 
 func (s *Debug) recordHistoryMessage(ev event.Event, re event.Result) {
@@ -100,20 +101,19 @@ func (s *Debug) recordHistoryMessage(ev event.Event, re event.Result) {
 		}
 	}()
 
-	err = s.traceAllHistoryContent()
+	if err := s.checkDataDir(s.dataDir); err != nil {
+		log.Errorf("check data dir failed, err:%s", err)
+		return
+	}
+
+	err = s.traceAllHistoryContent(s.dataDir)
 }
 
-func (s *Debug) traceAllHistoryContent() (err *cd.Error) {
+func (s *Debug) traceAllHistoryContent(dataDir string) (err *cd.Error) {
 	filter := &common.MessageFilter{
 		PageIndex: 1,
 		PageSize:  100,
 	}
-
-	dataDir := filepath.Join(config.CurrentWorkPath(), "data")
-	if err = s.checkDataDir(dataDir); err != nil {
-		return
-	}
-
 	for {
 		messageList := s.filterMessage(filter)
 		for _, message := range messageList {

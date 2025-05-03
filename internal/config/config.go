@@ -21,7 +21,7 @@ var (
 	currentEndpoint   = "magicCodeAgent" // 默认端点名称
 	listenPort        = "8080"           // 默认监听端口
 	sysConfig         *Config            // 系统配置实例
-	debugWorkspace    = false
+	debugWorkspace    = true
 )
 
 // 状态常量定义
