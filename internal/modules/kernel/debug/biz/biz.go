@@ -36,24 +36,75 @@ func New(
 		Base: biz.New(imkdc.DebugModule, eventHub, backgroundRoutine),
 	}
 
+	ptr.SubscribeFunc(imkdc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
+
+	ptr.SubscribeFunc(imkdc.RecordHistoryMessage, ptr.recordHistoryMessage)
+
 	return ptr
 }
 
 func (s *Debug) Run() (err *cd.Error) {
+	s.traceAllHistoryContent()
+	return
+}
+
+func (s *Debug) checkDataDir(dataDir string) (err *cd.Error) {
+	// 清空或创建data目录
+	if errVal := os.RemoveAll(dataDir); errVal != nil {
+		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("clear data dir failed, error:%s", errVal.Error()))
+		log.Errorf("clear data dir failed, err:%s", errVal)
+		return
+	}
+	if errVal := os.MkdirAll(dataDir, 0755); errVal != nil {
+		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("create data dir failed, error:%s", errVal.Error()))
+		log.Errorf("create data dir failed, err:%s", errVal)
+		return
+	}
+	return
+}
+
+func (s *Debug) recordRealtimeMessage(ev event.Event, re event.Result) {
+	var err *cd.Error
+	defer func() {
+		if re != nil {
+			re.Set(nil, err)
+		}
+	}()
+
+	msgPtr, msgOK := ev.Data().(*models.MessageInfo)
+	if !msgOK {
+		err = cd.NewError(cd.IllegalParam, "recordMessage message is nil")
+		log.Warnf("recordMessage message is nil, ev:%v", ev)
+		return
+	}
+
+	dataDir := filepath.Join(".", "data")
+	if err := s.checkDataDir(dataDir); err != nil {
+		return
+	}
+
+	s.traceContent(dataDir, msgPtr)
+}
+
+func (s *Debug) recordHistoryMessage(ev event.Event, re event.Result) {
+	var err *cd.Error
+	defer func() {
+		if re != nil {
+			re.Set(nil, err)
+		}
+	}()
+
+	err = s.traceAllHistoryContent()
+}
+
+func (s *Debug) traceAllHistoryContent() (err *cd.Error) {
 	filter := &common.MessageFilter{
 		PageIndex: 1,
 		PageSize:  100,
 	}
 
 	dataDir := filepath.Join(".", "data")
-
-	// 清空或创建data目录
-	if errVal := os.RemoveAll(dataDir); errVal != nil {
-		log.Errorf("clear data dir failed, err:%s", errVal)
-		return
-	}
-	if errVal := os.MkdirAll(dataDir, 0755); errVal != nil {
-		log.Errorf("create data dir failed, err:%s", errVal)
+	if err = s.checkDataDir(dataDir); err != nil {
 		return
 	}
 

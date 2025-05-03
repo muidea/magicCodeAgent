@@ -1,5 +1,7 @@
 package common
 
+import "github.com/sashabaranov/go-openai"
+
 const (
 	v1Version      = "/api/v1"
 	defaultVersion = v1Version
@@ -16,9 +18,11 @@ const (
 )
 
 const (
-	System    = "system"
-	User      = "user"
-	Assistant = "assistant"
-	Tool      = "tool"
+	System    = openai.ChatMessageRoleSystem
+	User      = openai.ChatMessageRoleUser
+	Assistant = openai.ChatMessageRoleAssistant
+	Function  = openai.ChatMessageRoleFunction
+	Tool      = openai.ChatMessageRoleTool
+	Developer = openai.ChatMessageRoleDeveloper
 	Recorder  = "recorder"
 )
