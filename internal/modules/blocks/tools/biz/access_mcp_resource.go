@@ -12,7 +12,7 @@ import (
 type AccessMcpResourceTool struct{}
 
 func (s *AccessMcpResourceTool) Name() string { return "access_mcp_resource" }
-func (s *AccessMcpResourceTool) Prompts() string {
+func (s *AccessMcpResourceTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

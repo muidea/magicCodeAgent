@@ -17,7 +17,7 @@ import (
 type ListCodeDefinitionNamesTool struct{}
 
 func (s *ListCodeDefinitionNamesTool) Name() string { return "list_code_definition_names" }
-func (s *ListCodeDefinitionNamesTool) Prompts() string {
+func (s *ListCodeDefinitionNamesTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

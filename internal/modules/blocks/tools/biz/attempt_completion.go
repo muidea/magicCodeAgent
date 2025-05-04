@@ -12,7 +12,7 @@ import (
 type AttemptCompletionTool struct{}
 
 func (s *AttemptCompletionTool) Name() string { return "attempt_completion" }
-func (s *AttemptCompletionTool) Prompts() string {
+func (s *AttemptCompletionTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

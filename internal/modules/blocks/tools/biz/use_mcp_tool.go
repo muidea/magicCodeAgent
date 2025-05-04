@@ -12,7 +12,7 @@ import (
 type UseMcpToolTool struct{}
 
 func (s *UseMcpToolTool) Name() string { return "use_mcp_tool" }
-func (s *UseMcpToolTool) Prompts() string {
+func (s *UseMcpToolTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

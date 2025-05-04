@@ -18,7 +18,7 @@ import (
 type ApplyDiffTool struct{}
 
 func (s *ApplyDiffTool) Name() string { return "apply_diff" }
-func (s *ApplyDiffTool) Prompts() string {
+func (s *ApplyDiffTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

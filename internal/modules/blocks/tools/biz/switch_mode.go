@@ -12,7 +12,7 @@ import (
 type SwitchModeTool struct{}
 
 func (s *SwitchModeTool) Name() string { return "switch_mode" }
-func (s *SwitchModeTool) Prompts() string {
+func (s *SwitchModeTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

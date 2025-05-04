@@ -18,7 +18,7 @@ func (s *ReadFileTool) Name() string {
 	return "read_file"
 }
 
-func (s *ReadFileTool) Prompts() string {
+func (s *ReadFileTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

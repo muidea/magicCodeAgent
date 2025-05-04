@@ -14,7 +14,7 @@ import (
 type ListFilesTool struct{}
 
 func (s *ListFilesTool) Name() string { return "list_files" }
-func (s *ListFilesTool) Prompts() string {
+func (s *ListFilesTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

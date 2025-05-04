@@ -13,7 +13,7 @@ type ToolParam map[string]any
 type ToolResult []byte
 
 type Tool interface {
-	iipc.Prompts
+	iipc.Prompt
 	Execute(param ToolParam) (ToolResult, error)
 }
 

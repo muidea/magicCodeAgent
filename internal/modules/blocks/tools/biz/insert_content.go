@@ -15,7 +15,7 @@ import (
 type InsertContentTool struct{}
 
 func (s *InsertContentTool) Name() string { return "insert_content" }
-func (s *InsertContentTool) Prompts() string {
+func (s *InsertContentTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

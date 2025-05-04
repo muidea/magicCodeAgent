@@ -12,7 +12,7 @@ import (
 type FetchInstructionsTool struct{}
 
 func (s *FetchInstructionsTool) Name() string { return "fetch_instructions" }
-func (s *FetchInstructionsTool) Prompts() string {
+func (s *FetchInstructionsTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

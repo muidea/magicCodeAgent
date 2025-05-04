@@ -13,7 +13,7 @@ import (
 type WriteToFileTool struct{}
 
 func (s *WriteToFileTool) Name() string { return "write_to_file" }
-func (s *WriteToFileTool) Prompts() string {
+func (s *WriteToFileTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

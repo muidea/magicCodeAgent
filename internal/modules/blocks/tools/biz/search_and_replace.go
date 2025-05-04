@@ -16,7 +16,7 @@ import (
 type SearchAndReplaceTool struct{}
 
 func (s *SearchAndReplaceTool) Name() string { return "search_and_replace" }
-func (s *SearchAndReplaceTool) Prompts() string {
+func (s *SearchAndReplaceTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

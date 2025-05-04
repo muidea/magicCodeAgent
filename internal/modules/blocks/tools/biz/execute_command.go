@@ -14,7 +14,7 @@ import (
 type ExecuteCommandTool struct{}
 
 func (s *ExecuteCommandTool) Name() string { return "execute_command" }
-func (s *ExecuteCommandTool) Prompts() string {
+func (s *ExecuteCommandTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())

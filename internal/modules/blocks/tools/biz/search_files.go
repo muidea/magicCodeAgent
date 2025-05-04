@@ -15,7 +15,7 @@ import (
 type SearchFilesTool struct{}
 
 func (s *SearchFilesTool) Name() string { return "search_files" }
-func (s *SearchFilesTool) Prompts() string {
+func (s *SearchFilesTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
