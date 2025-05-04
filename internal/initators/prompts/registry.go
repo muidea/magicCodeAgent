@@ -48,17 +48,17 @@ func (s *promptsRegistry) AddPrompts(sectionName string, prompt common.Prompt) {
 	sectionObj.AddPrompt(prompt)
 }
 
-func (s *promptsRegistry) GetSectionPrompts(section string) []common.Prompt {
-	sectionObj, ok := s.findSection(section)
+func (s *promptsRegistry) GetSectionPrompts(sectionName string) []common.Prompt {
+	sectionObj, ok := s.findSection(sectionName)
 	if !ok {
-		log.Warnf("section prompts not found:%s", section)
+		log.Warnf("section prompts not found:%s", sectionName)
 		return nil
 	}
 	return sectionObj.GetPrompts()
 }
 
-func (s *promptsRegistry) GetSectionPromptsContent(section string) string {
-	sectionObj, ok := s.findSection(section)
+func (s *promptsRegistry) GetSectionPromptsContent(sectionName string) string {
+	sectionObj, ok := s.findSection(sectionName)
 	if !ok {
 		return ""
 	}
@@ -67,7 +67,7 @@ func (s *promptsRegistry) GetSectionPromptsContent(section string) string {
 
 func (s *promptsRegistry) GetPromptsContent() string {
 	var builder strings.Builder
-	builder.WriteString(s.GetRolePrompts())
+	builder.WriteString(s.getRolePrompts())
 	builder.WriteString("\n\n")
 
 	for _, section := range s.sections {
@@ -78,7 +78,7 @@ func (s *promptsRegistry) GetPromptsContent() string {
 	return builder.String()
 }
 
-func (s *promptsRegistry) GetRolePrompts() string {
+func (s *promptsRegistry) getRolePrompts() string {
 	fileName := "role.md"
 	contentVal, contentErr := util.GetTemplateContent(common.SystemPromptsBasePath, "", fileName)
 	if contentErr != nil {

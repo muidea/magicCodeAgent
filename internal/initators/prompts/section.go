@@ -30,18 +30,15 @@ func (s *Section) GetPrompts() []common.Prompt {
 
 func (s *Section) GetPromptsContent() string {
 	var builder strings.Builder
-	builder.WriteString("## ")
-	builder.WriteString(s.name)
-	builder.WriteString("\n\n")
 	if s.description != "" {
 		builder.WriteString(s.description)
 		builder.WriteString("\n\n")
 	}
 
+	builder.WriteString("## ")
+	builder.WriteString(s.name)
+	builder.WriteString(" list\n\n")
 	for _, prompt := range s.prompts {
-		builder.WriteString("### ")
-		builder.WriteString(prompt.Name())
-		builder.WriteString("\n\n")
 		builder.WriteString(prompt.Prompt())
 		builder.WriteString("\n\n")
 	}

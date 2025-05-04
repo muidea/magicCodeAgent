@@ -94,11 +94,16 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 	}
 	flowPath := stationPtr.GetFlowPath(curFlow)
 
-	messageList := []*models.MessageItem{}
+	systemMessage := &models.MessageItem{
+		Role:    common.System,
+		Content: s.prompsRegistry.GetPromptsContent(),
+	}
+
+	userMessageList := []*models.MessageItem{}
 	for _, flow := range flowPath {
 		for _, message := range flow.Message {
-			messageList = append(messageList, message.Send.Item)
-			messageList = append(messageList, message.Recv.Item)
+			userMessageList = append(userMessageList, message.Send.Item)
+			userMessageList = append(userMessageList, message.Recv.Item)
 		}
 	}
 
@@ -116,10 +121,11 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 	)
 
 	contentContext := context.WithValue(ctx, common.ContentSink{}, stationPtr)
-	messageList = append(messageList, messageItem)
-	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, messageList)
+	userMessageList = append(userMessageList, messageItem)
+	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, userMessageList)
 	ev.SetData("context", contentContext)
 	ev.SetData("workspace", param.Workspace)
+	ev.SetData("systemMessage", systemMessage)
 	result := s.SendEvent(ev)
 	err = result.Error()
 	return

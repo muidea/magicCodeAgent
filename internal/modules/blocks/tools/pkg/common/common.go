@@ -7,6 +7,7 @@ import (
 
 const ToolsModule = "/internal/modules/blocks/tools"
 
+const ToolUsePromptsBasePath = "assets/template/prompts/system"
 const ToolsPromptsBasePath = "assets/template/prompts/tools"
 
 type ToolParam map[string]any

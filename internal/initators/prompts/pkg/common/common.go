@@ -14,11 +14,12 @@ type Prompt interface {
 }
 
 type PromptsRegistry interface {
-	AddSection(prompts Prompt)
+	AddSection(sectionPrompt Prompt)
 	// 添加自定section的prompts
-	AddPrompts(section string, prompts Prompt)
+	AddPrompts(sectionPrompt string, prompt Prompt)
 	// 查询自定section的prompts
-	GetSectionPrompts(section string) []Prompt
+	GetSectionPrompts(sectionPrompt string) []Prompt
 	// 查询执行自定section的prompts内容，以Md格式进行返回
-	GetSectionPromptsContent(section string) string
+	GetSectionPromptsContent(sectionPrompt string) string
+	GetPromptsContent() string
 }

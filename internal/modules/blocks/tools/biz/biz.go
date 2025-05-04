@@ -10,11 +10,13 @@ import (
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 var WorkspaceDir = "/home/rangh/codespace/magicCodeAgent/internal/modules/blocks/tool/biz/temp"
@@ -39,22 +41,23 @@ func New(
 	}
 
 	if promptsRegistry != nil {
-		promptsRegistry.AddPrompts("tools", &ReadFileTool{})
-		promptsRegistry.AddPrompts("tools", &FetchInstructionsTool{})
-		promptsRegistry.AddPrompts("tools", &SearchFilesTool{})
-		promptsRegistry.AddPrompts("tools", &ListFilesTool{})
-		promptsRegistry.AddPrompts("tools", &ListCodeDefinitionNamesTool{})
-		promptsRegistry.AddPrompts("tools", &ApplyDiffTool{})
-		promptsRegistry.AddPrompts("tools", &WriteToFileTool{})
-		promptsRegistry.AddPrompts("tools", &InsertContentTool{})
-		promptsRegistry.AddPrompts("tools", &SearchAndReplaceTool{})
-		promptsRegistry.AddPrompts("tools", &ExecuteCommandTool{})
-		promptsRegistry.AddPrompts("tools", &UseMcpToolTool{})
-		promptsRegistry.AddPrompts("tools", &AccessMcpResourceTool{})
-		promptsRegistry.AddPrompts("tools", &AskFollowupQuestionTool{})
-		promptsRegistry.AddPrompts("tools", &AttemptCompletionTool{})
-		promptsRegistry.AddPrompts("tools", &SwitchModeTool{})
-		promptsRegistry.AddPrompts("tools", &NewTaskTool{})
+		promptsRegistry.AddSection(ptr)
+		promptsRegistry.AddPrompts(ptr.Name(), &ReadFileTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &FetchInstructionsTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &SearchFilesTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &ListFilesTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &ListCodeDefinitionNamesTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &ApplyDiffTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &WriteToFileTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &InsertContentTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &SearchAndReplaceTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &ExecuteCommandTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &UseMcpToolTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &AccessMcpResourceTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &AskFollowupQuestionTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &AttemptCompletionTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &SwitchModeTool{})
+		promptsRegistry.AddPrompts(ptr.Name(), &NewTaskTool{})
 	}
 
 	return ptr
@@ -62,6 +65,20 @@ func New(
 
 func (s *Tools) Run() (err *cd.Error) {
 	return
+}
+
+func (s *Tools) Name() string {
+	return "Tools"
+}
+
+func (s *Tools) Prompt() string {
+	contentVal, contentErr := util.GetTemplateContent(common.ToolUsePromptsBasePath, "", "tools.md")
+	if contentErr == nil {
+		return contentVal
+	}
+
+	log.Warnf("parse tool prompts failed, err:%s", contentErr.Error())
+	return ""
 }
 
 // 解析执行参数

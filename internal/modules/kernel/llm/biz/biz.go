@@ -42,16 +42,13 @@ func (s *LLM) Run() (err *cd.Error) {
 	return
 }
 
-func (s *LLM) constructRequest(messageList []*models.MessageItem) *imklc.ChatCompletionStreamRequest {
+func (s *LLM) constructRequest(
+	systemMessage *models.MessageItem,
+	messageList []*models.MessageItem) *imklc.ChatCompletionStreamRequest {
 	request := &imklc.ChatCompletionStreamRequest{
 		ChatCompletionRequest: openai.ChatCompletionRequest{
-			Model: imklc.DeepSeekChat,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a helpful assistant.",
-				},
-			},
+			Model:           imklc.DeepSeekChat,
+			Messages:        []openai.ChatCompletionMessage{},
 			Temperature:     0,   //采样温度，介于 0 和 2 之间。更高的值，如 0.8，会使输出更随机，而更低的值，如 0.2，会使其更加集中和确定。 我们通常建议可以更改这个值或者更改 top_p，但不建议同时对两者进行修改。
 			TopP:            0.1, // 作为调节采样温度的替代方案，模型会考虑前 top_p 概率的 token 的结果。所以 0.1 就意味着只有包括在最高 10% 概率中的 token 会被考虑。 我们通常建议修改这个值或者更改 temperature，但不建议同时对两者进行修改。
 			N:               1,
@@ -60,6 +57,18 @@ func (s *LLM) constructRequest(messageList []*models.MessageItem) *imklc.ChatCom
 			Stream:          true,             // 如果设置为 True，将会以 SSE（server-sent events）的形式以流式发送消息增量。消息流以 data: [DONE] 结尾。
 			PresencePenalty: 0,                //Default:0, 介于 -2.0 和 2.0 之间的数字。如果该值为正，那么新 token 会根据其是否已在已有文本中出现受到相应的惩罚，从而增加模型谈论新主题的可能性。
 		},
+	}
+
+	if systemMessage != nil {
+		request.Messages = append(request.Messages, openai.ChatCompletionMessage{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: systemMessage.Content,
+		})
+	} else {
+		request.Messages = append(request.Messages, openai.ChatCompletionMessage{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "You are a helpful assistant.",
+		})
 	}
 
 	for _, item := range messageList {
@@ -90,7 +99,13 @@ func (s *LLM) chatCompletion(ev event.Event, re event.Result) {
 		return
 	}
 
-	requestVal := s.constructRequest(messageListVal)
+	var systemMessage *models.MessageItem
+	systemMessageVal := ev.GetData("systemMessage")
+	if systemMessageVal != nil {
+		systemMessage = systemMessageVal.(*models.MessageItem)
+	}
+
+	requestVal := s.constructRequest(systemMessage, messageListVal)
 	err := s.ChatCompletionStream(workspaceVal, contextVal, requestVal)
 	if re != nil {
 		if err != nil {

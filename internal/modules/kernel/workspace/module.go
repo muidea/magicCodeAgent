@@ -8,7 +8,8 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
-	rc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	iirc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/service"
@@ -32,16 +33,25 @@ func (s *Workspace) ID() string {
 }
 
 func (s *Workspace) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
-	var routeRegistryHelperVal rc.RouteRegistryHelper
+	var routeRegistryHelperVal iirc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
-	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(rc.RouteRegistryInitator, routeRegistryHelperVal)
+	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(iirc.RouteRegistryInitator, routeRegistryHelperVal)
 	if routeRegistryHelperErr != nil {
 		err = routeRegistryHelperErr
 		log.Errorf("Workspace setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
 		return
 	}
 
-	s.bizPtr = biz.New(eventHub, backgroundRoutine)
+	var promptsRegistryHelperVal iipc.PromptsRegistryHeper
+	var promptsRegistryHelperErr *cd.Error
+	promptsRegistryHelperVal, promptsRegistryHelperErr = initator.GetEntity(iipc.PromptsInitator, promptsRegistryHelperVal)
+	if promptsRegistryHelperErr != nil {
+		err = promptsRegistryHelperErr
+		log.Errorf("Workspace setup failed, initator.GetEntity error:%s", promptsRegistryHelperErr.Error())
+		return
+	}
+
+	s.bizPtr = biz.New(eventHub, backgroundRoutine, promptsRegistryHelperVal.GetPromptsRegistry())
 
 	s.servicePtr = service.New(routeRegistryHelperVal.GetRouteRegistry(), s.bizPtr)
 

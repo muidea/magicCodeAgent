@@ -17,6 +17,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
@@ -26,11 +27,14 @@ type Workspace struct {
 
 	fsWatcher             *fsnotify.Watcher
 	workspaceStationCache sync.Map
+
+	prompsRegistry iipc.PromptsRegistry
 }
 
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
+	prompsRegistry iipc.PromptsRegistry,
 ) *Workspace {
 	workspacePtr, workspaceErr := fsnotify.NewWatcher()
 	if workspaceErr != nil {
@@ -39,8 +43,9 @@ func New(
 	}
 
 	ptr := &Workspace{
-		Base:      biz.New(common.WorkspaceModule, eventHub, backgroundRoutine),
-		fsWatcher: workspacePtr,
+		Base:           biz.New(common.WorkspaceModule, eventHub, backgroundRoutine),
+		fsWatcher:      workspacePtr,
+		prompsRegistry: prompsRegistry,
 	}
 
 	ptr.SubscribeFunc(common.PreCheckWorkspace, ptr.precheckWorkspace)
@@ -52,7 +57,6 @@ func New(
 	ptr.SubscribeFunc(common.RefreshWorkspace, ptr.refreshWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspace, ptr.filterWorkspace)
 	ptr.SubscribeFunc(common.FilterWorkspaceFile, ptr.filterWorkspaceFile)
-	//ptr.SubscribeFunc(imklc.BroadcastMessageInfo, ptr.recvMessage)
 
 	return ptr
 }
