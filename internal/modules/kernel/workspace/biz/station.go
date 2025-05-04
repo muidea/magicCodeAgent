@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"errors"
 	"os"
 	"path"
 	"path/filepath"
@@ -252,4 +253,32 @@ func (s *Station) OnRecv(event string, content string) {
 	}
 
 	s.DisposeRecvMessage(msgPtr)
+}
+
+func (s *Station) DoWork(content string) error {
+	parts := strings.Split(content, "\n\n")
+	if len(parts) < 2 {
+		return errors.New("invalid response format")
+	}
+
+	hasThinking := false
+	hasTool := false
+
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if strings.HasPrefix(trimmed, "<thinking>") && strings.HasSuffix(trimmed, "</thinking>") {
+			hasThinking = true
+		} else if strings.HasPrefix(trimmed, "<tool>") && strings.HasSuffix(trimmed, "</tool>") {
+			hasTool = true
+		}
+		if hasThinking && hasTool {
+			break // 提前退出循环
+		}
+	}
+
+	if hasThinking && hasTool {
+		return nil
+	}
+
+	return errors.New("invalid response format")
 }

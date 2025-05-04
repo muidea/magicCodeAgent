@@ -82,6 +82,9 @@ func (s *promptsRegistry) GetPromptsContent() string {
 	builder.WriteString(s.getObjecttivePrompts())
 	builder.WriteString("\n\n")
 
+	builder.WriteString(s.getCustomInstructionsPrompts())
+	builder.WriteString("\n\n")
+
 	return builder.String()
 }
 
@@ -130,6 +133,16 @@ func (s *promptsRegistry) getObjecttivePrompts() string {
 	contentVal, contentErr := util.GetTemplateContent(common.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("get objective prompts content failed:%s", contentErr.Error())
+		return ""
+	}
+	return contentVal
+}
+
+func (s *promptsRegistry) getCustomInstructionsPrompts() string {
+	fileName := "custom-instructions.md"
+	contentVal, contentErr := util.GetTemplateContent(common.SectionPromptsBasePath, "", fileName)
+	if contentErr != nil {
+		log.Errorf("get custom prompts content failed:%s", contentErr.Error())
 		return ""
 	}
 	return contentVal
