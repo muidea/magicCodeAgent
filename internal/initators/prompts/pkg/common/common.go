@@ -2,7 +2,7 @@ package common
 
 const PromptsInitator = "/internal/initators/prompts"
 
-const SystemPromptsBasePath = "assets/template/prompts/system"
+const SectionPromptsBasePath = "assets/template/prompts/section"
 
 type PromptsRegistryHeper interface {
 	GetPromptsRegistry() (ret PromptsRegistry)

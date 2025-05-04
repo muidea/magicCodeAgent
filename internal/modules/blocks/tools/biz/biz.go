@@ -72,7 +72,7 @@ func (s *Tools) Name() string {
 }
 
 func (s *Tools) Prompt() string {
-	contentVal, contentErr := util.GetTemplateContent(common.ToolUsePromptsBasePath, "", "tools.md")
+	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", "tools.md")
 	if contentErr == nil {
 		return contentVal
 	}

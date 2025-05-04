@@ -2,6 +2,7 @@ package prompts
 
 import (
 	"strings"
+	"text/template"
 
 	"github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/util"
@@ -75,16 +76,61 @@ func (s *promptsRegistry) GetPromptsContent() string {
 		builder.WriteString("\n\n")
 	}
 
+	builder.WriteString(s.getSystemInformationPrompts())
+	builder.WriteString("\n\n")
+
+	builder.WriteString(s.getObjecttivePrompts())
+	builder.WriteString("\n\n")
+
 	return builder.String()
 }
 
 func (s *promptsRegistry) getRolePrompts() string {
 	fileName := "role.md"
-	contentVal, contentErr := util.GetTemplateContent(common.SystemPromptsBasePath, "", fileName)
+	contentVal, contentErr := util.GetTemplateContent(common.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("get role prompts content failed:%s", contentErr.Error())
 		return "You are magicAssistant, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices."
 	}
 
+	return contentVal
+}
+
+func (s *promptsRegistry) getSystemInformationPrompts() string {
+	fileName := "system-info.md"
+	contentVal, contentErr := util.GetTemplateContent(common.SectionPromptsBasePath, "", fileName)
+	if contentErr != nil {
+		log.Errorf("get system information prompts content failed:%s", contentErr.Error())
+		return "Operating System: Linux 5.15\nDefault Shell: /bin/bash"
+	}
+
+	param := map[string]string{
+		"OsName":      util.GetOsName(),
+		"SystemShell": util.GetDefaultShell(),
+	}
+
+	tmpl, err := template.New("systemInfo").Parse(contentVal)
+	if err != nil {
+		log.Errorf("parse system info template failed:%s", err.Error())
+		return contentVal
+	}
+
+	var builder strings.Builder
+	err = tmpl.Execute(&builder, param)
+	if err != nil {
+		log.Errorf("execute system info template failed:%s", err.Error())
+		return contentVal
+	}
+
+	return builder.String()
+}
+
+func (s *promptsRegistry) getObjecttivePrompts() string {
+	fileName := "objective.md"
+	contentVal, contentErr := util.GetTemplateContent(common.SectionPromptsBasePath, "", fileName)
+	if contentErr != nil {
+		log.Errorf("get objective prompts content failed:%s", contentErr.Error())
+		return ""
+	}
 	return contentVal
 }
