@@ -46,19 +46,20 @@ func (s *Workspace) Available() bool {
 	return s.Status == EnableStatus
 }
 
-// Model 定义AI模型配置结构
-type Model struct {
+// ModelInfo 定义AI模型配置结构
+type ModelInfo struct {
 	Name     string `json:"name"`     // 模型名称
 	BaseUrl  string `json:"baseUrl"`  // 模型基础URL
 	APIKey   string `json:"apiKey"`   // 模型API密钥
 	Provider string `json:"provider"` // 模型提供商
+	Model    string `json:"model"`
 }
 
 // Config 定义系统配置结构
 type Config struct {
 	BindPort  string       `json:"bindPort"`  // 绑定端口
 	Workspace []*Workspace `json:"workspace"` // 工作区列表
-	Models    []*Model     `json:"models"`    // AI模型列表
+	Models    []*ModelInfo `json:"models"`    // AI模型列表
 	DebugFlag bool         `json:"debugFlag"`
 }
 
@@ -262,12 +263,12 @@ func GetWorkspace(workspaceName string) (ret *Workspace) {
 
 // Models 获取AI模型列表
 // 返回: 模型切片
-func Models() []*Model {
+func Models() []*ModelInfo {
 	if sysConfig != nil {
 		return sysConfig.Models
 	}
 
-	return []*Model{}
+	return []*ModelInfo{}
 }
 
 // SetEmbedTemplateFS 设置嵌入模板文件系统

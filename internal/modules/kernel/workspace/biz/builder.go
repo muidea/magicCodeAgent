@@ -121,9 +121,10 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkw
 	)
 
 	contentContext := context.WithValue(ctx, common.ContentSink{}, stationPtr)
+	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.LocalDeepseek)
 	userMessageList = append(userMessageList, messageItem)
 	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, userMessageList)
-	ev.SetData("context", contentContext)
+	ev.SetData("context", providerContext)
 	ev.SetData("workspace", param.Workspace)
 	ev.SetData("systemMessage", systemMessage)
 	result := s.SendEvent(ev)

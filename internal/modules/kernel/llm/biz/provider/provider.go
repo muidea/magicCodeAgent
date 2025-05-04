@@ -184,16 +184,20 @@ func (s *Provider) OnRecv(event string, content string) {
 //	需要配置有效的DeepSeek API Key才能正常调用
 func (s *Provider) ChatCompletion(
 	workspaceName string,
-	ctx context.Context,
+	chatContext context.Context,
 	paramPtr *imklc.ChatCompletionStreamRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
+	providerType := imklc.RemoteDeepseek
+	if val := chatContext.Value(imklc.DeepseekProvider{}); val != nil {
+		providerType = val.(string)
+	}
 	resultPtr := &imklc.ChatCompletionStreamResponse{}
 	clnt := http.DefaultClient
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
+	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(providerType))
 	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Accept", "application/json;charset=utf-8")
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey(providerType)))
 	_, err = fn.HTTPPost(clnt, urlVal.String(), paramPtr, resultPtr, header)
 	if err != nil {
 		log.Errorf("ChatCompletion failed, url:%v, error:%v", urlVal.String(), err)
@@ -208,12 +212,19 @@ func (s *Provider) ChatCompletionStream(
 	workspaceName string,
 	chatContext context.Context,
 	paramPtr *imklc.ChatCompletionStreamRequest) error {
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
+	providerType := imklc.RemoteDeepseek
+	if val := chatContext.Value(imklc.DeepseekProvider{}); val != nil {
+		providerType = val.(string)
+	}
+
+	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(providerType))
 	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletion)
 
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey(providerType)))
+
+	paramPtr.Model = config.GetDeepSeekModelName(providerType)
 
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
@@ -249,16 +260,24 @@ func (s *Provider) ChatCompletionStream(
 //	该API可能不稳定，建议仅用于测试目的
 func (s *Provider) BetaCompletion(
 	workspaceName string,
-	ctx context.Context,
+	chatContext context.Context,
 	paramPtr *imklc.BetaCompletionRequest) (ret *imklc.BetaCompletionStreamResponse, err error) {
+
+	providerType := imklc.RemoteDeepseek
+	if val := chatContext.Value(imklc.DeepseekProvider{}); val != nil {
+		providerType = val.(string)
+	}
+
+	paramPtr.Model = config.GetDeepSeekModelName(providerType)
+
 	resultPtr := &imklc.BetaCompletionStreamResponse{}
 	clnt := http.DefaultClient
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
+	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(providerType))
 	urlVal.Path = path.Join(urlVal.Path, imklc.BetaCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Accept", "application/json;charset=utf-8")
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey(providerType)))
 	_, err = fn.HTTPPost(clnt, urlVal.String(), paramPtr, resultPtr, header)
 	if err != nil {
 		log.Errorf("BetaCompletion failed, url:%v, error:%v", urlVal.String(), err)
@@ -271,13 +290,19 @@ func (s *Provider) BetaCompletion(
 
 func (s *Provider) BetaCompletionStream(
 	workspaceName string,
-	ctx context.Context,
+	chatContext context.Context,
 	paramPtr *imklc.BetaCompletionRequest) error {
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
+
+	providerType := imklc.RemoteDeepseek
+	if val := chatContext.Value(imklc.DeepseekProvider{}); val != nil {
+		providerType = val.(string)
+	}
+
+	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(providerType))
 	urlVal.Path = path.Join(urlVal.Path, imklc.BetaCompletion)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey(providerType)))
 
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
@@ -291,7 +316,7 @@ func (s *Provider) BetaCompletionStream(
 	stream := NewStream(urlVal.String(),
 		config.GetDeepSeekRetryInterval(),
 		config.GetDeepSeekMaxRetries(),
-		ctx,
+		chatContext,
 		s,
 		header)
 
@@ -310,12 +335,12 @@ func (s *Provider) BetaCompletionStream(
 func (s *Provider) ModelsList() (ret *imklc.ModelsListResponse, err error) {
 	resultPtr := &imklc.ModelsListResponse{}
 	clnt := http.DefaultClient
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
+	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(imklc.RemoteDeepseek))
 	urlVal.Path = path.Join(urlVal.Path, imklc.ModelsList)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
-	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey(imklc.RemoteDeepseek)))
 	_, err = fn.HTTPGet(clnt, urlVal.String(), resultPtr, ctx)
 	if err != nil {
 		log.Errorf("ModelsList failed, url:%v, error:%v", urlVal.String(), err)
@@ -337,12 +362,12 @@ func (s *Provider) ModelsList() (ret *imklc.ModelsListResponse, err error) {
 func (s *Provider) UserBalance() (ret *imklc.UserBalanceResponse, err error) {
 	resultPtr := &imklc.UserBalanceResponse{}
 	clnt := http.DefaultClient
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
+	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(imklc.RemoteDeepseek))
 	urlVal.Path = path.Join(urlVal.Path, imklc.UserBalance)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
-	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey(imklc.RemoteDeepseek)))
 	_, err = fn.HTTPGet(clnt, urlVal.String(), resultPtr, ctx)
 	if err != nil {
 		log.Errorf("UserBalance failed, url:%v, error:%v", urlVal.String(), err)

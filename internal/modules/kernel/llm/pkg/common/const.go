@@ -1,8 +1,14 @@
 package common
 
 const (
-	DeepSeekChat = "deepseek-chat"
-	DeepseekR1   = "deepseek-reasoner"
+	LocalDeepseek  = "localDeepSeek"
+	RemoteDeepseek = "remoteDeepSeek"
 )
+
+type DeepseekProvider struct{}
+
+func (s *DeepseekProvider) String() string {
+	return "DeepseekProvider"
+}
 
 const Deepseek = "deepseek"

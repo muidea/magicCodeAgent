@@ -25,12 +25,12 @@ import (
 func ModelsList() (ret *common.ModelsListResponse, err error) {
 	resultPtr := &common.ModelsListResponse{}
 	clnt := http.DefaultClient
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
+	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(common.RemoteDeepseek))
 	urlVal.Path = path.Join(urlVal.Path, common.ModelsList)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
-	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey(common.RemoteDeepseek)))
 	_, err = fn.HTTPGet(clnt, urlVal.String(), resultPtr, ctx)
 	if err != nil {
 		log.Errorf("ModelsList failed, url:%v, error:%v", urlVal.String(), err)
@@ -52,12 +52,12 @@ func ModelsList() (ret *common.ModelsListResponse, err error) {
 func UserBalance() (ret *common.UserBalanceResponse, err error) {
 	resultPtr := &common.UserBalanceResponse{}
 	clnt := http.DefaultClient
-	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl())
+	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(common.RemoteDeepseek))
 	urlVal.Path = path.Join(urlVal.Path, common.UserBalance)
 	ctx := url.Values{}
 	ctx.Set("Content-Type", "application/json;charset=utf-8")
 	ctx.Set("Accept", "application/json;charset=utf-8")
-	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey()))
+	ctx.Set("Authorization", fmt.Sprintf("Bearer %s", config.GetDeepSeekAPIKey(common.RemoteDeepseek)))
 	_, err = fn.HTTPGet(clnt, urlVal.String(), resultPtr, ctx)
 	if err != nil {
 		log.Errorf("UserBalance failed, url:%v, error:%v", urlVal.String(), err)
