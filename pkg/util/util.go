@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"golang.org/x/text/cases"
@@ -156,12 +155,4 @@ func VerifyProjectWorkPath(pathVal string) *cd.Error {
 	}
 
 	return nil
-}
-
-func GetOsName() string {
-	return runtime.GOOS
-}
-
-func GetDefaultShell() string {
-	return os.Getenv("SHELL")
 }

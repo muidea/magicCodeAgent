@@ -4,6 +4,8 @@ import (
 	"strings"
 	"text/template"
 
+	fu "github.com/muidea/magicCommon/foundation/util"
+
 	"github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -108,8 +110,8 @@ func (s *promptsRegistry) getSystemInformationPrompts() string {
 	}
 
 	param := map[string]string{
-		"OsName":      util.GetOsName(),
-		"SystemShell": util.GetDefaultShell(),
+		"OsName":      fu.GetOsName(),
+		"SystemShell": fu.GetDefaultShell(),
 	}
 
 	tmpl, err := template.New("systemInfo").Parse(contentVal)

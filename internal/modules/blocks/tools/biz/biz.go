@@ -4,15 +4,19 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 	"github.com/muidea/magicCommon/task"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
 
@@ -54,6 +58,39 @@ func New(
 }
 
 func (s *Tools) Run() (err *cd.Error) {
+
+	dataFile := config.GetDataFile()
+	if dataFile == "" {
+		return
+	}
+
+	if !fp.Exist(dataFile) {
+		log.Errorf("data file not exist: %s", dataFile)
+	}
+
+	currentWorkDir := fu.GetCurrentWorkDir()
+	byteContent, byteErr := os.ReadFile(dataFile)
+	if byteErr != nil {
+		log.Errorf("read data file error: %s", byteErr.Error())
+		return
+	}
+
+	toolName, toolParam, toolErr := parseParamContent(string(byteContent))
+	if toolErr != nil {
+		log.Errorf("parse param content error: %s", toolErr.Error())
+		return
+	}
+
+	if toolName == "" {
+		log.Errorf("tool name is empty")
+		return
+	}
+
+	_, toolErr = s.toolRegistry.Execute(currentWorkDir, toolName, toolParam)
+	if toolErr != nil {
+		log.Errorf("execute tool error: %s", toolErr.Error())
+		return
+	}
 	return
 }
 
