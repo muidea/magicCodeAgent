@@ -4,8 +4,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"os"
-	"path"
 	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
@@ -15,20 +13,13 @@ import (
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/util"
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 )
-
-var WorkspaceDir = "/home/rangh/codespace/magicCodeAgent/internal/modules/blocks/tool/biz/temp"
-
-func init() {
-	WorkspaceDir, _ = os.Getwd()
-
-	WorkspaceDir = path.Join(WorkspaceDir, "temp")
-}
 
 type Tools struct {
 	biz.Base
+
+	toolRegistry *ToolRegistry
 }
 
 func New(
@@ -37,48 +28,33 @@ func New(
 	promptsRegistry iipc.PromptsRegistry,
 ) *Tools {
 	ptr := &Tools{
-		Base: biz.New(common.ToolsModule, eventHub, backgroundRoutine),
+		Base:         biz.New(imbtc.ToolsModule, eventHub, backgroundRoutine),
+		toolRegistry: NewToolRegistry(promptsRegistry),
 	}
 
-	if promptsRegistry != nil {
-		promptsRegistry.AddSection(ptr)
-		promptsRegistry.AddPrompts(ptr.Name(), &ReadFileTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &FetchInstructionsTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &SearchFilesTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &ListFilesTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &ListCodeDefinitionNamesTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &ApplyDiffTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &WriteToFileTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &InsertContentTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &SearchAndReplaceTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &ExecuteCommandTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &UseMcpToolTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &AccessMcpResourceTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &AskFollowupQuestionTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &AttemptCompletionTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &SwitchModeTool{})
-		promptsRegistry.AddPrompts(ptr.Name(), &NewTaskTool{})
-	}
+	ptr.toolRegistry.Register(&ReadFileTool{})
+	ptr.toolRegistry.Register(&FetchInstructionsTool{})
+	ptr.toolRegistry.Register(&SearchFilesTool{})
+	ptr.toolRegistry.Register(&ListFilesTool{})
+	ptr.toolRegistry.Register(&ListCodeDefinitionNamesTool{})
+	ptr.toolRegistry.Register(&ApplyDiffTool{})
+	ptr.toolRegistry.Register(&WriteToFileTool{})
+	ptr.toolRegistry.Register(&InsertContentTool{})
+	ptr.toolRegistry.Register(&SearchAndReplaceTool{})
+	ptr.toolRegistry.Register(&ExecuteCommandTool{})
+	ptr.toolRegistry.Register(&UseMcpToolTool{})
+	ptr.toolRegistry.Register(&AccessMcpResourceTool{})
+	ptr.toolRegistry.Register(&AskFollowupQuestionTool{})
+	ptr.toolRegistry.Register(&AttemptCompletionTool{})
+	ptr.toolRegistry.Register(&SwitchModeTool{})
+	ptr.toolRegistry.Register(&NewTaskTool{})
 
+	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
 	return ptr
 }
 
 func (s *Tools) Run() (err *cd.Error) {
 	return
-}
-
-func (s *Tools) Name() string {
-	return "Tools"
-}
-
-func (s *Tools) Prompt() string {
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", "tools.md")
-	if contentErr == nil {
-		return contentVal
-	}
-
-	log.Warnf("parse tool prompts failed, err:%s", contentErr.Error())
-	return ""
 }
 
 // 解析执行参数
@@ -120,4 +96,45 @@ func parseParamContent(content string) (ret string, param map[string]any, err er
 	}
 
 	return ret, param, nil
+}
+
+func (s *Tools) Execute(ev event.Event, re event.Result) {
+	var err *cd.Error
+	var executeResult imbtc.ToolResult
+	defer func() {
+		if re != nil {
+			re.Set(executeResult, err)
+		}
+	}()
+
+	dataVal := ev.Data()
+	contentVal, contentOK := dataVal.(string)
+	if !contentOK {
+		err = cd.NewError(cd.IllegalParam, "execute tool failed, invalid tool content")
+		log.Warnf("content is not string, dataVal:%v", dataVal)
+		return
+	}
+	workspaceDirVal := ev.GetData("workspaceDir")
+	workspaceDir, workspaceDirOK := workspaceDirVal.(string)
+	if !workspaceDirOK {
+		err = cd.NewError(cd.IllegalParam, "execute tool failed, workspaceDir is not string")
+		log.Warnf("workspaceDir is not string, dataVal:%v", dataVal)
+		return
+	}
+
+	toolsName, toolParam, toolErr := parseParamContent(contentVal)
+	if toolErr != nil {
+		err = cd.NewError(cd.IllegalParam, "execute tool failed, invalid tool content")
+		log.Warnf("parseParamContent failed, err: %s", toolErr.Error())
+		return
+	}
+
+	execVal, execErr := s.toolRegistry.Execute(workspaceDir, toolsName, toolParam)
+	if execErr != nil {
+		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("execute tool failed, error: %s", execErr.Error()))
+		log.Warnf("Execute tool failed, err: %s", execErr.Error())
+		return
+	}
+
+	executeResult = execVal
 }

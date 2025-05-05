@@ -28,7 +28,7 @@ func (s *ReadFileTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ReadFileTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 检查路径参数
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
@@ -72,7 +72,7 @@ func (s *ReadFileTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) 
 		}
 	}
 
-	ret, err := ReadFile(path, startLine, endLine)
+	ret, err := ReadFile(workspaceDir, path, startLine, endLine)
 	if err != nil {
 		return nil, fmt.Errorf("读取文件失败: %w", err)
 	}
@@ -130,8 +130,8 @@ Note: When both start_line and end_line are provided, this tool efficiently stre
 注意：当同时提供start_line和end_line时，此工具会高效地仅流式传输请求的行，使其适合处理大型文件（如日志、CSV文件和其他大型数据集）而不会出现内存问题。
 */
 // ReadFile 读取文件内容
-func ReadFile(path string, startLine, endLine int) (string, error) {
-	fullPath := filepath.Join(WorkspaceDir, path)
+func ReadFile(workspaceDir, path string, startLine, endLine int) (string, error) {
+	fullPath := filepath.Join(workspaceDir, path)
 	file, err := os.Open(fullPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %v", err)

@@ -276,9 +276,9 @@ func (s *Station) DoWork(content string) error {
 		}
 	}
 
-	if hasThinking && hasTool {
-		return nil
+	if !hasThinking || !hasTool {
+		return errors.New("invalid response format")
 	}
 
-	return errors.New("invalid response format")
+	return nil
 }

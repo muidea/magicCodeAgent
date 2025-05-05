@@ -9,20 +9,15 @@ import (
 )
 
 func TestWriteToFile(t *testing.T) {
-	// 保存原始的WorkspaceDir
-	originalWorkspaceDir := WorkspaceDir
 	// 临时修改WorkspaceDir为测试目录
 	tempDir := t.TempDir()
-	WorkspaceDir = tempDir
-	// 确保测试结束后恢复原始值
-	defer func() { WorkspaceDir = originalWorkspaceDir }()
 
 	// 测试用例1：写入新文件
 	filePath := "test_file.txt"
 	content := "Hello, World!\nThis is a test file.\nLine 3"
 	lineCount := 3
 
-	err := WriteToFile(filePath, content, lineCount)
+	err := WriteToFile(tempDir, filePath, content, lineCount)
 	assert.NoError(t, err, "写入新文件应该成功")
 
 	// 验证文件内容
@@ -35,7 +30,7 @@ func TestWriteToFile(t *testing.T) {
 	newContent := "This is new content.\nReplacing the old content."
 	newLineCount := 2
 
-	err = WriteToFile(filePath, newContent, newLineCount)
+	err = WriteToFile(tempDir, filePath, newContent, newLineCount)
 	assert.NoError(t, err, "覆盖现有文件应该成功")
 
 	// 验证文件内容已更新
@@ -48,7 +43,7 @@ func TestWriteToFile(t *testing.T) {
 	nestedContent := "Content in nested directory"
 	nestedLineCount := 1
 
-	err = WriteToFile(nestedFilePath, nestedContent, nestedLineCount)
+	err = WriteToFile(tempDir, nestedFilePath, nestedContent, nestedLineCount)
 	assert.NoError(t, err, "写入嵌套目录中的文件应该成功")
 
 	// 验证嵌套目录和文件已创建
@@ -62,7 +57,7 @@ func TestWriteToFile(t *testing.T) {
 	emptyContent := ""
 	emptyLineCount := 0
 
-	err = WriteToFile(emptyFilePath, emptyContent, emptyLineCount)
+	err = WriteToFile(tempDir, emptyFilePath, emptyContent, emptyLineCount)
 	assert.NoError(t, err, "写入空内容应该成功")
 
 	// 验证空文件已创建
@@ -76,7 +71,7 @@ func TestWriteToFile(t *testing.T) {
 	specialContent := "Line with special chars: !@#$%^&*()\nUnicode: 你好，世界\nTab:\tIndented"
 	specialLineCount := 3
 
-	err = WriteToFile(specialFilePath, specialContent, specialLineCount)
+	err = WriteToFile(tempDir, specialFilePath, specialContent, specialLineCount)
 	assert.NoError(t, err, "写入包含特殊字符的内容应该成功")
 
 	// 验证特殊字符文件内容

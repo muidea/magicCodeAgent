@@ -22,7 +22,7 @@ func (s *FetchInstructionsTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *FetchInstructionsTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 参数校验
 	task, ok := param["task"].(string)
 	if !ok || task == "" {

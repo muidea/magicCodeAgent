@@ -9,13 +9,8 @@ import (
 )
 
 func TestSearchAndReplace(t *testing.T) {
-	// 保存原始的WorkspaceDir
-	originalWorkspaceDir := WorkspaceDir
 	// 临时修改WorkspaceDir为测试目录
 	tempDir := t.TempDir()
-	WorkspaceDir = tempDir
-	// 确保测试结束后恢复原始值
-	defer func() { WorkspaceDir = originalWorkspaceDir }()
 
 	// 创建测试文件
 	testFilePath := filepath.Join(tempDir, "test_file.txt")
@@ -39,7 +34,7 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = SearchAndReplace("test_file.txt", op1)
+	err = SearchAndReplace(tempDir, "test_file.txt", op1)
 	assert.NoError(t, err, "简单字符串替换应该成功")
 
 	// 验证替换结果
@@ -70,7 +65,7 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = SearchAndReplace("test_file.txt", op2)
+	err = SearchAndReplace(tempDir, "test_file.txt", op2)
 	assert.NoError(t, err, "指定行范围的替换应该成功")
 
 	// 验证替换结果
@@ -102,7 +97,7 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = SearchAndReplace("test_file.txt", op3)
+	err = SearchAndReplace(tempDir, "test_file.txt", op3)
 	assert.NoError(t, err, "使用正则表达式替换应该成功")
 
 	// 验证替换结果
@@ -135,7 +130,7 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = SearchAndReplace("test_file.txt", op4)
+	err = SearchAndReplace(tempDir, "test_file.txt", op4)
 	assert.NoError(t, err, "多个替换操作应该成功")
 
 	// 验证替换结果
@@ -160,6 +155,6 @@ func TestSearchAndReplace(t *testing.T) {
 		},
 	}
 
-	err = SearchAndReplace("nonexistent_file.txt", op5)
+	err = SearchAndReplace(tempDir, "nonexistent_file.txt", op5)
 	assert.Error(t, err, "替换不存在的文件应该返回错误")
 }

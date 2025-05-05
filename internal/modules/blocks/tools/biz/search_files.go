@@ -25,7 +25,7 @@ func (s *SearchFilesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchFilesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
 		return nil, fmt.Errorf("缺少或无效的目录路径参数")
@@ -42,7 +42,7 @@ func (s *SearchFilesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, erro
 		filePattern = filePatternParam
 	}
 
-	results, err := SearchFiles(path, regex, filePattern)
+	results, err := SearchFiles(workspaceDir,path, regex, filePattern)
 	if err != nil {
 		return nil, fmt.Errorf("搜索文件失败: %v", err)
 	}
@@ -91,8 +91,8 @@ Example 示例: Requesting to search for all .ts files in the current directory
 
 // SearchFiles 实现search_files工具功能
 // SearchFiles function implements the search_files tool functionality
-func SearchFiles(path, regexPattern, filePattern string) ([]string, error) {
-	fullPath := filepath.Join(WorkspaceDir, path)
+func SearchFiles(workspaceDir, path, regexPattern, filePattern string) ([]string, error) {
+	fullPath := filepath.Join(workspaceDir, path)
 	var results []string
 
 	err := filepath.Walk(fullPath, func(path string, info os.FileInfo, err error) error {

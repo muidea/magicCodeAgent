@@ -24,7 +24,7 @@ func (s *AskFollowupQuestionTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AskFollowupQuestionTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 参数校验
 	question, ok := param["question"].(string)
 	if !ok || question == "" {

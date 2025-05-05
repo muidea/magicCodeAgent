@@ -22,7 +22,7 @@ func (s *UseMcpToolTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *UseMcpToolTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
 		return nil, fmt.Errorf("缺少或无效的服务器名称参数")

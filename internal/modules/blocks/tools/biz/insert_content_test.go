@@ -11,14 +11,8 @@ import (
 )
 
 func TestInsertContent(t *testing.T) {
-	// 保存原始的WorkspaceDir
-	originalWorkspaceDir := WorkspaceDir
 	// 临时修改WorkspaceDir为测试目录
 	tempDir := t.TempDir()
-	WorkspaceDir = tempDir
-	// 确保测试结束后恢复原始值
-	defer func() { WorkspaceDir = originalWorkspaceDir }()
-
 	// 创建测试文件
 	testFilePath := filepath.Join(tempDir, "test_file.txt")
 	testContent := "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
@@ -36,7 +30,7 @@ func TestInsertContent(t *testing.T) {
 	var operations1 []*InsertBlock
 	err = json.Unmarshal([]byte(operationsJSON1), &operations1)
 	assert.NoError(t, err, "解析JSON应该成功")
-	err = InsertContent("test_file.txt", operations1)
+	err = InsertContent(tempDir, "test_file.txt", operations1)
 	assert.NoError(t, err, "在文件开头插入内容应该成功")
 
 	// 验证插入结果
@@ -54,7 +48,7 @@ func TestInsertContent(t *testing.T) {
 	var operations2 []*InsertBlock
 	err = json.Unmarshal([]byte(operationsJSON2), &operations2)
 	assert.NoError(t, err, "解析JSON应该成功")
-	err = InsertContent("test_file.txt", operations2)
+	err = InsertContent(tempDir, "test_file.txt", operations2)
 	assert.NoError(t, err, "在文件中间插入多行内容应该成功")
 
 	// 验证插入结果
@@ -72,7 +66,7 @@ func TestInsertContent(t *testing.T) {
 	var operations3 []*InsertBlock
 	err = json.Unmarshal([]byte(operationsJSON3), &operations3)
 	assert.NoError(t, err, "解析JSON应该成功")
-	err = InsertContent("test_file.txt", operations3)
+	err = InsertContent(tempDir, "test_file.txt", operations3)
 	assert.NoError(t, err, "在文件末尾插入内容应该成功")
 
 	// 验证插入结果
@@ -94,7 +88,7 @@ func TestInsertContent(t *testing.T) {
 	var operations4 []*InsertBlock
 	err = json.Unmarshal([]byte(operationsJSON4), &operations4)
 	assert.NoError(t, err, "解析JSON应该成功")
-	err = InsertContent("test_file.txt", operations4)
+	err = InsertContent(tempDir, "test_file.txt", operations4)
 	assert.NoError(t, err, "多个位置同时插入内容应该成功")
 
 	// 验证插入结果
@@ -114,7 +108,7 @@ func TestInsertContent(t *testing.T) {
 	var operations5 []*InsertBlock
 	err = json.Unmarshal([]byte(operationsJSON5), &operations5)
 	assert.NoError(t, err, "解析JSON应该成功")
-	err = InsertContent("test_file.txt", operations5)
+	err = InsertContent(tempDir, "test_file.txt", operations5)
 	assert.Error(t, err, "插入位置超出文件范围应该返回错误")
 
 	// 测试用例6：插入位置为负数
@@ -127,7 +121,7 @@ func TestInsertContent(t *testing.T) {
 	var operations6 []*InsertBlock
 	err = json.Unmarshal([]byte(operationsJSON6), &operations6)
 	assert.NoError(t, err, "解析JSON应该成功")
-	err = InsertContent("test_file.txt", operations6)
+	err = InsertContent(tempDir, "test_file.txt", operations6)
 	assert.Error(t, err, "插入位置为负数应该返回错误")
 
 	// 测试用例7：文件不存在
@@ -140,6 +134,6 @@ func TestInsertContent(t *testing.T) {
 	var operations7 []*InsertBlock
 	err = json.Unmarshal([]byte(operationsJSON7), &operations7)
 	assert.NoError(t, err, "解析JSON应该成功")
-	err = InsertContent("nonexistent_file.txt", operations7)
+	err = InsertContent(tempDir, "nonexistent_file.txt", operations7)
 	assert.Error(t, err, "文件不存在应该返回错误")
 }

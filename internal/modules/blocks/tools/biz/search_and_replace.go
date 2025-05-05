@@ -26,7 +26,7 @@ func (s *SearchAndReplaceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchAndReplaceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
 		return nil, fmt.Errorf("缺少或无效的文件路径参数")
@@ -55,7 +55,7 @@ func (s *SearchAndReplaceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult,
 		return nil, fmt.Errorf("缺少有效的操作")
 	}
 
-	err := SearchAndReplace(path, ops)
+	err := SearchAndReplace(workspaceDir, path, ops)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ Example: Replace all occurrences of \"old\" with \"new\" using regex
 */
 
 // SearchAndReplace 实现search_and_replace工具功能
-func SearchAndReplace(path string, operations []struct {
+func SearchAndReplace(workspaceDir, path string, operations []struct {
 	Search     string `json:"search"`
 	Replace    string `json:"replace"`
 	StartLine  int    `json:"start_line"`
@@ -132,7 +132,7 @@ func SearchAndReplace(path string, operations []struct {
 	IgnoreCase bool   `json:"ignore_case"`
 	RegexFlags string `json:"regex_flags"`
 }) error {
-	fullPath := filepath.Join(WorkspaceDir, path)
+	fullPath := filepath.Join(workspaceDir, path)
 
 	// 读取原始文件内容
 	content, err := os.ReadFile(fullPath)

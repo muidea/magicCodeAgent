@@ -23,7 +23,7 @@ func (s *WriteToFileTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *WriteToFileTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
 		return nil, fmt.Errorf("缺少或无效的文件路径参数")
@@ -40,7 +40,7 @@ func (s *WriteToFileTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, erro
 		lineCount = int(lineCountParam)
 	}
 
-	err := WriteToFile(path, content, lineCount)
+	err := WriteToFile(workspaceDir, path, content, lineCount)
 	if err != nil {
 		return nil, err
 	}
@@ -89,8 +89,8 @@ Example: Requesting to write to frontend-config.json
 */
 
 // WriteToFile 实现write_to_file工具功能
-func WriteToFile(path, content string, lineCount int) error {
-	fullPath := filepath.Join(WorkspaceDir, path)
+func WriteToFile(workspaceDir, path, content string, lineCount int) error {
+	fullPath := filepath.Join(workspaceDir, path)
 
 	// 创建必要的目录
 	dir := filepath.Dir(fullPath)

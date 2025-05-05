@@ -22,7 +22,7 @@ func (s *AttemptCompletionTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AttemptCompletionTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 参数校验
 	result, ok := param["result"].(string)
 	if !ok || result == "" {

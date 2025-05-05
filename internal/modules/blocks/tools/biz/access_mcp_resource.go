@@ -22,7 +22,7 @@ func (s *AccessMcpResourceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AccessMcpResourceTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 参数校验
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {

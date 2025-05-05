@@ -22,7 +22,7 @@ func (s *NewTaskTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *NewTaskTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	mode, ok := param["mode"].(string)
 	if !ok || mode == "" {
 		return nil, fmt.Errorf("缺少或无效的模式参数")

@@ -24,7 +24,7 @@ func (s *ExecuteCommandTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ExecuteCommandTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 参数校验
 	command, ok := param["command"].(string)
 	if !ok || command == "" {
@@ -44,7 +44,7 @@ func (s *ExecuteCommandTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, e
 	cwd, _ := param["cwd"].(string)
 
 	// 调用工具函数
-	output, err := ExecuteCommand(command, args, cwd)
+	output, err := ExecuteCommand(workspaceDir, command, args, cwd)
 	if err != nil {
 		return nil, fmt.Errorf("执行命令失败: %v", err)
 	}
@@ -89,13 +89,13 @@ Example: Requesting to execute ls in a specific directory if directed
 */
 
 // ExecuteCommand 实现execute_command工具功能
-func ExecuteCommand(command string, args []string, cwd string) (string, error) {
+func ExecuteCommand(workspaceDir, command string, args []string, cwd string) (string, error) {
 	cmd := exec.Command(command, args...)
 
 	if cwd != "" {
-		cmd.Dir = filepath.Join(WorkspaceDir, cwd)
+		cmd.Dir = filepath.Join(workspaceDir, cwd)
 	} else {
-		cmd.Dir = WorkspaceDir
+		cmd.Dir = workspaceDir
 	}
 
 	output, err := cmd.CombinedOutput()

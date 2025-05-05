@@ -16,12 +16,6 @@ func TestSearchFiles(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	// 保存原始的WorkspaceDir并在测试结束后恢复
-	originalWorkspaceDir := WorkspaceDir
-	defer func() { WorkspaceDir = originalWorkspaceDir }()
-	// 设置测试的WorkspaceDir为临时目录
-	WorkspaceDir = tempDir
-
 	// 创建测试文件结构
 	testFiles := map[string]string{
 		"file1.txt":        "This is a test file with some content",
@@ -129,7 +123,7 @@ func TestSearchFiles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := SearchFiles(tt.path, tt.regex, tt.filePattern)
+			results, err := SearchFiles(tempDir, tt.path, tt.regex, tt.filePattern)
 
 			if tt.isError {
 				assert.Error(t, err)

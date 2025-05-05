@@ -9,14 +9,8 @@ import (
 )
 
 func TestListCodeDefinitionNames(t *testing.T) {
-	// 保存原始的WorkspaceDir
-	originalWorkspaceDir := WorkspaceDir
 	// 临时修改WorkspaceDir为测试目录
 	tempDir := t.TempDir()
-	WorkspaceDir = tempDir
-	// 确保测试结束后恢复原始值
-	defer func() { WorkspaceDir = originalWorkspaceDir }()
-
 	// 创建测试文件
 	testFilePath := filepath.Join(tempDir, "test_file.go")
 	testContent := `package test
@@ -35,7 +29,7 @@ var TestVar = "test"
 	assert.NoError(t, err, "写入测试文件应该成功")
 
 	// 测试用例1：分析单个文件
-	definitions, err := ListCodeDefinitionNames("test_file.go")
+	definitions, err := ListCodeDefinitionNames(tempDir, "test_file.go")
 	assert.NoError(t, err, "分析单个文件应该成功")
 	assert.Contains(t, definitions, "TestFunction", "应该包含函数定义")
 	assert.Contains(t, definitions, "TestStruct", "应该包含结构体定义")
@@ -69,7 +63,7 @@ var File2Var = 42
 	assert.NoError(t, err, "写入第二个测试文件应该成功")
 
 	// 测试用例2：分析目录
-	definitions2, err := ListCodeDefinitionNames("testdir")
+	definitions2, err := ListCodeDefinitionNames(tempDir, "testdir")
 	assert.NoError(t, err, "分析目录应该成功")
 	assert.Contains(t, definitions2, "File1Function", "应该包含第一个文件中的函数定义")
 	assert.Contains(t, definitions2, "File1Struct", "应该包含第一个文件中的结构体定义")
@@ -77,7 +71,7 @@ var File2Var = 42
 	assert.Contains(t, definitions2, "File2Var", "应该包含第二个文件中的变量定义")
 
 	// 测试用例3：分析不存在的路径
-	_, err = ListCodeDefinitionNames("nonexistent_path")
+	_, err = ListCodeDefinitionNames(tempDir, "nonexistent_path")
 	assert.Error(t, err, "分析不存在的路径应该返回错误")
 
 	// 测试用例4：分析非Go文件
@@ -85,6 +79,6 @@ var File2Var = 42
 	err = os.WriteFile(nonGoFilePath, []byte("This is not a Go file"), 0644)
 	assert.NoError(t, err, "写入非Go文件应该成功")
 
-	_, err = ListCodeDefinitionNames("test.txt")
+	_, err = ListCodeDefinitionNames(tempDir, "test.txt")
 	assert.Error(t, err, "分析非Go文件应该返回错误")
 }

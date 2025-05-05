@@ -24,7 +24,7 @@ func (s *ListFilesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ListFilesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
@@ -35,7 +35,7 @@ func (s *ListFilesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error)
 	recursive, _ := param["recursive"].(bool)
 
 	// 调用工具函数
-	result, err := ListFiles(path, recursive)
+	result, err := ListFiles(workspaceDir, path, recursive)
 	if err != nil {
 		return nil, fmt.Errorf("列出文件失败: %v", err)
 	}
@@ -77,8 +77,8 @@ Example 示例: Requesting to list all files in the current directory
 */
 
 // ListFiles 实现list_files工具功能
-func ListFiles(path string, recursive bool) ([]string, error) {
-	fullPath := filepath.Join(WorkspaceDir, path)
+func ListFiles(workspaceDir, path string, recursive bool) ([]string, error) {
+	fullPath := filepath.Join(workspaceDir, path)
 
 	// 检查路径是否存在且是目录
 	fileInfo, err := os.Stat(fullPath)

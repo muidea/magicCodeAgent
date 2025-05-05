@@ -7,6 +7,10 @@ import (
 
 const ToolsModule = "/internal/modules/blocks/tools"
 
+const (
+	ExecuteTool = "/tools/execute"
+)
+
 // const ToolSectionPromptsBasePath = "assets/template/prompts/section"
 const ToolsPromptsBasePath = "assets/template/prompts/tools"
 
@@ -15,7 +19,7 @@ type ToolResult []byte
 
 type Tool interface {
 	iipc.Prompt
-	Execute(param ToolParam) (ToolResult, error)
+	Execute(workspaceDir string, param ToolParam) (ToolResult, error)
 }
 
 func ReadToolsPrompts(toolName string) (ret string, err error) {

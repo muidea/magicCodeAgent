@@ -22,7 +22,7 @@ func (s *SwitchModeTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SwitchModeTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	modeSlug, ok := param["mode_slug"].(string)
 	if !ok || modeSlug == "" {
 		return nil, fmt.Errorf("缺少或无效的模式标识参数")

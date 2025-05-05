@@ -25,7 +25,7 @@ func (s *InsertContentTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *InsertContentTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
@@ -61,7 +61,7 @@ func (s *InsertContentTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, er
 	}
 
 	// 调用工具函数
-	if err := InsertContent(path, insertBlocks); err != nil {
+	if err := InsertContent(workspaceDir, path, insertBlocks); err != nil {
 		return nil, fmt.Errorf("插入内容失败: %v", err)
 	}
 
@@ -127,8 +127,8 @@ type InsertBlock struct {
 }
 
 // InsertContent 实现insert_content工具功能
-func InsertContent(path string, operations []*InsertBlock) error {
-	fullPath := filepath.Join(WorkspaceDir, path)
+func InsertContent(workspaceDir, path string, operations []*InsertBlock) error {
+	fullPath := filepath.Join(workspaceDir, path)
 
 	// 读取原始文件内容
 	content, err := os.ReadFile(fullPath)

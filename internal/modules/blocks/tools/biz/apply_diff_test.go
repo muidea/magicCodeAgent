@@ -196,15 +196,8 @@ def calculate_total(items):
 >>>>>>> REPLACE
 `
 
-	// 保存原始的WorkspaceDir
-	originalWorkspaceDir := WorkspaceDir
-	// 临时修改WorkspaceDir为测试目录
-	WorkspaceDir = tempDir
-	// 确保测试结束后恢复原始值
-	defer func() { WorkspaceDir = originalWorkspaceDir }()
-
 	// 应用差异
-	err = ApplyDiff("test_file.txt", diff1)
+	err = ApplyDiff(tempDir, "test_file.txt", diff1)
 	assert.NoError(t, err, "应用差异应该成功")
 
 	// 读取修改后的文件内容
@@ -245,7 +238,7 @@ def calculate_sum(items):
 `
 
 	// 应用差异
-	err = ApplyDiff("test_file.txt", diff2)
+	err = ApplyDiff(tempDir, "test_file.txt", diff2)
 	assert.NoError(t, err, "应用多个替换块应该成功")
 
 	// 读取修改后的文件内容
@@ -257,11 +250,11 @@ def calculate_sum(items):
 	assert.Equal(t, expectedContent2, string(modifiedContent2), "文件内容应该被正确修改")
 
 	// 测试用例3：文件不存在
-	err = ApplyDiff("non_existent_file.txt", diff1)
+	err = ApplyDiff(tempDir, "non_existent_file.txt", diff1)
 	assert.Error(t, err, "对不存在的文件应用差异应该返回错误")
 
 	// 测试用例4：无效的差异格式
 	invalidDiff := "This is not a valid diff format"
-	err = ApplyDiff("test_file.txt", invalidDiff)
+	err = ApplyDiff(tempDir, "test_file.txt", invalidDiff)
 	assert.Error(t, err, "应用无效的差异格式应该返回错误")
 }

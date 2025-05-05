@@ -27,7 +27,7 @@ func (s *ListCodeDefinitionNamesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ListCodeDefinitionNamesTool) Execute(param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ListCodeDefinitionNamesTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
@@ -35,7 +35,7 @@ func (s *ListCodeDefinitionNamesTool) Execute(param imbtc.ToolParam) (imbtc.Tool
 	}
 
 	// 调用工具函数
-	result, err := ListCodeDefinitionNames(path)
+	result, err := ListCodeDefinitionNames(workspaceDir, path)
 	if err != nil {
 		return nil, fmt.Errorf("列出代码定义失败: %v", err)
 	}
@@ -85,8 +85,8 @@ Examples:
 
 // ListCodeDefinitionNames 实现list_code_definition_names工具功能
 // ListCodeDefinitionNames function implements the list_code_definition_names tool functionality
-func ListCodeDefinitionNames(path string) ([]string, error) {
-	fullPath := filepath.Join(WorkspaceDir, path)
+func ListCodeDefinitionNames(workspaceDir, path string) ([]string, error) {
+	fullPath := filepath.Join(workspaceDir, path)
 	var definitions []string
 
 	info, err := os.Stat(fullPath)
