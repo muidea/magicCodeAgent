@@ -1,8 +1,10 @@
 package biz
 
 import (
+	"os"
 	"testing"
 
+	"github.com/muidea/magicCodeAgent/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -121,4 +123,44 @@ This is line 3
 	assert.Equal(t, "", params11["path"], "空path参数应该正确解析")
 	assert.Equal(t, "", params11["content"], "空content参数应该正确解析")
 	assert.Equal(t, "", params11["line_count"], "空line_count参数应该正确解析")
+
+	content12 := `<apply_diff>
+<path>Makefile</path>
+<diff>
+<<<<<<< SEARCH
+:start_line:8
+-------
+run: build
+	./hello
+=======
+run: build
+	./hello
+
+clean:
+	rm -f hello
+>>>>>>> REPLACE
+</diff>
+</apply_diff>`
+	funcName12, param12, err := parseParamContent(content12)
+	assert.NoError(t, err, "解析失败")
+	assert.Equal(t, "apply_diff", funcName12, "函数名应该正确解析")
+	assert.Equal(t, "Makefile", param12["path"], "path参数应该正确解析")
+}
+
+func TestParseXML(t *testing.T) {
+	fileContent, fileErr := os.ReadFile("./assistant.md")
+	assert.NoError(t, fileErr, "读取文件失败")
+	blocksList, blockErr := util.SpliteBlocks(string(fileContent))
+	assert.NoError(t, blockErr, "解析文件失败")
+	assert.Equal(t, 2, len(blocksList), "解析文件失败")
+
+	funcName, funcParams, funcErr := parseParamContent(blocksList[0])
+	assert.NoError(t, funcErr, "解析函数失败")
+	assert.Equal(t, "thinking", funcName, "解析函数失败")
+	assert.Equal(t, 0, len(funcParams), "解析函数失败")
+
+	funcName, funcParams, funcErr = parseParamContent(blocksList[1])
+	assert.NoError(t, funcErr, "解析函数失败")
+	assert.Equal(t, "apply_diff", funcName, "解析函数失败")
+	assert.Equal(t, 2, len(funcParams), "解析函数失败")
 }

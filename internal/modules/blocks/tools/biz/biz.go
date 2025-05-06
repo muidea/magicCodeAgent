@@ -199,7 +199,7 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 	workspaceDir, workspaceDirOK := workspaceDirVal.(string)
 	if !workspaceDirOK {
 		err = cd.NewError(cd.IllegalParam, "execute tool failed, workspaceDir is not string")
-		log.Warnf("workspaceDir is not string, dataVal:%v", dataVal)
+		log.Warnf("workspaceDir is not string, dataVal:%v", workspaceDirVal)
 		return
 	}
 

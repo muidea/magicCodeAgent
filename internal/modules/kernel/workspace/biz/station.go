@@ -1,7 +1,6 @@
 package biz
 
 import (
-	"errors"
 	"os"
 	"path"
 	"path/filepath"
@@ -33,13 +32,15 @@ type Station struct {
 
 	localMessageCache *cache.MessageSequenceCache
 	localFlowManger   *FlowManager
+	localWorker       Worker
 }
 
-func NewStation(workspacePtr *config.Workspace) *Station {
+func NewStation(workspacePtr *config.Workspace, worker Worker) *Station {
 	ret := &Station{
 		configPtr:         workspacePtr,
 		localMessageCache: cache.NewMessageSequenceCache(500),
 		localFlowManger:   NewFlowManager(),
+		localWorker:       worker,
 	}
 
 	return ret
@@ -252,33 +253,9 @@ func (s *Station) OnRecv(event string, content string) {
 		Workspace:  s.configPtr.Name,
 	}
 
+	if s.localWorker != nil {
+		s.localWorker.DoWork(s.configPtr.Path, content)
+	}
+
 	s.DisposeRecvMessage(msgPtr)
-}
-
-func (s *Station) DoWork(content string) error {
-	parts := strings.Split(content, "\n\n")
-	if len(parts) < 2 {
-		return errors.New("invalid response format")
-	}
-
-	hasThinking := false
-	hasTool := false
-
-	for _, part := range parts {
-		trimmed := strings.TrimSpace(part)
-		if strings.HasPrefix(trimmed, "<thinking>") && strings.HasSuffix(trimmed, "</thinking>") {
-			hasThinking = true
-		} else if strings.HasPrefix(trimmed, "<tool>") && strings.HasSuffix(trimmed, "</tool>") {
-			hasTool = true
-		}
-		if hasThinking && hasTool {
-			break // 提前退出循环
-		}
-	}
-
-	if !hasThinking || !hasTool {
-		return errors.New("invalid response format")
-	}
-
-	return nil
 }
