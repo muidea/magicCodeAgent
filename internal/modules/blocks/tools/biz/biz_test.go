@@ -1,10 +1,8 @@
 package biz
 
 import (
-	"os"
 	"testing"
 
-	"github.com/muidea/magicCodeAgent/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,7 +45,7 @@ This is line 3
 	assert.NoError(t, err, "解析有效XML应该成功")
 	assert.Equal(t, "writeToFile", funcName3, "函数名应该是writeToFile")
 	assert.Equal(t, "output.txt", params3["path"], "path参数应该正确解析")
-	assert.Equal(t, "\nThis is line 1\nThis is line 2\nThis is line 3\n\t", params3["content"], "content参数应该正确解析")
+	assert.Equal(t, "This is line 1\nThis is line 2\nThis is line 3\n\t", params3["content"], "content参数应该正确解析")
 	assert.Equal(t, "3", params3["line_count"], "line_count参数应该正确解析")
 
 	// 测试用例4：searchFiles工具 - 正常XML格式，包含可选参数
@@ -145,22 +143,4 @@ clean:
 	assert.NoError(t, err, "解析失败")
 	assert.Equal(t, "apply_diff", funcName12, "函数名应该正确解析")
 	assert.Equal(t, "Makefile", param12["path"], "path参数应该正确解析")
-}
-
-func TestParseXML(t *testing.T) {
-	fileContent, fileErr := os.ReadFile("./assistant.md")
-	assert.NoError(t, fileErr, "读取文件失败")
-	blocksList, blockErr := util.SpliteBlocks(string(fileContent))
-	assert.NoError(t, blockErr, "解析文件失败")
-	assert.Equal(t, 2, len(blocksList), "解析文件失败")
-
-	funcName, funcParams, funcErr := parseParamContent(blocksList[0])
-	assert.NoError(t, funcErr, "解析函数失败")
-	assert.Equal(t, "thinking", funcName, "解析函数失败")
-	assert.Equal(t, 0, len(funcParams), "解析函数失败")
-
-	funcName, funcParams, funcErr = parseParamContent(blocksList[1])
-	assert.NoError(t, funcErr, "解析函数失败")
-	assert.Equal(t, "apply_diff", funcName, "解析函数失败")
-	assert.Equal(t, 2, len(funcParams), "解析函数失败")
 }

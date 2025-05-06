@@ -16,6 +16,28 @@ func TestSplitDiff(t *testing.T) {
 		expectedErr bool
 	}{
 		{
+			name: "缺少end_line的diff块",
+			diff: `<<<<<<< SEARCH
+:start_line:1
+-------
+line1
+line2
+line3
+=======
+new line1
+new line2
+new line3
+>>>>>>> REPLACE`,
+			expected: []*DiffBlock{
+				{
+					StartLine:      1,
+					EndLine:        3, // 应该根据内容行数自动计算为3
+					OriginContent:  "line1\nline2\nline3",
+					ReplaceContent: "new line1\nnew line2\nnew line3",
+				},
+			},
+		},
+		{
 			name: "单个diff块",
 			diff: `<<<<<<< SEARCH
 :start_line:1

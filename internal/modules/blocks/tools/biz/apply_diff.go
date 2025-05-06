@@ -228,23 +228,32 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 		}
 
 		// 验证行号
-		if !startLineFound || !endLineFound {
-			return nil, fmt.Errorf("缺少起始行号或结束行号")
+		if !startLineFound {
+			return nil, fmt.Errorf("缺少起始行号")
 		}
 
-		if startLine <= 0 || endLine <= 0 {
-			return nil, fmt.Errorf("行号必须为正数: startLine=%d, endLine=%d", startLine, endLine)
+		if startLine <= 0 {
+			return nil, fmt.Errorf("起始行号必须为正数: startLine=%d", startLine)
+		}
+
+		// 提取原始内容和替换内容
+		contentSep = strings.Index(blockPart, "-------")
+		rawContent := strings.Trim(blockPart[contentSep+len("-------"):sepIdx], "\n")
+
+		// 如果没有指定结束行号，根据原始内容的行数计算
+		if !endLineFound {
+			lineCount := len(strings.Split(rawContent, "\n"))
+			endLine = startLine + lineCount - 1
+			log.Infof("未指定结束行号，根据内容自动计算: startLine=%d, lineCount=%d, endLine=%d", startLine, lineCount, endLine)
+		} else if endLine <= 0 {
+			return nil, fmt.Errorf("结束行号必须为正数: endLine=%d", endLine)
 		}
 
 		if startLine > endLine {
 			return nil, fmt.Errorf("起始行号不能大于结束行号: startLine=%d, endLine=%d", startLine, endLine)
 		}
 
-		// 提取原始内容和替换内容
-		contentSep = strings.Index(blockPart, "-------")
-		//rawContent := strings.TrimSpace(blockPart[contentSep+len("-------") : sepIdx])
-		//replaceContent := strings.TrimSpace(blockPart[sepIdx+len("=======") : replaceEndIdx])
-		rawContent := strings.Trim(blockPart[contentSep+len("-------"):sepIdx], "\n")
+		// 提取替换内容
 		replaceContent := strings.Trim(blockPart[sepIdx+len("======="):replaceEndIdx], "\n")
 		// 创建diff块
 		blocks = append(blocks, &DiffBlock{

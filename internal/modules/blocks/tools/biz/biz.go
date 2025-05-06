@@ -143,24 +143,68 @@ func (s *Tools) execDataContent(workspaceDir, dataContent string) (result imbtc.
 // 执行函数是xml的root节点名
 // 执行函数的参数是root的子节点及子节点的值
 // 参照示例参见各个工具函数对应的注释信息
-func parseParamContent(content string) (ret string, param map[string]any, err error) {
-	// 解析XML内容
-	decoder := xml.NewDecoder(strings.NewReader(content))
-	param = make(map[string]any)
+func parseParamContent(content string) (string, map[string]any, error) {
+	// 检查内容是否为空
+	if strings.TrimSpace(content) == "" {
+		return "", nil, fmt.Errorf("empty content")
+	}
 
-	for {
-		token, err := decoder.Token()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return "", nil, err
+	// 提取根元素名称
+	start := strings.Index(content, "<")
+	if start == -1 {
+		return "", nil, fmt.Errorf("invalid XML: missing opening tag")
+	}
+
+	end := strings.Index(content[start+1:], ">")
+	if end == -1 {
+		return "", nil, fmt.Errorf("invalid XML: missing closing tag")
+	}
+
+	// 获取根元素名称
+	tagName := strings.TrimSpace(content[start+1 : start+1+end])
+	if strings.Contains(tagName, " ") {
+		tagName = strings.Split(tagName, " ")[0]
+	}
+
+	// 创建参数映射
+	param := make(map[string]any)
+	// 特殊处理apply_diff工具，因为它包含特殊的XML字符
+	if tagName == "apply_diff" {
+		// 提取path参数
+		pathStart := strings.Index(content, "<path>")
+		pathEnd := strings.Index(content, "</path>")
+		if pathStart != -1 && pathEnd != -1 {
+			pathValue := content[pathStart+6 : pathEnd]
+			param["path"] = strings.TrimSpace(pathValue)
 		}
 
-		switch se := token.(type) {
+		// 提取diff参数
+		diffStart := strings.Index(content, "<diff>")
+		diffEnd := strings.Index(content, "</diff>")
+		if diffStart != -1 && diffEnd != -1 {
+			diffValue := content[diffStart+6 : diffEnd]
+			param["diff"] = diffValue
+		}
+
+		return tagName, param, nil
+	}
+
+	tagName = ""
+	// 对于其他工具，使用标准XML解析
+	decoder := xml.NewDecoder(strings.NewReader(content))
+	for {
+		tokenVal, tokenErr := decoder.Token()
+		if tokenErr != nil {
+			if tokenErr == io.EOF {
+				break
+			}
+			return "", nil, tokenErr
+		}
+
+		switch se := tokenVal.(type) {
 		case xml.StartElement:
-			if ret == "" {
-				ret = se.Name.Local
+			if tagName == "" {
+				tagName = se.Name.Local
 			} else {
 				var value string
 				if err := decoder.DecodeElement(&value, &se); err != nil {
@@ -171,12 +215,11 @@ func parseParamContent(content string) (ret string, param map[string]any, err er
 		}
 	}
 
-	if ret == "" {
-		err = fmt.Errorf("invalid tool content")
-		return
+	if tagName == "" {
+		return "", nil, fmt.Errorf("invalid tool content")
 	}
 
-	return
+	return tagName, param, nil
 }
 
 func (s *Tools) Execute(ev event.Event, re event.Result) {
