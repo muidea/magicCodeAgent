@@ -20,7 +20,7 @@ func (s *ListCodeDefinitionNamesTool) Name() string { return "list_code_definiti
 func (s *ListCodeDefinitionNamesTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -31,19 +31,21 @@ func (s *ListCodeDefinitionNamesTool) Execute(workspaceDir string, param imbtc.T
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("缺少或无效的路径参数")
+		return nil, fmt.Errorf("missing or invalid path parameter")
 	}
 
 	// 调用工具函数
 	result, err := ListCodeDefinitionNames(workspaceDir, path)
 	if err != nil {
-		return nil, fmt.Errorf("列出代码定义失败: %v", err)
+		log.Errorf("failed to list code definitions: %v", err)
+		return nil, fmt.Errorf("failed to list code definitions: %v", err)
 	}
 
 	// 处理返回值
 	ret, err := json.Marshal(result)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		log.Errorf("failed to serialize result: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return ret, nil

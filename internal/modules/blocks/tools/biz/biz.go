@@ -79,15 +79,15 @@ func (s *Tools) Run() (err *cd.Error) {
 
 func (s *Tools) execDataFile(workspaceDir, dataFile string) (result imbtc.ToolResult, err *cd.Error) {
 	if !fp.Exist(dataFile) {
-		err = cd.NewError(cd.IllegalParam, "data file not exist")
-		log.Errorf("data file not exist: %s", dataFile)
+		err = cd.NewError(cd.IllegalParam, "data file does not exist")
+		log.Errorf("data file does not exist: %s", dataFile)
 		return
 	}
 
 	byteContent, byteErr := os.ReadFile(dataFile)
 	if byteErr != nil {
 		err = cd.NewError(cd.IllegalParam, "read data file error")
-		log.Errorf("read data file error: %s", byteErr.Error())
+		log.Errorf("failed to read data file: %s", byteErr.Error())
 		return
 	}
 
@@ -99,7 +99,7 @@ func (s *Tools) execDataContent(workspaceDir, dataContent string) (result imbtc.
 	dataBlocks, dataErr := util.SpliteBlocks(dataContent)
 	if dataErr != nil {
 		err = cd.NewError(cd.IllegalParam, "split data content error")
-		log.Errorf("split data content error: %s", dataErr.Error())
+		log.Errorf("failed to split data content: %s", dataErr.Error())
 		return
 	}
 
@@ -112,19 +112,19 @@ func (s *Tools) execDataContent(workspaceDir, dataContent string) (result imbtc.
 
 		if toolErr != nil {
 			err = cd.NewError(cd.IllegalParam, "parse param content error")
-			log.Errorf("parse param content error: %s", toolErr.Error())
+			log.Errorf("failed to parse param content: %s", toolErr.Error())
 			return
 		}
 		if toolName == "" {
 			err = cd.NewError(cd.IllegalParam, "tool name is empty")
-			log.Errorf("tool name is empty")
+			log.Errorf("tool name cannot be empty")
 			return
 		}
 
 		toolResult, toolErr := s.toolRegistry.Execute(workspaceDir, toolName, toolParam)
 		if toolErr != nil {
 			err = cd.NewError(cd.IllegalParam, "execute tool error")
-			log.Errorf("execute tool error: %s", toolErr.Error())
+			log.Errorf("failed to execute tool: %s", toolErr.Error())
 			return
 		}
 		if idx > 0 {

@@ -15,7 +15,7 @@ func (s *AccessMcpResourceTool) Name() string { return "access_mcp_resource" }
 func (s *AccessMcpResourceTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -23,27 +23,27 @@ func (s *AccessMcpResourceTool) Prompt() string {
 }
 
 func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
-	// 参数校验
+	// Parameter validation
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
-		return nil, fmt.Errorf("缺少或无效的服务器名称参数")
+		return nil, fmt.Errorf("missing or invalid server name parameter")
 	}
 
 	uri, ok := param["uri"].(string)
 	if !ok || uri == "" {
-		return nil, fmt.Errorf("缺少或无效的URI参数")
+		return nil, fmt.Errorf("missing or invalid URI parameter")
 	}
 
-	// 调用工具函数
+	// Call tool function
 	ret, err := AccessMcpResource(serverName, uri)
 	if err != nil {
-		return nil, fmt.Errorf("访问MCP资源失败: %v", err)
+		return nil, fmt.Errorf("failed to access MCP resource: %v", err)
 	}
 
-	// 处理返回值
+	// Process return value
 	result, err := json.Marshal(ret)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return result, nil
@@ -72,10 +72,10 @@ Usage:
 </access_mcp_resource>
 */
 
-// AccessMcpResource 实现access_mcp_resource工具功能
+// AccessMcpResource implements the access_mcp_resource tool functionality
 // AccessMcpResource function implements the access_mcp_resource tool functionality
 func AccessMcpResource(serverName, uri string) (string, error) {
-	// 这里应该实现与MCP服务器的资源访问逻辑
-	// 由于这是一个模拟实现，我们只返回一个示例响应
+	// Should implement the resource access logic with MCP server
+	// As this is a mock implementation, we just return a sample response
 	return fmt.Sprintf("Accessed resource '%s' on server '%s'", uri, serverName), nil
 }

@@ -15,7 +15,7 @@ func (s *SwitchModeTool) Name() string { return "switch_mode" }
 func (s *SwitchModeTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -25,19 +25,19 @@ func (s *SwitchModeTool) Prompt() string {
 func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	modeSlug, ok := param["mode_slug"].(string)
 	if !ok || modeSlug == "" {
-		return nil, fmt.Errorf("缺少或无效的模式标识参数")
+		return nil, fmt.Errorf("missing or invalid mode identifier parameter")
 	}
 
 	reason, _ := param["reason"].(string)
 
 	ret, err := SwitchMode(modeSlug, reason)
 	if err != nil {
-		return nil, fmt.Errorf("切换模式失败: %v", err)
+		return nil, fmt.Errorf("failed to switch mode: %v", err)
 	}
 
 	result, err := json.Marshal(ret)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return result, nil
@@ -65,7 +65,7 @@ Example: Requesting to switch to code mode
 // SwitchMode 实现switch_mode工具功能
 // SwitchMode function implements the switch_mode tool functionality
 func SwitchMode(modeSlug, reason string) (string, error) {
-	// 返回模式切换信息
+	// Return mode switching information
 	if reason != "" {
 		return fmt.Sprintf("Switching to mode '%s' because: %s", modeSlug, reason), nil
 	}

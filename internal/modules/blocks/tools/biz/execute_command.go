@@ -28,7 +28,7 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 	// 参数校验
 	command, ok := param["command"].(string)
 	if !ok || command == "" {
-		return nil, fmt.Errorf("缺少或无效的命令参数")
+		return nil, fmt.Errorf("missing or invalid command parameter")
 	}
 
 	// 获取可选参数
@@ -46,13 +46,13 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 	// 调用工具函数
 	output, err := ExecuteCommand(workspaceDir, command, args, cwd)
 	if err != nil {
-		return nil, fmt.Errorf("执行命令失败: %v", err)
+		return nil, fmt.Errorf("failed to execute command: %v", err)
 	}
 
 	// 处理返回值
 	result, err := json.Marshal(output)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return result, nil

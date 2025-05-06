@@ -32,12 +32,12 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbt
 	// 检查路径参数
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("缺少或无效的文件路径参数")
+		return nil, fmt.Errorf("missing or invalid file path parameter")
 	}
 
 	// 检查路径安全性，防止路径遍历攻击
 	if strings.Contains(path, "..") || strings.HasPrefix(path, "/") {
-		return nil, fmt.Errorf("非法文件路径，禁止访问上级目录或绝对路径")
+		return nil, fmt.Errorf("invalid file path, access to parent directory or absolute path is forbidden")
 	}
 
 	// 处理起始行参数
@@ -49,10 +49,10 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbt
 		case int:
 			startLine = v
 		default:
-			return nil, fmt.Errorf("start_line参数必须是数字类型")
+			return nil, fmt.Errorf("start_line parameter must be a number")
 		}
 		if startLine < 1 {
-			return nil, fmt.Errorf("起始行号不能小于1")
+			return nil, fmt.Errorf("start line cannot be less than 1")
 		}
 	}
 
@@ -65,16 +65,16 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbt
 		case int:
 			endLine = v
 		default:
-			return nil, fmt.Errorf("end_line参数必须是数字类型")
+			return nil, fmt.Errorf("end_line parameter must be a number")
 		}
 		if endLine > 0 && endLine < startLine {
-			return nil, fmt.Errorf("结束行号不能小于起始行号")
+			return nil, fmt.Errorf("end line cannot be less than start line")
 		}
 	}
 
 	ret, err := ReadFile(workspaceDir, path, startLine, endLine)
 	if err != nil {
-		return nil, fmt.Errorf("读取文件失败: %w", err)
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	// 将字符串结果转换为[]byte作为ToolResult返回

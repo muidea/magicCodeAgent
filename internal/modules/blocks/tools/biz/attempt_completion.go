@@ -15,7 +15,7 @@ func (s *AttemptCompletionTool) Name() string { return "attempt_completion" }
 func (s *AttemptCompletionTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("Failed to read prompts: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -26,7 +26,7 @@ func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolPar
 	// 参数校验
 	result, ok := param["result"].(string)
 	if !ok || result == "" {
-		return nil, fmt.Errorf("缺少或无效的结果参数")
+		return nil, fmt.Errorf("missing or invalid result parameter")
 	}
 
 	// 获取可选参数
@@ -35,13 +35,15 @@ func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolPar
 	// 调用工具函数
 	ret, err := AttemptCompletion(result, command)
 	if err != nil {
-		return nil, fmt.Errorf("尝试完成任务失败: %v", err)
+		log.Errorf("Failed to attempt completion: %v", err)
+		return nil, fmt.Errorf("failed to attempt completion: %v", err)
 	}
 
 	// 处理返回值
 	byteVal, byeErr := json.Marshal(ret)
 	if byeErr != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", byeErr)
+		log.Errorf("Failed to serialize result: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 	return byteVal, nil
 }
@@ -87,7 +89,7 @@ I've updated the CSS
 
 // AttemptCompletion 实现attempt_completion工具功能
 func AttemptCompletion(result, command string) (string, error) {
-	// 返回完成结果和可选的命令
+	// Return completion result and optional command
 	if command != "" {
 		return fmt.Sprintf("Result: %s\nCommand: %s", result, command), nil
 	}

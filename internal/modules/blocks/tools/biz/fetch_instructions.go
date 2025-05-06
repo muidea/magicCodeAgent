@@ -15,7 +15,7 @@ func (s *FetchInstructionsTool) Name() string { return "fetch_instructions" }
 func (s *FetchInstructionsTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("Failed to read prompts: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -26,19 +26,21 @@ func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolPar
 	// 参数校验
 	task, ok := param["task"].(string)
 	if !ok || task == "" {
-		return nil, fmt.Errorf("缺少或无效的任务类型参数")
+		return nil, fmt.Errorf("missing or invalid task type parameter")
 	}
 
 	// 调用工具函数
 	result, err := FetchInstructions(task)
 	if err != nil {
-		return nil, fmt.Errorf("获取指令失败: %v", err)
+		log.Errorf("Failed to fetch instructions: %v", err)
+		return nil, fmt.Errorf("failed to fetch instructions: %v", err)
 	}
 
 	// 处理返回值
 	ret, err := json.Marshal(result)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		log.Errorf("Failed to serialize result: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return ret, nil
@@ -64,7 +66,7 @@ Example: Requesting instructions to create an MCP Server
 // FetchInstructions 实现fetch_instructions工具功能
 // FetchInstructions function implements the fetch_instructions tool functionality
 func FetchInstructions(task string) (string, error) {
-	// 根据任务类型返回相应的指令
+	// Return corresponding instructions based on task type
 	switch task {
 	case "create_mcp_server":
 		return "Instructions for creating an MCP server...", nil

@@ -29,12 +29,12 @@ func (s *SearchAndReplaceTool) Prompt() string {
 func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("缺少或无效的文件路径参数")
+		return nil, fmt.Errorf("missing or invalid file path parameter")
 	}
 
 	operations, ok := param["operations"].(string)
 	if !ok || operations == "" {
-		return nil, fmt.Errorf("缺少或无效的操作参数")
+		return nil, fmt.Errorf("missing or invalid operation parameter")
 	}
 
 	var ops []struct {
@@ -48,11 +48,11 @@ func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolPara
 	}
 
 	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
-		return nil, fmt.Errorf("解析操作参数失败: %v", err)
+		return nil, fmt.Errorf("failed to parse operation parameters: %v", err)
 	}
 
 	if len(ops) == 0 {
-		return nil, fmt.Errorf("缺少有效的操作")
+		return nil, fmt.Errorf("no valid operations provided")
 	}
 
 	err := SearchAndReplace(workspaceDir, path, ops)
@@ -63,7 +63,7 @@ func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolPara
 	// 返回结果需要转换为ToolResult格式
 	result, err := json.Marshal("替换操作成功完成")
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return result, nil

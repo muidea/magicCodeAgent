@@ -17,8 +17,8 @@ func TestUseMcpTool(t *testing.T) {
 	result1, err := UseMcpTool(serverName1, toolName1, arguments1)
 
 	// 验证结果
-	assert.NoError(t, err, "使用MCP工具应该成功")
-	assert.Equal(t, expectedResult1, result1, "返回结果应该符合预期")
+	assert.NoError(t, err, "using MCP tool should succeed")
+	assert.Equal(t, expectedResult1, result1, "result should match expectation")
 
 	// 测试用例2：空参数
 	serverName2 := "test-server"
@@ -29,8 +29,8 @@ func TestUseMcpTool(t *testing.T) {
 	result2, err := UseMcpTool(serverName2, toolName2, arguments2)
 
 	// 验证结果
-	assert.NoError(t, err, "空参数应该不会导致错误")
-	assert.Equal(t, expectedResult2, result2, "返回结果应该符合预期")
+	assert.NoError(t, err, "empty arguments should not cause error")
+	assert.Equal(t, expectedResult2, result2, "result should match expectation")
 
 	// 测试用例3：复杂嵌套参数
 	serverName3 := "data-server"
@@ -41,8 +41,8 @@ func TestUseMcpTool(t *testing.T) {
 	result3, err := UseMcpTool(serverName3, toolName3, arguments3)
 
 	// 验证结果
-	assert.NoError(t, err, "复杂嵌套参数应该不会导致错误")
-	assert.Equal(t, expectedResult3, result3, "返回结果应该符合预期")
+	assert.NoError(t, err, "complex nested arguments should not cause error")
+	assert.Equal(t, expectedResult3, result3, "result should match expectation")
 
 	// 测试用例4：空服务器名
 	serverName4 := ""
@@ -53,8 +53,8 @@ func TestUseMcpTool(t *testing.T) {
 	result4, err := UseMcpTool(serverName4, toolName4, arguments4)
 
 	// 验证结果
-	assert.NoError(t, err, "空服务器名应该不会导致错误")
-	assert.Equal(t, expectedResult4, result4, "返回结果应该符合预期")
+	assert.NoError(t, err, "empty server name should not cause error")
+	assert.Equal(t, expectedResult4, result4, "result should match expectation")
 
 	// 测试用例5：空工具名
 	serverName5 := "some-server"
@@ -65,8 +65,8 @@ func TestUseMcpTool(t *testing.T) {
 	result5, err := UseMcpTool(serverName5, toolName5, arguments5)
 
 	// 验证结果
-	assert.NoError(t, err, "空工具名应该不会导致错误")
-	assert.Equal(t, expectedResult5, result5, "返回结果应该符合预期")
+	assert.NoError(t, err, "empty tool name should not cause error")
+	assert.Equal(t, expectedResult5, result5, "result should match expectation")
 
 	// 测试用例6：nil参数（应该被视为空JSON对象）
 	serverName6 := "nil-server"
@@ -77,6 +77,6 @@ func TestUseMcpTool(t *testing.T) {
 	result6, err := UseMcpTool(serverName6, toolName6, arguments6)
 
 	// 验证结果
-	assert.NoError(t, err, "nil参数应该不会导致错误")
-	assert.Equal(t, expectedResult6, result6, "返回结果应该符合预期")
+	assert.NoError(t, err, "nil arguments should not cause error")
+	assert.Equal(t, expectedResult6, result6, "result should match expectation")
 }

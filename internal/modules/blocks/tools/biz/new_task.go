@@ -15,7 +15,7 @@ func (s *NewTaskTool) Name() string { return "new_task" }
 func (s *NewTaskTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -25,22 +25,22 @@ func (s *NewTaskTool) Prompt() string {
 func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	mode, ok := param["mode"].(string)
 	if !ok || mode == "" {
-		return nil, fmt.Errorf("缺少或无效的模式参数")
+		return nil, fmt.Errorf("missing or invalid mode parameter")
 	}
 
 	message, ok := param["message"].(string)
 	if !ok || message == "" {
-		return nil, fmt.Errorf("缺少或无效的消息参数")
+		return nil, fmt.Errorf("missing or invalid message parameter")
 	}
 
 	ret, err := NewTask(mode, message)
 	if err != nil {
-		return nil, fmt.Errorf("创建新任务失败: %v", err)
+		return nil, fmt.Errorf("failed to create new task: %v", err)
 	}
 
 	result, err := json.Marshal(ret)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return result, nil

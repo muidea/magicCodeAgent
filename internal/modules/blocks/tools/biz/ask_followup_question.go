@@ -17,7 +17,7 @@ func (s *AskFollowupQuestionTool) Name() string { return "ask_followup_question"
 func (s *AskFollowupQuestionTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("failed to read prompts, err: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -28,19 +28,19 @@ func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolP
 	// 参数校验
 	question, ok := param["question"].(string)
 	if !ok || question == "" {
-		return nil, fmt.Errorf("缺少或无效的问题参数")
+		return nil, fmt.Errorf("missing or invalid question parameter")
 	}
 
 	// 调用工具函数
 	ret, err := AskFollowupQuestion(question)
 	if err != nil {
-		return nil, fmt.Errorf("提问失败: %v", err)
+		return nil, fmt.Errorf("failed to ask question: %v", err)
 	}
 
 	// 处理返回值
 	result, err := json.Marshal(ret)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return result, nil

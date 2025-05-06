@@ -15,7 +15,7 @@ func (s *UseMcpToolTool) Name() string { return "use_mcp_tool" }
 func (s *UseMcpToolTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -25,27 +25,27 @@ func (s *UseMcpToolTool) Prompt() string {
 func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
-		return nil, fmt.Errorf("缺少或无效的服务器名称参数")
+		return nil, fmt.Errorf("missing or invalid server name parameter")
 	}
 
 	toolName, ok := param["tool_name"].(string)
 	if !ok || toolName == "" {
-		return nil, fmt.Errorf("缺少或无效的工具名称参数")
+		return nil, fmt.Errorf("missing or invalid tool name parameter")
 	}
 
 	arguments, ok := param["arguments"].(string)
 	if !ok || arguments == "" {
-		return nil, fmt.Errorf("缺少或无效的参数")
+		return nil, fmt.Errorf("missing or invalid arguments")
 	}
 
 	ret, err := UseMcpTool(serverName, toolName, json.RawMessage(arguments))
 	if err != nil {
-		return nil, fmt.Errorf("使用MCP工具失败: %v", err)
+		return nil, fmt.Errorf("failed to use MCP tool: %v", err)
 	}
 
 	result, err := json.Marshal(ret)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return result, nil

@@ -17,7 +17,7 @@ func (s *ListFilesTool) Name() string { return "list_files" }
 func (s *ListFilesTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -28,7 +28,7 @@ func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (imb
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("缺少或无效的路径参数")
+		return nil, fmt.Errorf("missing or invalid path parameter")
 	}
 
 	// 获取可选参数
@@ -37,13 +37,15 @@ func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (imb
 	// 调用工具函数
 	result, err := ListFiles(workspaceDir, path, recursive)
 	if err != nil {
-		return nil, fmt.Errorf("列出文件失败: %v", err)
+		log.Errorf("failed to list files: %v", err)
+		return nil, fmt.Errorf("failed to list files: %v", err)
 	}
 
 	// 处理返回值
 	ret, err := json.Marshal(result)
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		log.Errorf("failed to serialize result: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 
 	return ret, nil
@@ -86,7 +88,7 @@ func ListFiles(workspaceDir, path string, recursive bool) ([]string, error) {
 		return nil, err
 	}
 	if !fileInfo.IsDir() {
-		return nil, fmt.Errorf("%s 不是一个目录", path)
+		return nil, fmt.Errorf("%s is not a directory", path)
 	}
 
 	var results []string

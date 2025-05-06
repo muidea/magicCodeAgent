@@ -21,7 +21,7 @@ func (s *ApplyDiffTool) Name() string { return "apply_diff" }
 func (s *ApplyDiffTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
-		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
+		log.Warnf("failed to read prompts, err: %s", promptsErr.Error())
 		return ""
 	}
 
@@ -32,24 +32,24 @@ func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) (imb
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("缺少或无效的文件路径参数")
+		return nil, fmt.Errorf("missing or invalid file path parameter")
 	}
 
 	diff, ok := param["diff"].(string)
 	if !ok || diff == "" {
-		return nil, fmt.Errorf("缺少或无效的diff参数")
+		return nil, fmt.Errorf("missing or invalid diff parameter")
 	}
 
 	// 调用工具函数
 	err := ApplyDiff(workspaceDir, path, diff)
 	if err != nil {
-		return nil, fmt.Errorf("应用差异失败: %v", err)
+		return nil, fmt.Errorf("failed to apply diff: %v", err)
 	}
 
 	// 处理返回值
 	result, err := json.Marshal("差异应用成功")
 	if err != nil {
-		return nil, fmt.Errorf("序列化结果失败: %v", err)
+		return nil, fmt.Errorf("failed to serialize result: %v", err)
 	}
 	return result, nil
 }
@@ -200,14 +200,14 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 		replaceEndIdx := strings.Index(blockPart, ">>>>>>> REPLACE")
 
 		if sepIdx == -1 || replaceEndIdx == -1 {
-			return nil, fmt.Errorf("格式不正确的diff块: 缺少分隔符或结束标记")
+			return nil, fmt.Errorf("malformed diff block: missing separator or end marker")
 		}
 
 		// 提取元数据行
 		metaPart := blockPart[len("<<<<<<< SEARCH"):]
 		contentSep := strings.Index(metaPart, "-------")
 		if contentSep == -1 {
-			return nil, fmt.Errorf("格式不正确的diff块: 缺少内容分隔符")
+			return nil, fmt.Errorf("malformed diff block: missing content separator")
 		}
 		metaLines := strings.Split(strings.TrimSpace(metaPart[:contentSep]), "\n")
 
@@ -216,12 +216,12 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 		for _, line := range metaLines {
 			if strings.HasPrefix(line, ":start_line:") {
 				if _, err := fmt.Sscanf(line, ":start_line:%d", &startLine); err != nil {
-					return nil, fmt.Errorf("无效的起始行号: %v", err)
+					return nil, fmt.Errorf("invalid start line: %v", err)
 				}
 				startLineFound = true
 			} else if strings.HasPrefix(line, ":end_line:") {
 				if _, err := fmt.Sscanf(line, ":end_line:%d", &endLine); err != nil {
-					return nil, fmt.Errorf("无效的结束行号: %v", err)
+					return nil, fmt.Errorf("invalid end line: %v", err)
 				}
 				endLineFound = true
 			}
@@ -229,11 +229,11 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 
 		// 验证行号
 		if !startLineFound {
-			return nil, fmt.Errorf("缺少起始行号")
+			return nil, fmt.Errorf("missing start line")
 		}
 
 		if startLine <= 0 {
-			return nil, fmt.Errorf("起始行号必须为正数: startLine=%d", startLine)
+			return nil, fmt.Errorf("start line must be positive: startLine=%d", startLine)
 		}
 
 		// 提取原始内容和替换内容
@@ -246,11 +246,11 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 			endLine = startLine + lineCount - 1
 			log.Infof("未指定结束行号，根据内容自动计算: startLine=%d, lineCount=%d, endLine=%d", startLine, lineCount, endLine)
 		} else if endLine <= 0 {
-			return nil, fmt.Errorf("结束行号必须为正数: endLine=%d", endLine)
+			return nil, fmt.Errorf("end line must be positive: endLine=%d", endLine)
 		}
 
 		if startLine > endLine {
-			return nil, fmt.Errorf("起始行号不能大于结束行号: startLine=%d, endLine=%d", startLine, endLine)
+			return nil, fmt.Errorf("start line cannot be greater than end line: startLine=%d, endLine=%d", startLine, endLine)
 		}
 
 		// 提取替换内容
@@ -268,7 +268,7 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 	}
 
 	if len(blocks) == 0 {
-		return nil, fmt.Errorf("没有找到有效的diff块")
+		return nil, fmt.Errorf("no valid diff blocks found")
 	}
 
 	// 对块按起始行号排序
@@ -284,12 +284,12 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 	fullPath := filepath.Join(workspaceDir, path)
 	fullPath = filepath.Clean(fullPath)
 	if !fp.Exist(fullPath) {
-		return fmt.Errorf("文件不存在: %s", fullPath)
+		return fmt.Errorf("file not found: %s", fullPath)
 	}
 
 	diffBlocks, err := splitDiffBlock(diff)
 	if err != nil {
-		return fmt.Errorf("解析diff失败: %v", err)
+		return fmt.Errorf("failed to parse diff: %v", err)
 	}
 	if len(diffBlocks) == 0 {
 		return nil
@@ -299,14 +299,14 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 	tmpPath := fullPath + ".tmp"
 	tmpFile, err := os.Create(tmpPath)
 	if err != nil {
-		return fmt.Errorf("创建临时文件失败: %v", err)
+		return fmt.Errorf("failed to create temp file: %v", err)
 	}
 	defer tmpFile.Close()
 
 	// 打开原文件
 	origFile, err := os.Open(fullPath)
 	if err != nil {
-		return fmt.Errorf("打开原文件失败: %v", err)
+		return fmt.Errorf("failed to open original file: %v", err)
 	}
 	defer origFile.Close()
 
@@ -330,12 +330,12 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 					// 写入换行符
 					if !firstLine {
 						if _, err := writer.WriteString("\n"); err != nil {
-							return fmt.Errorf("写入换行符失败: %v", err)
+							return fmt.Errorf("failed to write newline: %v", err)
 						}
 					}
 					firstLine = false
 					if _, err := writer.WriteString(block.ReplaceContent); err != nil {
-						return fmt.Errorf("写入替换内容失败: %v", err)
+						return fmt.Errorf("failed to write replacement content: %v", err)
 					}
 				}
 
@@ -352,24 +352,24 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 		// 写入换行符
 		if !firstLine {
 			if _, err := writer.WriteString("\n"); err != nil {
-				return fmt.Errorf("写入换行符失败: %v", err)
+				return fmt.Errorf("failed to write newline: %v", err)
 			}
 		}
 		firstLine = false
 		// 不在替换范围内，写入原始行
 		if _, err := writer.WriteString(line); err != nil {
-			return fmt.Errorf("写入原始内容失败: %v", err)
+			return fmt.Errorf("failed to write original content: %v", err)
 		}
 		lineNum++
 	}
 
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("读取文件失败: %v", err)
+		return fmt.Errorf("failed to read file: %v", err)
 	}
 
 	// 刷新缓冲区
 	if err := writer.Flush(); err != nil {
-		return fmt.Errorf("刷新写入缓冲区失败: %v", err)
+		return fmt.Errorf("failed to flush write buffer: %v", err)
 	}
 
 	// 关闭文件
@@ -378,7 +378,7 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 
 	// 重命名临时文件
 	if err := os.Rename(tmpPath, fullPath); err != nil {
-		return fmt.Errorf("重命名临时文件失败: %v", err)
+		return fmt.Errorf("failed to rename temp file: %v", err)
 	}
 
 	return nil

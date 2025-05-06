@@ -26,12 +26,12 @@ func (s *WriteToFileTool) Prompt() string {
 func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("缺少或无效的文件路径参数")
+		return nil, fmt.Errorf("missing or invalid file path parameter")
 	}
 
 	content, ok := param["content"].(string)
 	if !ok || content == "" {
-		return nil, fmt.Errorf("缺少或无效的文件内容参数")
+		return nil, fmt.Errorf("missing or invalid file content parameter")
 	}
 
 	// 获取行数参数

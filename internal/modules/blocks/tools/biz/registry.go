@@ -37,7 +37,7 @@ func (s *ToolRegistry) Prompt() string {
 		return contentVal
 	}
 
-	log.Warnf("parse tool prompts failed, err:%s", contentErr.Error())
+	log.Warnf("failed to parse tool prompts, error:%s", contentErr.Error())
 	return ""
 }
 
