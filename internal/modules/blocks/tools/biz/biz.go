@@ -1,8 +1,8 @@
 package biz
 
 import (
+	"bytes"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -19,6 +19,7 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Tools struct {
@@ -59,29 +60,30 @@ func New(
 }
 
 func (s *Tools) Run() (err *cd.Error) {
+	currentWorkDir := fu.GetCurrentWorkDir()
+
 	dataFile := config.GetDataFile()
 	if dataFile != "" {
-		s.execDataFile(dataFile)
+		s.execDataFile(currentWorkDir, dataFile)
 		return
 	}
 
 	dataContent := config.GetDataContent()
 	if dataContent != "" {
-		s.execDataContent(dataContent)
+		s.execDataContent(currentWorkDir, dataContent)
 		return
 	}
 
 	return
 }
 
-func (s *Tools) execDataFile(dataFile string) (result imbtc.ToolResult, err *cd.Error) {
+func (s *Tools) execDataFile(workspaceDir, dataFile string) (result imbtc.ToolResult, err *cd.Error) {
 	if !fp.Exist(dataFile) {
 		err = cd.NewError(cd.IllegalParam, "data file not exist")
 		log.Errorf("data file not exist: %s", dataFile)
 		return
 	}
 
-	currentWorkDir := fu.GetCurrentWorkDir()
 	byteContent, byteErr := os.ReadFile(dataFile)
 	if byteErr != nil {
 		err = cd.NewError(cd.IllegalParam, "read data file error")
@@ -89,52 +91,45 @@ func (s *Tools) execDataFile(dataFile string) (result imbtc.ToolResult, err *cd.
 		return
 	}
 
-	toolName, toolParam, toolErr := parseParamContent(string(byteContent))
-	if toolErr != nil {
-		err = cd.NewError(cd.IllegalParam, "parse param content error")
-		log.Errorf("parse param content error: %s", toolErr.Error())
-		return
-	}
-
-	if toolName == "" {
-		err = cd.NewError(cd.IllegalParam, "tool name is empty")
-		log.Errorf("tool name is empty")
-		return
-	}
-
-	toolResult, toolErr := s.toolRegistry.Execute(currentWorkDir, toolName, toolParam)
-	if toolErr != nil {
-		err = cd.NewError(cd.IllegalParam, "execute tool error")
-		log.Errorf("execute tool error: %s", toolErr.Error())
-		return
-	}
-
-	result = toolResult
+	result, err = s.execDataContent(workspaceDir, string(byteContent))
 	return
 }
 
-func (s *Tools) execDataContent(dataContent string) (result imbtc.ToolResult, err *cd.Error) {
-	currentWorkDir := fu.GetCurrentWorkDir()
-	toolName, toolParam, toolErr := parseParamContent(dataContent)
-	if toolErr != nil {
-		err = cd.NewError(cd.IllegalParam, "parse param content error")
-		log.Errorf("parse param content error: %s", toolErr.Error())
-		return
-	}
-	if toolName == "" {
-		err = cd.NewError(cd.IllegalParam, "tool name is empty")
-		log.Errorf("tool name is empty")
+func (s *Tools) execDataContent(workspaceDir, dataContent string) (result imbtc.ToolResult, err *cd.Error) {
+	dataBlocks, dataErr := util.SpliteBlocks(dataContent)
+	if dataErr != nil {
+		err = cd.NewError(cd.IllegalParam, "split data content error")
+		log.Errorf("split data content error: %s", dataErr.Error())
 		return
 	}
 
-	toolResult, toolErr := s.toolRegistry.Execute(currentWorkDir, toolName, toolParam)
-	if toolErr != nil {
-		err = cd.NewError(cd.IllegalParam, "execute tool error")
-		log.Errorf("execute tool error: %s", toolErr.Error())
-		return
+	byteBuffer := bytes.NewBuffer(nil)
+	for idx, val := range dataBlocks {
+		toolName, toolParam, toolErr := parseParamContent(val)
+		if toolErr != nil {
+			err = cd.NewError(cd.IllegalParam, "parse param content error")
+			log.Errorf("parse param content error: %s", toolErr.Error())
+			return
+		}
+		if toolName == "" {
+			err = cd.NewError(cd.IllegalParam, "tool name is empty")
+			log.Errorf("tool name is empty")
+			return
+		}
+
+		toolResult, toolErr := s.toolRegistry.Execute(workspaceDir, toolName, toolParam)
+		if toolErr != nil {
+			err = cd.NewError(cd.IllegalParam, "execute tool error")
+			log.Errorf("execute tool error: %s", toolErr.Error())
+			return
+		}
+		if idx > 0 {
+			byteBuffer.WriteString("======\n\n")
+		}
+		byteBuffer.Write(toolResult)
 	}
 
-	result = toolResult
+	result = byteBuffer.Bytes()
 	return
 }
 
@@ -145,36 +140,8 @@ func (s *Tools) execDataContent(dataContent string) (result imbtc.ToolResult, er
 // 执行函数的参数是root的子节点及子节点的值
 // 参照示例参见各个工具函数对应的注释信息
 func parseParamContent(content string) (ret string, param map[string]any, err error) {
-	parts := strings.Split(content, "\n\n")
-	if len(parts) < 2 {
-		err = errors.New("invalid content format")
-		return
-	}
-
-	hasThinking := false
-	hasTool := false
-
-	var toolsContent string
-	for _, part := range parts {
-		trimmed := strings.TrimSpace(part)
-		if strings.HasPrefix(trimmed, "<thinking>") && strings.HasSuffix(trimmed, "</thinking>") {
-			hasThinking = true
-		} else if strings.HasPrefix(trimmed, "<tool>") && strings.HasSuffix(trimmed, "</tool>") {
-			hasTool = true
-			toolsContent = trimmed
-		}
-		if hasThinking && hasTool {
-			break // 提前退出循环
-		}
-	}
-
-	if !hasTool {
-		err = errors.New("invalid content format")
-		return
-	}
-
 	// 解析XML内容
-	decoder := xml.NewDecoder(strings.NewReader(toolsContent))
+	decoder := xml.NewDecoder(strings.NewReader(content))
 	param = make(map[string]any)
 
 	for {
