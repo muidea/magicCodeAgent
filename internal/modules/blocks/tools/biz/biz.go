@@ -199,19 +199,5 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		return
 	}
 
-	toolsName, toolParam, toolErr := parseParamContent(contentVal)
-	if toolErr != nil {
-		err = cd.NewError(cd.IllegalParam, "execute tool failed, invalid tool content")
-		log.Warnf("parseParamContent failed, err: %s", toolErr.Error())
-		return
-	}
-
-	execVal, execErr := s.toolRegistry.Execute(workspaceDir, toolsName, toolParam)
-	if execErr != nil {
-		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("execute tool failed, error: %s", execErr.Error()))
-		log.Warnf("Execute tool failed, err: %s", execErr.Error())
-		return
-	}
-
-	executeResult = execVal
+	executeResult, err = s.execDataContent(workspaceDir, contentVal)
 }
