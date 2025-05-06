@@ -9,10 +9,8 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
-	iirc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/service"
 
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
 )
@@ -22,8 +20,7 @@ func init() {
 }
 
 type Tools struct {
-	bizPtr     *biz.Tools
-	servicePtr *service.Tools
+	bizPtr *biz.Tools
 }
 
 func New() *Tools {
@@ -35,15 +32,6 @@ func (s *Tools) ID() string {
 }
 
 func (s *Tools) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
-	var routeRegistryHelperVal iirc.RouteRegistryHelper
-	var routeRegistryHelperErr *cd.Error
-	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(iirc.RouteRegistryInitator, routeRegistryHelperVal)
-	if routeRegistryHelperErr != nil {
-		err = routeRegistryHelperErr
-		log.Errorf("Tool setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
-		return
-	}
-
 	var promptsRegistryHelperVal iipc.PromptsRegistryHeper
 	var promptsRegistryHelperErr *cd.Error
 	promptsRegistryHelperVal, promptsRegistryHelperErr = initator.GetEntity(iipc.PromptsInitator, promptsRegistryHelperVal)
@@ -54,9 +42,6 @@ func (s *Tools) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRouti
 	}
 
 	s.bizPtr = biz.New(eventHub, backgroundRoutine, promptsRegistryHelperVal.GetPromptsRegistry())
-
-	s.servicePtr = service.New(routeRegistryHelperVal.GetRouteRegistry(), s.bizPtr)
-
 	return nil
 }
 
@@ -65,8 +50,6 @@ func (s *Tools) Run() (err *cd.Error) {
 	if err != nil {
 		return
 	}
-
-	s.servicePtr.RegisterRoute()
 	return
 }
 

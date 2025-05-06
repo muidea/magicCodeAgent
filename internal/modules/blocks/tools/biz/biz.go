@@ -106,6 +106,10 @@ func (s *Tools) execDataContent(workspaceDir, dataContent string) (result imbtc.
 	byteBuffer := bytes.NewBuffer(nil)
 	for idx, val := range dataBlocks {
 		toolName, toolParam, toolErr := parseParamContent(val)
+		if toolName == "thinking" {
+			continue
+		}
+
 		if toolErr != nil {
 			err = cd.NewError(cd.IllegalParam, "parse param content error")
 			log.Errorf("parse param content error: %s", toolErr.Error())

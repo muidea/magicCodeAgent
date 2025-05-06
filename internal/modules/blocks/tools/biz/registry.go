@@ -43,7 +43,7 @@ func (s *ToolRegistry) Prompt() string {
 
 func (s *ToolRegistry) Register(tool imbtc.Tool) {
 	if s.promptsRegistry != nil {
-		s.promptsRegistry.AddPrompts(tool.Name(), tool)
+		s.promptsRegistry.AddPrompts(s.Name(), tool)
 	}
 	s.name2Tools[tool.Name()] = tool
 }
