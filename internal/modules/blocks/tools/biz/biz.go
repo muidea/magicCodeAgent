@@ -2,6 +2,7 @@ package biz
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -58,39 +59,82 @@ func New(
 }
 
 func (s *Tools) Run() (err *cd.Error) {
-
 	dataFile := config.GetDataFile()
-	if dataFile == "" {
+	if dataFile != "" {
+		s.execDataFile(dataFile)
 		return
 	}
 
+	dataContent := config.GetDataContent()
+	if dataContent != "" {
+		s.execDataContent(dataContent)
+		return
+	}
+
+	return
+}
+
+func (s *Tools) execDataFile(dataFile string) (result imbtc.ToolResult, err *cd.Error) {
 	if !fp.Exist(dataFile) {
+		err = cd.NewError(cd.IllegalParam, "data file not exist")
 		log.Errorf("data file not exist: %s", dataFile)
+		return
 	}
 
 	currentWorkDir := fu.GetCurrentWorkDir()
 	byteContent, byteErr := os.ReadFile(dataFile)
 	if byteErr != nil {
+		err = cd.NewError(cd.IllegalParam, "read data file error")
 		log.Errorf("read data file error: %s", byteErr.Error())
 		return
 	}
 
 	toolName, toolParam, toolErr := parseParamContent(string(byteContent))
 	if toolErr != nil {
+		err = cd.NewError(cd.IllegalParam, "parse param content error")
 		log.Errorf("parse param content error: %s", toolErr.Error())
 		return
 	}
 
 	if toolName == "" {
+		err = cd.NewError(cd.IllegalParam, "tool name is empty")
 		log.Errorf("tool name is empty")
 		return
 	}
 
-	_, toolErr = s.toolRegistry.Execute(currentWorkDir, toolName, toolParam)
+	toolResult, toolErr := s.toolRegistry.Execute(currentWorkDir, toolName, toolParam)
 	if toolErr != nil {
+		err = cd.NewError(cd.IllegalParam, "execute tool error")
 		log.Errorf("execute tool error: %s", toolErr.Error())
 		return
 	}
+
+	result = toolResult
+	return
+}
+
+func (s *Tools) execDataContent(dataContent string) (result imbtc.ToolResult, err *cd.Error) {
+	currentWorkDir := fu.GetCurrentWorkDir()
+	toolName, toolParam, toolErr := parseParamContent(dataContent)
+	if toolErr != nil {
+		err = cd.NewError(cd.IllegalParam, "parse param content error")
+		log.Errorf("parse param content error: %s", toolErr.Error())
+		return
+	}
+	if toolName == "" {
+		err = cd.NewError(cd.IllegalParam, "tool name is empty")
+		log.Errorf("tool name is empty")
+		return
+	}
+
+	toolResult, toolErr := s.toolRegistry.Execute(currentWorkDir, toolName, toolParam)
+	if toolErr != nil {
+		err = cd.NewError(cd.IllegalParam, "execute tool error")
+		log.Errorf("execute tool error: %s", toolErr.Error())
+		return
+	}
+
+	result = toolResult
 	return
 }
 
@@ -101,8 +145,36 @@ func (s *Tools) Run() (err *cd.Error) {
 // 执行函数的参数是root的子节点及子节点的值
 // 参照示例参见各个工具函数对应的注释信息
 func parseParamContent(content string) (ret string, param map[string]any, err error) {
+	parts := strings.Split(content, "\n\n")
+	if len(parts) < 2 {
+		err = errors.New("invalid content format")
+		return
+	}
+
+	hasThinking := false
+	hasTool := false
+
+	var toolsContent string
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if strings.HasPrefix(trimmed, "<thinking>") && strings.HasSuffix(trimmed, "</thinking>") {
+			hasThinking = true
+		} else if strings.HasPrefix(trimmed, "<tool>") && strings.HasSuffix(trimmed, "</tool>") {
+			hasTool = true
+			toolsContent = trimmed
+		}
+		if hasThinking && hasTool {
+			break // 提前退出循环
+		}
+	}
+
+	if !hasTool {
+		err = errors.New("invalid content format")
+		return
+	}
+
 	// 解析XML内容
-	decoder := xml.NewDecoder(strings.NewReader(content))
+	decoder := xml.NewDecoder(strings.NewReader(toolsContent))
 	param = make(map[string]any)
 
 	for {
@@ -129,10 +201,11 @@ func parseParamContent(content string) (ret string, param map[string]any, err er
 	}
 
 	if ret == "" {
-		return "", nil, fmt.Errorf("invalid xml content")
+		err = fmt.Errorf("invalid tool content")
+		return
 	}
 
-	return ret, param, nil
+	return
 }
 
 func (s *Tools) Execute(ev event.Event, re event.Result) {
