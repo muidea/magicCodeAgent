@@ -6,8 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testVal = `
-<thinking>
+var testVal = `<thinking>
 1. 分析任务：需要为已有的Go程序添加Makefile，用于构建和运行
 2. 目标：创建一个标准的Makefile，包含build和run目标
 3. 工具选择：使用write_to_file工具创建新的Makefile

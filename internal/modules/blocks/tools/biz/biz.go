@@ -166,7 +166,7 @@ func parseParamContent(content string) (ret string, param map[string]any, err er
 				if err := decoder.DecodeElement(&value, &se); err != nil {
 					return "", nil, err
 				}
-				param[se.Name.Local] = value
+				param[se.Name.Local] = strings.Trim(value, "\n")
 			}
 		}
 	}

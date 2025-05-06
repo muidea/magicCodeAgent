@@ -70,7 +70,7 @@ func SpliteBlocks(content string) (ret []string, err error) {
 				currentBlock.WriteString("\n")
 				foundStartTag = false
 			}
-			currentBlock.WriteString(line)
+			currentBlock.WriteString(line + "\n")
 		}
 	}
 
