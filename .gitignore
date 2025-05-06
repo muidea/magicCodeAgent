@@ -18,5 +18,6 @@ data
 !application/magicCodeAgent/cmd/main.go
 
 magicCodeCli
+magicCodeTool
 magicCodeDebug
 magicCodeAgent

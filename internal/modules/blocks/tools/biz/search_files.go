@@ -42,7 +42,7 @@ func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (i
 		filePattern = filePatternParam
 	}
 
-	results, err := SearchFiles(workspaceDir,path, regex, filePattern)
+	results, err := SearchFiles(workspaceDir, path, regex, filePattern)
 	if err != nil {
 		return nil, fmt.Errorf("搜索文件失败: %v", err)
 	}
