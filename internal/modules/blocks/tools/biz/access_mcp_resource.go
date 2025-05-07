@@ -41,7 +41,7 @@ func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolPar
 	}
 
 	// Process return value
-	byteVal, byteErr := json.Marshal(resourceVal)
+	byteVal, byteErr := json.MarshalIndent(resourceVal, "", "  ")
 	if byteErr != nil {
 		return &imbtc.ToolResult{Error: byteErr}
 	}

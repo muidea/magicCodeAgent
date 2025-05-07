@@ -35,7 +35,7 @@ func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) *im
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to switch mode: %v", err)}
 	}
 
-	result, err := json.Marshal(resVal)
+	result, err := json.MarshalIndent(resVal, "", "  ")
 	if err != nil {
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}

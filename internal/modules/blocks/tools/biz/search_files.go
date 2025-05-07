@@ -48,7 +48,7 @@ func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *i
 	}
 
 	// 将结果转换为JSON格式
-	resultJSON, err := json.Marshal(results)
+	resultJSON, err := json.MarshalIndent(results, "", "  ")
 	if err != nil {
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}

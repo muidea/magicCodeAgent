@@ -37,7 +37,7 @@ func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolPar
 	}
 
 	// 处理返回值
-	byteVal, byteErr := json.Marshal(result)
+	byteVal, byteErr := json.MarshalIndent(result, "", "  ")
 	if byteErr != nil {
 		log.Errorf("Failed to serialize result: %v", byteErr)
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}

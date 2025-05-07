@@ -38,7 +38,7 @@ func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolP
 	}
 
 	// 处理返回值
-	result, err := json.Marshal(resVal)
+	result, err := json.MarshalIndent(resVal, "", "  ")
 	if err != nil {
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}

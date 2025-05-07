@@ -60,7 +60,7 @@ func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolPara
 		return &imbtc.ToolResult{Error: err}
 	}
 
-	return &imbtc.ToolResult{Content: nil}
+	return &imbtc.ToolResult{Content: []byte("search and replace success!")}
 }
 
 /*

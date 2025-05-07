@@ -50,7 +50,7 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 	}
 
 	// 处理返回值
-	result, err := json.Marshal(output)
+	result, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}

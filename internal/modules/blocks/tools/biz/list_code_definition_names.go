@@ -42,7 +42,7 @@ func (s *ListCodeDefinitionNamesTool) Execute(workspaceDir string, param imbtc.T
 	}
 
 	// 处理返回值
-	byteVal, err := json.Marshal(result)
+	byteVal, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		log.Errorf("failed to serialize result: %v", err)
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}

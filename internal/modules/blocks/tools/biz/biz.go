@@ -125,7 +125,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 			continue
 		}
 
-		byteBuilder.WriteString(string(toolResult.Content))
+		byteBuilder.WriteString(string(toolResult.Content) + "\n")
 	}
 	return byteBuilder.String(), nil
 }

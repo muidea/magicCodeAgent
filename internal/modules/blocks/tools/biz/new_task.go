@@ -38,7 +38,7 @@ func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to create new task: %v", err)}
 	}
 
-	result, err := json.Marshal(resVal)
+	result, err := json.MarshalIndent(resVal, "", "  ")
 	if err != nil {
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}

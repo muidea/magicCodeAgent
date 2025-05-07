@@ -40,7 +40,7 @@ func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolPar
 	}
 
 	// 处理返回值
-	byteVal, byteErr := json.Marshal(resVal)
+	byteVal, byteErr := json.MarshalIndent(resVal, "", "  ")
 	if byteErr != nil {
 		log.Errorf("Failed to serialize result: %v", byteErr)
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}

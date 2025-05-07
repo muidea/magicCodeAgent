@@ -65,7 +65,7 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to insert content: %v", err)}
 	}
 
-	return &imbtc.ToolResult{Content: nil}
+	return &imbtc.ToolResult{Content: []byte("insert content success!")}
 }
 
 /*

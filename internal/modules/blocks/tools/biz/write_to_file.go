@@ -45,7 +45,7 @@ func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *i
 		return &imbtc.ToolResult{Error: err}
 	}
 
-	return &imbtc.ToolResult{Content: nil}
+	return &imbtc.ToolResult{Content: []byte("write to file success!")}
 }
 
 /*

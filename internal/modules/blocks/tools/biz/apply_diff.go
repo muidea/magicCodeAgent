@@ -47,8 +47,8 @@ func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) *imb
 	}
 
 	// 处理返回值
-	resultStr := "差异应用成功"
-	byteVal, byteErr := json.Marshal(resultStr)
+	resultStr := "apply diff success!"
+	byteVal, byteErr := json.MarshalIndent(resultStr, "", "  ")
 	if byteErr != nil {
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
 	}
