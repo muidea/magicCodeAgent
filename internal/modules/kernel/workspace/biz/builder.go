@@ -4,16 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	cd "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
-	fu "github.com/muidea/magicCommon/foundation/util"
 
 	"github.com/muidea/magicEngine/sse"
 
-	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -76,59 +72,15 @@ func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName s
 	return
 }
 
-func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, param *imkwc.ChatMessage) (err *cd.Error) {
-	curWorkspace, ok := s.workspaceStationCache.Load(param.Workspace)
+func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, paramPtr *imkwc.ChatMessage) (err *cd.Error) {
+	curWorkspace, ok := s.workspaceStationCache.Load(paramPtr.Workspace)
 	if !ok {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", param.Workspace))
-		log.Errorf("workspace:%s not found", param.Workspace)
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", paramPtr.Workspace))
+		log.Errorf("workspace:%s not found", paramPtr.Workspace)
 		return
 	}
 	stationPtr := curWorkspace.(*Station)
-
-	var curFlow *models.Flow
-	flowIDVal := ctx.Value(common.FlowID{})
-	if flowIDVal != nil {
-		curFlow = stationPtr.GetFlow(flowIDVal.(string))
-	} else {
-		curFlow = stationPtr.GetCurrentFlow()
-	}
-	flowPath := stationPtr.GetFlowPath(curFlow)
-
-	systemMessage := &models.MessageItem{
-		Role:    common.System,
-		Content: s.prompsRegistry.GetPromptsContent(),
-	}
-
-	userMessageList := []*models.MessageItem{}
-	for _, flow := range flowPath {
-		for _, message := range flow.Message {
-			userMessageList = append(userMessageList, message.Send.Item)
-			userMessageList = append(userMessageList, message.Recv.Item)
-		}
-	}
-
-	messageItem := &models.MessageItem{
-		Role:    common.User,
-		Content: param.Content,
-	}
-	stationPtr.DisposeSendMessage(
-		&models.MessageInfo{
-			Item:       messageItem,
-			CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-			Workspace:  param.Workspace,
-		},
-		curFlow,
-	)
-
-	contentContext := context.WithValue(ctx, common.ContentSink{}, stationPtr)
-	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	userMessageList = append(userMessageList, messageItem)
-	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, userMessageList)
-	ev.SetData("context", providerContext)
-	ev.SetData("workspace", param.Workspace)
-	ev.SetData("systemMessage", systemMessage)
-	result := s.SendEvent(ev)
-	err = result.Error()
+	err = stationPtr.ChatMessage(ctx, paramPtr)
 	return
 }
 

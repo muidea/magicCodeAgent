@@ -18,6 +18,7 @@ const ToolsPromptsBasePath = "assets/template/prompts/tools"
 
 type ToolParam map[string]any
 type ToolResult struct {
+	Final   bool            `json:"final"`
 	Content json.RawMessage `json:"content omitempty"`
 	Error   error           `json:"error omitempty"`
 }

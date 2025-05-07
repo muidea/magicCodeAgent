@@ -51,3 +51,19 @@ func (s *Flow) GetParent() *Flow {
 func (s *Flow) IsFinish() bool {
 	return s.Status == FLOW_STATUS_FINISH
 }
+
+func (s *Flow) GetFlowPath() []*Flow {
+	nodes := make([]*Flow, 0)
+	if s.Parent != nil {
+		nodes = append(nodes, s.Parent.GetFlowPath()...)
+	}
+	nodes = append(nodes, s)
+
+	// 反转slice使父节点在前
+	flowPath := make([]*Flow, len(nodes))
+	for i, j := 0, len(nodes)-1; j >= 0; i, j = i+1, j-1 {
+		flowPath[i] = nodes[j]
+	}
+
+	return flowPath
+}

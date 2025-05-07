@@ -45,7 +45,7 @@ func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolPar
 		log.Errorf("Failed to serialize result: %v", byteErr)
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
 	}
-	return &imbtc.ToolResult{Content: byteVal}
+	return &imbtc.ToolResult{Content: byteVal, Final: true}
 }
 
 /*
@@ -93,5 +93,6 @@ func AttemptCompletion(result, command string) (string, error) {
 	if command != "" {
 		return fmt.Sprintf("Result: %s\nCommand: %s", result, command), nil
 	}
-	return fmt.Sprintf("Result: %s", result), nil
+
+	return result, nil
 }

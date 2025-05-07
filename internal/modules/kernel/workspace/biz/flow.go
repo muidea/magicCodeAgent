@@ -18,7 +18,7 @@ func NewFlowManager() *FlowManager {
 	}
 }
 
-func (s *FlowManager) newRootFlow(msgPtr *models.MessageInfo) {
+func (s *FlowManager) newRootFlow(msgPtr *models.MessageInfo) *models.Flow {
 	flowPtr := &models.Flow{
 		Id:    fmt.Sprintf("flow_%d", len(s.localFlows)),
 		Title: msgPtr.Item.Content,
@@ -33,16 +33,16 @@ func (s *FlowManager) newRootFlow(msgPtr *models.MessageInfo) {
 	}
 
 	s.AppendFlow(flowPtr, nil)
+	return flowPtr
 }
 
-func (s *FlowManager) NewFlow(msgPtr *models.MessageInfo, parentPtr *models.Flow) {
+func (s *FlowManager) NewFlow(msgPtr *models.MessageInfo, parentPtr *models.Flow) *models.Flow {
 	if parentPtr == nil {
 		parentPtr = s.currentFlowPtr
 	}
 
 	if parentPtr == nil {
-		s.newRootFlow(msgPtr)
-		return
+		return s.newRootFlow(msgPtr)
 	}
 
 	flowPtr := &models.Flow{
@@ -58,6 +58,7 @@ func (s *FlowManager) NewFlow(msgPtr *models.MessageInfo, parentPtr *models.Flow
 	}
 
 	s.AppendFlow(flowPtr, parentPtr)
+	return flowPtr
 }
 
 func (s *FlowManager) GetCurrentFlow() *models.Flow {
@@ -76,27 +77,6 @@ func (s *FlowManager) GetFlow(flowID string) *models.Flow {
 	}
 
 	return nil
-}
-
-func (s *FlowManager) GetFlowPath(flowPtr *models.Flow) []*models.Flow {
-	if flowPtr == nil {
-		return nil
-	}
-
-	// 先收集所有节点
-	var nodes []*models.Flow
-	for flowPtr != nil {
-		nodes = append(nodes, flowPtr)
-		flowPtr = flowPtr.GetParent()
-	}
-
-	// 反转slice使父节点在前
-	flowPath := make([]*models.Flow, len(nodes))
-	for i, j := 0, len(nodes)-1; j >= 0; i, j = i+1, j-1 {
-		flowPath[i] = nodes[j]
-	}
-
-	return flowPath
 }
 
 func (s *FlowManager) AppendFlow(flowPtr *models.Flow, parentPtr *models.Flow) {

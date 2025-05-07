@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"context"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,9 +12,13 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
+	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
+	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/cache"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
+	"github.com/muidea/magicCodeAgent/pkg/util"
+	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
@@ -33,14 +38,16 @@ type Station struct {
 	localMessageCache *cache.MessageSequenceCache
 	localFlowManger   *FlowManager
 	localWorker       Worker
+	localAssistant    Assistant
 }
 
-func NewStation(workspacePtr *config.Workspace, worker Worker) *Station {
+func NewStation(workspacePtr *config.Workspace, worker Worker, assistant Assistant) *Station {
 	ret := &Station{
 		configPtr:         workspacePtr,
 		localMessageCache: cache.NewMessageSequenceCache(500),
 		localFlowManger:   NewFlowManager(),
 		localWorker:       worker,
+		localAssistant:    assistant,
 	}
 
 	return ret
@@ -179,8 +186,37 @@ func (s *Station) GetFlow(id string) *models.Flow {
 	return s.localFlowManger.GetFlow(id)
 }
 
-func (s *Station) GetFlowPath(flowPtr *models.Flow) []*models.Flow {
-	return s.localFlowManger.GetFlowPath(flowPtr)
+func (s *Station) ChatMessage(ctx context.Context, paramPtr *imkwc.ChatMessage) (err *cd.Error) {
+	messageItemPtr := paramPtr.ToMessageItem()
+	messageInfoPtr := &models.MessageInfo{
+		Item:       messageItemPtr,
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		Workspace:  s.configPtr.Name,
+	}
+	var curFlow *models.Flow
+	flowIDVal := ctx.Value(common.FlowID{})
+	if flowIDVal != nil {
+		curFlow = s.GetFlow(flowIDVal.(string))
+	} else {
+		curFlow = s.GetCurrentFlow()
+	}
+	if curFlow == nil {
+		curFlow = s.localFlowManger.NewFlow(messageInfoPtr, nil)
+	}
+
+	s.DisposeSendMessage(messageInfoPtr, curFlow)
+
+	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
+	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
+
+	msgErr := s.localAssistant.Chat(providerContext, s.configPtr.Name, messageItemPtr, curFlow)
+	if msgErr != nil {
+		err = msgErr
+		log.Errorf("ChatMessage, err:%v", msgErr)
+		return
+	}
+
+	return
 }
 
 func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
@@ -253,9 +289,23 @@ func (s *Station) OnRecv(event string, content string) {
 		Workspace:  s.configPtr.Name,
 	}
 
-	if s.localWorker != nil {
-		s.localWorker.DoWork(s.configPtr.Path, content)
+	s.DisposeRecvMessage(msgPtr)
+
+	blockList, blockErr := util.SpliteBlocks(content)
+	if blockErr != nil {
+		log.Errorf("OnRecv, err:%v", blockErr)
+		return
 	}
 
-	s.DisposeRecvMessage(msgPtr)
+	for _, block := range blockList {
+		resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.Path, block)
+		if resultFinal || resultVal == "" {
+			continue
+		}
+
+		s.ChatMessage(context.Background(), &imkwc.ChatMessage{
+			Workspace: s.configPtr.Name,
+			Content:   resultVal,
+		})
+	}
 }

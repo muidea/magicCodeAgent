@@ -56,7 +56,6 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbt
 		}
 	}
 
-	// 处理结束行参数
 	endLine := 0 // 0表示读取到文件末尾
 	if endLineParam, exists := param["end_line"]; exists {
 		switch v := endLineParam.(type) {
@@ -77,7 +76,6 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbt
 		return &imbtc.ToolResult{Error: fmt.Errorf("failed to read file: %w", err)}
 	}
 
-	// 将字符串结果转换为[]byte作为ToolResult返回
 	return &imbtc.ToolResult{Content: []byte(result)}
 }
 
