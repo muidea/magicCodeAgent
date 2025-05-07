@@ -28,16 +28,16 @@ func (s *ReadFileTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// 检查路径参数
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("missing or invalid file path parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
 	}
 
 	// 检查路径安全性，防止路径遍历攻击
 	if strings.Contains(path, "..") || strings.HasPrefix(path, "/") {
-		return nil, fmt.Errorf("invalid file path, access to parent directory or absolute path is forbidden")
+		return &imbtc.ToolResult{Error: fmt.Errorf("invalid file path, access to parent directory or absolute path is forbidden")}
 	}
 
 	// 处理起始行参数
@@ -49,10 +49,10 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbt
 		case int:
 			startLine = v
 		default:
-			return nil, fmt.Errorf("start_line parameter must be a number")
+			return &imbtc.ToolResult{Error: fmt.Errorf("start_line parameter must be a number")}
 		}
 		if startLine < 1 {
-			return nil, fmt.Errorf("start line cannot be less than 1")
+			return &imbtc.ToolResult{Error: fmt.Errorf("start line cannot be less than 1")}
 		}
 	}
 
@@ -65,20 +65,20 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbt
 		case int:
 			endLine = v
 		default:
-			return nil, fmt.Errorf("end_line parameter must be a number")
+			return &imbtc.ToolResult{Error: fmt.Errorf("end_line parameter must be a number")}
 		}
 		if endLine > 0 && endLine < startLine {
-			return nil, fmt.Errorf("end line cannot be less than start line")
+			return &imbtc.ToolResult{Error: fmt.Errorf("end line cannot be less than start line")}
 		}
 	}
 
-	ret, err := ReadFile(workspaceDir, path, startLine, endLine)
+	result, err := ReadFile(workspaceDir, path, startLine, endLine)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to read file: %w", err)}
 	}
 
 	// 将字符串结果转换为[]byte作为ToolResult返回
-	return []byte(ret), nil
+	return &imbtc.ToolResult{Content: []byte(result)}
 }
 
 /*

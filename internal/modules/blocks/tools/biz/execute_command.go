@@ -24,11 +24,11 @@ func (s *ExecuteCommandTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// 参数校验
 	command, ok := param["command"].(string)
 	if !ok || command == "" {
-		return nil, fmt.Errorf("missing or invalid command parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid command parameter")}
 	}
 
 	// 获取可选参数
@@ -46,16 +46,16 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 	// 调用工具函数
 	output, err := ExecuteCommand(workspaceDir, command, args, cwd)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute command: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to execute command: %v", err)}
 	}
 
 	// 处理返回值
 	result, err := json.Marshal(output)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}
 
-	return result, nil
+	return &imbtc.ToolResult{Content: result}
 }
 
 /*

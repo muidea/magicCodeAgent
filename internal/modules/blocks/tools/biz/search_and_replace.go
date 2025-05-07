@@ -26,15 +26,15 @@ func (s *SearchAndReplaceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("missing or invalid file path parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
 	}
 
 	operations, ok := param["operations"].(string)
 	if !ok || operations == "" {
-		return nil, fmt.Errorf("missing or invalid operation parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid operation parameter")}
 	}
 
 	var ops []struct {
@@ -48,25 +48,19 @@ func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolPara
 	}
 
 	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
-		return nil, fmt.Errorf("failed to parse operation parameters: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to parse operation parameters: %v", err)}
 	}
 
 	if len(ops) == 0 {
-		return nil, fmt.Errorf("no valid operations provided")
+		return &imbtc.ToolResult{Error: fmt.Errorf("no valid operations provided")}
 	}
 
 	err := SearchAndReplace(workspaceDir, path, ops)
 	if err != nil {
-		return nil, err
+		return &imbtc.ToolResult{Error: err}
 	}
 
-	// 返回结果需要转换为ToolResult格式
-	result, err := json.Marshal("替换操作成功完成")
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
-	}
-
-	return result, nil
+	return &imbtc.ToolResult{Content: nil}
 }
 
 /*

@@ -25,15 +25,15 @@ func (s *SearchFilesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("missing or invalid directory path parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid directory path parameter")}
 	}
 
 	regex, ok := param["regex"].(string)
 	if !ok || regex == "" {
-		return nil, fmt.Errorf("missing or invalid regex parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid regex parameter")}
 	}
 
 	// 获取可选参数
@@ -44,16 +44,16 @@ func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (i
 
 	results, err := SearchFiles(workspaceDir, path, regex, filePattern)
 	if err != nil {
-		return nil, fmt.Errorf("failed to search files: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to search files: %v", err)}
 	}
 
 	// 将结果转换为JSON格式
 	resultJSON, err := json.Marshal(results)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}
 
-	return resultJSON, nil
+	return &imbtc.ToolResult{Content: resultJSON}
 }
 
 /*

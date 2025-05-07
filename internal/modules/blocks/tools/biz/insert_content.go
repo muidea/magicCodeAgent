@@ -25,16 +25,16 @@ func (s *InsertContentTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("missing or invalid file path parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
 	}
 
 	operations, ok := param["operations"].(string)
 	if !ok || operations == "" {
-		return nil, fmt.Errorf("missing or invalid operations parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid operations parameter")}
 	}
 
 	// 解析JSON格式的operations参数
@@ -44,11 +44,11 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 	}
 
 	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
-		return nil, fmt.Errorf("failed to parse operations: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to parse operations: %v", err)}
 	}
 
 	if len(ops) == 0 {
-		return nil, fmt.Errorf("operations cannot be empty")
+		return &imbtc.ToolResult{Error: fmt.Errorf("operations cannot be empty")}
 	}
 
 	// 转换参数格式
@@ -62,16 +62,10 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 
 	// 调用工具函数
 	if err := InsertContent(workspaceDir, path, insertBlocks); err != nil {
-		return nil, fmt.Errorf("failed to insert content: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to insert content: %v", err)}
 	}
 
-	// 处理返回值
-	result, err := json.Marshal("内容插入成功")
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
-	}
-
-	return result, nil
+	return &imbtc.ToolResult{Content: nil}
 }
 
 /*

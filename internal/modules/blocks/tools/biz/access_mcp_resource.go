@@ -22,31 +22,30 @@ func (s *AccessMcpResourceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// Parameter validation
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
-		return nil, fmt.Errorf("missing or invalid server name parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid server name parameter")}
 	}
 
 	uri, ok := param["uri"].(string)
 	if !ok || uri == "" {
-		return nil, fmt.Errorf("missing or invalid URI parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid URI parameter")}
 	}
 
 	// Call tool function
-	ret, err := AccessMcpResource(serverName, uri)
-	if err != nil {
-		return nil, fmt.Errorf("failed to access MCP resource: %v", err)
+	resourceVal, resourceErr := AccessMcpResource(serverName, uri)
+	if resourceErr != nil {
+		return &imbtc.ToolResult{Error: resourceErr}
 	}
 
 	// Process return value
-	result, err := json.Marshal(ret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+	byteVal, byteErr := json.Marshal(resourceVal)
+	if byteErr != nil {
+		return &imbtc.ToolResult{Error: byteErr}
 	}
-
-	return result, nil
+	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

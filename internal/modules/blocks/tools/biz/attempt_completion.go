@@ -22,30 +22,30 @@ func (s *AttemptCompletionTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// 参数校验
 	result, ok := param["result"].(string)
 	if !ok || result == "" {
-		return nil, fmt.Errorf("missing or invalid result parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid result parameter")}
 	}
 
 	// 获取可选参数
 	command, _ := param["command"].(string)
 
 	// 调用工具函数
-	ret, err := AttemptCompletion(result, command)
+	resVal, err := AttemptCompletion(result, command)
 	if err != nil {
 		log.Errorf("Failed to attempt completion: %v", err)
-		return nil, fmt.Errorf("failed to attempt completion: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to attempt completion: %v", err)}
 	}
 
 	// 处理返回值
-	byteVal, byeErr := json.Marshal(ret)
-	if byeErr != nil {
-		log.Errorf("Failed to serialize result: %v", err)
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+	byteVal, byteErr := json.Marshal(resVal)
+	if byteErr != nil {
+		log.Errorf("Failed to serialize result: %v", byteErr)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
 	}
-	return byteVal, nil
+	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

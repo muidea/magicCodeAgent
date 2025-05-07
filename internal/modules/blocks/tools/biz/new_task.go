@@ -22,28 +22,28 @@ func (s *NewTaskTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	mode, ok := param["mode"].(string)
 	if !ok || mode == "" {
-		return nil, fmt.Errorf("missing or invalid mode parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid mode parameter")}
 	}
 
 	message, ok := param["message"].(string)
 	if !ok || message == "" {
-		return nil, fmt.Errorf("missing or invalid message parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid message parameter")}
 	}
 
-	ret, err := NewTask(mode, message)
+	resVal, err := NewTask(mode, message)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new task: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to create new task: %v", err)}
 	}
 
-	result, err := json.Marshal(ret)
+	result, err := json.Marshal(resVal)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}
 
-	return result, nil
+	return &imbtc.ToolResult{Content: result}
 }
 
 /*

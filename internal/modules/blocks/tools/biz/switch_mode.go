@@ -22,25 +22,25 @@ func (s *SwitchModeTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	modeSlug, ok := param["mode_slug"].(string)
 	if !ok || modeSlug == "" {
-		return nil, fmt.Errorf("missing or invalid mode identifier parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid mode identifier parameter")}
 	}
 
 	reason, _ := param["reason"].(string)
 
-	ret, err := SwitchMode(modeSlug, reason)
+	resVal, err := SwitchMode(modeSlug, reason)
 	if err != nil {
-		return nil, fmt.Errorf("failed to switch mode: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to switch mode: %v", err)}
 	}
 
-	result, err := json.Marshal(ret)
+	result, err := json.Marshal(resVal)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}
 
-	return result, nil
+	return &imbtc.ToolResult{Content: result}
 }
 
 /*

@@ -27,28 +27,28 @@ func (s *ListCodeDefinitionNamesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ListCodeDefinitionNamesTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ListCodeDefinitionNamesTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("missing or invalid path parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid path parameter")}
 	}
 
 	// 调用工具函数
 	result, err := ListCodeDefinitionNames(workspaceDir, path)
 	if err != nil {
 		log.Errorf("failed to list code definitions: %v", err)
-		return nil, fmt.Errorf("failed to list code definitions: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to list code definitions: %v", err)}
 	}
 
 	// 处理返回值
-	ret, err := json.Marshal(result)
+	byteVal, err := json.Marshal(result)
 	if err != nil {
 		log.Errorf("failed to serialize result: %v", err)
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}
 
-	return ret, nil
+	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

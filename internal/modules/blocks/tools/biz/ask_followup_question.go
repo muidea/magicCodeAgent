@@ -24,26 +24,26 @@ func (s *AskFollowupQuestionTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// 参数校验
 	question, ok := param["question"].(string)
 	if !ok || question == "" {
-		return nil, fmt.Errorf("missing or invalid question parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid question parameter")}
 	}
 
 	// 调用工具函数
-	ret, err := AskFollowupQuestion(question)
+	resVal, err := AskFollowupQuestion(question)
 	if err != nil {
-		return nil, fmt.Errorf("failed to ask question: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to ask question: %v", err)}
 	}
 
 	// 处理返回值
-	result, err := json.Marshal(ret)
+	result, err := json.Marshal(resVal)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
 	}
 
-	return result, nil
+	return &imbtc.ToolResult{Content: result}
 }
 
 /*

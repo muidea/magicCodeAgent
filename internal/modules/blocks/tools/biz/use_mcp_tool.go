@@ -22,33 +22,32 @@ func (s *UseMcpToolTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
-		return nil, fmt.Errorf("missing or invalid server name parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid server name parameter")}
 	}
 
 	toolName, ok := param["tool_name"].(string)
 	if !ok || toolName == "" {
-		return nil, fmt.Errorf("missing or invalid tool name parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid tool name parameter")}
 	}
 
 	arguments, ok := param["arguments"].(string)
 	if !ok || arguments == "" {
-		return nil, fmt.Errorf("missing or invalid arguments")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid arguments")}
 	}
 
-	ret, err := UseMcpTool(serverName, toolName, json.RawMessage(arguments))
-	if err != nil {
-		return nil, fmt.Errorf("failed to use MCP tool: %v", err)
+	resourceVal, resourceErr := UseMcpTool(serverName, toolName, json.RawMessage(arguments))
+	if resourceErr != nil {
+		return &imbtc.ToolResult{Error: resourceErr}
 	}
 
-	result, err := json.Marshal(ret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+	byteVal, byteErr := json.Marshal(resourceVal)
+	if byteErr != nil {
+		return &imbtc.ToolResult{Error: byteErr}
 	}
-
-	return result, nil
+	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

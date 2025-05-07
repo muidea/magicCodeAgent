@@ -23,15 +23,15 @@ func (s *WriteToFileTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("missing or invalid file path parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
 	}
 
 	content, ok := param["content"].(string)
 	if !ok || content == "" {
-		return nil, fmt.Errorf("missing or invalid file content parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file content parameter")}
 	}
 
 	// 获取行数参数
@@ -42,10 +42,10 @@ func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (i
 
 	err := WriteToFile(workspaceDir, path, content, lineCount)
 	if err != nil {
-		return nil, err
+		return &imbtc.ToolResult{Error: err}
 	}
 
-	return nil, nil
+	return &imbtc.ToolResult{Content: nil}
 }
 
 /*

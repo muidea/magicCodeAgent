@@ -28,30 +28,31 @@ func (s *ApplyDiffTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return nil, fmt.Errorf("missing or invalid file path parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
 	}
 
 	diff, ok := param["diff"].(string)
 	if !ok || diff == "" {
-		return nil, fmt.Errorf("missing or invalid diff parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid diff parameter")}
 	}
 
 	// 调用工具函数
 	err := ApplyDiff(workspaceDir, path, diff)
 	if err != nil {
-		return nil, fmt.Errorf("failed to apply diff: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to apply diff: %v", err)}
 	}
 
 	// 处理返回值
-	result, err := json.Marshal("差异应用成功")
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+	resultStr := "差异应用成功"
+	byteVal, byteErr := json.Marshal(resultStr)
+	if byteErr != nil {
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
 	}
-	return result, nil
+	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

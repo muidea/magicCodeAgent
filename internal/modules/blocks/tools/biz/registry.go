@@ -1,7 +1,7 @@
 package biz
 
 import (
-	"errors"
+	"fmt"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -48,10 +48,16 @@ func (s *ToolRegistry) Register(tool imbtc.Tool) {
 	s.name2Tools[tool.Name()] = tool
 }
 
-func (s *ToolRegistry) Execute(workspaceDir, toolName string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *ToolRegistry) Execute(workspaceDir, toolName string, param imbtc.ToolParam) *imbtc.ToolResult {
+	log.Infof("execute tool, workspaceDir:%s, toolName:%s, param:%v", workspaceDir, toolName, param)
 	tool, ok := s.name2Tools[toolName]
 	if !ok {
-		return nil, errors.New("not exist tool")
+		// 获取所有可用工具名称列表
+		availableTools := make([]string, 0, len(s.name2Tools))
+		for name := range s.name2Tools {
+			availableTools = append(availableTools, name)
+		}
+		return &imbtc.ToolResult{Error: fmt.Errorf("tool '%s' does not exist. Available tools: %v", toolName, availableTools)}
 	}
 
 	return tool.Execute(workspaceDir, param)

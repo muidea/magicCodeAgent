@@ -7,12 +7,17 @@ import (
 )
 
 type Worker interface {
-	DoWork(workspaceDir, content string) error
+	DoWork(workspaceDir, content string) (string, error)
 }
 
-func (s *Workspace) DoWork(workspaceDir, content string) error {
+func (s *Workspace) DoWork(workspaceDir, content string) (string, error) {
 	ev := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
 	ev.SetData("workspaceDir", workspaceDir)
-	s.SendEvent(ev)
-	return nil
+	result := s.SendEvent(ev)
+	resultVal, resultErr := result.Get()
+	if resultErr != nil {
+		return "", resultErr
+	}
+
+	return resultVal.(string), nil
 }

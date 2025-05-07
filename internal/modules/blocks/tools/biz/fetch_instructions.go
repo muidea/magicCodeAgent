@@ -22,28 +22,28 @@ func (s *FetchInstructionsTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolParam) (imbtc.ToolResult, error) {
+func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	// 参数校验
 	task, ok := param["task"].(string)
 	if !ok || task == "" {
-		return nil, fmt.Errorf("missing or invalid task type parameter")
+		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid task type parameter")}
 	}
 
 	// 调用工具函数
 	result, err := FetchInstructions(task)
 	if err != nil {
 		log.Errorf("Failed to fetch instructions: %v", err)
-		return nil, fmt.Errorf("failed to fetch instructions: %v", err)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to fetch instructions: %v", err)}
 	}
 
 	// 处理返回值
-	ret, err := json.Marshal(result)
-	if err != nil {
-		log.Errorf("Failed to serialize result: %v", err)
-		return nil, fmt.Errorf("failed to serialize result: %v", err)
+	byteVal, byteErr := json.Marshal(result)
+	if byteErr != nil {
+		log.Errorf("Failed to serialize result: %v", byteErr)
+		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
 	}
 
-	return ret, nil
+	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*
