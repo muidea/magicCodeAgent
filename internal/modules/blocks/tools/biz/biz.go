@@ -80,7 +80,7 @@ func (s *Tools) Run() (err *cd.Error) {
 
 	dataContent := config.GetDataContent()
 	if dataContent != "" {
-		resultVal := s.execDataContent(currentWorkDir, dataContent)
+		_, resultVal := s.execDataContent(currentWorkDir, dataContent)
 		if resultVal != nil {
 			if resultVal.Error != nil {
 				log.Errorf("exec data content failed!\n%v", resultVal.Error.Error())
@@ -114,38 +114,42 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 
 	byteBuilder := strings.Builder{}
 	for idx, block := range blocksList {
-		toolResult := s.execDataContent(workspaceDir, block)
-		if idx > 0 {
-			byteBuilder.WriteString("=======\n")
-		}
-
+		toolName, toolResult := s.execDataContent(workspaceDir, block)
 		if toolResult.Error != nil {
+			if idx > 0 {
+				byteBuilder.WriteString("=======\n")
+			}
 			log.Errorf("failed to execute tool: %s", toolResult.Error.Error())
+			byteBuilder.WriteString(fmt.Sprintf("tool: %s\n\n", toolName))
 			byteBuilder.WriteString(fmt.Sprintf("failed to execute tool: %s\n", toolResult.Error.Error()))
 			continue
+		} else if toolResult.Content != nil {
+			if idx > 0 {
+				byteBuilder.WriteString("=======\n")
+			}
+			byteBuilder.WriteString(fmt.Sprintf("tool: %s\n\n", toolName))
+			byteBuilder.WriteString(string(toolResult.Content) + "\n")
 		}
-
-		byteBuilder.WriteString(string(toolResult.Content) + "\n")
 	}
 	return byteBuilder.String(), nil
 }
 
-func (s *Tools) execDataContent(workspaceDir, dataContent string) *imbtc.ToolResult {
+func (s *Tools) execDataContent(workspaceDir, dataContent string) (string, *imbtc.ToolResult) {
 	toolName, toolParam, toolErr := parseParamContent(dataContent)
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to parse param content: %s", toolErr.Error())}
+		return "", &imbtc.ToolResult{Error: fmt.Errorf("failed to parse param content: %s", toolErr.Error())}
 	}
 	if toolName == "" {
 		log.Errorf("tool name cannot be empty")
-		return &imbtc.ToolResult{Error: fmt.Errorf("tool name cannot be empty")}
+		return "", &imbtc.ToolResult{Error: fmt.Errorf("tool name cannot be empty")}
 	}
 
 	if toolName == "thinking" {
-		return &imbtc.ToolResult{Content: []byte("thinking ok!")}
+		return "thinking", &imbtc.ToolResult{Content: []byte("thinking ok!")}
 	}
 
-	return s.toolRegistry.Execute(workspaceDir, toolName, toolParam)
+	return toolName, s.toolRegistry.Execute(workspaceDir, toolName, toolParam)
 }
 
 // 解析执行参数
@@ -235,10 +239,12 @@ func parseParamContent(content string) (string, map[string]any, error) {
 
 func (s *Tools) Execute(ev event.Event, re event.Result) {
 	var err *cd.Error
+	var executeToolName string
 	var executeResult *imbtc.ToolResult
 	defer func() {
 		if re != nil {
 			re.Set(executeResult, err)
+			re.SetVal("toolName", executeToolName)
 		}
 	}()
 
@@ -257,5 +263,5 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		return
 	}
 
-	executeResult = s.execDataContent(workspaceDir, contentVal)
+	executeToolName, executeResult = s.execDataContent(workspaceDir, contentVal)
 }
