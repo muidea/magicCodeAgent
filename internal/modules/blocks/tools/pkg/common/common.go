@@ -1,9 +1,8 @@
 package common
 
 import (
-	"encoding/json"
-
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
@@ -18,9 +17,8 @@ const ToolsPromptsBasePath = "assets/template/prompts/tools"
 
 type ToolParam map[string]any
 type ToolResult struct {
-	Final   bool            `json:"final"`
-	Content json.RawMessage `json:"content omitempty"`
-	Error   error           `json:"error omitempty"`
+	Final  bool               `json:"final"`
+	Result models.MessageItem `json:"result"`
 }
 
 type Tool interface {

@@ -1,12 +1,12 @@
 package biz
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type AccessMcpResourceTool struct{}
@@ -26,26 +26,52 @@ func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolPar
 	// Parameter validation
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid server name parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"server name cannot be empty",
+				},
+			},
+		}
 	}
 
 	uri, ok := param["uri"].(string)
 	if !ok || uri == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid URI parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"uri cannot be empty",
+				},
+			},
+		}
 	}
 
 	// Call tool function
 	resourceVal, resourceErr := AccessMcpResource(serverName, uri)
 	if resourceErr != nil {
-		return &imbtc.ToolResult{Error: resourceErr}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					resourceErr.Error(),
+				},
+			},
+		}
 	}
 
-	// Process return value
-	byteVal, byteErr := json.MarshalIndent(resourceVal, "", "  ")
-	if byteErr != nil {
-		return &imbtc.ToolResult{Error: byteErr}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				resourceVal,
+			},
+		},
 	}
-	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

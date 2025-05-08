@@ -137,24 +137,27 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 		return
 	}
 
-	if message.Item == nil {
-		log.Warnf("message item is nil, sn:%s", snStr)
-		return
-	}
-
 	// 处理Item
 	item := message.Item
-	switch item.Role {
+	switch message.Role {
 	case common.Assistant, common.Recorder:
-		// 直接保存MD内容
-		fileName := filepath.Join(snDir, fmt.Sprintf("%s.md", item.Role))
-		if err := os.WriteFile(fileName, []byte(item.Content), 0644); err != nil {
-			log.Errorf("save assistant content failed, role:%s, err:%s", item.Role, err)
+		fileName := filepath.Join(snDir, fmt.Sprintf("%s.md", message.Role))
+		if err := os.WriteFile(fileName, []byte(item.Content[0]), 0644); err != nil {
+			log.Errorf("save assistant content failed, role:%s, err:%s", message.Role, err)
 		}
 	case common.User:
+		if len(item.Content) > 1 {
+			for idx, item := range item.Content {
+				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d.md", message.Role, idx))
+				if err := os.WriteFile(fileName, []byte(item), 0644); err != nil {
+					log.Errorf("save user content failed, role:%s, err:%s", message.Role, err)
+				}
+			}
+			return
+		}
 		// 解析ChatCompletionRequest
 		chatReq := &openai.ChatCompletionRequest{}
-		if err := json.Unmarshal([]byte(item.Content), chatReq); err != nil {
+		if err := json.Unmarshal([]byte(item.Content[0]), chatReq); err != nil {
 			log.Errorf("unmarshal chat request failed, err:%s", err)
 			return
 		}
@@ -163,10 +166,10 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 			content := []byte(msg.Content)
 			if msg.Role == openai.ChatMessageRoleSystem {
 				// 普通字符串内容
-				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s.md", item.Role, i, msg.Role))
+				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s.md", message.Role, i, msg.Role))
 				if err := os.WriteFile(fileName, content, 0644); err != nil {
 					log.Errorf("save user message failed, role:%s, index:%d, err:%s",
-						item.Role, i, err)
+						message.Role, i, err)
 				}
 				continue
 			}
@@ -174,10 +177,10 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 			if msg.Role == openai.ChatMessageRoleUser {
 				for j, textItem := range msg.MultiContent {
 					if textItem.Type == "text" && textItem.Text != "" {
-						fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s_%d.md", item.Role, i, msg.Role, j))
+						fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s_%d.md", message.Role, i, msg.Role, j))
 						if err := os.WriteFile(fileName, []byte(textItem.Text), 0644); err != nil {
 							log.Errorf("save user text content failed, role:%s, index:%d, textIndex:%d, err:%s",
-								item.Role, i, j, err)
+								message.Role, i, j, err)
 						}
 					}
 				}

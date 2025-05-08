@@ -149,7 +149,8 @@ func NewProvider(
 
 func (s *Provider) OnClose() {
 	closeMsg := &models.MessageInfo{
-		Item:       &models.MessageItem{Role: common.Recorder, Content: "terminate"},
+		Role:       common.Recorder,
+		Item:       models.MessageItem{Content: []string{"terminate"}},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.workspaceName,
 	}
@@ -160,7 +161,8 @@ func (s *Provider) OnClose() {
 
 func (s *Provider) OnRecv(event string, content string) {
 	recvMsg := &models.MessageInfo{
-		Item:       &models.MessageItem{Role: common.Assistant, Content: content},
+		Role:       common.Assistant,
+		Item:       models.MessageItem{Content: []string{content}},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.workspaceName,
 	}
@@ -229,7 +231,8 @@ func (s *Provider) ChatCompletionStream(
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
 		s.messageSink.OnMessage(&models.MessageInfo{
-			Item:       &models.MessageItem{Role: common.User, Content: string(byteVal)},
+			Role:       common.User,
+			Item:       models.MessageItem{Content: []string{string(byteVal)}},
 			CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 			Workspace:  workspaceName,
 		})
@@ -307,7 +310,8 @@ func (s *Provider) BetaCompletionStream(
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
 		s.messageSink.OnMessage(&models.MessageInfo{
-			Item:       &models.MessageItem{Role: common.User, Content: string(byteVal)},
+			Role:       common.User,
+			Item:       models.MessageItem{Content: []string{string(byteVal)}},
 			CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 			Workspace:  workspaceName,
 		})

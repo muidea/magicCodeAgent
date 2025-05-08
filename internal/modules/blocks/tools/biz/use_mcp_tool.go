@@ -7,6 +7,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type UseMcpToolTool struct{}
@@ -25,29 +26,64 @@ func (s *UseMcpToolTool) Prompt() string {
 func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	serverName, ok := param["server_name"].(string)
 	if !ok || serverName == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid server name parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"server name cannot be empty",
+				},
+			},
+		}
 	}
 
 	toolName, ok := param["tool_name"].(string)
 	if !ok || toolName == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid tool name parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"tool name cannot be empty",
+				},
+			},
+		}
 	}
 
 	arguments, ok := param["arguments"].(string)
 	if !ok || arguments == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid arguments")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"arguments cannot be empty",
+				},
+			},
+		}
 	}
 
 	resourceVal, resourceErr := UseMcpTool(serverName, toolName, json.RawMessage(arguments))
 	if resourceErr != nil {
-		return &imbtc.ToolResult{Error: resourceErr}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					resourceErr.Error(),
+				},
+			},
+		}
 	}
 
-	byteVal, byteErr := json.MarshalIndent(resourceVal, "", "  ")
-	if byteErr != nil {
-		return &imbtc.ToolResult{Error: byteErr}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				resourceVal,
+			},
+		},
 	}
-	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

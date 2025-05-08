@@ -10,7 +10,6 @@ import (
 	fp "github.com/muidea/magicCommon/foundation/path"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -130,13 +129,6 @@ type ChatMessage struct {
 	Workspace string `json:"workspace"`
 	Type      string `json:"type"`
 	Content   string `json:"content"`
-}
-
-func (s *ChatMessage) ToMessageItem() *models.MessageItem {
-	return &models.MessageItem{
-		Role:    common.User,
-		Content: s.Content,
-	}
 }
 
 type ChatMessageResult struct {

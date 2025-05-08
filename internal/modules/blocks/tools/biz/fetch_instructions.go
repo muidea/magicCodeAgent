@@ -1,12 +1,12 @@
 package biz
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type FetchInstructionsTool struct{}
@@ -26,24 +26,40 @@ func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolPar
 	// 参数校验
 	task, ok := param["task"].(string)
 	if !ok || task == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid task type parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid task type parameter",
+				},
+			},
+		}
 	}
 
 	// 调用工具函数
 	result, err := FetchInstructions(task)
 	if err != nil {
 		log.Errorf("Failed to fetch instructions: %v", err)
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to fetch instructions: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to fetch instructions: %v", err),
+				},
+			},
+		}
 	}
 
-	// 处理返回值
-	byteVal, byteErr := json.MarshalIndent(result, "", "  ")
-	if byteErr != nil {
-		log.Errorf("Failed to serialize result: %v", byteErr)
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				result,
+			},
+		},
 	}
-
-	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

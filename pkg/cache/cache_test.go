@@ -14,7 +14,8 @@ func TestMessageSequenceCache(t *testing.T) {
 	// 测试Add和Size
 	for i := 0; i < 50; i++ {
 		cache.Add(&models.MessageInfo{
-			Item:       &models.MessageItem{Role: "user", Content: "test"},
+			Role:       "user",
+			Item:       models.MessageItem{Content: []string{"test"}},
 			CreateTime: time.Now().Format(time.RFC3339),
 		})
 	}
@@ -62,7 +63,8 @@ func TestMessageSequenceCacheConcurrent(t *testing.T) {
 		go func() {
 			for j := 0; j < 100; j++ {
 				cache.Add(&models.MessageInfo{
-					Item:       &models.MessageItem{Role: "user", Content: "test"},
+					Role:       "user",
+					Item:       models.MessageItem{Content: []string{"test"}},
 					CreateTime: time.Now().Format(time.RFC3339),
 				})
 			}

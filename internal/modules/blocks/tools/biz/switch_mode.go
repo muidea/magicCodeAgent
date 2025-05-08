@@ -1,12 +1,12 @@
 package biz
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type SwitchModeTool struct{}
@@ -25,22 +25,39 @@ func (s *SwitchModeTool) Prompt() string {
 func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	modeSlug, ok := param["mode_slug"].(string)
 	if !ok || modeSlug == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid mode identifier parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid mode_slug parameter",
+				},
+			},
+		}
 	}
 
 	reason, _ := param["reason"].(string)
-
 	resVal, err := SwitchMode(modeSlug, reason)
 	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to switch mode: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to switch mode: %s", err.Error()),
+				},
+			},
+		}
 	}
 
-	result, err := json.MarshalIndent(resVal, "", "  ")
-	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				resVal,
+			},
+		},
 	}
-
-	return &imbtc.ToolResult{Content: result}
 }
 
 /*

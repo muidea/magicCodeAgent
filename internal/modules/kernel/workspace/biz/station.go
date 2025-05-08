@@ -13,7 +13,6 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
-	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/cache"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -186,10 +185,10 @@ func (s *Station) GetFlow(id string) *models.Flow {
 	return s.localFlowManger.GetFlow(id)
 }
 
-func (s *Station) ChatMessage(ctx context.Context, paramPtr *imkwc.ChatMessage) (err *cd.Error) {
-	messageItemPtr := paramPtr.ToMessageItem()
+func (s *Station) ChatMessage(ctx context.Context, messageItemPtr *models.MessageItem) (err *cd.Error) {
 	messageInfoPtr := &models.MessageInfo{
-		Item:       messageItemPtr,
+		Role:       common.User,
+		Item:       *messageItemPtr,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.configPtr.Name,
 	}
@@ -224,7 +223,7 @@ func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	if curFlow != nil {
-		curFlow.AppendRecv(msgPtr)
+		curFlow.AppendMessage(msgPtr)
 	}
 
 	//log.Infof("DisposeRecvMessage, :%v", msgPtr)
@@ -243,7 +242,7 @@ func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models
 	if curFlow == nil {
 		s.localFlowManger.NewFlow(msgPtr, flowPtr)
 	} else {
-		curFlow.AppendSend(msgPtr)
+		curFlow.AppendMessage(msgPtr)
 	}
 
 	//log.Infof("DisposeSendMessage, :%v", msgPtr)
@@ -268,9 +267,9 @@ func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.Mes
 
 func (s *Station) OnClose() {
 	msgPtr := &models.MessageInfo{
-		Item: &models.MessageItem{
-			Role:    common.Recorder,
-			Content: "terminate",
+		Role: common.Recorder,
+		Item: models.MessageItem{
+			Content: []string{"terminate"},
 		},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.configPtr.Name,
@@ -281,9 +280,9 @@ func (s *Station) OnClose() {
 
 func (s *Station) OnRecv(event string, content string) {
 	msgPtr := &models.MessageInfo{
-		Item: &models.MessageItem{
-			Role:    common.Assistant,
-			Content: content,
+		Role: common.Assistant,
+		Item: models.MessageItem{
+			Content: []string{content},
 		},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.configPtr.Name,
@@ -299,13 +298,10 @@ func (s *Station) OnRecv(event string, content string) {
 
 	for _, block := range blockList {
 		resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.Path, block)
-		if resultFinal || resultVal == "" {
+		if resultFinal {
 			continue
 		}
 
-		s.ChatMessage(context.Background(), &imkwc.ChatMessage{
-			Workspace: s.configPtr.Name,
-			Content:   resultVal,
-		})
+		s.ChatMessage(context.Background(), &resultVal)
 	}
 }

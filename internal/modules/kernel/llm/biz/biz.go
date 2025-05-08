@@ -44,7 +44,7 @@ func (s *LLM) Run() (err *cd.Error) {
 
 func (s *LLM) constructRequest(
 	systemMessage *models.MessageItem,
-	messageList []*models.MessageItem) *imklc.ChatCompletionStreamRequest {
+	userMessageList models.MessageItemList) *imklc.ChatCompletionStreamRequest {
 	request := &imklc.ChatCompletionStreamRequest{
 		ChatCompletionRequest: openai.ChatCompletionRequest{
 			Messages:    []openai.ChatCompletionMessage{},
@@ -61,7 +61,7 @@ func (s *LLM) constructRequest(
 	if systemMessage != nil {
 		request.Messages = append(request.Messages, openai.ChatCompletionMessage{
 			Role:    openai.ChatMessageRoleSystem,
-			Content: systemMessage.Content,
+			Content: systemMessage.Content[0],
 		})
 	} else {
 		request.Messages = append(request.Messages, openai.ChatCompletionMessage{
@@ -70,18 +70,31 @@ func (s *LLM) constructRequest(
 		})
 	}
 
-	for _, item := range messageList {
-		request.Messages = append(request.Messages, openai.ChatCompletionMessage{
-			Role:    item.Role,
-			Content: item.Content,
-		})
+	for _, item := range userMessageList {
+		if len(item.Content) > 1 {
+			chatMessage := openai.ChatCompletionMessage{
+				Role: openai.ChatMessageRoleUser,
+			}
+			for _, sv := range item.Content {
+				chatMessage.MultiContent = append(chatMessage.MultiContent, openai.ChatMessagePart{
+					Type: openai.ChatMessagePartTypeText,
+					Text: sv,
+				})
+			}
+			request.Messages = append(request.Messages, chatMessage)
+		} else {
+			request.Messages = append(request.Messages, openai.ChatCompletionMessage{
+				Role:    openai.ChatMessageRoleUser,
+				Content: item.Content[0],
+			})
+		}
 	}
 
 	return request
 }
 
 func (s *LLM) chatCompletion(ev event.Event, re event.Result) {
-	messageListVal, messageListOK := ev.Data().([]*models.MessageItem)
+	messageListVal, messageListOK := ev.Data().(models.MessageItemList)
 	if !messageListOK {
 		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid message list"))
 		return

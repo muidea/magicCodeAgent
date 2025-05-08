@@ -1,7 +1,6 @@
 package biz
 
 import (
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -9,6 +8,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type ExecuteCommandTool struct{}
@@ -28,7 +28,15 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 	// 参数校验
 	command, ok := param["command"].(string)
 	if !ok || command == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid command parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid command parameter",
+				},
+			},
+		}
 	}
 
 	// 获取可选参数
@@ -46,16 +54,25 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 	// 调用工具函数
 	output, err := ExecuteCommand(workspaceDir, command, args, cwd)
 	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to execute command: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to execute command: %v", err),
+				},
+			},
+		}
 	}
 
-	// 处理返回值
-	result, err := json.MarshalIndent(output, "", "  ")
-	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				output,
+			},
+		},
 	}
-
-	return &imbtc.ToolResult{Content: result}
 }
 
 /*

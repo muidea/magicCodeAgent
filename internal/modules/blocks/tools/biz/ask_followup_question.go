@@ -1,13 +1,13 @@
 package biz
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type AskFollowupQuestionTool struct{}
@@ -28,22 +28,39 @@ func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolP
 	// 参数校验
 	question, ok := param["question"].(string)
 	if !ok || question == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid question parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid question parameter",
+				},
+			},
+		}
 	}
 
 	// 调用工具函数
 	resVal, err := AskFollowupQuestion(question)
 	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to ask question: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to ask followup question: %v", err),
+				},
+			},
+		}
 	}
 
-	// 处理返回值
-	result, err := json.MarshalIndent(resVal, "", "  ")
-	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				resVal,
+			},
+		},
 	}
-
-	return &imbtc.ToolResult{Content: result}
 }
 
 /*

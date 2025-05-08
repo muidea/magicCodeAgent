@@ -10,6 +10,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type SearchFilesTool struct{}
@@ -28,12 +29,28 @@ func (s *SearchFilesTool) Prompt() string {
 func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid directory path parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid path parameter",
+				},
+			},
+		}
 	}
 
 	regex, ok := param["regex"].(string)
 	if !ok || regex == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid regex parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid regex parameter",
+				},
+			},
+		}
 	}
 
 	// 获取可选参数
@@ -42,18 +59,42 @@ func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *i
 		filePattern = filePatternParam
 	}
 
-	results, err := SearchFiles(workspaceDir, path, regex, filePattern)
+	result, err := SearchFiles(workspaceDir, path, regex, filePattern)
 	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to search files: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to search files: %v", err),
+				},
+			},
+		}
 	}
 
-	// 将结果转换为JSON格式
-	resultJSON, err := json.MarshalIndent(results, "", "  ")
-	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
+	// 处理返回值
+	byteVal, byteErr := json.MarshalIndent(result, "", "  ")
+	if byteErr != nil {
+		log.Errorf("failed to serialize result: %v", byteErr)
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to serialize result: %v", byteErr),
+				},
+			},
+		}
 	}
 
-	return &imbtc.ToolResult{Content: resultJSON}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				string(byteVal),
+			},
+		},
+	}
 }
 
 /*

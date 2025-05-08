@@ -9,6 +9,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type ListFilesTool struct{}
@@ -28,7 +29,15 @@ func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *imb
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid path parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid path parameter",
+				},
+			},
+		}
 	}
 
 	// 获取可选参数
@@ -38,17 +47,40 @@ func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *imb
 	result, err := ListFiles(workspaceDir, path, recursive)
 	if err != nil {
 		log.Errorf("failed to list files: %v", err)
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to list files: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to list files: %v", err),
+				},
+			},
+		}
 	}
 
 	// 处理返回值
 	byteVal, byteErr := json.MarshalIndent(result, "", "  ")
 	if byteErr != nil {
 		log.Errorf("failed to serialize result: %v", byteErr)
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to serialize result: %v", byteErr),
+				},
+			},
+		}
 	}
 
-	return &imbtc.ToolResult{Content: byteVal}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				string(byteVal),
+			},
+		},
+	}
 }
 
 /*

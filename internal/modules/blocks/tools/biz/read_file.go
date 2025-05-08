@@ -10,6 +10,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type ReadFileTool struct{}
@@ -32,12 +33,28 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbt
 	// 检查路径参数
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid path parameter",
+				},
+			},
+		}
 	}
 
 	// 检查路径安全性，防止路径遍历攻击
 	if strings.Contains(path, "..") || strings.HasPrefix(path, "/") {
-		return &imbtc.ToolResult{Error: fmt.Errorf("invalid file path, access to parent directory or absolute path is forbidden")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"invalid path parameter",
+				},
+			},
+		}
 	}
 
 	// 处理起始行参数
@@ -49,10 +66,26 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbt
 		case int:
 			startLine = v
 		default:
-			return &imbtc.ToolResult{Error: fmt.Errorf("start_line parameter must be a number")}
+			return &imbtc.ToolResult{
+				Final: true,
+				Result: models.MessageItem{
+					Content: []string{
+						fmt.Sprintf("execute tool: %s", s.Name()),
+						"start_line parameter must be a number",
+					},
+				},
+			}
 		}
 		if startLine < 1 {
-			return &imbtc.ToolResult{Error: fmt.Errorf("start line cannot be less than 1")}
+			return &imbtc.ToolResult{
+				Final: true,
+				Result: models.MessageItem{
+					Content: []string{
+						fmt.Sprintf("execute tool: %s", s.Name()),
+						"start_line parameter must be greater than 0",
+					},
+				},
+			}
 		}
 	}
 
@@ -64,19 +97,50 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbt
 		case int:
 			endLine = v
 		default:
-			return &imbtc.ToolResult{Error: fmt.Errorf("end_line parameter must be a number")}
+			return &imbtc.ToolResult{
+				Final: true,
+				Result: models.MessageItem{
+					Content: []string{
+						fmt.Sprintf("execute tool: %s", s.Name()),
+						"end_line parameter must be greater than start_line",
+					},
+				},
+			}
 		}
 		if endLine > 0 && endLine < startLine {
-			return &imbtc.ToolResult{Error: fmt.Errorf("end line cannot be less than start line")}
+			return &imbtc.ToolResult{
+				Final: true,
+				Result: models.MessageItem{
+					Content: []string{
+						fmt.Sprintf("execute tool: %s", s.Name()),
+						"end_line parameter must be greater than start_line",
+					},
+				},
+			}
 		}
 	}
 
 	result, err := ReadFile(workspaceDir, path, startLine, endLine)
 	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to read file: %w", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to read file: %v", err),
+				},
+			},
+		}
 	}
 
-	return &imbtc.ToolResult{Content: []byte(result)}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				result,
+			},
+		},
+	}
 }
 
 /*

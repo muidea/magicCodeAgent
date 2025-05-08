@@ -18,13 +18,9 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 )
-
-type ItemResult struct {
-	ToolName   string `json:"toolName"`
-	ToolResult []byte `json:"toolResult"`
-}
 
 type Tools struct {
 	biz.Base
@@ -82,11 +78,7 @@ func (s *Tools) Run() (err *cd.Error) {
 	if dataContent != "" {
 		_, resultVal := s.execDataContent(currentWorkDir, dataContent)
 		if resultVal != nil {
-			if resultVal.Error != nil {
-				log.Errorf("exec data content failed!\n%v", resultVal.Error.Error())
-				return
-			}
-			log.Infof("exec data content result.\n%v", resultVal.Content)
+			log.Infof("exec data content result.\n%v", resultVal.Result.String())
 		}
 		return
 	}
@@ -114,21 +106,12 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 
 	byteBuilder := strings.Builder{}
 	for idx, block := range blocksList {
-		toolName, toolResult := s.execDataContent(workspaceDir, block)
-		if toolResult.Error != nil {
+		_, toolResult := s.execDataContent(workspaceDir, block)
+		if toolResult != nil {
 			if idx > 0 {
 				byteBuilder.WriteString("=======\n")
 			}
-			log.Errorf("failed to execute tool: %s", toolResult.Error.Error())
-			byteBuilder.WriteString(fmt.Sprintf("tool: %s\n\n", toolName))
-			byteBuilder.WriteString(fmt.Sprintf("failed to execute tool: %s\n", toolResult.Error.Error()))
-			continue
-		} else if toolResult.Content != nil {
-			if idx > 0 {
-				byteBuilder.WriteString("=======\n")
-			}
-			byteBuilder.WriteString(fmt.Sprintf("tool: %s\n\n", toolName))
-			byteBuilder.WriteString(string(toolResult.Content) + "\n")
+			byteBuilder.WriteString(toolResult.Result.String() + "\n")
 		}
 	}
 	return byteBuilder.String(), nil
@@ -138,15 +121,29 @@ func (s *Tools) execDataContent(workspaceDir, dataContent string) (string, *imbt
 	toolName, toolParam, toolErr := parseParamContent(dataContent)
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
-		return "", &imbtc.ToolResult{Error: fmt.Errorf("failed to parse param content: %s", toolErr.Error())}
+		return "", &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{fmt.Sprintf("failed to parse param content: %s", toolErr.Error())},
+			},
+		}
 	}
 	if toolName == "" {
 		log.Errorf("tool name cannot be empty")
-		return "", &imbtc.ToolResult{Error: fmt.Errorf("tool name cannot be empty")}
+		return "", &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{"tool name cannot be empty"},
+			},
+		}
 	}
 
 	if toolName == "thinking" {
-		return "thinking", &imbtc.ToolResult{Content: []byte("thinking ok!")}
+		return "thinking", &imbtc.ToolResult{
+			Result: models.MessageItem{
+				Content: []string{"thinking ok!"},
+			},
+		}
 	}
 
 	return toolName, s.toolRegistry.Execute(workspaceDir, toolName, toolParam)

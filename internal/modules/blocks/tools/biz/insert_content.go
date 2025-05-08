@@ -10,6 +10,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type InsertContentTool struct{}
@@ -29,12 +30,28 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid file path parameter",
+				},
+			},
+		}
 	}
 
 	operations, ok := param["operations"].(string)
 	if !ok || operations == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid operations parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid operation parameter",
+				},
+			},
+		}
 	}
 
 	// 解析JSON格式的operations参数
@@ -44,11 +61,27 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 	}
 
 	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to parse operations: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to parse operations: %v", err),
+				},
+			},
+		}
 	}
 
 	if len(ops) == 0 {
-		return &imbtc.ToolResult{Error: fmt.Errorf("operations cannot be empty")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"operations cannot be empty",
+				},
+			},
+		}
 	}
 
 	// 转换参数格式
@@ -62,10 +95,25 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 
 	// 调用工具函数
 	if err := InsertContent(workspaceDir, path, insertBlocks); err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to insert content: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to insert content: %v", err),
+				},
+			},
+		}
 	}
 
-	return &imbtc.ToolResult{Content: []byte("insert content success!")}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				"insert content successfully",
+			},
+		},
+	}
 }
 
 /*

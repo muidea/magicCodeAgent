@@ -1,12 +1,12 @@
 package biz
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type AttemptCompletionTool struct{}
@@ -26,7 +26,15 @@ func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolPar
 	// 参数校验
 	result, ok := param["result"].(string)
 	if !ok || result == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid result parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid result parameter",
+				},
+			},
+		}
 	}
 
 	// 获取可选参数
@@ -36,16 +44,26 @@ func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolPar
 	resVal, err := AttemptCompletion(result, command)
 	if err != nil {
 		log.Errorf("Failed to attempt completion: %v", err)
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to attempt completion: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to attempt completion: %v", err),
+				},
+			},
+		}
 	}
 
-	// 处理返回值
-	byteVal, byteErr := json.MarshalIndent(resVal, "", "  ")
-	if byteErr != nil {
-		log.Errorf("Failed to serialize result: %v", byteErr)
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
+	return &imbtc.ToolResult{
+		Final: true,
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				resVal,
+			},
+		},
 	}
-	return &imbtc.ToolResult{Content: byteVal, Final: true}
 }
 
 /*

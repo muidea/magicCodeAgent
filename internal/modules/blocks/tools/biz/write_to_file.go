@@ -8,6 +8,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type WriteToFileTool struct{}
@@ -26,12 +27,28 @@ func (s *WriteToFileTool) Prompt() string {
 func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid path parameter",
+				},
+			},
+		}
 	}
 
 	content, ok := param["content"].(string)
 	if !ok || content == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file content parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid content parameter",
+				},
+			},
+		}
 	}
 
 	// 获取行数参数
@@ -42,10 +59,25 @@ func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *i
 
 	err := WriteToFile(workspaceDir, path, content, lineCount)
 	if err != nil {
-		return &imbtc.ToolResult{Error: err}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to write to file: %v", err),
+				},
+			},
+		}
 	}
 
-	return &imbtc.ToolResult{Content: []byte("write to file success!")}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				"write to file success!",
+			},
+		},
+	}
 }
 
 /*

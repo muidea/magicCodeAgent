@@ -2,7 +2,6 @@ package biz
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type ApplyDiffTool struct{}
@@ -32,27 +32,53 @@ func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) *imb
 	// 参数校验
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid path parameter",
+				},
+			},
+		}
 	}
 
 	diff, ok := param["diff"].(string)
 	if !ok || diff == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid diff parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid diff parameter",
+				},
+			},
+		}
 	}
 
 	// 调用工具函数
 	err := ApplyDiff(workspaceDir, path, diff)
 	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to apply diff: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to apply diff: %v", err),
+				},
+			},
+		}
 	}
 
-	// 处理返回值
 	resultStr := "apply diff success!"
-	byteVal, byteErr := json.MarshalIndent(resultStr, "", "  ")
-	if byteErr != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", byteErr)}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				resultStr,
+			},
+		},
 	}
-	return &imbtc.ToolResult{Content: byteVal}
 }
 
 /*

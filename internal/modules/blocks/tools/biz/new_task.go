@@ -1,12 +1,12 @@
 package biz
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type NewTaskTool struct{}
@@ -25,25 +25,51 @@ func (s *NewTaskTool) Prompt() string {
 func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	mode, ok := param["mode"].(string)
 	if !ok || mode == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid mode parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid mode parameter",
+				},
+			},
+		}
 	}
 
 	message, ok := param["message"].(string)
 	if !ok || message == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid message parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid message parameter",
+				},
+			},
+		}
 	}
 
 	resVal, err := NewTask(mode, message)
 	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to create new task: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to create task: %v", err),
+				},
+			},
+		}
 	}
 
-	result, err := json.MarshalIndent(resVal, "", "  ")
-	if err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to serialize result: %v", err)}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				resVal,
+			},
+		},
 	}
-
-	return &imbtc.ToolResult{Content: result}
 }
 
 /*

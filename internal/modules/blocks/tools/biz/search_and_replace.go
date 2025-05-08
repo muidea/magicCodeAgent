@@ -11,6 +11,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type SearchAndReplaceTool struct{}
@@ -29,12 +30,28 @@ func (s *SearchAndReplaceTool) Prompt() string {
 func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid file path parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid path parameter",
+				},
+			},
+		}
 	}
 
 	operations, ok := param["operations"].(string)
 	if !ok || operations == "" {
-		return &imbtc.ToolResult{Error: fmt.Errorf("missing or invalid operation parameter")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"missing or invalid operations parameter",
+				},
+			},
+		}
 	}
 
 	var ops []struct {
@@ -48,19 +65,50 @@ func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolPara
 	}
 
 	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
-		return &imbtc.ToolResult{Error: fmt.Errorf("failed to parse operation parameters: %v", err)}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"no valid operations provided",
+				},
+			},
+		}
 	}
 
 	if len(ops) == 0 {
-		return &imbtc.ToolResult{Error: fmt.Errorf("no valid operations provided")}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					"no operations provided",
+				},
+			},
+		}
 	}
 
 	err := SearchAndReplace(workspaceDir, path, ops)
 	if err != nil {
-		return &imbtc.ToolResult{Error: err}
+		return &imbtc.ToolResult{
+			Final: true,
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("failed to search and replace: %v", err),
+				},
+			},
+		}
 	}
 
-	return &imbtc.ToolResult{Content: []byte("search and replace success!")}
+	return &imbtc.ToolResult{
+		Result: models.MessageItem{
+			Content: []string{
+				fmt.Sprintf("execute tool: %s", s.Name()),
+				"search and replace success!",
+			},
+		},
+	}
 }
 
 /*

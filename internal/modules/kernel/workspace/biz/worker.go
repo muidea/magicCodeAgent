@@ -5,18 +5,21 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Worker interface {
-	DoWork(workspaceDir, content string) (result string, final bool)
+	DoWork(workspaceDir, content string) (result models.MessageItem, final bool)
 }
 
-func (s *Workspace) DoWork(workspaceDir, content string) (result string, final bool) {
+func (s *Workspace) DoWork(workspaceDir, content string) (result models.MessageItem, final bool) {
 	ev := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
 	ev.SetData("workspaceDir", workspaceDir)
 	resultVal, resultErr := s.SendEvent(ev).Get()
 	if resultErr != nil {
-		result = resultErr.Error()
+		result = models.MessageItem{
+			Content: []string{resultErr.Error()},
+		}
 		final = true
 		log.Errorf("do work failed, %s", resultErr)
 		return //"", fmt.Errorf("do work failed, %s", resultErr)
@@ -24,18 +27,14 @@ func (s *Workspace) DoWork(workspaceDir, content string) (result string, final b
 
 	toolResultPtr, toolResultOK := resultVal.(*imbtc.ToolResult)
 	if !toolResultOK {
-		result = "do work failed, illegal result"
+		result = models.MessageItem{
+			Content: []string{"do work failed, illegal result"},
+		}
 		final = true
-		log.Errorf(result)
 		return //"", fmt.Errorf("do work failed, %s", resultErr)
 	}
 
-	if toolResultPtr.Error == nil && toolResultPtr.Content == nil {
-		final = toolResultPtr.Final
-		return //"", fmt.Errorf("do work failed, %s", resultErr)
-	}
-
-	result = string(toolResultPtr.Content)
+	result = toolResultPtr.Result
 	final = toolResultPtr.Final
 	return
 }
