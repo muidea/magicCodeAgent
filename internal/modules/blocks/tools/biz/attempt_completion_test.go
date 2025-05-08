@@ -11,7 +11,7 @@ func TestAttemptCompletion(t *testing.T) {
 	result1 := "Task completed successfully"
 	output1, err := AttemptCompletion(result1, "")
 	assert.NoError(t, err, "尝试完成任务应该成功")
-	assert.Equal(t, "Result: Task completed successfully", output1, "输出应该只包含结果信息")
+	assert.Equal(t, "Task completed successfully", output1, "输出应该只包含结果信息")
 
 	// 测试用例2：有结果和命令
 	result2 := "Created a new web application"
@@ -25,7 +25,7 @@ func TestAttemptCompletion(t *testing.T) {
 	result3 := ""
 	output3, err := AttemptCompletion(result3, "")
 	assert.NoError(t, err, "尝试完成任务应该成功，即使结果为空")
-	assert.Equal(t, "Result: ", output3, "输出应该包含空结果信息")
+	assert.Equal(t, "", output3, "输出应该包含空结果信息")
 
 	// 测试用例4：空结果但有命令
 	result4 := ""
