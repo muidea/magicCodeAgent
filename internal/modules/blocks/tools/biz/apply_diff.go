@@ -28,57 +28,45 @@ func (s *ApplyDiffTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// 参数校验
-	path, ok := param["path"].(string)
-	if !ok || path == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
 					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid path parameter",
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		err = fmt.Errorf("missing or invalid path parameter")
+		return
 	}
 
 	diff, ok := param["diff"].(string)
 	if !ok || diff == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid diff parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid diff parameter")
+		return
 	}
 
-	// 调用工具函数
-	err := ApplyDiff(workspaceDir, path, diff)
+	err = ApplyDiff(workspaceDir, path, diff)
 	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to apply diff: %v", err),
-				},
-			},
-		}
+		err = fmt.Errorf("failed to apply diff: %v", err)
+		return
 	}
 
-	resultStr := "apply diff success!"
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				resultStr,
-			},
-		},
-	}
+	result = "apply diff success!"
+	return
 }
 
 /*

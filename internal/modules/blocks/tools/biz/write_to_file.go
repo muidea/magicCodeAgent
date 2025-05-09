@@ -24,60 +24,49 @@ func (s *WriteToFileTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	path, ok := param["path"].(string)
-	if !ok || path == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid path parameter",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		err = fmt.Errorf("missing or invalid path parameter")
+		return
 	}
 
 	content, ok := param["content"].(string)
 	if !ok || content == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid content parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid content parameter")
+		return
 	}
 
-	// 获取行数参数
 	lineCount := 0
 	if lineCountParam, ok := param["line_count"].(float64); ok {
 		lineCount = int(lineCountParam)
 	}
 
-	err := WriteToFile(workspaceDir, path, content, lineCount)
+	err = WriteToFile(workspaceDir, path, content, lineCount)
 	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to write to file: %v", err),
-				},
-			},
-		}
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				"write to file success!",
-			},
-		},
-	}
+	result = "write to file success!"
+	return
 }
 
 /*

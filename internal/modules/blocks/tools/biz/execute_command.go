@@ -24,22 +24,31 @@ func (s *ExecuteCommandTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// 参数校验
-	command, ok := param["command"].(string)
-	if !ok || command == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid command parameter",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	command, ok := param["command"].(string)
+	if !ok || command == "" {
+		err = fmt.Errorf("command is empty")
+		return
 	}
 
-	// 获取可选参数
 	var args []string
 	if argsParam, ok := param["args"].([]interface{}); ok {
 		for _, arg := range argsParam {
@@ -50,29 +59,13 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 	}
 
 	cwd, _ := param["cwd"].(string)
-
-	// 调用工具函数
-	output, err := ExecuteCommand(workspaceDir, command, args, cwd)
+	result, err = ExecuteCommand(workspaceDir, command, args, cwd)
 	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to execute command: %v", err),
-				},
-			},
-		}
+		log.Errorf("failed to execute command: %v", err)
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				output,
-			},
-		},
-	}
+	return
 }
 
 /*

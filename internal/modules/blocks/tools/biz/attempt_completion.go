@@ -22,48 +22,39 @@ func (s *AttemptCompletionTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// 参数校验
-	result, ok := param["result"].(string)
-	if !ok || result == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
 					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid result parameter",
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	resultVal, resultOK := param["result"].(string)
+	if !resultOK || resultVal == "" {
+		err = fmt.Errorf("missing or invalid result parameter")
+		return
 	}
 
-	// 获取可选参数
 	command, _ := param["command"].(string)
-
-	// 调用工具函数
-	resVal, err := AttemptCompletion(result, command)
+	result, err = AttemptCompletion(resultVal, command)
 	if err != nil {
-		log.Errorf("Failed to attempt completion: %v", err)
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to attempt completion: %v", err),
-				},
-			},
-		}
+		err = fmt.Errorf("failed to attempt completion: %v", err)
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Final: true,
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				resVal,
-			},
-		},
-	}
+	return
 }
 
 /*

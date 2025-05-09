@@ -22,44 +22,38 @@ func (s *FetchInstructionsTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// 参数校验
+func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
+				},
+			},
+		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
 	task, ok := param["task"].(string)
 	if !ok || task == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid task type parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("task is empty")
+		return
 	}
 
-	// 调用工具函数
-	result, err := FetchInstructions(task)
+	result, err = FetchInstructions(task)
 	if err != nil {
 		log.Errorf("Failed to fetch instructions: %v", err)
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to fetch instructions: %v", err),
-				},
-			},
-		}
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				result,
-			},
-		},
-	}
+	return
 }
 
 /*

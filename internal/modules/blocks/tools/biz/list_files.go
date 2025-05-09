@@ -25,62 +25,46 @@ func (s *ListFilesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// 参数校验
+func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
+				},
+			},
+		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid path parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid path parameter")
+		return
 	}
 
-	// 获取可选参数
 	recursive, _ := param["recursive"].(bool)
-
-	// 调用工具函数
-	result, err := ListFiles(workspaceDir, path, recursive)
-	if err != nil {
+	listResult, listErr := ListFiles(workspaceDir, path, recursive)
+	if listErr != nil {
+		err = listErr
 		log.Errorf("failed to list files: %v", err)
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to list files: %v", err),
-				},
-			},
-		}
+		return
 	}
-
-	// 处理返回值
-	byteVal, byteErr := json.MarshalIndent(result, "", "  ")
+	byteVal, byteErr := json.MarshalIndent(listResult, "", "  ")
 	if byteErr != nil {
-		log.Errorf("failed to serialize result: %v", byteErr)
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to serialize result: %v", byteErr),
-				},
-			},
-		}
+		err = byteErr
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				string(byteVal),
-			},
-		},
-	}
+	result = string(byteVal)
+	return
 }
 
 /*

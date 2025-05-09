@@ -23,67 +23,51 @@ func (s *UseMcpToolTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	serverName, ok := param["server_name"].(string)
-	if !ok || serverName == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"server name cannot be empty",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	serverName, ok := param["server_name"].(string)
+	if !ok || serverName == "" {
+		err = fmt.Errorf("server_name is empty")
+		return
 	}
 
 	toolName, ok := param["tool_name"].(string)
 	if !ok || toolName == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"tool name cannot be empty",
-				},
-			},
-		}
+		err = fmt.Errorf("tool_name is empty")
+		return
 	}
 
 	arguments, ok := param["arguments"].(string)
 	if !ok || arguments == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"arguments cannot be empty",
-				},
-			},
-		}
+		err = fmt.Errorf("arguments is empty")
+		return
 	}
 
 	resourceVal, resourceErr := UseMcpTool(serverName, toolName, json.RawMessage(arguments))
 	if resourceErr != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					resourceErr.Error(),
-				},
-			},
-		}
+		err = resourceErr
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				resourceVal,
-			},
-		},
-	}
+	result = resourceVal
+	return
 }
 
 /*

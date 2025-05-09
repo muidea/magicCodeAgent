@@ -26,31 +26,35 @@ func (s *SearchFilesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	path, ok := param["path"].(string)
-	if !ok || path == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid path parameter",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		err = fmt.Errorf("missing or invalid path parameter")
+		return
 	}
 
 	regex, ok := param["regex"].(string)
 	if !ok || regex == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid regex parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid regex parameter")
+		return
 	}
 
 	// 获取可选参数
@@ -59,42 +63,20 @@ func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) *i
 		filePattern = filePatternParam
 	}
 
-	result, err := SearchFiles(workspaceDir, path, regex, filePattern)
-	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to search files: %v", err),
-				},
-			},
-		}
+	searchResult, searchErr := SearchFiles(workspaceDir, path, regex, filePattern)
+	if searchErr != nil {
+		err = searchErr
+		return
 	}
 
-	// 处理返回值
-	byteVal, byteErr := json.MarshalIndent(result, "", "  ")
+	byteVal, byteErr := json.MarshalIndent(searchResult, "", "  ")
 	if byteErr != nil {
-		log.Errorf("failed to serialize result: %v", byteErr)
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to serialize result: %v", byteErr),
-				},
-			},
-		}
+		err = byteErr
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				string(byteVal),
-			},
-		},
-	}
+	result = string(byteVal)
+	return
 }
 
 /*

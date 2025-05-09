@@ -22,54 +22,43 @@ func (s *NewTaskTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	mode, ok := param["mode"].(string)
-	if !ok || mode == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid mode parameter",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	mode, ok := param["mode"].(string)
+	if !ok || mode == "" {
+		err = fmt.Errorf("missing or invalid mode parameter")
+		return
 	}
 
 	message, ok := param["message"].(string)
 	if !ok || message == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid message parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid message parameter")
+		return
 	}
 
-	resVal, err := NewTask(mode, message)
+	result, err = NewTask(mode, message)
 	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to create task: %v", err),
-				},
-			},
-		}
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				resVal,
-			},
-		},
-	}
+	return
 }
 
 /*

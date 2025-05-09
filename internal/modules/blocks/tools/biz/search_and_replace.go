@@ -27,31 +27,35 @@ func (s *SearchAndReplaceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	path, ok := param["path"].(string)
-	if !ok || path == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid path parameter",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		err = fmt.Errorf("missing or invalid path parameter")
+		return
 	}
 
 	operations, ok := param["operations"].(string)
 	if !ok || operations == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid operations parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid operations parameter")
+		return
 	}
 
 	var ops []struct {
@@ -64,51 +68,23 @@ func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolPara
 		RegexFlags string `json:"regex_flags"`
 	}
 
-	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"no valid operations provided",
-				},
-			},
-		}
+	if err = json.Unmarshal([]byte(operations), &ops); err != nil {
+		err = fmt.Errorf("no valid operations provided")
+		return
 	}
 
 	if len(ops) == 0 {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"no operations provided",
-				},
-			},
-		}
+		err = fmt.Errorf("no valid operations provided")
+		return
 	}
 
-	err := SearchAndReplace(workspaceDir, path, ops)
+	err = SearchAndReplace(workspaceDir, path, ops)
 	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to search and replace: %v", err),
-				},
-			},
-		}
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				"search and replace success!",
-			},
-		},
-	}
+	result = "search and replace success!"
+	return
 }
 
 /*

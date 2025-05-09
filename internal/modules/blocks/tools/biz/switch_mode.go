@@ -22,42 +22,34 @@ func (s *SwitchModeTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	modeSlug, ok := param["mode_slug"].(string)
-	if !ok || modeSlug == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid mode_slug parameter",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	modeSlug, ok := param["mode_slug"].(string)
+	if !ok || modeSlug == "" {
+		err = fmt.Errorf("missing or invalid mode_slug parameter")
+		return
 	}
 
 	reason, _ := param["reason"].(string)
-	resVal, err := SwitchMode(modeSlug, reason)
-	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to switch mode: %s", err.Error()),
-				},
-			},
-		}
-	}
-
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				resVal,
-			},
-		},
-	}
+	result, err = SwitchMode(modeSlug, reason)
+	return
 }
 
 /*

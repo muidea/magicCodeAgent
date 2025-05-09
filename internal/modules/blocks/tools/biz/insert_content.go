@@ -26,65 +26,52 @@ func (s *InsertContentTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// 参数校验
-	path, ok := param["path"].(string)
-	if !ok || path == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid file path parameter",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		err = fmt.Errorf("missing or invalid file path parameter")
+		return
 	}
 
 	operations, ok := param["operations"].(string)
 	if !ok || operations == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid operation parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid operation parameter")
+		return
 	}
 
-	// 解析JSON格式的operations参数
 	var ops []struct {
 		StartLine int    `json:"start_line"`
 		Content   string `json:"content"`
 	}
 
-	if err := json.Unmarshal([]byte(operations), &ops); err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to parse operations: %v", err),
-				},
-			},
-		}
+	if err = json.Unmarshal([]byte(operations), &ops); err != nil {
+		err = fmt.Errorf("failed to parse operations: %v", err)
+		return
 	}
 
 	if len(ops) == 0 {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"operations cannot be empty",
-				},
-			},
-		}
+		err = fmt.Errorf("operations cannot be empty")
+		return
 	}
 
-	// 转换参数格式
 	var insertBlocks []*InsertBlock
 	for _, op := range ops {
 		insertBlocks = append(insertBlocks, &InsertBlock{
@@ -93,27 +80,12 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 		})
 	}
 
-	// 调用工具函数
-	if err := InsertContent(workspaceDir, path, insertBlocks); err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to insert content: %v", err),
-				},
-			},
-		}
+	if err = InsertContent(workspaceDir, path, insertBlocks); err != nil {
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				"insert content successfully",
-			},
-		},
-	}
+	result = "insert content successfully!"
+	return
 }
 
 /*

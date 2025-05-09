@@ -24,43 +24,38 @@ func (s *AskFollowupQuestionTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// 参数校验
+func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s", s.Name()),
+				},
+			},
+		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
 	question, ok := param["question"].(string)
 	if !ok || question == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid question parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid question parameter")
+		return
 	}
 
-	// 调用工具函数
-	resVal, err := AskFollowupQuestion(question)
+	result, err = AskFollowupQuestion(question)
 	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to ask followup question: %v", err),
-				},
-			},
-		}
+		err = fmt.Errorf("failed to ask followup question: %v", err)
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				resVal,
-			},
-		},
-	}
+	return
 }
 
 /*

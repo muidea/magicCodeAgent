@@ -53,7 +53,6 @@ func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolPar
 		return
 	}
 
-	// Call tool function
 	resourceVal, resourceErr := AccessMcpResource(serverName, uri)
 	if resourceErr != nil {
 		err = resourceErr

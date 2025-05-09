@@ -29,35 +29,36 @@ func (s *ReadFileTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// 检查路径参数
+func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
+			Result: models.MessageItem{
+				Content: []string{
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
+				},
+			},
+		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"missing or invalid path parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("missing or invalid path parameter")
+		return
 	}
 
-	// 检查路径安全性，防止路径遍历攻击
 	if strings.Contains(path, "..") || strings.HasPrefix(path, "/") {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"invalid path parameter",
-				},
-			},
-		}
+		err = fmt.Errorf("invalid path parameter")
+		return
 	}
 
-	// 处理起始行参数
 	startLine := 1
 	if startLineParam, exists := param["start_line"]; exists {
 		switch v := startLineParam.(type) {
@@ -66,26 +67,12 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbt
 		case int:
 			startLine = v
 		default:
-			return &imbtc.ToolResult{
-				Final: true,
-				Result: models.MessageItem{
-					Content: []string{
-						fmt.Sprintf("execute tool: %s", s.Name()),
-						"start_line parameter must be a number",
-					},
-				},
-			}
+			err = fmt.Errorf("start_line parameter must be a number")
+			return
 		}
 		if startLine < 1 {
-			return &imbtc.ToolResult{
-				Final: true,
-				Result: models.MessageItem{
-					Content: []string{
-						fmt.Sprintf("execute tool: %s", s.Name()),
-						"start_line parameter must be greater than 0",
-					},
-				},
-			}
+			err = fmt.Errorf("start_line parameter must be greater than 0")
+			return
 		}
 	}
 
@@ -97,50 +84,17 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbt
 		case int:
 			endLine = v
 		default:
-			return &imbtc.ToolResult{
-				Final: true,
-				Result: models.MessageItem{
-					Content: []string{
-						fmt.Sprintf("execute tool: %s", s.Name()),
-						"end_line parameter must be greater than start_line",
-					},
-				},
-			}
+			err = fmt.Errorf("end_line parameter must be a number")
+			return
 		}
 		if endLine > 0 && endLine < startLine {
-			return &imbtc.ToolResult{
-				Final: true,
-				Result: models.MessageItem{
-					Content: []string{
-						fmt.Sprintf("execute tool: %s", s.Name()),
-						"end_line parameter must be greater than start_line",
-					},
-				},
-			}
+			err = fmt.Errorf("end_line parameter must be greater than start_line")
+			return
 		}
 	}
 
-	result, err := ReadFile(workspaceDir, path, startLine, endLine)
-	if err != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					fmt.Sprintf("failed to read file: %v", err),
-				},
-			},
-		}
-	}
-
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				result,
-			},
-		},
-	}
+	result, err = ReadFile(workspaceDir, path, startLine, endLine)
+	return
 }
 
 /*
