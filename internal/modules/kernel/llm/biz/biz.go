@@ -17,6 +17,7 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz/deepseek"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz/provider"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -71,9 +72,13 @@ func (s *LLM) constructRequest(
 	}
 
 	for _, item := range userMessageList {
+		if item.Role == common.Recorder {
+			continue
+		}
+
 		if len(item.Content) > 1 {
 			chatMessage := openai.ChatCompletionMessage{
-				Role: openai.ChatMessageRoleUser,
+				Role: item.Role,
 			}
 			for _, sv := range item.Content {
 				chatMessage.MultiContent = append(chatMessage.MultiContent, openai.ChatMessagePart{
@@ -84,7 +89,7 @@ func (s *LLM) constructRequest(
 			request.Messages = append(request.Messages, chatMessage)
 		} else {
 			request.Messages = append(request.Messages, openai.ChatCompletionMessage{
-				Role:    openai.ChatMessageRoleUser,
+				Role:    item.Role,
 				Content: item.Content[0],
 			})
 		}

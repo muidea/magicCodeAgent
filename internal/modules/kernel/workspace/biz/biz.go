@@ -411,7 +411,9 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err
 		return
 	}
 
-	workspace := NewStation(workspacePtr, s, s)
+	workspace := NewStation(
+		&s.Base,
+		workspacePtr, s, s)
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {

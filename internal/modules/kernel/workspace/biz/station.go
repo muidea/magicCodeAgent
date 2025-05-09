@@ -12,6 +12,7 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/cache"
 	"github.com/muidea/magicCodeAgent/pkg/common"
@@ -28,8 +29,9 @@ type Observer interface {
 }
 
 type Station struct {
-	configPtr *config.Workspace
-	fileInfo  sync.Map
+	bizBasePtr *biz.Base
+	configPtr  *config.Workspace
+	fileInfo   sync.Map
 
 	stationMutex sync.RWMutex
 	observerList []Observer
@@ -40,8 +42,11 @@ type Station struct {
 	localAssistant    Assistant
 }
 
-func NewStation(workspacePtr *config.Workspace, worker Worker, assistant Assistant) *Station {
+func NewStation(
+	bizBasePtr *biz.Base,
+	workspacePtr *config.Workspace, worker Worker, assistant Assistant) *Station {
 	ret := &Station{
+		bizBasePtr:        bizBasePtr,
 		configPtr:         workspacePtr,
 		localMessageCache: cache.NewMessageSequenceCache(500),
 		localFlowManger:   NewFlowManager(),
@@ -187,7 +192,6 @@ func (s *Station) GetFlow(id string) *models.Flow {
 
 func (s *Station) ChatMessage(ctx context.Context, messageItemPtr *models.MessageItem) (err *cd.Error) {
 	messageInfoPtr := &models.MessageInfo{
-		Role:       common.User,
 		Item:       *messageItemPtr,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.configPtr.Name,
@@ -199,19 +203,16 @@ func (s *Station) ChatMessage(ctx context.Context, messageItemPtr *models.Messag
 	} else {
 		curFlow = s.GetCurrentFlow()
 	}
-	if curFlow == nil {
-		curFlow = s.localFlowManger.NewFlow(messageInfoPtr, nil)
-	}
 
-	s.DisposeSendMessage(messageInfoPtr, curFlow)
+	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
 
-	msgErr := s.localAssistant.Chat(providerContext, s.configPtr.Name, messageItemPtr, curFlow)
+	msgErr := s.localAssistant.Chat(providerContext, s.configPtr.Name, curFlow.GetFlowPath())
 	if msgErr != nil {
 		err = msgErr
-		log.Errorf("ChatMessage, err:%v", msgErr)
+		log.Errorf("ChatMessage, s.localAssistant.Chat error:%v", msgErr)
 		return
 	}
 
@@ -235,12 +236,12 @@ func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 	}
 }
 
-func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models.Flow) {
+func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models.Flow) (ret *models.Flow) {
 	msgPtr = s.localMessageCache.Add(msgPtr)
 
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	if curFlow == nil {
-		s.localFlowManger.NewFlow(msgPtr, flowPtr)
+		curFlow = s.localFlowManger.NewFlow(msgPtr, flowPtr)
 	} else {
 		curFlow.AppendMessage(msgPtr)
 	}
@@ -252,6 +253,9 @@ func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models
 	for _, val := range s.observerList {
 		val.OnMessage(msgPtr)
 	}
+
+	ret = curFlow
+	return
 }
 
 func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.MessageInfo, err *cd.Error) {
@@ -267,8 +271,8 @@ func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.Mes
 
 func (s *Station) OnClose() {
 	msgPtr := &models.MessageInfo{
-		Role: common.Recorder,
 		Item: models.MessageItem{
+			Role:    common.Recorder,
 			Content: []string{"terminate"},
 		},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -280,8 +284,8 @@ func (s *Station) OnClose() {
 
 func (s *Station) OnRecv(event string, content string) {
 	msgPtr := &models.MessageInfo{
-		Role: common.Assistant,
 		Item: models.MessageItem{
+			Role:    common.Assistant,
 			Content: []string{content},
 		},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -290,18 +294,21 @@ func (s *Station) OnRecv(event string, content string) {
 
 	s.DisposeRecvMessage(msgPtr)
 
-	blockList, blockErr := util.SpliteBlocks(content)
-	if blockErr != nil {
-		log.Errorf("OnRecv, err:%v", blockErr)
-		return
-	}
-
-	for _, block := range blockList {
-		resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.Path, block)
-		if resultFinal {
-			continue
+	s.bizBasePtr.AsyncTask(func() {
+		blockList, blockErr := util.SpliteBlocks(content)
+		if blockErr != nil {
+			log.Errorf("OnRecv, err:%v", blockErr)
+			return
 		}
 
-		s.ChatMessage(context.Background(), &resultVal)
-	}
+		for _, block := range blockList {
+			resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.Path, block)
+			if resultFinal {
+				continue
+			}
+
+			resultVal.Role = common.User
+			s.ChatMessage(context.Background(), &resultVal)
+		}
+	})
 }

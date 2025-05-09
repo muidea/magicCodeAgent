@@ -92,7 +92,7 @@ func (s *StreamTunnel) Run(value any) (err error) {
 
 	err = s.sseClient.Post(s.context, byteVal, s.header, s)
 	if err != nil {
-		log.Errorf("Run failed, error:%v", err)
+		log.Errorf("Run failed, data:[%s], error:%v", string(byteVal), err)
 	}
 	return
 }
@@ -149,8 +149,9 @@ func NewProvider(
 
 func (s *Provider) OnClose() {
 	closeMsg := &models.MessageInfo{
-		Role:       common.Recorder,
-		Item:       models.MessageItem{Content: []string{"terminate"}},
+		Item: models.MessageItem{
+			Role:    common.Recorder,
+			Content: []string{"terminate"}},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.workspaceName,
 	}
@@ -161,8 +162,9 @@ func (s *Provider) OnClose() {
 
 func (s *Provider) OnRecv(event string, content string) {
 	recvMsg := &models.MessageInfo{
-		Role:       common.Assistant,
-		Item:       models.MessageItem{Content: []string{content}},
+		Item: models.MessageItem{
+			Role:    common.Assistant,
+			Content: []string{content}},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.workspaceName,
 	}
@@ -231,8 +233,9 @@ func (s *Provider) ChatCompletionStream(
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
 		s.messageSink.OnMessage(&models.MessageInfo{
-			Role:       common.User,
-			Item:       models.MessageItem{Content: []string{string(byteVal)}},
+			Item: models.MessageItem{
+				Role:    common.User,
+				Content: []string{string(byteVal)}},
 			CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 			Workspace:  workspaceName,
 		})
@@ -310,8 +313,9 @@ func (s *Provider) BetaCompletionStream(
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
 		s.messageSink.OnMessage(&models.MessageInfo{
-			Role:       common.User,
-			Item:       models.MessageItem{Content: []string{string(byteVal)}},
+			Item: models.MessageItem{
+				Role:    common.User,
+				Content: []string{string(byteVal)}},
 			CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 			Workspace:  workspaceName,
 		})

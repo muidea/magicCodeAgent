@@ -82,6 +82,7 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, paramPtr *i
 	stationPtr := curWorkspace.(*Station)
 
 	messageItemPtr := &models.MessageItem{
+		Role:    common.User,
 		Content: []string{paramPtr.Content},
 	}
 	err = stationPtr.ChatMessage(ctx, messageItemPtr)

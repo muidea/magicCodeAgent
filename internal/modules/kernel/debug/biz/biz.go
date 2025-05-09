@@ -137,20 +137,22 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 		return
 	}
 
+	//log.Infof("sn:%d, role:%s, content:%v", message.SN, message.Item.Role, &message.Item.Content)
+
 	// 处理Item
 	item := message.Item
-	switch message.Role {
+	switch message.Item.Role {
 	case common.Assistant, common.Recorder:
-		fileName := filepath.Join(snDir, fmt.Sprintf("%s.md", message.Role))
+		fileName := filepath.Join(snDir, fmt.Sprintf("%s.md", message.Item.Role))
 		if err := os.WriteFile(fileName, []byte(item.Content[0]), 0644); err != nil {
-			log.Errorf("save assistant content failed, role:%s, err:%s", message.Role, err)
+			log.Errorf("save assistant content failed, role:%s, err:%s", message.Item.Role, err)
 		}
 	case common.User:
 		if len(item.Content) > 1 {
 			for idx, item := range item.Content {
-				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d.md", message.Role, idx))
+				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d.md", message.Item.Role, idx))
 				if err := os.WriteFile(fileName, []byte(item), 0644); err != nil {
-					log.Errorf("save user content failed, role:%s, err:%s", message.Role, err)
+					log.Errorf("save user content failed, role:%s, err:%s", message.Item.Role, err)
 				}
 			}
 			return
@@ -166,10 +168,10 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 			content := []byte(msg.Content)
 			if msg.Role == openai.ChatMessageRoleSystem {
 				// 普通字符串内容
-				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s.md", message.Role, i, msg.Role))
+				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s.md", message.Item.Role, i, msg.Role))
 				if err := os.WriteFile(fileName, content, 0644); err != nil {
 					log.Errorf("save user message failed, role:%s, index:%d, err:%s",
-						message.Role, i, err)
+						message.Item.Role, i, err)
 				}
 				continue
 			}
@@ -177,10 +179,10 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 			if msg.Role == openai.ChatMessageRoleUser {
 				for j, textItem := range msg.MultiContent {
 					if textItem.Type == "text" && textItem.Text != "" {
-						fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s_%d.md", message.Role, i, msg.Role, j))
+						fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s_%d.md", message.Item.Role, i, msg.Role, j))
 						if err := os.WriteFile(fileName, []byte(textItem.Text), 0644); err != nil {
 							log.Errorf("save user text content failed, role:%s, index:%d, textIndex:%d, err:%s",
-								message.Role, i, j, err)
+								message.Item.Role, i, j, err)
 						}
 					}
 				}
