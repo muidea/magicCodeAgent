@@ -22,56 +22,46 @@ func (s *AccessMcpResourceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolParam) *imbtc.ToolResult {
-	// Parameter validation
-	serverName, ok := param["server_name"].(string)
-	if !ok || serverName == "" {
-		return &imbtc.ToolResult{
-			Final: true,
+func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+	var err error
+	var result string
+	defer func() {
+		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"server name cannot be empty",
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
+		if err != nil {
+			ret.Final = true
+			ret.Result.Content = append(ret.Result.Content, err.Error())
+		} else {
+			ret.Result.Content = append(ret.Result.Content, result)
+		}
+	}()
+
+	serverName, ok := param["server_name"].(string)
+	if !ok || serverName == "" {
+		err = fmt.Errorf("server_name is empty")
+		return
 	}
 
 	uri, ok := param["uri"].(string)
 	if !ok || uri == "" {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					"uri cannot be empty",
-				},
-			},
-		}
+		err = fmt.Errorf("uri is empty")
+		return
 	}
 
 	// Call tool function
 	resourceVal, resourceErr := AccessMcpResource(serverName, uri)
 	if resourceErr != nil {
-		return &imbtc.ToolResult{
-			Final: true,
-			Result: models.MessageItem{
-				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
-					resourceErr.Error(),
-				},
-			},
-		}
+		err = resourceErr
+		return
 	}
 
-	return &imbtc.ToolResult{
-		Result: models.MessageItem{
-			Content: []string{
-				fmt.Sprintf("execute tool: %s", s.Name()),
-				resourceVal,
-			},
-		},
-	}
+	result = resourceVal
+	return
 }
 
 /*

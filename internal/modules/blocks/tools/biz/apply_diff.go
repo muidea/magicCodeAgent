@@ -271,7 +271,6 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 		if !endLineFound {
 			lineCount := len(strings.Split(rawContent, "\n"))
 			endLine = startLine + lineCount - 1
-			log.Infof("未指定结束行号，根据内容自动计算: startLine=%d, lineCount=%d, endLine=%d", startLine, lineCount, endLine)
 		} else if endLine <= 0 {
 			return nil, fmt.Errorf("end line must be positive: endLine=%d", endLine)
 		}
