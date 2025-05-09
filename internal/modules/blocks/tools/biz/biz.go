@@ -140,6 +140,7 @@ func (s *Tools) execDataContent(workspaceDir, dataContent string) (string, *imbt
 
 	if toolName == "thinking" {
 		return "thinking", &imbtc.ToolResult{
+			Final: true,
 			Result: models.MessageItem{
 				Content: []string{"thinking ok!"},
 			},
