@@ -37,6 +37,20 @@ func ToCamelCase(val string) string {
 	return strings.ToLower(val[0:1]) + val[1:]
 }
 
+func CheckFileExist(templatePath, filePath, fileName string) (ret bool, err error) {
+	filePath = filepath.Join(templatePath, filePath)
+	filePath = filepath.Join(filePath, fileName)
+	_, err = os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
 func GetTemplateContent(templatePath, filePath, fileName string) (ret string, err error) {
 	fullFilePath := path.Join(templatePath, filePath, fileName)
 	if _, fileErr := fs.Stat(config.GetTemplateFS(), fullFilePath); fileErr != nil {

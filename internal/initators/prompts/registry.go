@@ -1,6 +1,7 @@
 package prompts
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 
@@ -68,9 +69,9 @@ func (s *promptsRegistry) GetSectionPromptsContent(sectionName string) string {
 	return sectionObj.GetPromptsContent()
 }
 
-func (s *promptsRegistry) GetPromptsContent() string {
+func (s *promptsRegistry) GetPromptsContent(modeName string) string {
 	var builder strings.Builder
-	builder.WriteString(s.getRolePrompts())
+	builder.WriteString(s.getRolePrompts(modeName))
 	builder.WriteString("\n\n")
 
 	for _, section := range s.sections {
@@ -90,8 +91,8 @@ func (s *promptsRegistry) GetPromptsContent() string {
 	return builder.String()
 }
 
-func (s *promptsRegistry) getRolePrompts() string {
-	fileName := "role.md"
+func (s *promptsRegistry) getRolePrompts(modeName string) string {
+	fileName := fmt.Sprintf("role_%s.md", modeName)
 	contentVal, contentErr := util.GetTemplateContent(common.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("get role prompts content failed:%s", contentErr.Error())

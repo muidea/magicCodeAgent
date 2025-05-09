@@ -4,6 +4,7 @@ import (
 	"context"
 
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -19,8 +20,14 @@ func (s *Workspace) Chat(chatContext context.Context, workspace string, flowPath
 		return
 	}
 
+	modeName := "code"
+	modelType := chatContext.Value(common.ModeName{})
+	if modelType != nil {
+		modeName = modelType.(string)
+	}
+
 	systemMessage := &models.MessageItem{
-		Content: []string{s.prompsRegistry.GetPromptsContent()},
+		Content: []string{s.prompsRegistry.GetPromptsContent(modeName)},
 	}
 
 	userMessageList := models.MessageItemList{}
