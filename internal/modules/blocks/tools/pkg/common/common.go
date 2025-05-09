@@ -27,7 +27,7 @@ func (s ToolParam) String() string {
 
 	var builder strings.Builder
 	builder.WriteString("{")
-	
+
 	first := true
 	for k, v := range s {
 		if !first {
