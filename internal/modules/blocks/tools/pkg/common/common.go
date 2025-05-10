@@ -15,8 +15,8 @@ const (
 	ExecuteTool = "/tools/execute"
 )
 
-// const ToolSectionPromptsBasePath = "assets/template/prompts/section"
-const ToolsPromptsBasePath = "assets/template/prompts/tools"
+// const ToolSectionPromptsBasePath = "assets/prompts/section"
+const ToolsPromptsBasePath = "assets/prompts/tools"
 
 type ToolParam map[string]any
 
