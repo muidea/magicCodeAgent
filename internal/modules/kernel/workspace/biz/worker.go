@@ -1,6 +1,8 @@
 package biz
 
 import (
+	"path"
+
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
 
@@ -9,12 +11,12 @@ import (
 )
 
 type Worker interface {
-	DoWork(workspaceDir, content string) (result models.MessageItem, final bool)
+	DoWork(workspaceDir, workMode, content string) (result models.MessageItem, final bool)
 }
 
-func (s *Workspace) DoWork(workspaceDir, content string) (result models.MessageItem, final bool) {
+func (s *Workspace) DoWork(workspaceDir, workMode, content string) (result models.MessageItem, final bool) {
 	ev := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
-	ev.SetData("workspaceDir", workspaceDir)
+	ev.SetData("workspaceDir", path.Join(workspaceDir, workMode))
 	resultVal, resultErr := s.SendEvent(ev).Get()
 	if resultErr != nil {
 		result = models.MessageItem{

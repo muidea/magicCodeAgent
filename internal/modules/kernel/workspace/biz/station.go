@@ -33,6 +33,8 @@ type Station struct {
 	configPtr  *config.Workspace
 	fileInfo   sync.Map
 
+	currentWorkMode string
+
 	stationMutex sync.RWMutex
 	observerList []Observer
 
@@ -190,7 +192,7 @@ func (s *Station) GetFlow(id string) *models.Flow {
 	return s.localFlowManger.GetFlow(id)
 }
 
-func (s *Station) ChatMessage(ctx context.Context, messageItemPtr *models.MessageItem) (err *cd.Error) {
+func (s *Station) ChatMessage(ctx context.Context, modeName string, messageItemPtr *models.MessageItem) (err *cd.Error) {
 	messageInfoPtr := &models.MessageInfo{
 		Item:       *messageItemPtr,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -203,6 +205,8 @@ func (s *Station) ChatMessage(ctx context.Context, messageItemPtr *models.Messag
 	} else {
 		curFlow = s.GetCurrentFlow()
 	}
+
+	s.currentWorkMode = modeName
 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
@@ -302,13 +306,13 @@ func (s *Station) OnRecv(event string, content string) {
 		}
 
 		for _, block := range blockList {
-			resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.Path, block)
+			resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.Path, s.currentWorkMode, block)
 			if resultFinal {
 				continue
 			}
 
 			resultVal.Role = common.User
-			s.ChatMessage(context.Background(), &resultVal)
+			s.ChatMessage(context.Background(), s.currentWorkMode, &resultVal)
 		}
 	})
 }

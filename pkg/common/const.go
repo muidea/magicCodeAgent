@@ -26,3 +26,8 @@ const (
 	Developer = openai.ChatMessageRoleDeveloper
 	Recorder  = "recorder"
 )
+
+const (
+	Code   = "code"
+	Design = "design"
+)

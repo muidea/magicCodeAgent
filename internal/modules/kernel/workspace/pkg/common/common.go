@@ -127,7 +127,7 @@ type FileContentResult struct {
 
 type ChatMessage struct {
 	Workspace string `json:"workspace"`
-	Type      string `json:"type"`
+	Mode      string `json:"mode"`
 	Content   string `json:"content"`
 }
 
