@@ -80,7 +80,7 @@ func (s *promptsRegistry) GetPromptsContent(modeName, workspaceDir string) strin
 		builder.WriteString("\n\n")
 	}
 
-	if modeName == common.Design {
+	if modeName == common.DesignStage {
 		builder.WriteString(s.getMarkdownPrompts())
 		builder.WriteString("\n\n")
 	}

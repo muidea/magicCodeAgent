@@ -36,9 +36,10 @@ type Workspace struct {
 	Name        string   `json:"name"`        // 工作区名称
 	Description string   `json:"description"` // 工作区描述
 	Status      string   `json:"status"`      // 工作区状态(enable/disable/offline)
-	Path        string   `json:"path"`        // 工作区路径
-	TechStack   []string `json:"techStack"`   // 技术栈列表
-	Ignores     []string `json:"ignores"`     // 忽略文件/目录列表
+	Stage       string   `json:"stage"`
+	Path        string   `json:"path"`      // 工作区路径
+	TechStack   []string `json:"techStack"` // 技术栈列表
+	Ignores     []string `json:"ignores"`   // 忽略文件/目录列表
 	UpdateTime  string   `json:"updateTime"`
 }
 

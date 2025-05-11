@@ -28,6 +28,6 @@ const (
 )
 
 const (
-	Code   = "code"
-	Design = "design"
+	CodeStage   = "code"
+	DesignStage = "design"
 )

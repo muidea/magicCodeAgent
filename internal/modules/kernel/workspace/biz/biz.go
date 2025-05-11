@@ -19,7 +19,8 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 type Workspace struct {
@@ -43,20 +44,20 @@ func New(
 	}
 
 	ptr := &Workspace{
-		Base:           biz.New(common.WorkspaceModule, eventHub, backgroundRoutine),
+		Base:           biz.New(imkwc.WorkspaceModule, eventHub, backgroundRoutine),
 		fsWatcher:      workspacePtr,
 		prompsRegistry: prompsRegistry,
 	}
 
-	ptr.SubscribeFunc(common.PreCheckWorkspace, ptr.precheckWorkspace)
-	ptr.SubscribeFunc(common.CreateWorkspace, ptr.createWorkspace)
-	ptr.SubscribeFunc(common.DestroyWorkspace, ptr.destroyWorkspace)
-	ptr.SubscribeFunc(common.AddWorkspace, ptr.addWorkspace)
-	ptr.SubscribeFunc(common.UpdateWorkspace, ptr.updateWorkspace)
-	ptr.SubscribeFunc(common.RemoveWorkspace, ptr.removeWorkspace)
-	ptr.SubscribeFunc(common.RefreshWorkspace, ptr.refreshWorkspace)
-	ptr.SubscribeFunc(common.FilterWorkspace, ptr.filterWorkspace)
-	ptr.SubscribeFunc(common.FilterWorkspaceFile, ptr.filterWorkspaceFile)
+	ptr.SubscribeFunc(imkwc.PreCheckWorkspace, ptr.precheckWorkspace)
+	ptr.SubscribeFunc(imkwc.CreateWorkspace, ptr.createWorkspace)
+	ptr.SubscribeFunc(imkwc.DestroyWorkspace, ptr.destroyWorkspace)
+	ptr.SubscribeFunc(imkwc.AddWorkspace, ptr.addWorkspace)
+	ptr.SubscribeFunc(imkwc.UpdateWorkspace, ptr.updateWorkspace)
+	ptr.SubscribeFunc(imkwc.RemoveWorkspace, ptr.removeWorkspace)
+	ptr.SubscribeFunc(imkwc.RefreshWorkspace, ptr.refreshWorkspace)
+	ptr.SubscribeFunc(imkwc.FilterWorkspace, ptr.filterWorkspace)
+	ptr.SubscribeFunc(imkwc.FilterWorkspaceFile, ptr.filterWorkspaceFile)
 
 	return ptr
 }
@@ -499,5 +500,10 @@ func (s *Workspace) filterWorkspace(ev event.Event, re event.Result) {
 
 func (s *Workspace) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, err *cd.Error) {
 	ret = config.Workspaces()
+	for _, val := range ret {
+		if val.Stage == "" {
+			val.Stage = common.DesignStage
+		}
+	}
 	return
 }
