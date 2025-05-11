@@ -2,7 +2,9 @@ package biz
 
 import (
 	"context"
+	"path"
 
+	"github.com/muidea/magicCodeAgent/internal/config"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -11,10 +13,10 @@ import (
 )
 
 type Assistant interface {
-	Chat(ctx context.Context, workspace string, flowPathList []*models.Flow) *cd.Error
+	Chat(ctx context.Context, workspaceConfig *config.Workspace, flowPathList []*models.Flow) *cd.Error
 }
 
-func (s *Workspace) Chat(chatContext context.Context, workspace string, flowPathList []*models.Flow) (err *cd.Error) {
+func (s *Workspace) Chat(chatContext context.Context, workspaceConfig *config.Workspace, flowPathList []*models.Flow) (err *cd.Error) {
 	if len(flowPathList) == 0 {
 		err = cd.NewError(cd.InvalidParameter, "flowPathList is empty")
 		return
@@ -27,7 +29,7 @@ func (s *Workspace) Chat(chatContext context.Context, workspace string, flowPath
 	}
 
 	systemMessage := &models.MessageItem{
-		Content: []string{s.prompsRegistry.GetPromptsContent(modeName)},
+		Content: []string{s.prompsRegistry.GetPromptsContent(modeName,path.Join(workspaceConfig.Path, modeName))},
 	}
 
 	userMessageList := models.MessageItemList{}
@@ -38,7 +40,7 @@ func (s *Workspace) Chat(chatContext context.Context, workspace string, flowPath
 	}
 	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, userMessageList)
 	ev.SetData("context", chatContext)
-	ev.SetData("workspace", workspace)
+	ev.SetData("workspace", workspaceConfig.Name)
 	ev.SetData("systemMessage", systemMessage)
 	result := s.SendEvent(ev)
 	err = result.Error()
