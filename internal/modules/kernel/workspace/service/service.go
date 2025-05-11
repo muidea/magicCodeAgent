@@ -209,7 +209,8 @@ func (s *Workspace) filterFileTree(ctx context.Context, res http.ResponseWriter,
 
 	workspace := req.URL.Query().Get("workspace")
 	basePath := req.URL.Query().Get("basePath")
-	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, basePath)
+	modeName := req.URL.Query().Get("mode")
+	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, modeName, basePath)
 }
 
 func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -259,6 +260,11 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 	result := &common.ChatMessageResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	holder := s.sseHolderRegistry.GetHolder(res, req)
+	if holder == nil {
+		log.Errorf("invalid sse request")
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	taskFunc := func() error {
 		errVal := s.bizPtr.ChatWorkspaceContentMessage(ctx, param)
 		if errVal != nil {
