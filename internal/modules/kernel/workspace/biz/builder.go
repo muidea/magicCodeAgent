@@ -81,13 +81,13 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, paramPtr *i
 	}
 	stationPtr := curWorkspace.(*Station)
 
-	//modeContext := context.WithValue(ctx, common.ModeName{}, paramPtr.Mode)
+	modeContext := context.WithValue(ctx, common.ModeName{}, paramPtr.Mode)
 
 	messageItemPtr := &models.MessageItem{
 		Role:    common.User,
 		Content: []string{paramPtr.Content},
 	}
-	err = stationPtr.ChatMessage(ctx, paramPtr.Mode, messageItemPtr)
+	err = stationPtr.ChatMessage(modeContext, paramPtr.Mode, messageItemPtr)
 	return
 }
 

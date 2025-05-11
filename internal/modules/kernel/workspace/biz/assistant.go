@@ -23,9 +23,9 @@ func (s *Workspace) Chat(chatContext context.Context, workspaceConfig *config.Wo
 	}
 
 	modeName := "code"
-	modelType := chatContext.Value(common.ModeName{})
-	if modelType != nil {
-		modeName = modelType.(string)
+	modelNameVal := chatContext.Value(common.ModeName{})
+	if modelNameVal != nil {
+		modeName = modelNameVal.(string)
 	}
 
 	systemMessage := &models.MessageItem{

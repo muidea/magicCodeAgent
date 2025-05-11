@@ -54,6 +54,9 @@ func New(
 	ptr.toolRegistry.Register(&AttemptCompletionTool{})
 	ptr.toolRegistry.Register(&SwitchModeTool{})
 	ptr.toolRegistry.Register(&NewTaskTool{})
+	ptr.toolRegistry.Register(&CreateServiceModuleTool{})
+	ptr.toolRegistry.Register(&CreateServiceInitatorTool{})
+	ptr.toolRegistry.Register(&InitializationServiceProjectTool{})
 
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
 	return ptr
