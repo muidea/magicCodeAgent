@@ -94,6 +94,9 @@ func (s *promptsRegistry) GetPromptsContent(modeName, workspaceDir string) strin
 	builder.WriteString(s.getCustomInstructionsPrompts())
 	builder.WriteString("\n\n")
 
+	builder.WriteString(s.getModelsPrompts())
+	builder.WriteString("\n\n")
+
 	builder.WriteString(s.getRulesPrompts(workspaceDir))
 	builder.WriteString("\n\n")
 
@@ -165,6 +168,16 @@ func (s *promptsRegistry) getMarkdownPrompts() string {
 	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("get markdown prompts content failed:%s", contentErr.Error())
+		return ""
+	}
+	return contentVal
+}
+
+func (s *promptsRegistry) getModelsPrompts() string {
+	fileName := "models.md"
+	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	if contentErr != nil {
+		log.Errorf("get models prompts content failed:%s", contentErr.Error())
 		return ""
 	}
 	return contentVal

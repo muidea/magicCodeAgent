@@ -37,6 +37,7 @@ func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolPar
 			ret.Final = true
 			ret.Result.Content = append(ret.Result.Content, err.Error())
 		} else {
+			ret.Final = true
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()

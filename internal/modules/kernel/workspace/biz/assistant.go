@@ -29,7 +29,7 @@ func (s *Workspace) Chat(chatContext context.Context, workspaceConfig *config.Wo
 	}
 
 	systemMessage := &models.MessageItem{
-		Content: []string{s.prompsRegistry.GetPromptsContent(modeName,path.Join(workspaceConfig.Path, modeName))},
+		Content: []string{s.prompsRegistry.GetPromptsContent(modeName, path.Join(workspaceConfig.Path, modeName))},
 	}
 
 	userMessageList := models.MessageItemList{}

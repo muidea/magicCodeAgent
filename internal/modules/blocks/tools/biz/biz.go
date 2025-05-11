@@ -168,6 +168,11 @@ func parseParamContent(content string) (string, map[string]any, error) {
 		return "", nil, fmt.Errorf("invalid XML: missing opening tag")
 	}
 
+	// 检查是否是XML声明而不是根元素
+	if strings.HasPrefix(strings.TrimSpace(content[start:]), "<?xml") {
+		return "", nil, fmt.Errorf("invalid XML: missing root element")
+	}
+
 	end := strings.Index(content[start+1:], ">")
 	if end == -1 {
 		return "", nil, fmt.Errorf("invalid XML: missing closing tag")
@@ -179,10 +184,17 @@ func parseParamContent(content string) (string, map[string]any, error) {
 		tagName = strings.Split(tagName, " ")[0]
 	}
 
+	// 检查是否有匹配的结束标签
+	closingTag := "</" + tagName + ">"
+	if !strings.Contains(content, closingTag) {
+		return "", nil, fmt.Errorf("invalid XML: missing closing tag for root element '%s'", tagName)
+	}
+
 	// 创建参数映射
 	param := make(map[string]any)
-	// 特殊处理apply_diff工具，因为它包含特殊的XML字符
-	if tagName == "apply_diff" {
+
+	// 特殊处理包含特殊XML字符的工具
+	if tagName == "apply_diff" || tagName == "write_to_file" {
 		// 提取path参数
 		pathStart := strings.Index(content, "<path>")
 		pathEnd := strings.Index(content, "</path>")
@@ -191,25 +203,58 @@ func parseParamContent(content string) (string, map[string]any, error) {
 			param["path"] = strings.TrimSpace(pathValue)
 		}
 
-		// 提取diff参数
-		diffStart := strings.Index(content, "<diff>")
-		diffEnd := strings.Index(content, "</diff>")
-		if diffStart != -1 && diffEnd != -1 {
-			diffValue := content[diffStart+6 : diffEnd]
-			param["diff"] = diffValue
+		// 根据工具类型提取不同参数
+		if tagName == "apply_diff" {
+			// 提取diff参数
+			diffStart := strings.Index(content, "<diff>")
+			diffEnd := strings.Index(content, "</diff>")
+			if diffStart != -1 && diffEnd != -1 {
+				diffValue := content[diffStart+6 : diffEnd]
+				param["diff"] = diffValue
+			}
+		} else if tagName == "write_to_file" {
+			// 提取content参数
+			contentStart := strings.Index(content, "<content>")
+			contentEnd := strings.Index(content, "</content>")
+			if contentStart != -1 && contentEnd != -1 {
+				contentValue := content[contentStart+9 : contentEnd]
+				// 移除内容开头的换行符
+				if len(contentValue) > 0 && contentValue[0] == '\n' {
+					contentValue = contentValue[1:]
+				}
+				param["content"] = contentValue
+			}
+
+			// 提取line_count参数
+			lineCountStart := strings.Index(content, "<line_count>")
+			lineCountEnd := strings.Index(content, "</line_count>")
+			if lineCountStart != -1 && lineCountEnd != -1 {
+				lineCountValue := content[lineCountStart+12 : lineCountEnd]
+				param["line_count"] = strings.TrimSpace(lineCountValue)
+			}
 		}
 
 		return tagName, param, nil
 	}
 
-	tagName = ""
 	// 对于其他工具，使用标准XML解析
-	decoder := xml.NewDecoder(strings.NewReader(content))
+	// 预处理XML内容，转义特殊字符
+	processedContent := content
+	processedContent = strings.ReplaceAll(processedContent, "&", "&amp;")
+
+	decoder := xml.NewDecoder(strings.NewReader(processedContent))
+	originalTagName := tagName
+	tagName = ""
+
 	for {
 		tokenVal, tokenErr := decoder.Token()
 		if tokenErr != nil {
 			if tokenErr == io.EOF {
 				break
+			}
+			// 如果XML解析失败，但我们已经有了根元素名称，尝试使用手动解析
+			if originalTagName != "" {
+				return originalTagName, param, nil
 			}
 			return "", nil, tokenErr
 		}
@@ -223,9 +268,20 @@ func parseParamContent(content string) (string, map[string]any, error) {
 				if err := decoder.DecodeElement(&value, &se); err != nil {
 					return "", nil, err
 				}
-				param[se.Name.Local] = strings.Trim(value, "\n")
+
+				// 特殊处理content字段，移除开头的换行符
+				if se.Name.Local == "content" && len(value) > 0 && value[0] == '\n' {
+					value = value[1:]
+				}
+
+				param[se.Name.Local] = value
 			}
 		}
+	}
+
+	// 如果XML解析没有找到标签名，但我们已经从字符串解析中获取了标签名
+	if tagName == "" && originalTagName != "" {
+		tagName = originalTagName
 	}
 
 	if tagName == "" {

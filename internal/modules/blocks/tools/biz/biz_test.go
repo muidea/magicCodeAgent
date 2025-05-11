@@ -143,4 +143,35 @@ clean:
 	assert.NoError(t, err, "解析失败")
 	assert.Equal(t, "apply_diff", funcName12, "函数名应该正确解析")
 	assert.Equal(t, "Makefile", param12["path"], "path参数应该正确解析")
+
+	content13 := `<write_to_file>
+<path>product_list.md</path>
+<content>
+# 产品列表页面
+
+## 功能描述
+- 展示所有产品的缩略信息
+- 支持分页加载
+- 支持下拉刷新
+
+## 接口需求
+- GET /api/products?page=1&limit=10
+
+## 交互流程
+1. 进入页面自动加载第一页数据
+2. 滚动到底部自动加载下一页
+3. 下拉刷新重置列表
+
+## UI组件
+- 产品卡片组件
+- 无限滚动组件
+- 下拉刷新组件
+- 搜索框组件
+</content>
+<line_count>16</line_count>
+</write_to_file>`
+	funcName13, param13, err := parseParamContent(content13)
+	assert.NoError(t, err, "解析失败")
+	assert.Equal(t, "write_to_file", funcName13, "函数名应该正确解析")
+	assert.Equal(t, "product_list.md", param13["path"], "path参数应该正确解析")
 }
