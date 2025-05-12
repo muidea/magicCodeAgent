@@ -1,0 +1,56 @@
+package routeregistry
+
+import (
+	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/framework/plugin/initator"
+	"github.com/muidea/magicCommon/task"
+
+	engine "github.com/muidea/magicEngine/http"
+
+	"github.com/muidea/{{.ProjectName}}/internal/config"
+	iirc "github.com/muidea/{{.ProjectName}}/internal/initators/routeregistry/pkg/common"
+	"github.com/muidea/{{.ProjectName}}/pkg/common"
+)
+
+func init() {
+	initator.Register(New())
+}
+
+func New() *routeRegistry {
+	return &routeRegistry{}
+}
+
+type routeRegistry struct {
+	httpServer    engine.HTTPServer
+	routeRegistry engine.RouteRegistry
+}
+
+func (s *routeRegistry) ID() string {
+	return iirc.RouteRegistryInitator
+}
+
+func (s *routeRegistry) Setup(_ event.Hub, _ task.BackgroundRoutine) (err *cd.Error) {
+	router := engine.NewRouteRegistry()
+	s.httpServer = engine.NewHTTPServer(config.BindPort(), false)
+	s.httpServer.Bind(router)
+
+	router.SetApiVersion(common.ApiVersion)
+	s.routeRegistry = router
+	return
+}
+
+func (s *routeRegistry) Run() (err *cd.Error) {
+	go func() {
+		s.httpServer.Run()
+	}()
+	return
+}
+
+func (s *routeRegistry) Teardown() {
+}
+
+func (s *routeRegistry) GetRouteRegistry() (ret engine.RouteRegistry) {
+	ret = s.routeRegistry
+	return
+}

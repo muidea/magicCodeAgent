@@ -1,6 +1,9 @@
 package biz
 
 import (
+	"os"
+	"path"
+
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -59,6 +62,15 @@ func (s *Project) create(ev event.Event, re event.Result) {
 			re.Set(nil, err)
 		}
 		return
+	}
+
+	rawPath := path.Join(paramPtr.WorkingPath, "application", "main.go")
+	dstPath := path.Join(paramPtr.WorkingPath, "application", paramPtr.Name, "main.go")
+	if osErr := os.Rename(rawPath, dstPath); osErr != nil {
+		log.Errorf("rename file failed, rawPath:%s, dstPath:%s, err:%s", rawPath, dstPath, osErr.Error())
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.Unexpected, osErr.Error()))
+		}
 	}
 }
 

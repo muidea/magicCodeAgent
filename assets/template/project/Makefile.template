@@ -1,0 +1,18 @@
+export PATH := $(GOPATH)/bin:$(PATH)
+export GO111MODULE=on
+LDFLAGS := -X 'main.buildTime=$(shell date -u --rfc-3339=seconds)' -X 'main.gitCommit=$(shell git log --pretty=format:"%h" -1)'
+PROJECT={{.ProjectName}}
+
+all: fmt build
+
+build:
+	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/{{.ProjectName}} ./application/{{.ProjectName}}/cmd
+
+fmt:
+	go fmt ./...
+
+vet:
+	go vet ./...
+
+clean:
+	rm -f ./bin/$(PROJECT)
