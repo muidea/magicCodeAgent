@@ -1,9 +1,6 @@
 package cli
 
 import (
-	"os"
-	"syscall"
-
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/framework/plugin/module"
@@ -42,21 +39,8 @@ func (s *Cli) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine
 func (s *Cli) Run() (err *cd.Error) {
 	s.bizPtr.Run()
 
-	// 运行完成，主动退出进程
-	s.terminates()
 	return
 }
 
 func (s *Cli) Teardown() {
-}
-
-func (s *Cli) terminates() {
-	// 获取当前进程
-	p, err := os.FindProcess(os.Getpid())
-	if err != nil {
-		return
-	}
-
-	// 发送SIGINT信号
-	p.Signal(syscall.SIGINT)
 }

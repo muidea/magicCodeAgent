@@ -29,7 +29,7 @@ func main() {
 	fmt.Printf("magicCodeCli V1.0\n")
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
 	config.SetEndpoint("magicCodeCli")
-	err := application.Startup(service.HoldService(config.EndpointName()))
+	err := application.Startup(service.DefaultService(config.EndpointName()))
 	if err != nil {
 		log.Errorf("application.Startup err:%s", err.Error())
 		return
