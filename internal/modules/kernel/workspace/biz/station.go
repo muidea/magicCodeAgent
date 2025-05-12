@@ -212,8 +212,8 @@ func (s *Station) ChatMessage(ctx context.Context, modeName string, messageItemP
 
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-
-	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, curFlow.GetFlowPath())
+	chatContext := context.WithValue(providerContext, common.ModeName{}, s.currentWorkMode)
+	msgErr := s.localAssistant.Chat(chatContext, s.configPtr, curFlow.GetFlowPath())
 	if msgErr != nil {
 		err = msgErr
 		log.Errorf("ChatMessage, s.localAssistant.Chat error:%v", msgErr)

@@ -1,10 +1,13 @@
 package biz
 
 import (
-	"path"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -15,8 +18,18 @@ type Worker interface {
 }
 
 func (s *Workspace) DoWork(workspaceDir, workMode, content string) (result models.MessageItem, final bool) {
+	workPath := filepath.Join(workspaceDir, workMode)
+	if !fp.Exist(workPath) {
+		if err := os.MkdirAll(workPath, 0755); err != nil {
+			result = models.MessageItem{
+				Content: []string{fmt.Sprintf("create work dir failed, error%s", err.Error())},
+			}
+			final = true
+			return
+		}
+	}
 	ev := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
-	ev.SetData("workspaceDir", path.Join(workspaceDir, workMode))
+	ev.SetData("workspaceDir", workPath)
 	resultVal, resultErr := s.SendEvent(ev).Get()
 	if resultErr != nil {
 		result = models.MessageItem{
