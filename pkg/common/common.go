@@ -32,7 +32,8 @@ type ContentSinker interface {
 }
 
 type CreateParam struct {
-	Name          string `json:"name"`
+	ProjectName   string `json:"projectName omitempty"`
+	ModuleName    string `json:"moduleName"`
 	WorkingPath   string `json:"workingPath"`
 	EnableService bool   `json:"enableService"`
 	EnableDao     bool   `json:"enableDao"`

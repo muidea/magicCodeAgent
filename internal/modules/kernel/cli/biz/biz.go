@@ -33,6 +33,7 @@ func New(
 func (s *Cli) Run() {
 	err := config.VerifyVar()
 	if err != nil {
+		log.Errorf("verify config failed,err:%s", err.Error())
 		return
 	}
 
@@ -53,7 +54,7 @@ func (s *Cli) runModuleAction() {
 	param := &tc.CreateParam{
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
-		Name:          config.GetModuleName(),
+		ModuleName:    config.GetModuleName(),
 		WorkingPath:   icfg.CurrentWorkPath(),
 	}
 	var ev event.Event
@@ -75,7 +76,7 @@ func (s *Cli) runInitatorAction() {
 	param := &tc.CreateParam{
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
-		Name:          config.GetModuleName(),
+		ModuleName:    config.GetModuleName(),
 		WorkingPath:   icfg.CurrentWorkPath(),
 	}
 	var ev event.Event
@@ -95,9 +96,9 @@ func (s *Cli) runInitatorAction() {
 
 func (s *Cli) runProjectAction() {
 	param := &tc.CreateParam{
+		ProjectName:   config.GetModuleName(),
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
-		Name:          config.GetModuleName(),
 		WorkingPath:   icfg.CurrentWorkPath(),
 	}
 	var ev event.Event

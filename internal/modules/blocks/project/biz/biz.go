@@ -7,6 +7,7 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
@@ -55,9 +56,9 @@ func (s *Project) create(ev event.Event, re event.Result) {
 	}
 
 	helper := biz.NewHelper(common.ProjectTemplateBasePath)
-	err = helper.Create(paramPtr.Name, "", paramPtr)
+	err = helper.Create("", paramPtr)
 	if err != nil {
-		log.Errorf("create project failed, projectName:%s, err:%s", paramPtr.Name, err.Error())
+		log.Errorf("create project failed, projectName:%s, err:%s", paramPtr.ModuleName, err.Error())
 		if re != nil {
 			re.Set(nil, err)
 		}
@@ -65,7 +66,12 @@ func (s *Project) create(ev event.Event, re event.Result) {
 	}
 
 	rawPath := path.Join(paramPtr.WorkingPath, "application", "main.go")
-	dstPath := path.Join(paramPtr.WorkingPath, "application", paramPtr.Name, "main.go")
+	dstPath := path.Join(paramPtr.WorkingPath, "application", paramPtr.ProjectName)
+	if !fp.Exist(dstPath) {
+		os.MkdirAll(dstPath, 0755)
+	}
+
+	dstPath = path.Join(dstPath, "main.go")
 	if osErr := os.Rename(rawPath, dstPath); osErr != nil {
 		log.Errorf("rename file failed, rawPath:%s, dstPath:%s, err:%s", rawPath, dstPath, osErr.Error())
 		if re != nil {

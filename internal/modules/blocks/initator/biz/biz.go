@@ -47,8 +47,9 @@ func (s *Initator) create(ev event.Event, re event.Result) {
 		return
 	}
 
+	paramPtr.ProjectName = projectName
 	helper := biz.NewHelper(common.InitatorTemplateBasePath)
-	err = helper.Create(projectName, prefixPath, paramPtr)
+	err = helper.Create(prefixPath, paramPtr)
 	if err != nil {
 		if re != nil {
 			re.Set(nil, err)

@@ -51,8 +51,9 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		return
 	}
 
+	paramPtr.ProjectName = projectName
 	helper := biz.NewHelper(common.ModuleTemplateBasePath)
-	err = helper.Create(projectName, prefixPath, paramPtr)
+	err = helper.Create(prefixPath, paramPtr)
 	if err != nil {
 		log.Errorf("create module failed, projectName:%s, prefixPath:%s, err:%s", projectName, prefixPath, err.Error())
 		if re != nil {

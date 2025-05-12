@@ -10,6 +10,7 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/factory"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/log"
 )
 
 type Helper struct {
@@ -30,11 +31,11 @@ func NewHelper(templateBasePath string) *Helper {
 	return ret
 }
 
-func (s *Helper) Create(projectName, prefixPath string, createParam *tc.CreateParam) (err *cd.Error) {
+func (s *Helper) Create(prefixPath string, createParam *tc.CreateParam) (err *cd.Error) {
 	s.workingPath = createParam.WorkingPath
-	s.projectName = projectName
-	s.moduleName = util.ToTitle(createParam.Name)
-	s.modulePath = path.Join(prefixPath, util.ToLower(createParam.Name))
+	s.projectName = createParam.ProjectName
+	s.moduleName = util.ToTitle(createParam.ModuleName)
+	s.modulePath = path.Join(prefixPath, util.ToLower(createParam.ModuleName))
 	s.enableService = createParam.EnableService
 	s.enableDao = createParam.EnableDao
 
@@ -46,6 +47,7 @@ func (s *Helper) Create(projectName, prefixPath string, createParam *tc.CreatePa
 		relativePath, fileName := path.Split(filePath[len(s.templateBasePath)+1:])
 		err = s.cloneModuleContent(s.templateBasePath, relativePath, fileName)
 		if err != nil {
+			log.Errorf("cloneModuleContent, filePath:%s, fileName:%s err:%v", relativePath, fileName, err)
 			return err
 		}
 
