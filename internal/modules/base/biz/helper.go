@@ -30,13 +30,13 @@ func NewHelper(templateBasePath string) *Helper {
 	return ret
 }
 
-func (s *Helper) Create(projectName, prefixPath string, moduleParam *tc.CreateParam) (err *cd.Error) {
-	s.workingPath = moduleParam.WorkingPath
+func (s *Helper) Create(projectName, prefixPath string, createParam *tc.CreateParam) (err *cd.Error) {
+	s.workingPath = createParam.WorkingPath
 	s.projectName = projectName
-	s.moduleName = util.ToTitle(moduleParam.Name)
-	s.modulePath = path.Join(prefixPath, util.ToLower(moduleParam.Name))
-	s.enableService = moduleParam.EnableService
-	s.enableDao = moduleParam.EnableDao
+	s.moduleName = util.ToTitle(createParam.Name)
+	s.modulePath = path.Join(prefixPath, util.ToLower(createParam.Name))
+	s.enableService = createParam.EnableService
+	s.enableDao = createParam.EnableDao
 
 	fs.WalkDir(config.GetTemplateFS(), s.templateBasePath, func(filePath string, fileEntry fs.DirEntry, err error) error {
 		if s.templateBasePath == filePath || fileEntry.IsDir() || err != nil {
