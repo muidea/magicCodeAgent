@@ -2,7 +2,6 @@ package biz
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
 
@@ -48,8 +47,13 @@ func (s *AskFollowupQuestionTool) Execute(workspaceDir string, param imbtc.ToolP
 		err = fmt.Errorf("missing or invalid question parameter")
 		return
 	}
+	flowUp, ok := param["flow_up"].([]string)
+	if !ok || len(flowUp) == 0 {
+		err = fmt.Errorf("missing or invalid flow_up parameter")
+		return
+	}
 
-	result, err = AskFollowupQuestion(question)
+	result, err = AskFollowupQuestion(question, flowUp)
 	if err != nil {
 		err = fmt.Errorf("failed to ask followup question: %v", err)
 		return
@@ -82,33 +86,12 @@ Please specify which API endpoint you want to test
 */
 
 // AskFollowupQuestion 实现ask_followup_question工具功能
-func AskFollowupQuestion(question string) (string, error) {
-	// 默认的建议答案
-	defaultAnswers := []string{"Answer A", "Answer B"}
-
-	// 根据问题内容提供特定的建议答案
-	suggestions := defaultAnswers
-
-	// 针对特定问题提供特定的建议答案
-	if strings.Contains(question, "frontend-config.json") {
-		suggestions = []string{
-			"./src/frontend-config.json",
-			"./config/frontend-config.json",
-			"./frontend-config.json",
-		}
-	} else if strings.Contains(question, "programming language") {
-		suggestions = []string{
-			"C++ because of its performance",
-			"Java because of its platform independence",
-			"Python because of its simplicity and readability",
-		}
-	}
-
+func AskFollowupQuestion(question string, flowUp []string) (string, error) {
 	// 构建格式化的回答
 	result := fmt.Sprintf("Follow-up question: %s\nSuggested answers:\n", question)
 
 	// 添加编号的建议答案
-	for i, suggestion := range suggestions {
+	for i, suggestion := range flowUp {
 		result += fmt.Sprintf("%d. %s\n", i+1, suggestion)
 	}
 

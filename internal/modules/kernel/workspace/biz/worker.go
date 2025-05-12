@@ -28,9 +28,10 @@ func (s *Workspace) DoWork(workspaceDir, workMode, content string) (result model
 			return
 		}
 	}
-	ev := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
-	ev.SetData("workspaceDir", workPath)
-	resultVal, resultErr := s.SendEvent(ev).Get()
+	executeEvent := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
+	executeEvent.SetData("workspaceDir", workPath)
+	executeResult := s.SendEvent(executeEvent)
+	resultVal, resultErr := executeResult.Get()
 	if resultErr != nil {
 		result = models.MessageItem{
 			Content: []string{resultErr.Error()},

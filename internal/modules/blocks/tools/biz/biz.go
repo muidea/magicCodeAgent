@@ -196,6 +196,41 @@ func parseParamContent(content string) (string, map[string]any, error) {
 	// 创建参数映射
 	param := make(map[string]any)
 
+	// 特殊处理ask_followup_question工具，处理suggest标签
+	if tagName == "ask_followup_question" {
+		// 提取question参数
+		questionStart := strings.Index(content, "<question>")
+		questionEnd := strings.Index(content, "</question>")
+		if questionStart != -1 && questionEnd != -1 {
+			questionValue := content[questionStart+10 : questionEnd]
+			param["question"] = strings.TrimSpace(questionValue)
+		}
+
+		// 提取follow_up参数中的suggest标签
+		suggests := []string{}
+		start := 0
+		for {
+			suggestStart := strings.Index(content[start:], "<suggest>")
+			if suggestStart == -1 {
+				break
+			}
+			suggestStart += start
+			suggestEnd := strings.Index(content[suggestStart:], "</suggest>")
+			if suggestEnd == -1 {
+				break
+			}
+			suggestEnd += suggestStart
+			suggestValue := content[suggestStart+9 : suggestEnd]
+			suggests = append(suggests, suggestValue)
+			start = suggestEnd + 10 // 移动到</suggest>之后
+		}
+		if len(suggests) > 0 {
+			param["follow_up"] = suggests
+		}
+
+		return tagName, param, nil
+	}
+
 	// 特殊处理包含特殊XML字符的工具
 	if tagName == "apply_diff" || tagName == "write_to_file" {
 		// 提取path参数
@@ -267,6 +302,12 @@ func parseParamContent(content string) (string, map[string]any, error) {
 			if tagName == "" {
 				tagName = se.Name.Local
 			} else {
+				// 处理特殊情况：如果是follow_up元素，可能包含多个suggest子元素
+				if se.Name.Local == "follow_up" {
+					// 跳过follow_up标签的处理，因为我们已经在特殊处理部分处理了
+					continue
+				}
+
 				var value string
 				if err := decoder.DecodeElement(&value, &se); err != nil {
 					return "", nil, err

@@ -174,4 +174,19 @@ clean:
 	assert.NoError(t, err, "解析失败")
 	assert.Equal(t, "write_to_file", funcName13, "函数名应该正确解析")
 	assert.Equal(t, "product_list.md", param13["path"], "path参数应该正确解析")
+
+	content14 := `<ask_followup_question>
+<question>abc</question>
+<follow_up>
+<suggest>需要补充会员签到和优惠券功能</suggest>
+<suggest>需要补充会员分组/标签功能</suggest>
+<suggest>需要补充会员活动报名功能</suggest>
+<suggest>当前分解已完整，无需补充</suggest>
+</follow_up>
+</ask_followup_question>`
+	funcName14, param14, err := parseParamContent(content14)
+	assert.NoError(t, err, "parseParamContent error")
+	assert.Equal(t, "ask_followup_question", funcName14, "funcName14 error")
+	assert.Equal(t, "abc", param14["question"], "param14[question] error")
+	assert.Equal(t, 4, len(param14["follow_up"].([]string)), "param14[follow_up.suggest[0]] error")
 }
