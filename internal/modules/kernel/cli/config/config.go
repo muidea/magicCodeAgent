@@ -16,25 +16,27 @@ const (
 	RefreshVal  = "refresh"
 )
 
-// moduleType: module,initator,project
-var moduleType string
+// actionType: module,initator,project
+var actionType string
 
 // executeAction: create,destroy,refresh
 var executeAction string
+var projectName string
 var moduleName string
 var enableService bool
 var enableDao bool
 
 func init() {
-	flag.StringVar(&moduleType, "moduleType", "", "module type (required, options: module/initator/project)")
+	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initator/project)")
 	flag.StringVar(&executeAction, "executeAction", "", "execute action (required, options: create/destroy/refresh)")
+	flag.StringVar(&projectName, "projectName", "", "project name (required, must start with letter and contain only alphanumeric chars)")
 	flag.StringVar(&moduleName, "moduleName", "", "module name (required, must start with letter and contain only alphanumeric chars)")
 	flag.BoolVar(&enableService, "enableService", false, "enable service (optional, default: false)")
 	flag.BoolVar(&enableDao, "enableDao", false, "enable dao (optional, default: false)")
 }
 
-func GetModuleType() string {
-	return moduleType
+func GetActionType() string {
+	return actionType
 }
 
 func GetExecuteAction() string {
@@ -45,6 +47,10 @@ func GetModuleName() string {
 	return moduleName
 }
 
+func GetProjectName() string {
+	return projectName
+}
+
 func GetEnableService() bool {
 	return enableService
 }
@@ -52,6 +58,9 @@ func GetEnableService() bool {
 func GetEnableDao() bool {
 	return enableDao
 }
+
+var modulePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*$`)
+var projectPattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*|(service|web)\/[a-zA-Z][a-zA-Z0-9]*)$`)
 
 // 校验输入参数
 // 1. moduleType只能是module,initator,project其中一种，必选参数，如果参数为空则失败，返回参数错误
@@ -66,11 +75,11 @@ func VerifyVar() (err *cd.Error) {
 	}()
 
 	// 验证moduleType
-	if moduleType == "" {
+	if actionType == "" {
 		err = cd.NewError(cd.IllegalParam, "moduleType不能为空")
 		return
 	}
-	if moduleType != "module" && moduleType != "initator" && moduleType != "project" {
+	if actionType != "module" && actionType != "initator" && actionType != "project" {
 		err = cd.NewError(cd.IllegalParam, "moduleType必须是module/initator/project之一")
 		return
 	}
@@ -85,14 +94,17 @@ func VerifyVar() (err *cd.Error) {
 		return
 	}
 
-	// 验证moduleName
-	if moduleName == "" {
-		err = cd.NewError(cd.IllegalParam, "moduleName不能为空")
-		return
-	}
-	if !regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9]*$`).MatchString(moduleName) {
-		err = cd.NewError(cd.IllegalParam, "moduleName必须以字母开头且只能包含字母数字")
-		return
+	switch actionType {
+	case "module", "initator":
+		if !modulePattern.MatchString(moduleName) {
+			err = cd.NewError(cd.IllegalParam, "moduleName必须以字母开头且只能包含字母数字")
+			return
+		}
+	case "project":
+		if !projectPattern.MatchString(projectName) {
+			err = cd.NewError(cd.IllegalParam, "projectName必须是类似service/demo,web/demo这类格式")
+			return
+		}
 	}
 
 	return

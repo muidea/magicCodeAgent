@@ -56,7 +56,7 @@ func (s *CreateServiceInitatorTool) Execute(workspaceDir string, param imbtc.Too
 
 	command := "magicCodeCli"
 	var args = []string{
-		"-moduleType", "initator",
+		"-actionType", "initator",
 		"-executeAction", "create",
 		"-moduleName", name,
 	}

@@ -51,9 +51,9 @@ func (s *InitializationServiceProjectTool) Execute(workspaceDir string, param im
 
 	command := "magicCodeCli"
 	var args = []string{
-		"-moduleType", "project",
+		"-actionType", "project/service",
 		"-executeAction", "create",
-		"-moduleName", name,
+		"-projectName", name,
 	}
 	result, err = ExecuteCommand(workspaceDir, command, args, "")
 	if err != nil {

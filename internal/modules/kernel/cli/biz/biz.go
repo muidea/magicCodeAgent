@@ -37,8 +37,8 @@ func (s *Cli) Run() {
 		return
 	}
 
-	moduleType := config.GetModuleType()
-	switch moduleType {
+	actionType := config.GetActionType()
+	switch actionType {
 	case config.ModuleVal:
 		s.runModuleAction()
 	case config.InitatorVal:
@@ -46,7 +46,7 @@ func (s *Cli) Run() {
 	case config.ProjectVal:
 		s.runProjectAction()
 	default:
-		log.Warnf("unknown module type:%s", moduleType)
+		log.Warnf("unknown module type:%s", actionType)
 	}
 }
 
@@ -96,7 +96,7 @@ func (s *Cli) runInitatorAction() {
 
 func (s *Cli) runProjectAction() {
 	param := &tc.CreateParam{
-		ProjectName:   config.GetModuleName(),
+		ProjectName:   config.GetProjectName(),
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
 		WorkingPath:   icfg.CurrentWorkPath(),

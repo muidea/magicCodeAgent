@@ -3,6 +3,7 @@ package biz
 import (
 	"os"
 	"path"
+	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -54,11 +55,19 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		}
 		return
 	}
+	items := strings.Split(paramPtr.ProjectName, "/")
+	if len(items) != 2 || (items[0] != "service" && items[0] != "web") {
+		log.Errorf("invalid project name, projectName:%s", paramPtr.ProjectName)
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.InvalidParameter, "invalid project name"))
+		}
+	}
 
-	helper := biz.NewHelper(common.ProjectTemplateBasePath)
+	projectName := items[1]
+	helper := biz.NewHelper(path.Join(common.ProjectTemplateBasePath, items[0]))
 	err = helper.Create("", paramPtr)
 	if err != nil {
-		log.Errorf("create project failed, projectName:%s, err:%s", paramPtr.ModuleName, err.Error())
+		log.Errorf("create project failed, projectName:%s, err:%s", projectName, err.Error())
 		if re != nil {
 			re.Set(nil, err)
 		}
@@ -66,7 +75,7 @@ func (s *Project) create(ev event.Event, re event.Result) {
 	}
 
 	rawPath := path.Join(paramPtr.WorkingPath, "application", "main.go")
-	dstPath := path.Join(paramPtr.WorkingPath, "application", paramPtr.ProjectName)
+	dstPath := path.Join(paramPtr.WorkingPath, "application", projectName)
 	if !fp.Exist(dstPath) {
 		os.MkdirAll(dstPath, 0755)
 	}

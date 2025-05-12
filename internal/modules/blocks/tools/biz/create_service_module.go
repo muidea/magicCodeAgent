@@ -56,7 +56,7 @@ func (s *CreateServiceModuleTool) Execute(workspaceDir string, param imbtc.ToolP
 
 	command := "magicCodeCli"
 	var args = []string{
-		"-moduleType", "module",
+		"-actionType", "module",
 		"-executeAction", "create",
 		"-moduleName", name,
 	}
