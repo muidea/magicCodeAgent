@@ -165,9 +165,8 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 		}
 		// 保存每条message
 		for i, msg := range chatReq.Messages {
-			content := []byte(msg.Content)
-			if msg.Role == openai.ChatMessageRoleSystem {
-				// 普通字符串内容
+			if msg.Content != "" {
+				content := []byte(msg.Content)
 				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s.md", message.Item.Role, i, msg.Role))
 				if err := os.WriteFile(fileName, content, 0644); err != nil {
 					log.Errorf("save user message failed, role:%s, index:%d, err:%s",
@@ -176,18 +175,14 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 				continue
 			}
 
-			if msg.Role == openai.ChatMessageRoleUser {
-				for j, textItem := range msg.MultiContent {
-					if textItem.Type == "text" && textItem.Text != "" {
-						fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s_%d.md", message.Item.Role, i, msg.Role, j))
-						if err := os.WriteFile(fileName, []byte(textItem.Text), 0644); err != nil {
-							log.Errorf("save user text content failed, role:%s, index:%d, textIndex:%d, err:%s",
-								message.Item.Role, i, j, err)
-						}
+			for j, textItem := range msg.MultiContent {
+				if textItem.Type == "text" && textItem.Text != "" {
+					fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s_%d.md", message.Item.Role, i, msg.Role, j))
+					if err := os.WriteFile(fileName, []byte(textItem.Text), 0644); err != nil {
+						log.Errorf("save user text content failed, role:%s, index:%d, textIndex:%d, err:%s",
+							message.Item.Role, i, j, err)
 					}
 				}
-
-				continue
 			}
 		}
 	}
