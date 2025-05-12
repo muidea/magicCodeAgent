@@ -147,8 +147,26 @@ func UpdateWorkspace(workspace *Workspace) (err error) {
 	if sysConfig != nil {
 		for idx := range sysConfig.Workspace {
 			if sysConfig.Workspace[idx].Name == workspace.Name {
+				if workspace.Name == "" {
+					workspace.Name = sysConfig.Workspace[idx].Name
+				}
+				if workspace.Description == "" {
+					workspace.Description = sysConfig.Workspace[idx].Description
+				}
 				if workspace.Status == "" {
 					workspace.Status = sysConfig.Workspace[idx].Status
+				}
+				if workspace.Stage == "" {
+					workspace.Stage = sysConfig.Workspace[idx].Stage
+				}
+				if workspace.Path == "" {
+					workspace.Path = sysConfig.Workspace[idx].Path
+				}
+				if workspace.TechStack == nil {
+					workspace.TechStack = sysConfig.Workspace[idx].TechStack
+				}
+				if workspace.Ignores == nil {
+					workspace.Ignores = sysConfig.Workspace[idx].Ignores
 				}
 				workspace.UpdateTime = time.Now().Format(fu.CSTLayout)
 				sysConfig.Workspace[idx] = workspace

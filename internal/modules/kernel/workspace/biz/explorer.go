@@ -60,7 +60,7 @@ func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filt
 	return
 }
 
-func (s *Workspace) FilterWorkspaceFileTree(workspaceName, modeName, basePath string) (ret []*common.DataNode, err *cd.Error) {
+func (s *Workspace) FilterWorkspaceFileTree(workspaceName, stage, basePath string) (ret []*common.DataNode, err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
@@ -78,7 +78,7 @@ func (s *Workspace) FilterWorkspaceFileTree(workspaceName, modeName, basePath st
 		return
 	}
 
-	basePath = path.Join(modeName, basePath)
+	basePath = path.Join(stage, basePath)
 	filter := NewBasePathFilter(curWorkspace.(*Station).configPtr.Path, basePath)
 	fileList := curWorkspace.(*Station).Filter(filter)
 	return ConvertPathsToTree(curWorkspace.(*Station).configPtr.Path, fileList), nil

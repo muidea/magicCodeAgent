@@ -36,7 +36,7 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Workspace) *Workspace {
 
 func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.SetApiVersion(tc.ApiVersion)
-	s.routeRegistry.AddHandler(common.PreCheckWorkspace, engine.GET, s.precheckWorkspace)
+	s.routeRegistry.AddHandler(common.QueryWorkspace, engine.GET, s.queryWorkspace)
 	s.routeRegistry.AddHandler(common.CreateWorkspace, engine.POST, s.createWorkspace)
 	s.routeRegistry.AddHandler(common.DestroyWorkspace, engine.DELETE, s.destroyWorkspace)
 	s.routeRegistry.AddHandler(common.FilterWorkspace, engine.GET, s.filterWorkspace)
@@ -45,6 +45,7 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(common.RemoveWorkspace, engine.DELETE, s.delWorkspace)
 	s.routeRegistry.AddHandler(common.EnableWorkspace, engine.PUT, s.enableWorkspace)
 	s.routeRegistry.AddHandler(common.DisableWorkspace, engine.PUT, s.disableWorkspace)
+	s.routeRegistry.AddHandler(common.UpdateWorkspaceStage, engine.PUT, s.updateWorkspaceStage)
 	s.routeRegistry.AddHandler(common.RefreshWorkspace, engine.GET, s.refreshWorkspace)
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFile, engine.GET, s.filterFile)
 	s.routeRegistry.AddHandler(common.FilterWorkspaceFileTree, engine.GET, s.filterFileTree)
@@ -61,12 +62,12 @@ func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter
 	result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
 }
 
-func (s *Workspace) precheckWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) queryWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspaceName := req.URL.Query().Get("name")
-	result.Value, result.Error = s.bizPtr.PrecheckWorkspace(workspaceName)
+	result.Value, result.Error = s.bizPtr.QueryWorkspace(workspaceName)
 }
 
 func (s *Workspace) createWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -178,6 +179,26 @@ func (s *Workspace) disableWorkspace(ctx context.Context, res http.ResponseWrite
 	}
 }
 
+func (s *Workspace) updateWorkspaceStage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &common.WorkspaceResult{}
+	defer fn.PackageHTTPResponse(res, result)
+	param := &config.Workspace{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		return
+	}
+	if param.Stage == "" {
+		result.Error = cd.NewError(cd.IllegalParam, "stage can not be empty")
+		return
+	}
+	result.Error = s.bizPtr.UpdateWorkspace(param)
+	if result.Error == nil {
+		result.Value, result.Error = s.bizPtr.QueryWorkspace(param.Name)
+	}
+}
+
 func (s *Workspace) refreshWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &common.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
@@ -209,8 +230,8 @@ func (s *Workspace) filterFileTree(ctx context.Context, res http.ResponseWriter,
 
 	workspace := req.URL.Query().Get("workspace")
 	basePath := req.URL.Query().Get("basePath")
-	modeName := req.URL.Query().Get("mode")
-	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, modeName, basePath)
+	stage := req.URL.Query().Get("stage")
+	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, stage, basePath)
 }
 
 func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {

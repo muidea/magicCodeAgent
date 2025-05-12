@@ -16,7 +16,7 @@ import (
 const WorkspaceModule = "/internal/modules/kernel/workspace"
 
 const (
-	PreCheckWorkspace           = "/workspace/precheck"
+	QueryWorkspace              = "/workspace/query"
 	CreateWorkspace             = "/workspace/create"
 	DestroyWorkspace            = "/workspace/destroy"
 	AddWorkspace                = "/workspace/add"
@@ -25,6 +25,7 @@ const (
 	RefreshWorkspace            = "/workspace/refresh"
 	EnableWorkspace             = "/workspace/enable"
 	DisableWorkspace            = "/workspace/disable"
+	UpdateWorkspaceStage        = "/workspace/stage/update"
 	FilterWorkspace             = "/workspace/filter"
 	FilterWorkspaceFile         = "/workspace/file/filter"
 	FilterWorkspaceFileTree     = "/workspace/file/tree/filter"

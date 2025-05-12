@@ -49,7 +49,7 @@ func New(
 		prompsRegistry: prompsRegistry,
 	}
 
-	ptr.SubscribeFunc(imkwc.PreCheckWorkspace, ptr.precheckWorkspace)
+	ptr.SubscribeFunc(imkwc.QueryWorkspace, ptr.queryWorkspace)
 	ptr.SubscribeFunc(imkwc.CreateWorkspace, ptr.createWorkspace)
 	ptr.SubscribeFunc(imkwc.DestroyWorkspace, ptr.destroyWorkspace)
 	ptr.SubscribeFunc(imkwc.AddWorkspace, ptr.addWorkspace)
@@ -155,23 +155,23 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	}
 }
 
-func (s *Workspace) precheckWorkspace(ev event.Event, re event.Result) {
+func (s *Workspace) queryWorkspace(ev event.Event, re event.Result) {
 	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
 	if !workspaceOK {
-		log.Errorf("precheck workspace failed, invalid workspace:%v", ev.Data())
+		log.Errorf("query workspace failed, invalid workspace:%v", ev.Data())
 		return
 	}
-	workspacePtr, workspaceErr := s.PrecheckWorkspace(workspaceVal.Name)
+	workspacePtr, workspaceErr := s.QueryWorkspace(workspaceVal.Name)
 	if re != nil {
 		re.Set(workspacePtr, workspaceErr)
 	}
 }
 
-func (s *Workspace) PrecheckWorkspace(workspaceName string) (ret *config.Workspace, err *cd.Error) {
+func (s *Workspace) QueryWorkspace(workspaceName string) (ret *config.Workspace, err *cd.Error) {
 	workspacePtr := config.GetWorkspace(workspaceName)
 	if workspacePtr == nil {
-		log.Warnf("precheck workspace, workspace not exists:%s", workspaceName)
-		err = cd.NewError(cd.Unexpected, fmt.Sprintf("precheck workspace, workspace not exists:%s", workspaceName))
+		log.Warnf("query workspace, workspace not exists:%s", workspaceName)
+		err = cd.NewError(cd.Unexpected, fmt.Sprintf("query workspace, workspace not exists:%s", workspaceName))
 		return
 	}
 
