@@ -12,6 +12,7 @@ import (
 	fp "github.com/muidea/magicCommon/foundation/path"
 	"github.com/muidea/magicCommon/task"
 
+	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
 	tc "github.com/muidea/magicCodeAgent/pkg/common"
@@ -79,9 +80,19 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	if projectType == "service" {
+	if projectType == config.Service {
 		if err := s.initializeService(projectName, paramPtr.WorkingPath); err != nil {
 			log.Errorf("initialize service failed, err:%s", err.Error())
+			if re != nil {
+				re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
+			}
+			return
+		}
+	}
+
+	if projectType == config.Web {
+		if err := s.initializeWeb(projectName, paramPtr.WorkingPath); err != nil {
+			log.Errorf("initialize web failed, err:%s", err.Error())
 			if re != nil {
 				re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
 			}
@@ -134,6 +145,16 @@ func (s *Project) initializeService(projectName, projectPath string) (err error)
 	modVendorCmd.Dir = projectPath
 	if err = modVendorCmd.Run(); err != nil {
 		log.Errorf("go mod vendor failed, projectName:%s, err:%s", projectName, err.Error())
+		return
+	}
+	return
+}
+
+func (s *Project) initializeWeb(projectName, projectPath string) (err error) {
+	modInitCmd := exec.Command("yarn")
+	modInitCmd.Dir = projectPath
+	if err = modInitCmd.Run(); err != nil {
+		log.Errorf("yarn, projectName:%s, err:%s", projectName, err.Error())
 		return
 	}
 	return

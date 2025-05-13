@@ -14,6 +14,9 @@ func isIgnored(path string) bool {
 	base := filepath.Base(path)
 	return strings.Contains(path, ".git") ||
 		strings.HasSuffix(path, ".tmp") ||
+		strings.HasSuffix(path, ".umi") ||
+		strings.HasSuffix(path, ".umi-production") ||
+		strings.HasSuffix(path, "node_modules") ||
 		strings.HasPrefix(base, ".")
 }
 
