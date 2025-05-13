@@ -32,11 +32,12 @@ type ContentSinker interface {
 }
 
 type CreateParam struct {
-	ProjectName   string `json:"projectName omitempty"`
-	ModuleName    string `json:"moduleName"`
-	WorkingPath   string `json:"workingPath"`
-	EnableService bool   `json:"enableService"`
-	EnableDao     bool   `json:"enableDao"`
+	ProjectName        string `json:"projectName omitempty"`
+	ProjectDescription string `json:"projectDescription"`
+	ModuleName         string `json:"moduleName"`
+	WorkingPath        string `json:"workingPath"`
+	EnableService      bool   `json:"enableService"`
+	EnableDao          bool   `json:"enableDao"`
 }
 
 type MessageSink interface {

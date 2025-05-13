@@ -97,6 +97,7 @@ func (s *Cli) runInitatorAction() {
 func (s *Cli) runProjectAction() {
 	param := &tc.CreateParam{
 		ProjectName:   config.GetProjectName(),
+		ProjectDescription:  config.GetProjectDescription(),
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
 		WorkingPath:   icfg.CurrentWorkPath(),

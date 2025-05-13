@@ -22,6 +22,7 @@ var actionType string
 // executeAction: create,destroy,refresh
 var executeAction string
 var projectName string
+var projectDescription string
 var moduleName string
 var enableService bool
 var enableDao bool
@@ -30,6 +31,7 @@ func init() {
 	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initator/project)")
 	flag.StringVar(&executeAction, "executeAction", "", "execute action (required, options: create/destroy/refresh)")
 	flag.StringVar(&projectName, "projectName", "", "project name (required, must start with letter and contain only alphanumeric chars)")
+	flag.StringVar(&projectDescription, "projectDescription", "", "project description")
 	flag.StringVar(&moduleName, "moduleName", "", "module name (required, must start with letter and contain only alphanumeric chars)")
 	flag.BoolVar(&enableService, "enableService", false, "enable service (optional, default: false)")
 	flag.BoolVar(&enableDao, "enableDao", false, "enable dao (optional, default: false)")
@@ -49,6 +51,10 @@ func GetModuleName() string {
 
 func GetProjectName() string {
 	return projectName
+}
+
+func GetProjectDescription() string {
+	return projectDescription
 }
 
 func GetEnableService() bool {

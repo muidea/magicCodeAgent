@@ -16,12 +16,13 @@ import (
 type Helper struct {
 	templateBasePath string
 
-	workingPath   string
-	projectName   string
-	moduleName    string
-	modulePath    string
-	enableService bool
-	enableDao     bool
+	workingPath        string
+	projectName        string
+	projectDescription string
+	moduleName         string
+	modulePath         string
+	enableService      bool
+	enableDao          bool
 }
 
 func NewHelper(templateBasePath string) *Helper {
@@ -34,6 +35,7 @@ func NewHelper(templateBasePath string) *Helper {
 func (s *Helper) Create(prefixPath string, createParam *tc.CreateParam) (err *cd.Error) {
 	s.workingPath = createParam.WorkingPath
 	s.projectName = createParam.ProjectName
+	s.projectDescription = createParam.ProjectDescription
 	s.moduleName = util.ToTitle(createParam.ModuleName)
 	s.modulePath = path.Join(prefixPath, util.ToLower(createParam.ModuleName))
 	s.enableService = createParam.EnableService
@@ -66,11 +68,12 @@ func (s *Helper) cloneModuleContent(templateBasePath, relativePath, templateFile
 	}
 
 	contentVal := map[string]interface{}{
-		"ProjectName":   s.projectName,
-		"ModuleName":    s.moduleName,
-		"ModulePath":    s.modulePath,
-		"EnableService": s.enableService,
-		"EnableDao":     s.enableDao,
+		"ProjectName":        s.projectName,
+		"ProjectDescription": s.projectDescription,
+		"ModuleName":         s.moduleName,
+		"ModulePath":         s.modulePath,
+		"EnableService":      s.enableService,
+		"EnableDao":          s.enableDao,
 	}
 	factoryPtr := factory.NewFileFactory(templateBasePath, relativePath, templateFileName, contentVal)
 
