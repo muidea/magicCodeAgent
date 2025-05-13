@@ -118,9 +118,14 @@ func (s *Station) Available() bool {
 }
 
 func (s *Station) checkIgnore(fileFullPath string) bool {
+	if isIgnored(fileFullPath) {
+		return true
+	}
+
 	filePath, fileName := path.Split(fileFullPath)
 	for _, ignore := range s.configPtr.Ignores {
-		ignorePath := filepath.Join(s.configPtr.Path, ignore)
+		// 只需要匹配code目录下的文件
+		ignorePath := filepath.Join(s.configPtr.Path, common.CodeStage, ignore)
 		if fp.IsDir(ignorePath) {
 			if strings.HasPrefix(filePath, ignorePath) {
 				return true
@@ -159,11 +164,11 @@ func (s *Station) AddDir(dirPath string) bool {
 	}
 
 	filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-		if isIgnored(path) {
+		if info.IsDir() {
 			return nil
 		}
 
-		if info.IsDir() {
+		if s.checkIgnore(path) {
 			return nil
 		}
 
