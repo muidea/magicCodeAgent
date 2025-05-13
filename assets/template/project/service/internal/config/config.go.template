@@ -1,1 +1,71 @@
 package config
+
+import (
+	"embed"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
+)
+
+
+var (
+	currentConfigPath = ""               // 当前配置文件路径
+	currentWorkPath   = ""               // 当前工作目录路径
+	currentEndpoint   = "magicCodeAgent" // 默认端点名称
+	listenPort        = "8080"           // 默认监听端口
+	sysConfig         *Config            // 系统配置实例
+	debugWorkspace    = true
+)
+
+
+// Config 定义系统配置结构
+type Config struct {
+	BindPort  string       `json:"bindPort"`  // 绑定端口
+}
+
+// init 初始化当前工作目录路径
+func init() {
+	currentWorkPath, _ = os.Getwd()
+}
+
+// LoadConfig 加载配置文件
+// cfgFile: 配置文件路径
+// 返回: 错误信息
+func LoadConfig(cfgFile string) (err error) {
+	if cfgFile == "" {
+		return
+	}
+
+	cfg := &Config{}
+	err = fu.LoadConfig(cfgFile, cfg)
+	if err != nil {
+		log.Errorf("load config failed, err:%s", err.Error())
+		return
+	}
+
+	currentConfigPath = cfgFile
+	sysConfig = cfg
+	return
+}
+
+// SetEndpoint 设置当前端点名称
+// endpointName: 端点名称
+func SetEndpoint(endpointName string) {
+	currentEndpoint = endpointName
+}
+
+
+// BindPort 获取绑定端口
+// 返回: 端口号字符串
+func BindPort() string {
+	if sysConfig != nil {
+		return sysConfig.BindPort
+	}
+
+	return listenPort
+}
+
