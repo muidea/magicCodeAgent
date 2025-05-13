@@ -1,5 +1,5 @@
-import config from './config.ts';
-import { addWhitelistPaths, handleApiCall, genApi } from './api.ts';
+import config from './config';
+import { addWhitelistPaths, handleApiCall, genApi } from './api';
 export {
     addWhitelistPaths,
     handleApiCall,

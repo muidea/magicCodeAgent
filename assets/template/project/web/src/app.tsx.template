@@ -1,6 +1,6 @@
 import { RunTimeLayoutConfig } from '@umijs/max';
 import { message } from 'antd';
-import { config } from './utils/index.ts';
+import { config } from './utils/index';
 import { history } from '@umijs/max';
 
 // 运行时配置
