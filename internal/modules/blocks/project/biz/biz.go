@@ -154,7 +154,14 @@ func (s *Project) initializeWeb(projectName, projectPath string) (err error) {
 	modInitCmd := exec.Command("yarn")
 	modInitCmd.Dir = projectPath
 	if err = modInitCmd.Run(); err != nil {
-		log.Errorf("yarn, projectName:%s, err:%s", projectName, err.Error())
+		log.Errorf("yarn failed, projectName:%s, err:%s", projectName, err.Error())
+		return
+	}
+
+	mvUmiRCCmd := exec.Command("mv", "umirc.ts", ".umirc.ts")
+	mvUmiRCCmd.Dir = projectPath
+	if err = mvUmiRCCmd.Run(); err != nil {
+		log.Errorf("mv umirc.ts failed, projectName:%s, err:%s", projectName, err.Error())
 		return
 	}
 	return
