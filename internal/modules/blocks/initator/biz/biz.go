@@ -1,8 +1,12 @@
 package biz
 
 import (
+	"os"
+
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
@@ -33,14 +37,25 @@ func New(
 func (s *Initator) create(ev event.Event, re event.Result) {
 	paramPtr, paramOK := ev.Data().(*tc.CreateParam)
 	if !paramOK {
+		log.Errorf("create initator failed, illegal create initator param")
 		if re != nil {
-			re.Set(nil, cd.NewError(cd.Unexpected, "illegal create module param"))
+			re.Set(nil, cd.NewError(cd.Unexpected, "illegal create initator param"))
 		}
 		return
+	}
+	if !fp.Exist(paramPtr.WorkingPath) {
+		if err := os.MkdirAll(paramPtr.WorkingPath, 0755); err != nil {
+			log.Errorf("create initator failed, create initator working path failed, err: %v", err)
+			if re != nil {
+				re.Set(nil, cd.NewError(cd.Unexpected, "create initator working path failed"))
+			}
+			return
+		}
 	}
 
 	projectName, prefixPath, err := util.VerifyInitatorWorkPath(paramPtr.WorkingPath)
 	if err != nil {
+		log.Errorf("create initator failed, verify initator working path failed, err: %v", err)
 		if re != nil {
 			re.Set(nil, err)
 		}
@@ -51,6 +66,7 @@ func (s *Initator) create(ev event.Event, re event.Result) {
 	helper := biz.NewHelper(common.InitatorTemplateBasePath)
 	err = helper.Create(prefixPath, paramPtr)
 	if err != nil {
+		log.Errorf("create initator failed, create initator failed, err: %v", err)
 		if re != nil {
 			re.Set(nil, err)
 		}

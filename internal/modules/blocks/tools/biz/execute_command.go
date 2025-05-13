@@ -2,10 +2,12 @@ package biz
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -106,6 +108,12 @@ func ExecuteCommand(workspaceDir, command string, args []string, cwd string) (st
 		cmd.Dir = filepath.Join(workspaceDir, cwd)
 	} else {
 		cmd.Dir = workspaceDir
+	}
+
+	if !fp.Exist(cmd.Dir) {
+		if err := os.MkdirAll(cmd.Dir, 0755); err != nil {
+			return "", err
+		}
 	}
 
 	output, err := cmd.CombinedOutput()

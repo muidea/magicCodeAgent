@@ -1,9 +1,12 @@
 package biz
 
 import (
+	"os"
+
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
@@ -39,6 +42,15 @@ func (s *Module) create(ev event.Event, re event.Result) {
 			re.Set(nil, cd.NewError(cd.Unexpected, "illegal create module param"))
 		}
 		return
+	}
+	if !fp.Exist(paramPtr.WorkingPath) {
+		if err := os.MkdirAll(paramPtr.WorkingPath, 0755); err != nil {
+			log.Errorf("create module failed, create module working path failed, err: %v", err)
+			if re != nil {
+				re.Set(nil, cd.NewError(cd.Unexpected, "create module working path failed"))
+			}
+			return
+		}
 	}
 
 	projectName, prefixPath, err := util.VerifyModuleWorkPath(paramPtr.WorkingPath)
