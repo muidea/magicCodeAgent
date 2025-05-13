@@ -1,0 +1,176 @@
+import { request, RequestConfig, history } from '@umijs/max';
+import { notification } from 'antd';
+import config from './config';
+
+const { apiPrefix } = config;
+
+export interface ApiError {
+  code: number;
+  message?: string;
+  details?: any;
+}
+
+// ================ 类型增强 ================
+export interface ApiResponse<T = any> {
+  error?: ApiError
+  value?: T;
+}
+
+export class DefaultError extends Error {
+  code: number;
+  details?: any;
+
+  constructor(code: number, message: string, details?: any) {
+    super(message);
+    this.code = code;
+    this.details = details;
+  }
+}
+
+// ================ 错误处理模块 ================
+class ErrorNotifier {
+  private lastErrorTime = 0;
+  private readonly debounceTime: number;
+  private readonly criticalCodes: number[];
+  private whitelistPaths: Set<string>;
+
+  constructor(
+    debounceTime = 5000,
+    criticalCodes: number[] = [401, 403],
+    whitelistPaths: string[] = []
+  ) {
+    this.debounceTime = debounceTime;
+    this.criticalCodes = criticalCodes;
+    this.whitelistPaths = new Set(whitelistPaths);
+  }
+
+  addWhitelistPaths(paths: string[]): void {
+    paths.forEach(path => this.whitelistPaths.add(path));
+  }
+
+  notify(error: Error, code?: number) {
+    const now = Date.now();
+    const isCritical = code && this.criticalCodes.includes(code);
+    const currentPath = history.location.pathname;
+    const isWhitelisted = this.whitelistPaths.has(currentPath);
+
+    if ((isCritical || now - this.lastErrorTime > this.debounceTime) && !isWhitelisted) {
+      this.lastErrorTime = now;
+      notification.error({
+        message: `请求错误`,
+        description: error.message || '未知错误',
+      });
+    }
+  }
+}
+
+const errorNotifier = new ErrorNotifier();
+
+// ================ 核心逻辑 ================
+const parseApiConfig = (params: string) => {
+  const match = params.match(/^(GET|POST|PUT|DELETE|PATCH)\s+(\S+)/);
+  if (!match || !match[1] || !match[2]) {
+    throw new DefaultError(400, `Invalid API format: ${params}`);
+  }
+
+  return {
+    method: match[1],
+    path: `${apiPrefix}${match[2]}`
+  };
+};
+
+const processRequestParams = (url: string, val?: any) => {
+  let processedUrl = url;
+  const data = val ? { ...val } : {};
+
+  if (data?.id) {
+    processedUrl = processedUrl.replace(':id', data.id);
+    delete data.id;
+  }
+
+  return { url: processedUrl, data };
+};
+
+// ================ 主API生成函数 ================
+export const genApi = <T = any>(urlPath: string) => {
+  return async (val: any = null, headers: Record<string, string> = {}, config?: RequestConfig): Promise<T> => {
+    try {
+      const { method, path } = parseApiConfig(urlPath);
+      const { url, data } = processRequestParams(path, val);
+      const isBodyMethod = ['POST', 'PUT', 'PATCH'].includes(method);
+
+      const response = await request<ApiResponse<T>>(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...config?.headers,
+          ...headers,
+        },
+        [isBodyMethod ? 'data' : 'params']: data,
+        timeout: 30000,
+        ...config
+      });
+
+      if (response.error) {
+        const { error } = response
+        errorNotifier.notify(
+          new Error(error.message),
+          error.code,
+        );
+      }
+
+      return response as T;
+    } catch (error) {
+      const errorCode = error instanceof DefaultError ? error.code : 500;
+      const errorMessage = error instanceof DefaultError ? error.message : '未知错误';
+
+      errorNotifier.notify(
+        new Error(errorMessage, { cause: error }),
+        errorCode
+      );
+
+      return {
+        code: errorCode,
+        message: errorMessage,
+        ...(error instanceof DefaultError && { details: error.details })
+      } as T;
+    }
+  };
+};
+
+export interface ApiFilter {
+  [key: string]: any;
+}
+
+export const handleApiCall = async (apiCall: Promise<any>, onSuccess: (result: any, others: any) => void, onError?: (result: any) => void, setLoading?: (val: boolean) => void): Promise<any> => {
+  if (setLoading) {
+    setLoading(true);
+  }
+  try {
+    const result = await apiCall;
+    const { error, value, values, ...others } = result;
+    if (error) {
+      const { error } = result
+      console.error(error.errorMessage);
+      return;
+    }
+
+    // 这里主动返回[]是为了避免业务端逻辑未判断值为null的情况
+    onSuccess(value || values || [], others);
+    return value || values || [];
+  } catch (err) {
+    console.error(err);
+    if (onError) {
+      onError(err);
+    }
+    return null;
+  } finally {
+    if (setLoading) {
+      setLoading(false);
+    }
+  }
+};
+
+export const addWhitelistPaths = (paths: string[]) => {
+  errorNotifier.addWhitelistPaths(paths);
+}

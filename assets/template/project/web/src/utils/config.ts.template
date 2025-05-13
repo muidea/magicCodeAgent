@@ -1,0 +1,6 @@
+const config = {
+    apiPrefix: '/api/v1',
+    systemName: '{{.ProjectName}}',
+}
+
+export default config;

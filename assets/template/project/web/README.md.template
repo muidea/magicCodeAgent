@@ -1,0 +1,10 @@
+# {{.ProjectName}}
+
+{{.ProjectDescription}}
+
+## 技术栈
+
+- 前端框架：@umijs/max
+- UI 组件库：Ant Design Pro
+- 状态管理：@umijs/max 内置的 Model
+
