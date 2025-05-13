@@ -4,11 +4,17 @@ package config
 import (
 	"embed"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
+)
+
+const (
+	Service = "service"
+	Web     = "web"
 )
 
 // templateFS 用于嵌入模板文件系统
@@ -41,6 +47,21 @@ type Workspace struct {
 	TechStack   []string `json:"techStack"` // 技术栈列表
 	Ignores     []string `json:"ignores"`   // 忽略文件/目录列表
 	UpdateTime  string   `json:"updateTime"`
+}
+
+func (s *Workspace) GetWorkspaceType() string {
+	frontendTechs := []string{"javascript", "html", "css", "react", "vue", "umijs", "antd", "typescript"}
+
+	for _, tech := range s.TechStack {
+		lowerTech := strings.ToLower(tech)
+		for _, frontend := range frontendTechs {
+			if strings.Contains(lowerTech, frontend) {
+				return Web
+			}
+		}
+	}
+
+	return Service
 }
 
 func (s *Workspace) Available() bool {

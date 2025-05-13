@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"path"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
@@ -13,23 +12,22 @@ import (
 )
 
 type Assistant interface {
-	Chat(ctx context.Context, workspaceConfig *config.Workspace, workspaceEnvPromp string, flowPathList []*models.Flow) *cd.Error
+	Chat(ctx context.Context, workspaceConfig *config.Workspace, systemPrompt, workspaceEnvPromp string, flowPathList []*models.Flow) *cd.Error
 }
 
-func (s *Workspace) Chat(chatContext context.Context, workspaceConfig *config.Workspace, workspaceEnvPrompt string, flowPathList []*models.Flow) (err *cd.Error) {
+func (s *Workspace) Chat(
+	chatContext context.Context,
+	workspaceConfig *config.Workspace,
+	systemPrompt string,
+	workspaceEnvPrompt string,
+	flowPathList []*models.Flow) (err *cd.Error) {
 	if len(flowPathList) == 0 {
 		err = cd.NewError(cd.InvalidParameter, "flowPathList is empty")
 		return
 	}
 
-	modeName := "code"
-	modelNameVal := chatContext.Value(common.ModeName{})
-	if modelNameVal != nil {
-		modeName = modelNameVal.(string)
-	}
-
 	systemMessage := &models.MessageItem{
-		Content: []string{s.prompsRegistry.GetPromptsContent(modeName, path.Join(workspaceConfig.Path, modeName))},
+		Content: []string{systemPrompt},
 	}
 
 	userMessageList := models.MessageItemList{}

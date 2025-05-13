@@ -8,12 +8,6 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type ModeName struct{}
-
-func (s *ModeName) String() string {
-	return "ModeName"
-}
-
 type FlowID struct{}
 
 func (s *FlowID) String() string {

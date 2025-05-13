@@ -29,13 +29,13 @@ type Workspace struct {
 	fsWatcher             *fsnotify.Watcher
 	workspaceStationCache sync.Map
 
-	prompsRegistry iipc.PromptsRegistry
+	promptsRegistry iipc.PromptsRegistry
 }
 
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
-	prompsRegistry iipc.PromptsRegistry,
+	promptsRegistry iipc.PromptsRegistry,
 ) *Workspace {
 	workspacePtr, workspaceErr := fsnotify.NewWatcher()
 	if workspaceErr != nil {
@@ -44,9 +44,9 @@ func New(
 	}
 
 	ptr := &Workspace{
-		Base:           biz.New(imkwc.WorkspaceModule, eventHub, backgroundRoutine),
-		fsWatcher:      workspacePtr,
-		prompsRegistry: prompsRegistry,
+		Base:            biz.New(imkwc.WorkspaceModule, eventHub, backgroundRoutine),
+		fsWatcher:       workspacePtr,
+		promptsRegistry: promptsRegistry,
 	}
 
 	ptr.SubscribeFunc(imkwc.QueryWorkspace, ptr.queryWorkspace)
@@ -414,7 +414,7 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err
 
 	workspace := NewStation(
 		&s.Base,
-		workspacePtr, s, s)
+		workspacePtr, s, s, s.promptsRegistry)
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {

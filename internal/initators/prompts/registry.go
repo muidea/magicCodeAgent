@@ -103,6 +103,16 @@ func (s *promptsRegistry) GetPromptsContent(modeName, workspaceDir string) strin
 	return builder.String()
 }
 
+func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string) string {
+	fileName := fmt.Sprintf("%s.md", sectionPrompt)
+	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	if contentErr != nil {
+		log.Errorf("Failed to read section prompt content for %s: %v", sectionPrompt, contentErr)
+		return ""
+	}
+	return contentVal
+}
+
 func (s *promptsRegistry) getRolePrompts(modeName string) string {
 	fileName := fmt.Sprintf("role_%s.md", modeName)
 	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)

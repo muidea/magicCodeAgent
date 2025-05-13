@@ -3,7 +3,6 @@ package biz
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -14,13 +13,12 @@ import (
 )
 
 type Worker interface {
-	DoWork(workspaceDir, workMode, content string) (result models.MessageItem, final bool)
+	DoWork(workspaceDir, content string) (result models.MessageItem, final bool)
 }
 
-func (s *Workspace) DoWork(workspaceDir, workMode, content string) (result models.MessageItem, final bool) {
-	workPath := filepath.Join(workspaceDir, workMode)
-	if !fp.Exist(workPath) {
-		if err := os.MkdirAll(workPath, 0755); err != nil {
+func (s *Workspace) DoWork(workspaceDir, content string) (result models.MessageItem, final bool) {
+	if !fp.Exist(workspaceDir) {
+		if err := os.MkdirAll(workspaceDir, 0755); err != nil {
 			result = models.MessageItem{
 				Content: []string{fmt.Sprintf("create work dir failed, error%s", err.Error())},
 			}
@@ -29,7 +27,7 @@ func (s *Workspace) DoWork(workspaceDir, workMode, content string) (result model
 		}
 	}
 	executeEvent := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
-	executeEvent.SetData("workspaceDir", workPath)
+	executeEvent.SetData("workspaceDir", workspaceDir)
 	executeResult := s.SendEvent(executeEvent)
 	resultVal, resultErr := executeResult.Get()
 	if resultErr != nil {

@@ -13,6 +13,7 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/cache"
@@ -43,11 +44,16 @@ type Station struct {
 	localFlowManger   *FlowManager
 	localWorker       Worker
 	localAssistant    Assistant
+	promptsRegistry   iipc.PromptsRegistry
 }
 
 func NewStation(
 	bizBasePtr *biz.Base,
-	workspacePtr *config.Workspace, worker Worker, assistant Assistant) *Station {
+	workspacePtr *config.Workspace,
+	worker Worker,
+	assistant Assistant,
+	promptsRegistry iipc.PromptsRegistry,
+) *Station {
 	ret := &Station{
 		bizBasePtr:        bizBasePtr,
 		configPtr:         workspacePtr,
@@ -55,12 +61,22 @@ func NewStation(
 		localFlowManger:   NewFlowManager(),
 		localWorker:       worker,
 		localAssistant:    assistant,
+		promptsRegistry:   promptsRegistry,
 	}
 
 	return ret
 }
 
-func (s *Station) Prompt() string {
+func (s *Station) getWorkspaceType() string {
+	return s.configPtr.GetWorkspaceType()
+
+}
+
+func (s *Station) systemPrompt(modeName string) string {
+	return s.promptsRegistry.GetPromptsContent(modeName, path.Join(s.configPtr.Path, modeName))
+}
+
+func (s *Station) envPrompt() string {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
 	stringBuilder.WriteString("# 项目名称：" + s.configPtr.Name + "\n\n\n")
@@ -73,6 +89,14 @@ func (s *Station) Prompt() string {
 		stringBuilder.WriteString("- " + val + "\n")
 	}
 	stringBuilder.WriteString("\n\n")
+
+	if s.getWorkspaceType() == config.Service {
+		structContent := s.promptsRegistry.ReadSectionPromptContent("service-project-struct")
+		if structContent != "" {
+			stringBuilder.WriteString(structContent)
+			stringBuilder.WriteString("\n\n")
+		}
+	}
 
 	prefixPath := filepath.Join(s.configPtr.Path, s.configPtr.Stage)
 	stringBuilder.WriteString("## 当前文件清单\n")
@@ -240,11 +264,11 @@ func (s *Station) ChatMessage(ctx context.Context, modeName string, messageItemP
 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
-	stationEnvPrompt := s.Prompt()
+	stationSystemPrompt := s.systemPrompt(modeName)
+	stationEnvPrompt := s.envPrompt()
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	chatContext := context.WithValue(providerContext, common.ModeName{}, s.currentWorkMode)
-	msgErr := s.localAssistant.Chat(chatContext, s.configPtr, stationEnvPrompt, curFlow.GetFlowPath())
+	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, stationSystemPrompt, stationEnvPrompt, curFlow.GetFlowPath())
 	if msgErr != nil {
 		err = msgErr
 		log.Errorf("ChatMessage, s.localAssistant.Chat error:%v", msgErr)
@@ -336,8 +360,9 @@ func (s *Station) OnRecv(event string, content string) {
 			return
 		}
 
+		workspaceDir := filepath.Join(s.configPtr.Path, s.currentWorkMode)
 		for _, block := range blockList {
-			resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.Path, s.currentWorkMode, block)
+			resultVal, resultFinal := s.localWorker.DoWork(workspaceDir, block)
 			if resultFinal {
 				continue
 			}
