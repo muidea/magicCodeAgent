@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path"
@@ -57,6 +58,35 @@ func NewStation(
 	}
 
 	return ret
+}
+
+func (s *Station) Prompt() string {
+	stringBuilder := bytes.NewBufferString("")
+	stringBuilder.WriteString("<environment_details>\n")
+	stringBuilder.WriteString("# 项目名称：" + s.configPtr.Name + "\n\n\n")
+
+	stringBuilder.WriteString("## 项目描述\n")
+	stringBuilder.WriteString(s.configPtr.Description + "\n\n\n")
+
+	stringBuilder.WriteString("## 技术栈\n")
+	for _, val := range s.configPtr.TechStack {
+		stringBuilder.WriteString("- " + val + "\n")
+	}
+	stringBuilder.WriteString("\n\n")
+
+	prefixPath := filepath.Join(s.configPtr.Path, s.configPtr.Stage)
+	stringBuilder.WriteString("## 当前文件清单\n")
+	s.fileInfo.Range(func(key, value interface{}) bool {
+		if strings.HasPrefix(key.(string), prefixPath) {
+			relativePath := key.(string)[len(prefixPath)+1:]
+			stringBuilder.WriteString("- " + relativePath + "\n")
+		}
+		return true
+	})
+	stringBuilder.WriteString("\n\n")
+
+	stringBuilder.WriteString("</environment_name>")
+	return stringBuilder.String()
 }
 
 func (s *Station) Available() bool {
@@ -210,10 +240,11 @@ func (s *Station) ChatMessage(ctx context.Context, modeName string, messageItemP
 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
+	stationEnvPrompt := s.Prompt()
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
 	chatContext := context.WithValue(providerContext, common.ModeName{}, s.currentWorkMode)
-	msgErr := s.localAssistant.Chat(chatContext, s.configPtr, curFlow.GetFlowPath())
+	msgErr := s.localAssistant.Chat(chatContext, s.configPtr, stationEnvPrompt, curFlow.GetFlowPath())
 	if msgErr != nil {
 		err = msgErr
 		log.Errorf("ChatMessage, s.localAssistant.Chat error:%v", msgErr)

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestConvertPathsToTree 测试路径转换功能
@@ -140,4 +141,12 @@ func compareTree(a, b []*common.DataNode) bool {
 		}
 	}
 	return true
+}
+
+func TestTrimPrefix(t *testing.T) {
+	fullPath := "/home/test/dir1/file1"
+	prefix := "/home/test"
+
+	relativePath := fullPath[len(prefix)+1:]
+	assert.Equal(t, "dir1/file1", relativePath)
 }

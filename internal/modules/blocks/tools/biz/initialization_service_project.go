@@ -2,6 +2,7 @@ package biz
 
 import (
 	"fmt"
+	"path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -51,9 +52,9 @@ func (s *InitializationServiceProjectTool) Execute(workspaceDir string, param im
 
 	command := "magicCodeCli"
 	var args = []string{
-		"-actionType", "project/service",
+		"-actionType", "project",
 		"-executeAction", "create",
-		"-projectName", name,
+		"-projectName", path.Join("service", name),
 	}
 	result, err = ExecuteCommand(workspaceDir, command, args, "")
 	if err != nil {

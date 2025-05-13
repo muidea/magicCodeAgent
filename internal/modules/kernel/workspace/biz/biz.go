@@ -364,7 +364,7 @@ func (s *Workspace) refreshWorkspace(ev event.Event, re event.Result) {
 
 func (s *Workspace) RefreshWorkspace(workspaceName string) (err *cd.Error) {
 	wPtr, wErr := config.RefreshWorkspace(workspaceName)
-	if wErr == nil {
+	if wErr != nil {
 		log.Warnf("refresh workspace, workspace not exists:%s", workspaceName)
 		return
 	}

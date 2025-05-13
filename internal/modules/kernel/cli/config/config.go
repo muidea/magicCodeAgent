@@ -59,7 +59,7 @@ func GetEnableDao() bool {
 	return enableDao
 }
 
-var modulePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*$`)
+var modulePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*)$`)
 var projectPattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*|(service|web)\/[a-zA-Z][a-zA-Z0-9]*)$`)
 
 // 校验输入参数
@@ -76,11 +76,11 @@ func VerifyVar() (err *cd.Error) {
 
 	// 验证moduleType
 	if actionType == "" {
-		err = cd.NewError(cd.IllegalParam, "moduleType不能为空")
+		err = cd.NewError(cd.IllegalParam, "actionType不能为空")
 		return
 	}
 	if actionType != "module" && actionType != "initator" && actionType != "project" {
-		err = cd.NewError(cd.IllegalParam, "moduleType必须是module/initator/project之一")
+		err = cd.NewError(cd.IllegalParam, "actionType必须是module/initator/project之一")
 		return
 	}
 

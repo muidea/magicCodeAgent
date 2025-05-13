@@ -65,6 +65,9 @@ func (s *Project) create(ev event.Event, re event.Result) {
 
 	projectName := items[1]
 	helper := biz.NewHelper(path.Join(common.ProjectTemplateBasePath, items[0]))
+
+	// 这里主动修正一下ProjectName，因为在传入参数时的ProprojectName里指定了类型，所以这里需要修正一下
+	paramPtr.ProjectName = projectName
 	err = helper.Create("", paramPtr)
 	if err != nil {
 		log.Errorf("create project failed, projectName:%s, err:%s", projectName, err.Error())

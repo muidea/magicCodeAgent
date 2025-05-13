@@ -13,10 +13,10 @@ import (
 )
 
 type Assistant interface {
-	Chat(ctx context.Context, workspaceConfig *config.Workspace, flowPathList []*models.Flow) *cd.Error
+	Chat(ctx context.Context, workspaceConfig *config.Workspace, workspaceEnvPromp string, flowPathList []*models.Flow) *cd.Error
 }
 
-func (s *Workspace) Chat(chatContext context.Context, workspaceConfig *config.Workspace, flowPathList []*models.Flow) (err *cd.Error) {
+func (s *Workspace) Chat(chatContext context.Context, workspaceConfig *config.Workspace, workspaceEnvPrompt string, flowPathList []*models.Flow) (err *cd.Error) {
 	if len(flowPathList) == 0 {
 		err = cd.NewError(cd.InvalidParameter, "flowPathList is empty")
 		return
@@ -38,6 +38,10 @@ func (s *Workspace) Chat(chatContext context.Context, workspaceConfig *config.Wo
 			userMessageList = append(userMessageList, message.Item)
 		}
 	}
+	userMessageList = append(userMessageList, models.MessageItem{
+		Role:    common.User,
+		Content: []string{workspaceEnvPrompt},
+	})
 	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, userMessageList)
 	ev.SetData("context", chatContext)
 	ev.SetData("workspace", workspaceConfig.Name)
