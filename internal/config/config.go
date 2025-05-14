@@ -66,8 +66,12 @@ func (s *Workspace) GetWorkspaceType() string {
 	return Service
 }
 
-func (s *Workspace) GetStagePath() string {
+func (s *Workspace) GetCurrentStagePath() string {
 	return filepath.Join(s.Path, s.Stage)
+}
+
+func (s *Workspace) GetStagePath(stage string) string {
+	return filepath.Join(s.Path, stage)
 }
 
 func (s *Workspace) Available() bool {

@@ -114,7 +114,7 @@ func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string) string 
 }
 
 func (s *promptsRegistry) getRolePrompts(stage string) string {
-	fileName := fmt.Sprintf("role_%s.md", stage)
+	fileName := fmt.Sprintf("role-%s.md", stage)
 	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("get role prompts content failed:%s", contentErr.Error())

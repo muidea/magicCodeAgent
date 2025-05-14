@@ -74,10 +74,10 @@ func (s *Station) getWorkspaceType() string {
 }
 
 func (s *Station) systemPrompt(stage string) string {
-	return s.promptsRegistry.GetPromptsContent(stage, s.configPtr.GetStagePath())
+	return s.promptsRegistry.GetPromptsContent(stage, s.configPtr.GetCurrentStagePath())
 }
 
-func (s *Station) envPrompt() string {
+func (s *Station) envPrompt(stage string) string {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
 	stringBuilder.WriteString("# 项目名称：" + s.configPtr.Name + "\n\n\n")
@@ -91,13 +91,13 @@ func (s *Station) envPrompt() string {
 	}
 	stringBuilder.WriteString("\n\n")
 
-	structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("%s-project-struct", s.getWorkspaceType()))
+	structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()))
 	if structContent != "" {
 		stringBuilder.WriteString(structContent)
 		stringBuilder.WriteString("\n\n")
 	}
 
-	stagePath := s.configPtr.GetStagePath()
+	stagePath := s.configPtr.GetCurrentStagePath()
 	stringBuilder.WriteString("## 当前文件清单\n")
 	s.fileInfo.Range(func(key, value interface{}) bool {
 		if strings.HasPrefix(key.(string), stagePath) {
@@ -121,7 +121,7 @@ func (s *Station) checkIgnore(fileFullPath string) bool {
 		return true
 	}
 
-	stagePath := s.configPtr.GetStagePath()
+	stagePath := s.configPtr.GetCurrentStagePath()
 	filePath, fileName := path.Split(fileFullPath)
 	for _, ignore := range s.configPtr.Ignores {
 		// 只需要匹配code目录下的文件
@@ -270,7 +270,7 @@ func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
 	stationSystemPrompt := s.systemPrompt(stage)
-	stationEnvPrompt := s.envPrompt()
+	stationEnvPrompt := s.envPrompt(stage)
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
 	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, stationSystemPrompt, stationEnvPrompt, curFlow.GetFlowPath())
@@ -365,7 +365,7 @@ func (s *Station) OnRecv(event string, content string) {
 			return
 		}
 
-		workspaceDir := s.configPtr.GetStagePath()
+		workspaceDir := s.configPtr.GetCurrentStagePath()
 		for _, block := range blockList {
 			resultVal, resultFinal := s.localWorker.DoWork(workspaceDir, block)
 			if resultFinal {
