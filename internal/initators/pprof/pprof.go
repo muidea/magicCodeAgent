@@ -36,7 +36,7 @@ func (s *pprof) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRouti
 		}
 	}()
 
-	log.Infof("pprof workspace start on %s", addr)
+	log.Infof("pprof monitor start on %s", addr)
 }
 
 func (s *pprof) Run() {
