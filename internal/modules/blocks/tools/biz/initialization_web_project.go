@@ -50,11 +50,18 @@ func (s *InitializationWebProjectTool) Execute(workspaceDir string, param imbtc.
 		return
 	}
 
+	description := ""
+	descriptionVal, descriptionOK := param["description"]
+	if descriptionOK {
+		description = descriptionVal.(string)
+	}
+
 	command := "magicCodeCli"
 	var args = []string{
 		"-actionType", "project",
 		"-executeAction", "create",
 		"-projectName", path.Join("web", name),
+		"-projectDescription", description,
 	}
 	result, err = ExecuteCommand(workspaceDir, command, args, "")
 	if err != nil {

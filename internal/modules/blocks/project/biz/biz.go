@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"bytes"
 	"os"
 	"os/exec"
 	"path"
@@ -126,43 +127,48 @@ func (s *Project) initializeService(projectName, projectPath string) (err error)
 		return
 	}
 
+	var byteBuffer bytes.Buffer
 	// 执行 go mod init github.com/muidea/{projectName} & go mod tidy & go mod vendor 完成go mod初始化
 	modInitCmd := exec.Command("go", "mod", "init", "github.com/muidea/"+projectName)
 	modInitCmd.Dir = projectPath
 	if err = modInitCmd.Run(); err != nil {
-		log.Errorf("go mod init failed, projectName:%s, err:%s", projectName, err.Error())
+		log.Errorf("go mod init failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
 		return
 	}
 
 	modTidyCmd := exec.Command("go", "mod", "tidy")
 	modTidyCmd.Dir = projectPath
 	if err = modTidyCmd.Run(); err != nil {
-		log.Errorf("go mod tidy failed, projectName:%s, err:%s", projectName, err.Error())
+		log.Errorf("go mod tidy failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
 		return
 	}
 
 	modVendorCmd := exec.Command("go", "mod", "vendor")
 	modVendorCmd.Dir = projectPath
 	if err = modVendorCmd.Run(); err != nil {
-		log.Errorf("go mod vendor failed, projectName:%s, err:%s", projectName, err.Error())
+		log.Errorf("go mod vendor failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
 		return
 	}
 	return
 }
 
 func (s *Project) initializeWeb(projectName, projectPath string) (err error) {
-	modInitCmd := exec.Command("yarn")
-	modInitCmd.Dir = projectPath
-	if err = modInitCmd.Run(); err != nil {
-		log.Errorf("yarn failed, projectName:%s, err:%s", projectName, err.Error())
+	var byteBuffer bytes.Buffer
+	mvUmiRCCmd := exec.Command("mv", "umirc.ts", ".umirc.ts")
+	mvUmiRCCmd.Dir = projectPath
+	mvUmiRCCmd.Stderr = &byteBuffer
+	if err = mvUmiRCCmd.Run(); err != nil {
+		log.Errorf("mv umirc.ts failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
 		return
 	}
 
-	mvUmiRCCmd := exec.Command("mv", "umirc.ts", ".umirc.ts")
-	mvUmiRCCmd.Dir = projectPath
-	if err = mvUmiRCCmd.Run(); err != nil {
-		log.Errorf("mv umirc.ts failed, projectName:%s, err:%s", projectName, err.Error())
+	yarnInstallCmd := exec.Command("yarn", "install")
+	yarnInstallCmd.Dir = projectPath
+	yarnInstallCmd.Stderr = &byteBuffer
+	if err = yarnInstallCmd.Run(); err != nil {
+		log.Errorf("yarn failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
 		return
 	}
+
 	return
 }
