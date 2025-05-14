@@ -4,9 +4,11 @@ package config
 import (
 	"embed"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
@@ -62,6 +64,10 @@ func (s *Workspace) GetWorkspaceType() string {
 	}
 
 	return Service
+}
+
+func (s *Workspace) GetStagePath() string {
+	return filepath.Join(s.Path, s.Stage)
 }
 
 func (s *Workspace) Available() bool {
@@ -177,7 +183,7 @@ func UpdateWorkspace(workspace *Workspace) (err error) {
 				if workspace.Status == "" {
 					workspace.Status = sysConfig.Workspace[idx].Status
 				}
-				if workspace.Stage == "" {
+				if !common.ValidStage(workspace.Stage) {
 					workspace.Stage = sysConfig.Workspace[idx].Stage
 				}
 				if workspace.Path == "" {

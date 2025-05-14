@@ -14,7 +14,8 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	tc "github.com/muidea/magicCodeAgent/pkg/common"
 )
 
@@ -36,34 +37,34 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Workspace) *Workspace {
 
 func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.SetApiVersion(tc.ApiVersion)
-	s.routeRegistry.AddHandler(common.QueryWorkspace, engine.GET, s.queryWorkspace)
-	s.routeRegistry.AddHandler(common.CreateWorkspace, engine.POST, s.createWorkspace)
-	s.routeRegistry.AddHandler(common.DestroyWorkspace, engine.DELETE, s.destroyWorkspace)
-	s.routeRegistry.AddHandler(common.FilterWorkspace, engine.GET, s.filterWorkspace)
-	s.routeRegistry.AddHandler(common.AddWorkspace, engine.POST, s.addWorkspace)
-	s.routeRegistry.AddHandler(common.UpdateWorkspace, engine.PUT, s.updateWorkspace)
-	s.routeRegistry.AddHandler(common.RemoveWorkspace, engine.DELETE, s.delWorkspace)
-	s.routeRegistry.AddHandler(common.EnableWorkspace, engine.PUT, s.enableWorkspace)
-	s.routeRegistry.AddHandler(common.DisableWorkspace, engine.PUT, s.disableWorkspace)
-	s.routeRegistry.AddHandler(common.UpdateWorkspaceStage, engine.PUT, s.updateWorkspaceStage)
-	s.routeRegistry.AddHandler(common.RefreshWorkspace, engine.GET, s.refreshWorkspace)
-	s.routeRegistry.AddHandler(common.FilterWorkspaceFile, engine.GET, s.filterFile)
-	s.routeRegistry.AddHandler(common.FilterWorkspaceFileTree, engine.GET, s.filterFileTree)
-	s.routeRegistry.AddHandler(common.QueryWorkspaceFileContent, engine.GET, s.queryFileContent)
-	s.routeRegistry.AddHandler(common.ChatWorkspaceContentSSE, engine.GET, s.chatWorkspaceContentSSE)
-	s.routeRegistry.AddHandler(common.ChatWorkspaceContentMessage, engine.POST, s.chatWorkspaceContentMessage)
-	s.routeRegistry.AddHandler(common.ChatWorkspaceContentHistory, engine.GET, s.chatWorkspaceContentHistory)
+	s.routeRegistry.AddHandler(imkwc.QueryWorkspace, engine.GET, s.queryWorkspace)
+	s.routeRegistry.AddHandler(imkwc.CreateWorkspace, engine.POST, s.createWorkspace)
+	s.routeRegistry.AddHandler(imkwc.DestroyWorkspace, engine.DELETE, s.destroyWorkspace)
+	s.routeRegistry.AddHandler(imkwc.FilterWorkspace, engine.GET, s.filterWorkspace)
+	s.routeRegistry.AddHandler(imkwc.AddWorkspace, engine.POST, s.addWorkspace)
+	s.routeRegistry.AddHandler(imkwc.UpdateWorkspace, engine.PUT, s.updateWorkspace)
+	s.routeRegistry.AddHandler(imkwc.RemoveWorkspace, engine.DELETE, s.delWorkspace)
+	s.routeRegistry.AddHandler(imkwc.EnableWorkspace, engine.PUT, s.enableWorkspace)
+	s.routeRegistry.AddHandler(imkwc.DisableWorkspace, engine.PUT, s.disableWorkspace)
+	s.routeRegistry.AddHandler(imkwc.UpdateWorkspaceStage, engine.PUT, s.updateWorkspaceStage)
+	s.routeRegistry.AddHandler(imkwc.RefreshWorkspace, engine.GET, s.refreshWorkspace)
+	s.routeRegistry.AddHandler(imkwc.FilterWorkspaceFile, engine.GET, s.filterFile)
+	s.routeRegistry.AddHandler(imkwc.FilterWorkspaceFileTree, engine.GET, s.filterFileTree)
+	s.routeRegistry.AddHandler(imkwc.QueryWorkspaceFileContent, engine.GET, s.queryFileContent)
+	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentSSE, engine.GET, s.chatWorkspaceContentSSE)
+	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentMessage, engine.POST, s.chatWorkspaceContentMessage)
+	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentHistory, engine.GET, s.chatWorkspaceContentHistory)
 }
 
 func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	result.Values, result.Error = s.bizPtr.FilterWorkspace(nil)
 }
 
 func (s *Workspace) queryWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceResult{}
+	result := &imkwc.WorkspaceResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspaceName := req.URL.Query().Get("name")
@@ -71,7 +72,7 @@ func (s *Workspace) queryWorkspace(ctx context.Context, res http.ResponseWriter,
 }
 
 func (s *Workspace) createWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &config.Workspace{}
@@ -90,7 +91,7 @@ func (s *Workspace) createWorkspace(ctx context.Context, res http.ResponseWriter
 }
 
 func (s *Workspace) destroyWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspaceName := req.URL.Query().Get("name")
@@ -101,7 +102,7 @@ func (s *Workspace) destroyWorkspace(ctx context.Context, res http.ResponseWrite
 }
 
 func (s *Workspace) addWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &config.Workspace{}
@@ -119,7 +120,7 @@ func (s *Workspace) addWorkspace(ctx context.Context, res http.ResponseWriter, r
 }
 
 func (s *Workspace) updateWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &config.Workspace{}
@@ -134,7 +135,7 @@ func (s *Workspace) updateWorkspace(ctx context.Context, res http.ResponseWriter
 }
 
 func (s *Workspace) delWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	workspaceName := req.URL.Query().Get("name")
 	result.Error = s.bizPtr.RemoveWorkspace(workspaceName)
@@ -144,7 +145,7 @@ func (s *Workspace) delWorkspace(ctx context.Context, res http.ResponseWriter, r
 }
 
 func (s *Workspace) enableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &config.Workspace{}
@@ -162,7 +163,7 @@ func (s *Workspace) enableWorkspace(ctx context.Context, res http.ResponseWriter
 }
 
 func (s *Workspace) disableWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &config.Workspace{}
@@ -180,7 +181,7 @@ func (s *Workspace) disableWorkspace(ctx context.Context, res http.ResponseWrite
 }
 
 func (s *Workspace) updateWorkspaceStage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceResult{}
+	result := &imkwc.WorkspaceResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	param := &config.Workspace{}
 	err := fn.ParseJSONBody(req, nil, param)
@@ -189,7 +190,7 @@ func (s *Workspace) updateWorkspaceStage(ctx context.Context, res http.ResponseW
 		log.Errorf("parse body error: %s", err.Error())
 		return
 	}
-	if param.Stage == "" {
+	if !common.ValidStage(param.Stage) {
 		result.Error = cd.NewError(cd.IllegalParam, "stage can not be empty")
 		return
 	}
@@ -200,7 +201,7 @@ func (s *Workspace) updateWorkspaceStage(ctx context.Context, res http.ResponseW
 }
 
 func (s *Workspace) refreshWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.WorkspaceListResult{}
+	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	workspaceName := req.URL.Query().Get("name")
 	result.Error = s.bizPtr.RefreshWorkspace(workspaceName)
@@ -216,16 +217,16 @@ func (s *Workspace) refreshWorkspace(ctx context.Context, res http.ResponseWrite
 | `extension`  | string | 否   | 文件扩展名精确匹配（如 `pdf`，不区分大小写）                          |
 */
 func (s *Workspace) filterFile(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.FileListResult{Result: cd.NewResult()}
+	result := &imkwc.FileListResult{Result: cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
-	filter := &common.FileFilter{}
+	filter := &imkwc.FileFilter{}
 	filter.Parse(req)
 	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileList(filter.Workspace, filter)
 }
 
 func (s *Workspace) filterFileTree(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.FileTreeListResult{Result: cd.NewResult()}
+	result := &imkwc.FileTreeListResult{Result: cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspace := req.URL.Query().Get("workspace")
@@ -235,7 +236,7 @@ func (s *Workspace) filterFileTree(ctx context.Context, res http.ResponseWriter,
 }
 
 func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.FileContentResult{}
+	result := &imkwc.FileContentResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspace := req.URL.Query().Get("workspace")
@@ -270,7 +271,7 @@ func (s *Workspace) chatWorkspaceContentSSE(ctx context.Context, res http.Respon
 }
 
 func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	param := &common.ChatMessage{}
+	param := &imkwc.ChatMessage{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		log.Errorf("parse body error: %s", err.Error())
@@ -278,7 +279,7 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 		return
 	}
 
-	result := &common.ChatMessageResult{}
+	result := &imkwc.ChatMessageResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	holder := s.sseHolderRegistry.GetHolder(res, req)
 	if holder == nil {
@@ -305,7 +306,7 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 }
 
 func (s *Workspace) chatWorkspaceContentHistory(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &common.ChatHistoryResult{}
+	result := &imkwc.ChatHistoryResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspaceName := req.URL.Query().Get("workspace")

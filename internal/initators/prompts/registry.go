@@ -70,9 +70,9 @@ func (s *promptsRegistry) GetSectionPromptsContent(sectionName string) string {
 	return sectionObj.GetPromptsContent()
 }
 
-func (s *promptsRegistry) GetPromptsContent(modeName, workspaceDir string) string {
+func (s *promptsRegistry) GetPromptsContent(stage, workspaceDir string) string {
 	var builder strings.Builder
-	builder.WriteString(s.getRolePrompts(modeName))
+	builder.WriteString(s.getRolePrompts(stage))
 	builder.WriteString("\n\n")
 
 	for _, section := range s.sections {
@@ -80,7 +80,7 @@ func (s *promptsRegistry) GetPromptsContent(modeName, workspaceDir string) strin
 		builder.WriteString("\n\n")
 	}
 
-	if modeName == common.DesignStage {
+	if stage == common.DesignStage {
 		builder.WriteString(s.getMarkdownPrompts())
 		builder.WriteString("\n\n")
 	}
@@ -113,8 +113,8 @@ func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string) string 
 	return contentVal
 }
 
-func (s *promptsRegistry) getRolePrompts(modeName string) string {
-	fileName := fmt.Sprintf("role_%s.md", modeName)
+func (s *promptsRegistry) getRolePrompts(stage string) string {
+	fileName := fmt.Sprintf("role_%s.md", stage)
 	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("get role prompts content failed:%s", contentErr.Error())

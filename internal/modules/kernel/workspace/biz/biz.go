@@ -531,7 +531,7 @@ func (s *Workspace) filterWorkspace(ev event.Event, re event.Result) {
 func (s *Workspace) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, err *cd.Error) {
 	ret = config.Workspaces()
 	for _, val := range ret {
-		if val.Stage == "" {
+		if !common.ValidStage(val.Stage) {
 			val.Stage = common.DesignStage
 		}
 	}

@@ -49,7 +49,9 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	err := util.VerifyProjectWorkPath(paramPtr.WorkingPath)
+	items := strings.Split(paramPtr.ProjectName, "/")
+	projectType := items[0]
+	err := util.VerifyProjectWorkPath(projectType, paramPtr.WorkingPath)
 	if err != nil {
 		log.Errorf("verify project work path failed, workingPath:%s, err:%s", paramPtr.WorkingPath, err.Error())
 
@@ -58,8 +60,6 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		}
 		return
 	}
-	items := strings.Split(paramPtr.ProjectName, "/")
-	projectType := items[0]
 	if len(items) != 2 || (projectType != "service" && projectType != "web") {
 		log.Errorf("invalid project name, projectName:%s", paramPtr.ProjectName)
 		if re != nil {

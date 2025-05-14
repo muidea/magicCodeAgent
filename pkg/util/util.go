@@ -130,7 +130,7 @@ func verifyWorkPath(pathVal string, validParentPath []string) (projectName, pref
 // VerifyProjectWorkPath 校验项目工作目录
 // 1. 当前目录下无子目录或子文件
 // 2. 当天目录下同时存在如下文件go.mod,go.sum,Makefile, 及application,internal,pkg,vendor目录
-func VerifyProjectWorkPath(pathVal string) *cd.Error {
+func VerifyProjectWorkPath(projectType, pathVal string) *cd.Error {
 	// 空路径视为合法
 	if pathVal == "" {
 		return cd.NewError(cd.IllegalParam, "project work path cannot be empty")
@@ -150,22 +150,36 @@ func VerifyProjectWorkPath(pathVal string) *cd.Error {
 		return cd.NewError(cd.IllegalParam, "work path must be absolute path")
 	}
 
-	// 检查必需文件
-	requiredFiles := []string{"go.mod", "go.sum", "Makefile"}
-	for _, file := range requiredFiles {
-		filePath := filepath.Join(pathVal, file)
-		if !fp.Exist(filePath) {
-			return cd.NewError(cd.IllegalParam, fmt.Sprintf("required file %s not found in project", file))
+	if projectType == config.Service {
+		// 检查必需文件
+		requiredFiles := []string{"go.mod", "go.sum", "Makefile"}
+		for _, file := range requiredFiles {
+			filePath := filepath.Join(pathVal, file)
+			if !fp.Exist(filePath) {
+				return cd.NewError(cd.IllegalParam, fmt.Sprintf("required file %s not found in project", file))
+			}
 		}
+
+		// 检查必需目录
+		requiredDirs := []string{"application", "internal", "pkg", "vendor"}
+		for _, dir := range requiredDirs {
+			dirPath := filepath.Join(pathVal, dir)
+			if !fp.Exist(dirPath) {
+				return cd.NewError(cd.IllegalParam, fmt.Sprintf("required directory %s not found in project", dir))
+			}
+		}
+		return nil
 	}
 
-	// 检查必需目录
-	requiredDirs := []string{"application", "internal", "pkg", "vendor"}
-	for _, dir := range requiredDirs {
-		dirPath := filepath.Join(pathVal, dir)
-		if !fp.Exist(dirPath) {
-			return cd.NewError(cd.IllegalParam, fmt.Sprintf("required directory %s not found in project", dir))
+	if projectType == config.Web {
+		requiredDirs := []string{"package.json", "yarn.lock", "src", "node_modules", "tsconfig.json"}
+		for _, dir := range requiredDirs {
+			dirPath := filepath.Join(pathVal, dir)
+			if !fp.Exist(dirPath) {
+				return cd.NewError(cd.IllegalParam, fmt.Sprintf("required directory %s not found in project", dir))
+			}
 		}
+		return nil
 	}
 
 	return nil

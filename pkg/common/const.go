@@ -28,6 +28,18 @@ const (
 )
 
 const (
-	CodeStage   = "code"
-	DesignStage = "design"
+	UnknownStage = ""
+	DesignStage  = "design"
+	CodeStage    = "code"
+	TestStage    = "test"
+	PublishStage = "publish"
 )
+
+func ValidStage(stage string) bool {
+	switch stage {
+	case DesignStage, CodeStage, TestStage, PublishStage:
+		return true
+	default:
+		return false
+	}
+}

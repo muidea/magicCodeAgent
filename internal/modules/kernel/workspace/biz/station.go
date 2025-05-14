@@ -36,7 +36,7 @@ type Station struct {
 	configPtr  *config.Workspace
 	fileInfo   sync.Map
 
-	currentWorkMode string
+	currentWorkStage string
 
 	stationMutex sync.RWMutex
 	observerList []Observer
@@ -73,8 +73,8 @@ func (s *Station) getWorkspaceType() string {
 
 }
 
-func (s *Station) systemPrompt(modeName string) string {
-	return s.promptsRegistry.GetPromptsContent(modeName, path.Join(s.configPtr.Path, modeName))
+func (s *Station) systemPrompt(stage string) string {
+	return s.promptsRegistry.GetPromptsContent(stage, s.configPtr.GetStagePath())
 }
 
 func (s *Station) envPrompt() string {
@@ -97,11 +97,11 @@ func (s *Station) envPrompt() string {
 		stringBuilder.WriteString("\n\n")
 	}
 
-	prefixPath := filepath.Join(s.configPtr.Path, s.configPtr.Stage)
+	stagePath := s.configPtr.GetStagePath()
 	stringBuilder.WriteString("## 当前文件清单\n")
 	s.fileInfo.Range(func(key, value interface{}) bool {
-		if strings.HasPrefix(key.(string), prefixPath) {
-			relativePath := key.(string)[len(prefixPath)+1:]
+		if strings.HasPrefix(key.(string), stagePath) {
+			relativePath := key.(string)[len(stagePath)+1:]
 			stringBuilder.WriteString("- " + relativePath + "\n")
 		}
 		return true
@@ -121,10 +121,11 @@ func (s *Station) checkIgnore(fileFullPath string) bool {
 		return true
 	}
 
+	stagePath := s.configPtr.GetStagePath()
 	filePath, fileName := path.Split(fileFullPath)
 	for _, ignore := range s.configPtr.Ignores {
 		// 只需要匹配code目录下的文件
-		ignorePath := filepath.Join(s.configPtr.Path, common.CodeStage, ignore)
+		ignorePath := filepath.Join(stagePath, ignore)
 		if fp.IsDir(ignorePath) {
 			if strings.HasPrefix(filePath, ignorePath) {
 				return true
@@ -250,7 +251,7 @@ func (s *Station) GetFlow(id string) *models.Flow {
 	return s.localFlowManger.GetFlow(id)
 }
 
-func (s *Station) ChatMessage(ctx context.Context, modeName string, messageItemPtr *models.MessageItem) (err *cd.Error) {
+func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr *models.MessageItem) (err *cd.Error) {
 	messageInfoPtr := &models.MessageInfo{
 		Item:       *messageItemPtr,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -264,11 +265,11 @@ func (s *Station) ChatMessage(ctx context.Context, modeName string, messageItemP
 		curFlow = s.GetCurrentFlow()
 	}
 
-	s.currentWorkMode = modeName
+	s.currentWorkStage = stage
 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
-	stationSystemPrompt := s.systemPrompt(modeName)
+	stationSystemPrompt := s.systemPrompt(stage)
 	stationEnvPrompt := s.envPrompt()
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
@@ -364,7 +365,7 @@ func (s *Station) OnRecv(event string, content string) {
 			return
 		}
 
-		workspaceDir := filepath.Join(s.configPtr.Path, s.currentWorkMode)
+		workspaceDir := s.configPtr.GetStagePath()
 		for _, block := range blockList {
 			resultVal, resultFinal := s.localWorker.DoWork(workspaceDir, block)
 			if resultFinal {
@@ -372,7 +373,7 @@ func (s *Station) OnRecv(event string, content string) {
 			}
 
 			resultVal.Role = common.User
-			s.ChatMessage(context.Background(), s.currentWorkMode, &resultVal)
+			s.ChatMessage(context.Background(), s.currentWorkStage, &resultVal)
 		}
 	})
 }
