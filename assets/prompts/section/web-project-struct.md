@@ -136,3 +136,6 @@ export default function Page() {
 ```
 
 其中，`useModel()` 方法传入的参数为 Model 的**命名空间**
+
+
+**强调说明：如果当前项目未完成初始化，请先执行`initialization_web_project`工具进行初始化**

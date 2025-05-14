@@ -7,6 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestIsIgnored(t *testing.T) {
+	filePath := "/home/rangh/codespace/demo/code/.test"
+	assert.Equal(t, true, isIgnored(filePath))
+
+	filePath = "/home/rangh/codespace/demo/code/test"
+	assert.Equal(t, false, isIgnored(filePath))
+}
+
 // TestConvertPathsToTree 测试路径转换功能
 func TestConvertPathsToTree(t *testing.T) {
 	tests := []struct {

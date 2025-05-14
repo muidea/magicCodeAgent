@@ -17,7 +17,9 @@ func isIgnored(path string) bool {
 		strings.HasSuffix(path, ".umi") ||
 		strings.HasSuffix(path, ".umi-production") ||
 		strings.HasSuffix(path, "node_modules") ||
-		strings.HasPrefix(base, ".")
+		strings.HasSuffix(path, "vendor") ||
+		strings.EqualFold(base, ".") ||
+		strings.EqualFold(base, "..")
 }
 
 func NewBasePathFilter(rootPath string, basePath string) *basePathFilter {

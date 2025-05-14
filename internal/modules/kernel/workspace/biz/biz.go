@@ -80,19 +80,22 @@ func (s *Workspace) workspaceTask() {
 			if !ok {
 				return
 			}
+
 			if isIgnored(event.Name) {
 				continue
 			}
 
 			// 去抖动处理（500ms窗口）
-			time.AfterFunc(500*time.Millisecond, func() {
-				switch event.Op {
-				case fsnotify.Create:
-					s.disposeCreate(event)
-				case fsnotify.Remove:
-					s.disposeRemove(event)
-				}
-			})
+			//time.AfterFunc(500*time.Millisecond, func() {
+			switch event.Op {
+			case fsnotify.Create:
+				s.disposeCreate(event)
+			case fsnotify.Remove:
+				s.disposeRemove(event)
+			case fsnotify.Rename:
+				s.disposeRename(event)
+			}
+			//})
 		case err := <-s.fsWatcher.Errors:
 			log.Errorf("Workspace error: %v", err)
 		}
@@ -155,6 +158,33 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	}
 }
 
+func (s *Workspace) disposeRename(event fsnotify.Event) {
+	if fp.IsDir(event.Name) {
+		s.fsWatcher.Remove(event.Name)
+		s.workspaceStationCache.Range(func(key, value interface{}) bool {
+			workspaceVal, workspaceOK := value.(*Station)
+			if !workspaceOK {
+				return true
+			}
+
+			if workspaceVal.ClearDir(event.Name) {
+				return false
+			}
+			return true
+		})
+	} else {
+		s.workspaceStationCache.Range(func(key, value interface{}) bool {
+			workspaceVal, workspaceOK := value.(*Station)
+			if !workspaceOK {
+				return true
+			}
+			if workspaceVal.RemoveFile(event.Name) {
+				return false
+			}
+			return true
+		})
+	}
+}
 func (s *Workspace) queryWorkspace(ev event.Event, re event.Result) {
 	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
 	if !workspaceOK {
