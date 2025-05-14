@@ -9,10 +9,16 @@ import (
 
 func TestIsIgnored(t *testing.T) {
 	filePath := "/home/rangh/codespace/demo/code/.test"
-	assert.Equal(t, true, isIgnored(filePath))
+	assert.Equal(t, false, isIgnored(filePath))
 
 	filePath = "/home/rangh/codespace/demo/code/test"
 	assert.Equal(t, false, isIgnored(filePath))
+
+	filePath = "/home/rangh/codespace/demo/code/."
+	assert.Equal(t, true, isIgnored(filePath))
+
+	filePath = "/home/rangh/codespace/demo/code/.."
+	assert.Equal(t, true, isIgnored(filePath))
 }
 
 // TestConvertPathsToTree 测试路径转换功能
