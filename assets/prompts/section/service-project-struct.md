@@ -1,5 +1,6 @@
 ## 项目规划目录结构
 
+```
 ├── .gitignore           # Git忽略规则文件
 ├── Makefile             # 项目构建Makefile
 ├── README.md            # 项目说明文档
@@ -29,6 +30,7 @@
 ├── pkg/                 # 公共库(可被外部引用)
 ├── test/                # 测试相关代码目录
 └── vendor/              # 项目依赖(Go vendor目录)
+```
 
 ### initator与module的目录结构
 

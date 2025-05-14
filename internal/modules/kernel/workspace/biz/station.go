@@ -3,6 +3,7 @@ package biz
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -90,12 +91,10 @@ func (s *Station) envPrompt() string {
 	}
 	stringBuilder.WriteString("\n\n")
 
-	if s.getWorkspaceType() == config.Service {
-		structContent := s.promptsRegistry.ReadSectionPromptContent("service-project-struct")
-		if structContent != "" {
-			stringBuilder.WriteString(structContent)
-			stringBuilder.WriteString("\n\n")
-		}
+	structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("%s-project-struct", s.getWorkspaceType()))
+	if structContent != "" {
+		stringBuilder.WriteString(structContent)
+		stringBuilder.WriteString("\n\n")
 	}
 
 	prefixPath := filepath.Join(s.configPtr.Path, s.configPtr.Stage)
