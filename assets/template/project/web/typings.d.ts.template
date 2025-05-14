@@ -8,6 +8,5 @@ declare module '*.svg' {
 }
 
 declare interface Window {
-  // 扩展window对象的类型定义
   [key: string]: any;
 }
