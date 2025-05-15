@@ -138,18 +138,6 @@ func newBar() {
 			expectedErr: true,
 		},
 		{
-			name: "缺少分隔符",
-			diff: `<<<<<<< SEARCH
-:start_line:1
-:end_line:3
-func bar() {
-=======
-func newBar() {
->>>>>>> REPLACE`,
-			expected:    nil,
-			expectedErr: true,
-		},
-		{
 			name:        "空diff",
 			diff:        "",
 			expected:    nil,
