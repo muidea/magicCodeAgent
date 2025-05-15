@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
@@ -109,6 +110,12 @@ Example: Requesting to execute ls in a specific directory if directed
 
 // ExecuteCommand 实现execute_command工具功能
 func ExecuteCommand(workspaceDir, command string, args []string, cwd string) (string, error) {
+	items := strings.Split(command, " ")
+	items = append(items, args...)
+	if len(items) > 0 {
+		command = items[0]
+		args = items[1:]
+	}
 	cmd := exec.Command(command, args...)
 
 	if cwd != "" {

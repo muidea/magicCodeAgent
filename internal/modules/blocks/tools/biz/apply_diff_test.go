@@ -279,4 +279,41 @@ def calculate_sum(items):
 	invalidDiff := "This is not a valid diff format"
 	err = ApplyDiff(tempDir, "test_file.txt", invalidDiff)
 	assert.Error(t, err, "应用无效的差异格式应该返回错误")
+
+	diff3 := `<<<<<<< SEARCH
+  routes: [
+    {
+      name: 'index',
+      path: '/',
+      component: './index',
+    },
+  ],
+=======
+  routes: [
+    {
+      name: 'index',
+      path: '/',
+      component: './index',
+    },
+    {
+      name: 'member',
+      path: '/member',
+      component: './member',
+      routes: [
+        {
+          path: '/member/profile',
+          component: './member/profile',
+        },
+        {
+          path: '/member/address',
+          component: './member/address',
+        },
+      ],
+    },
+  ],
+>>>>>>> REPLACE`
+
+	blocks, blockErr := splitDiffBlock(diff3)
+	assert.Nil(t, blockErr)
+	assert.Equal(t, len(blocks), 1)
 }

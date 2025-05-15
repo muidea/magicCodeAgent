@@ -48,4 +48,10 @@ func TestExecuteCommand(t *testing.T) {
 	// 测试用例4：执行不存在的命令
 	_, err = ExecuteCommand(tempDir, "nonexistent_command", []string{}, "")
 	assert.Error(t, err, "执行不存在的命令应该返回错误")
+
+	_, err = ExecuteCommand(tempDir, "ls -la", []string{}, "")
+	assert.NoError(t, err, "在根目录执行ls命令应该成功")
+
+	_, err = ExecuteCommand(tempDir, "mkdir -p src/pages/auth src/services src/models", []string{}, "")
+	assert.NoError(t, err, "在根目录创建子目录应该成功")
 }

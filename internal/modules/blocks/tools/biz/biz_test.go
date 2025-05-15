@@ -189,4 +189,12 @@ clean:
 	assert.Equal(t, "ask_followup_question", funcName14, "funcName14 error")
 	assert.Equal(t, "abc", param14["question"], "param14[question] error")
 	assert.Equal(t, 4, len(param14["follow_up"].([]string)), "param14[follow_up.suggest[0]] error")
+
+	content15 := `<execute_command>
+<command>mkdir -p src/pages/auth src/services src/models</command>
+</execute_command>`
+	funcName15, param15, err := parseParamContent(content15)
+	assert.NoError(t, err, "parseParamContent error")
+	assert.Equal(t, "execute_command", funcName15, "funcName15 error")
+	assert.Equal(t, 1, len(param15), "param15 error")
 }
