@@ -26,7 +26,7 @@ func (s *ExecuteCommandTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *ExecuteCommandTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -50,6 +50,13 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 		err = fmt.Errorf("command is empty")
 		return
 	}
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
 
 	var args []string
 	if argsParam, ok := param["args"].([]interface{}); ok {
@@ -61,7 +68,7 @@ func (s *ExecuteCommandTool) Execute(workspaceDir string, param imbtc.ToolParam)
 	}
 
 	cwd, _ := param["cwd"].(string)
-	result, err = ExecuteCommand(workspaceDir, command, args, cwd)
+	result, err = ExecuteCommand(fullPath, command, args, cwd)
 	if err != nil {
 		log.Errorf("failed to execute command: %v", err)
 		return
@@ -112,12 +119,14 @@ func ExecuteCommand(workspaceDir, command string, args []string, cwd string) (st
 
 	if !fp.Exist(cmd.Dir) {
 		if err := os.MkdirAll(cmd.Dir, 0755); err != nil {
+			log.Errorf("failed to create directory: %v, err：%s", cmd.Dir, err)
 			return "", err
 		}
 	}
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		log.Errorf("failed to execute command: %v, err：%s", cmd, err)
 		return string(output), err
 	}
 

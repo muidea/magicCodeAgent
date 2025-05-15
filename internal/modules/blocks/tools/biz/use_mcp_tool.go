@@ -23,7 +23,7 @@ func (s *UseMcpToolTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *UseMcpToolTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -63,6 +63,7 @@ func (s *UseMcpToolTool) Execute(workspaceDir string, param imbtc.ToolParam) (re
 	resourceVal, resourceErr := UseMcpTool(serverName, toolName, json.RawMessage(arguments))
 	if resourceErr != nil {
 		err = resourceErr
+		log.Errorf("UseMcpTool failed, serverName:%s, toolName:%s err: %v", serverName, toolName, err)
 		return
 	}
 

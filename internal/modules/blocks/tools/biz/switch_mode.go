@@ -22,7 +22,7 @@ func (s *SwitchModeTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SwitchModeTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *SwitchModeTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

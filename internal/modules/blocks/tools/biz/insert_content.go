@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -26,7 +27,7 @@ func (s *InsertContentTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *InsertContentTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -71,6 +72,13 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 		err = fmt.Errorf("operations cannot be empty")
 		return
 	}
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
 
 	var insertBlocks []*InsertBlock
 	for _, op := range ops {
@@ -80,7 +88,8 @@ func (s *InsertContentTool) Execute(workspaceDir string, param imbtc.ToolParam) 
 		})
 	}
 
-	if err = InsertContent(workspaceDir, path, insertBlocks); err != nil {
+	if err = InsertContent(fullPath, path, insertBlocks); err != nil {
+		log.Errorf("InsertContent failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
 		return
 	}
 

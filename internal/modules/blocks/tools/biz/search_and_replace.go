@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -27,7 +28,7 @@ func (s *SearchAndReplaceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *SearchAndReplaceTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -77,8 +78,14 @@ func (s *SearchAndReplaceTool) Execute(workspaceDir string, param imbtc.ToolPara
 		err = fmt.Errorf("no valid operations provided")
 		return
 	}
-
-	err = SearchAndReplace(workspaceDir, path, ops)
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
+	err = SearchAndReplace(fullPath, path, ops)
 	if err != nil {
 		return
 	}

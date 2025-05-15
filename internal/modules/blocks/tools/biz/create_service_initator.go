@@ -2,10 +2,13 @@ package biz
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
 type CreateServiceInitatorTool struct{}
@@ -24,7 +27,7 @@ func (s *CreateServiceInitatorTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *CreateServiceInitatorTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *CreateServiceInitatorTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -53,6 +56,13 @@ func (s *CreateServiceInitatorTool) Execute(workspaceDir string, param imbtc.Too
 		err = fmt.Errorf("missing or invalid name parameter")
 		return
 	}
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
 
 	command := "magicCodeCli"
 	var args = []string{
@@ -60,7 +70,7 @@ func (s *CreateServiceInitatorTool) Execute(workspaceDir string, param imbtc.Too
 		"-executeAction", "create",
 		"-moduleName", name,
 	}
-	result, err = ExecuteCommand(workspaceDir, command, args, path)
+	result, err = ExecuteCommand(fullPath, command, args, path)
 	if err != nil {
 		log.Errorf("failed to execute command: %v", err)
 		return

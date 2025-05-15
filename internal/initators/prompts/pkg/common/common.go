@@ -22,5 +22,5 @@ type PromptsRegistry interface {
 	// 查询执行自定section的prompts内容，以Md格式进行返回
 	GetSectionPromptsContent(sectionPrompt string) string
 	GetPromptsContent(stage string) string
-	ReadSectionPromptContent(sectionPrompt string, sectionParam map[string]string) string
+	ReadSectionPromptContent(sectionPrompt string) string
 }

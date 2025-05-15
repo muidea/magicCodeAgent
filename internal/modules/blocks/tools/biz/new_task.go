@@ -22,7 +22,7 @@ func (s *NewTaskTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *NewTaskTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *NewTaskTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

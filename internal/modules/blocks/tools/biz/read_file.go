@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -29,7 +30,7 @@ func (s *ReadFileTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *ReadFileTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -92,8 +93,17 @@ func (s *ReadFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret 
 			return
 		}
 	}
-
-	result, err = ReadFile(workspaceDir, path, startLine, endLine)
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
+	result, err = ReadFile(fullPath, path, startLine, endLine)
+	if err != nil {
+		log.Errorf("ReadFile failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
+	}
 	return
 }
 

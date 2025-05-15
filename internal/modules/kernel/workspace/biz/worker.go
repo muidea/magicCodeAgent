@@ -13,10 +13,10 @@ import (
 )
 
 type Worker interface {
-	DoWork(workspaceDir, content string) (result models.MessageItem, final bool)
+	DoWork(workspaceDir, stage, content string) (result models.MessageItem, final bool)
 }
 
-func (s *Workspace) DoWork(workspaceDir, content string) (result models.MessageItem, final bool) {
+func (s *Workspace) DoWork(workspaceDir, stage, content string) (result models.MessageItem, final bool) {
 	if !fp.Exist(workspaceDir) {
 		if err := os.MkdirAll(workspaceDir, 0755); err != nil {
 			result = models.MessageItem{
@@ -28,6 +28,7 @@ func (s *Workspace) DoWork(workspaceDir, content string) (result models.MessageI
 	}
 	executeEvent := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
 	executeEvent.SetData("workspaceDir", workspaceDir)
+	executeEvent.SetData("stage", stage)
 	executeResult := s.SendEvent(executeEvent)
 	resultVal, resultErr := executeResult.Get()
 	if resultErr != nil {

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -25,7 +26,7 @@ func (s *ListFilesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *ListFilesTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -49,12 +50,18 @@ func (s *ListFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret
 		err = fmt.Errorf("missing or invalid path parameter")
 		return
 	}
-
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
 	recursive, _ := param["recursive"].(bool)
-	listResult, listErr := ListFiles(workspaceDir, path, recursive)
+	listResult, listErr := ListFiles(fullPath, path, recursive)
 	if listErr != nil {
 		err = listErr
-		log.Errorf("failed to list files: %v", err)
+		log.Errorf("ListFiles failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
 		return
 	}
 	byteVal, byteErr := json.MarshalIndent(listResult, "", "  ")

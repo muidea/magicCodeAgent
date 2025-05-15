@@ -55,6 +55,10 @@ func (s *Workspace) GetStage() string {
 	return s.Stage
 }
 
+func (s *Workspace) GetWorkspaceDir() string {
+	return s.Path
+}
+
 func (s *Workspace) GetWorkspaceType() string {
 	frontendTechs := []string{"javascript", "html", "css", "react", "vue", "umijs", "antd", "typescript"}
 

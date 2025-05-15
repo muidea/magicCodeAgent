@@ -22,7 +22,7 @@ func (s *AccessMcpResourceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AccessMcpResourceTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *AccessMcpResourceTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

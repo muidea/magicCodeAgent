@@ -22,7 +22,7 @@ func (s *FetchInstructionsTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *FetchInstructionsTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *FetchInstructionsTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

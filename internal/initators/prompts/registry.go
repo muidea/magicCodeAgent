@@ -103,31 +103,14 @@ func (s *promptsRegistry) GetPromptsContent(stage string) string {
 	return builder.String()
 }
 
-func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string, sectionParam map[string]string) string {
+func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string) string {
 	fileName := fmt.Sprintf("%s.md", sectionPrompt)
 	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("Failed to read section prompt content for %s: %v", sectionPrompt, contentErr)
 		return ""
 	}
-	if len(sectionParam) == 0 {
-		return contentVal
-	}
-
-	tmpl, err := template.New(sectionPrompt).Parse(contentVal)
-	if err != nil {
-		log.Errorf("parse sectionPrompt template failed:%s", err.Error())
-		return contentVal
-	}
-
-	var builder strings.Builder
-	err = tmpl.Execute(&builder, sectionParam)
-	if err != nil {
-		log.Errorf("execute sectionPrompt template failed:%s", err.Error())
-		return contentVal
-	}
-
-	return builder.String()
+	return contentVal
 }
 
 func (s *promptsRegistry) getRolePrompts(stage string) string {

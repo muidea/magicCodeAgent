@@ -16,8 +16,9 @@ import (
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
+	localConfig "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 )
@@ -39,21 +40,23 @@ func New(
 	}
 
 	ptr.toolRegistry.Register(&ReadFileTool{})
+	ptr.toolRegistry.Register(&ReadStageFileTool{})
 	ptr.toolRegistry.Register(&FetchInstructionsTool{})
 	ptr.toolRegistry.Register(&SearchFilesTool{})
 	ptr.toolRegistry.Register(&ListFilesTool{})
+	ptr.toolRegistry.Register(&ListStageFilesTool{})
 	ptr.toolRegistry.Register(&ListCodeDefinitionNamesTool{})
 	ptr.toolRegistry.Register(&ApplyDiffTool{})
 	ptr.toolRegistry.Register(&WriteToFileTool{})
 	ptr.toolRegistry.Register(&InsertContentTool{})
 	ptr.toolRegistry.Register(&SearchAndReplaceTool{})
 	ptr.toolRegistry.Register(&ExecuteCommandTool{})
-	ptr.toolRegistry.Register(&UseMcpToolTool{})
-	ptr.toolRegistry.Register(&AccessMcpResourceTool{})
+	//ptr.toolRegistry.Register(&UseMcpToolTool{})
+	//ptr.toolRegistry.Register(&AccessMcpResourceTool{})
 	ptr.toolRegistry.Register(&AskFollowupQuestionTool{})
 	ptr.toolRegistry.Register(&AttemptCompletionTool{})
 	ptr.toolRegistry.Register(&SwitchModeTool{})
-	ptr.toolRegistry.Register(&NewTaskTool{})
+	//ptr.toolRegistry.Register(&NewTaskTool{})
 	ptr.toolRegistry.Register(&CreateServiceModuleTool{})
 	ptr.toolRegistry.Register(&CreateServiceInitatorTool{})
 	ptr.toolRegistry.Register(&InitializationServiceProjectTool{})
@@ -66,7 +69,7 @@ func New(
 func (s *Tools) Run() (err *cd.Error) {
 	currentWorkDir := fu.GetCurrentWorkDir()
 
-	dataFile := config.GetDataFile()
+	dataFile := localConfig.GetDataFile()
 	if dataFile != "" {
 		resultVal, resultErr := s.execDataFile(currentWorkDir, dataFile)
 		if resultErr != nil {
@@ -78,9 +81,9 @@ func (s *Tools) Run() (err *cd.Error) {
 		return
 	}
 
-	dataContent := config.GetDataContent()
+	dataContent := localConfig.GetDataContent()
 	if dataContent != "" {
-		_, resultVal := s.execDataContent(currentWorkDir, dataContent)
+		_, resultVal := s.execDataContent(currentWorkDir, "", dataContent)
 		if resultVal != nil {
 			log.Infof("exec data content result.\n%v", resultVal.Result.String())
 		}
@@ -110,7 +113,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 
 	byteBuilder := strings.Builder{}
 	for idx, block := range blocksList {
-		_, toolResult := s.execDataContent(workspaceDir, block)
+		_, toolResult := s.execDataContent(workspaceDir, "", block)
 		if toolResult != nil {
 			if idx > 0 {
 				byteBuilder.WriteString("=======\n")
@@ -121,7 +124,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 	return byteBuilder.String(), nil
 }
 
-func (s *Tools) execDataContent(workspaceDir, dataContent string) (string, *imbtc.ToolResult) {
+func (s *Tools) execDataContent(workspaceDir, stage, dataContent string) (string, *imbtc.ToolResult) {
 	toolName, toolParam, toolErr := parseParamContent(dataContent)
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
@@ -151,7 +154,7 @@ func (s *Tools) execDataContent(workspaceDir, dataContent string) (string, *imbt
 		}
 	}
 
-	return toolName, s.toolRegistry.Execute(workspaceDir, toolName, toolParam)
+	return toolName, s.toolRegistry.Execute(workspaceDir, stage, toolName, toolParam)
 }
 
 // 解析执行参数
@@ -361,6 +364,11 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		log.Warnf("workspaceDir is not string, dataVal:%v", workspaceDirVal)
 		return
 	}
-
-	executeToolName, executeResult = s.execDataContent(workspaceDir, contentVal)
+	stageVal := ev.GetData("stage").(string)
+	if !common.ValidStage(stageVal) {
+		err = cd.NewError(cd.IllegalParam, "execute tool failed, invalid stage")
+		log.Warnf("stage is not valid, stage:%v", stageVal)
+		return
+	}
+	executeToolName, executeResult = s.execDataContent(workspaceDir, stageVal, contentVal)
 }

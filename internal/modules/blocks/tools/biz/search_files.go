@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -26,7 +27,7 @@ func (s *SearchFilesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *SearchFilesTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -62,10 +63,17 @@ func (s *SearchFilesTool) Execute(workspaceDir string, param imbtc.ToolParam) (r
 	if filePatternParam, ok := param["file_pattern"].(string); ok && filePatternParam != "" {
 		filePattern = filePatternParam
 	}
-
-	searchResult, searchErr := SearchFiles(workspaceDir, path, regex, filePattern)
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
+	searchResult, searchErr := SearchFiles(fullPath, path, regex, filePattern)
 	if searchErr != nil {
 		err = searchErr
+		log.Errorf("SearchFiles failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
 		return
 	}
 

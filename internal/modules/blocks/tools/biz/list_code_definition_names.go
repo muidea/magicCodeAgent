@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -28,7 +29,7 @@ func (s *ListCodeDefinitionNamesTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ListCodeDefinitionNamesTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *ListCodeDefinitionNamesTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -52,8 +53,14 @@ func (s *ListCodeDefinitionNamesTool) Execute(workspaceDir string, param imbtc.T
 		err = fmt.Errorf("missing or invalid path parameter")
 		return
 	}
-
-	listResult, listErr := ListCodeDefinitionNames(workspaceDir, path)
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
+	listResult, listErr := ListCodeDefinitionNames(fullPath, path)
 	if listErr != nil {
 		err = listErr
 		log.Errorf("failed to list code definitions: %v", err)

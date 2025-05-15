@@ -22,7 +22,7 @@ func (s *AttemptCompletionTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AttemptCompletionTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *AttemptCompletionTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

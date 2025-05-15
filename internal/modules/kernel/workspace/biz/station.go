@@ -92,18 +92,14 @@ func (s *Station) envPrompt() string {
 	stringBuilder.WriteString("\n\n")
 
 	//## 项目规划目录
-	projectStructParam := map[string]string{}
-	structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()), projectStructParam)
+	structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()))
 	if structContent != "" {
 		stringBuilder.WriteString(structContent)
 		stringBuilder.WriteString("\n\n")
 	}
 
 	//## 项目状态
-	stageParam := map[string]string{
-		"WorkingDir": s.configPtr.GetCurrentStagePath(),
-	}
-	stageContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s", s.getWorkspaceType()), stageParam)
+	stageContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s", s.configPtr.GetStage()))
 	if stageContent != "" {
 		stringBuilder.WriteString(stageContent)
 		stringBuilder.WriteString("\n\n")
@@ -390,10 +386,15 @@ func (s *Station) OnRecv(event string, content string) {
 			return
 		}
 
-		workspaceDir := s.configPtr.GetCurrentStagePath()
 		for _, block := range blockList {
-			resultVal, resultFinal := s.localWorker.DoWork(workspaceDir, block)
+			resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.GetWorkspaceDir(), s.configPtr.GetStage(), block)
 			if resultFinal {
+				//s.DisposeRecvMessage(&models.MessageInfo{
+				//	Item:       resultVal,
+				//	CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+				//	Workspace:  s.configPtr.Name,
+				//})
+
 				continue
 			}
 

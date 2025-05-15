@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -24,7 +25,7 @@ func (s *WriteToFileTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *WriteToFileTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -59,9 +60,16 @@ func (s *WriteToFileTool) Execute(workspaceDir string, param imbtc.ToolParam) (r
 	if lineCountParam, ok := param["line_count"].(float64); ok {
 		lineCount = int(lineCountParam)
 	}
-
-	err = WriteToFile(workspaceDir, path, content, lineCount)
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
+	err = WriteToFile(fullPath, path, content, lineCount)
 	if err != nil {
+		log.Errorf("WriteToFile failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
 		return
 	}
 

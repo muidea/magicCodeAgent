@@ -28,7 +28,7 @@ func (s *ApplyDiffTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *ApplyDiffTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -59,9 +59,17 @@ func (s *ApplyDiffTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret
 		return
 	}
 
-	err = ApplyDiff(workspaceDir, path, diff)
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
+	err = ApplyDiff(fullPath, path, diff)
 	if err != nil {
 		err = fmt.Errorf("failed to apply diff: %v", err)
+		log.Errorf("ApplyDiff failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
 		return
 	}
 

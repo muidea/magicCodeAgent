@@ -2,11 +2,14 @@ package biz
 
 import (
 	"fmt"
+	"os"
 	"path"
+	"path/filepath"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
 type InitializationWebProjectTool struct{}
@@ -25,7 +28,7 @@ func (s *InitializationWebProjectTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *InitializationWebProjectTool) Execute(workspaceDir string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *InitializationWebProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -55,6 +58,13 @@ func (s *InitializationWebProjectTool) Execute(workspaceDir string, param imbtc.
 	if descriptionOK {
 		description = descriptionVal.(string)
 	}
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
 
 	command := "magicCodeCli"
 	var args = []string{
@@ -63,7 +73,7 @@ func (s *InitializationWebProjectTool) Execute(workspaceDir string, param imbtc.
 		"-projectName", path.Join("web", name),
 		"-projectDescription", description,
 	}
-	result, err = ExecuteCommand(workspaceDir, command, args, "")
+	result, err = ExecuteCommand(fullPath, command, args, "")
 	if err != nil {
 		log.Errorf("failed to execute command: %v", err)
 		return
