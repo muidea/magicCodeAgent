@@ -73,11 +73,11 @@ func (s *Station) getWorkspaceType() string {
 
 }
 
-func (s *Station) systemPrompt(stage string) string {
-	return s.promptsRegistry.GetPromptsContent(stage, s.configPtr.GetCurrentStagePath())
+func (s *Station) systemPrompt() string {
+	return s.promptsRegistry.GetPromptsContent(s.configPtr.GetStage())
 }
 
-func (s *Station) envPrompt(stage string) string {
+func (s *Station) envPrompt() string {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
 	stringBuilder.WriteString("# 项目名称：" + s.configPtr.Name + "\n\n\n")
@@ -91,14 +91,39 @@ func (s *Station) envPrompt(stage string) string {
 	}
 	stringBuilder.WriteString("\n\n")
 
-	structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()))
+	//## 项目规划目录
+	projectStructParam := map[string]string{}
+	structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()), projectStructParam)
 	if structContent != "" {
 		stringBuilder.WriteString(structContent)
 		stringBuilder.WriteString("\n\n")
 	}
 
+	//## 项目状态
+	stageParam := map[string]string{
+		"WorkingDir": s.configPtr.GetCurrentStagePath(),
+	}
+	stageContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s", s.getWorkspaceType()), stageParam)
+	if stageContent != "" {
+		stringBuilder.WriteString(stageContent)
+		stringBuilder.WriteString("\n\n")
+	}
+
+	previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
+	if previousPath != "" {
+		stringBuilder.WriteString(fmt.Sprintf("### %s\n", previousLabel))
+		s.fileInfo.Range(func(key, value interface{}) bool {
+			if strings.HasPrefix(key.(string), previousPath) {
+				relativePath := key.(string)[len(previousPath)+1:]
+				stringBuilder.WriteString("- " + relativePath + "\n")
+			}
+			return true
+		})
+		stringBuilder.WriteString("\n\n")
+	}
+
 	stagePath := s.configPtr.GetCurrentStagePath()
-	stringBuilder.WriteString("## 当前文件清单\n")
+	stringBuilder.WriteString("### 当前文件清单\n")
 	s.fileInfo.Range(func(key, value interface{}) bool {
 		if strings.HasPrefix(key.(string), stagePath) {
 			relativePath := key.(string)[len(stagePath)+1:]
@@ -269,8 +294,8 @@ func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr 
 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
-	stationSystemPrompt := s.systemPrompt(stage)
-	stationEnvPrompt := s.envPrompt(stage)
+	stationSystemPrompt := s.systemPrompt()
+	stationEnvPrompt := s.envPrompt()
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
 	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, stationSystemPrompt, stationEnvPrompt, curFlow.GetFlowPath())

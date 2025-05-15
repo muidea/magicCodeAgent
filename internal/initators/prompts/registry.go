@@ -70,7 +70,7 @@ func (s *promptsRegistry) GetSectionPromptsContent(sectionName string) string {
 	return sectionObj.GetPromptsContent()
 }
 
-func (s *promptsRegistry) GetPromptsContent(stage, workspaceDir string) string {
+func (s *promptsRegistry) GetPromptsContent(stage string) string {
 	var builder strings.Builder
 	builder.WriteString(s.getRolePrompts(stage))
 	builder.WriteString("\n\n")
@@ -97,20 +97,37 @@ func (s *promptsRegistry) GetPromptsContent(stage, workspaceDir string) string {
 	builder.WriteString(s.getModelsPrompts())
 	builder.WriteString("\n\n")
 
-	builder.WriteString(s.getRulesPrompts(workspaceDir))
+	builder.WriteString(s.getRulesPrompts())
 	builder.WriteString("\n\n")
 
 	return builder.String()
 }
 
-func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string) string {
+func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string, sectionParam map[string]string) string {
 	fileName := fmt.Sprintf("%s.md", sectionPrompt)
 	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("Failed to read section prompt content for %s: %v", sectionPrompt, contentErr)
 		return ""
 	}
-	return contentVal
+	if len(sectionParam) == 0 {
+		return contentVal
+	}
+
+	tmpl, err := template.New(sectionPrompt).Parse(contentVal)
+	if err != nil {
+		log.Errorf("parse sectionPrompt template failed:%s", err.Error())
+		return contentVal
+	}
+
+	var builder strings.Builder
+	err = tmpl.Execute(&builder, sectionParam)
+	if err != nil {
+		log.Errorf("execute sectionPrompt template failed:%s", err.Error())
+		return contentVal
+	}
+
+	return builder.String()
 }
 
 func (s *promptsRegistry) getRolePrompts(stage string) string {
@@ -193,29 +210,12 @@ func (s *promptsRegistry) getModelsPrompts() string {
 	return contentVal
 }
 
-func (s *promptsRegistry) getRulesPrompts(workspaceDir string) string {
+func (s *promptsRegistry) getRulesPrompts() string {
 	fileName := "rules.md"
 	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
 	if contentErr != nil {
 		log.Errorf("get rules prompts content failed:%s", contentErr.Error())
 		return ""
 	}
-	param := map[string]string{
-		"WorkspaceDir": workspaceDir,
-	}
-
-	tmpl, err := template.New("rules").Parse(contentVal)
-	if err != nil {
-		log.Errorf("parse rules template failed:%s", err.Error())
-		return contentVal
-	}
-
-	var builder strings.Builder
-	err = tmpl.Execute(&builder, param)
-	if err != nil {
-		log.Errorf("execute rules template failed:%s", err.Error())
-		return contentVal
-	}
-
-	return builder.String()
+	return contentVal
 }

@@ -51,6 +51,10 @@ type Workspace struct {
 	UpdateTime  string   `json:"updateTime"`
 }
 
+func (s *Workspace) GetStage() string {
+	return s.Stage
+}
+
 func (s *Workspace) GetWorkspaceType() string {
 	frontendTechs := []string{"javascript", "html", "css", "react", "vue", "umijs", "antd", "typescript"}
 
@@ -64,6 +68,26 @@ func (s *Workspace) GetWorkspaceType() string {
 	}
 
 	return Service
+}
+
+func (s *Workspace) GetPreviousStagePath() (string, string) {
+	previousLabel := ""
+	previousStage := ""
+	switch s.Stage {
+	case common.CodeStage:
+		previousStage = common.DesignStage
+		previousLabel = "子功能列表"
+	case common.TestStage:
+		previousLabel = "代码列表"
+		previousStage = common.CodeStage
+	case common.PublishStage:
+		previousLabel = "测试代码列表"
+		previousStage = common.TestStage
+	default:
+		return "", ""
+	}
+
+	return previousLabel, filepath.Join(s.Path, previousStage)
 }
 
 func (s *Workspace) GetCurrentStagePath() string {
