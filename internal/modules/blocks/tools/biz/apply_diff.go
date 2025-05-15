@@ -230,7 +230,7 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 		metaPart := blockPart[len("<<<<<<< SEARCH"):]
 		contentSep := strings.Index(metaPart, "-------")
 		if contentSep == -1 {
-			return nil, fmt.Errorf("malformed diff block: missing content separator")
+			contentSep = 0
 		}
 		metaLines := strings.Split(strings.TrimSpace(metaPart[:contentSep]), "\n")
 
@@ -252,23 +252,22 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 
 		// 验证行号
 		if !startLineFound {
-			return nil, fmt.Errorf("missing start line")
-		}
-
-		if startLine <= 0 {
-			return nil, fmt.Errorf("start line must be positive: startLine=%d", startLine)
+			startLine = 0
 		}
 
 		// 提取原始内容和替换内容
 		contentSep = strings.Index(blockPart, "-------")
-		rawContent := strings.Trim(blockPart[contentSep+len("-------"):sepIdx], "\n")
+		if contentSep == -1 {
+			contentSep = len("<<<<<<< SEARCH")
+		} else {
+			contentSep += len("-------")
+		}
+		rawContent := strings.Trim(blockPart[contentSep:sepIdx], "\n")
 
 		// 如果没有指定结束行号，根据原始内容的行数计算
-		if !endLineFound {
+		if !endLineFound && startLine > 0 {
 			lineCount := len(strings.Split(rawContent, "\n"))
 			endLine = startLine + lineCount - 1
-		} else if endLine <= 0 {
-			return nil, fmt.Errorf("end line must be positive: endLine=%d", endLine)
 		}
 
 		if startLine > endLine {
@@ -316,6 +315,44 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 	if len(diffBlocks) == 0 {
 		return nil
 	}
+
+	// 读取文件内容，用于在未指定行号时查找匹配内容
+	fileContent, err := os.ReadFile(fullPath)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %v", err)
+	}
+	fileLines := strings.Split(string(fileContent), "\n")
+
+	// 处理未指定行号的情况，通过内容匹配确定行号
+	for i, block := range diffBlocks {
+		// 如果起始行号未指定，通过内容匹配确定
+		if block.StartLine == 0 {
+			// 在文件中查找匹配的内容
+			lineNum := findContentInFile(fileLines, block.OriginContent)
+			if lineNum == -1 {
+				return fmt.Errorf("could not find matching content in file for block %d, content: %s", i+1, block.OriginContent)
+			}
+			block.StartLine = lineNum
+			// 如果结束行号也未指定，根据原始内容的行数计算
+			if block.EndLine == 0 {
+				block.EndLine = lineNum + len(strings.Split(block.OriginContent, "\n")) - 1
+			}
+		} else if block.EndLine == 0 {
+			// 如果只有结束行号未指定，根据原始内容的行数计算
+			block.EndLine = block.StartLine + len(strings.Split(block.OriginContent, "\n")) - 1
+		}
+
+		// 验证行号的有效性
+		if block.StartLine <= 0 || block.EndLine <= 0 || block.StartLine > block.EndLine {
+			return fmt.Errorf("invalid line numbers after resolution: startLine=%d, endLine=%d for block %d",
+				block.StartLine, block.EndLine, i+1)
+		}
+	}
+
+	// 对块按起始行号重新排序
+	sort.Slice(diffBlocks, func(i, j int) bool {
+		return diffBlocks[i].StartLine < diffBlocks[j].StartLine
+	})
 
 	// 创建临时文件
 	tmpPath := fullPath + ".tmp"

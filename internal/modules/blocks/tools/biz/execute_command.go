@@ -75,6 +75,10 @@ func (s *ExecuteCommandTool) Execute(workspaceDir, stage string, param imbtc.Too
 		return
 	}
 
+	if result == "" {
+		result = "execute command success!"
+	}
+
 	return
 }
 

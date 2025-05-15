@@ -315,5 +315,49 @@ def calculate_sum(items):
 
 	blocks, blockErr := splitDiffBlock(diff3)
 	assert.Nil(t, blockErr)
-	assert.Equal(t, len(blocks), 1)
+	assert.Equal(t, 1, len(blocks))
+
+	rawContent := `import { defineConfig } from '@umijs/max';
+
+export default defineConfig({
+  links: [
+    { rel: 'icon', href: '/favicon.png', type: 'image/png' },
+  ],
+  antd: {},
+  access: {},
+  model: {},
+  initialState: {},
+  request: {},
+  layout: {
+    title: 'demo',
+  },
+  base: '/',
+  publicPath: '/',
+  routes: [
+    {
+      name: 'index',
+      path: '/',
+      component: './index',
+    },
+  ],
+  exportStatic: {},
+  esbuildMinifyIIFE: true,
+  npmClient: 'yarn',
+  proxy: [
+    {
+      context: ['/api/v1/'],
+      target: 'http://127.0.0.1:8090',
+      changeOrigin: true,
+    }
+  ],
+  alias: {
+    '@/utils': require('path').resolve(__dirname, 'src/utils'),
+    '@/types': require('path').resolve(__dirname, 'src/types'),
+  },
+});`
+	testFilePath = filepath.Join(tempDir, "test_file2.txt")
+	err = os.WriteFile(testFilePath, []byte(rawContent), 0644)
+	assert.NoError(t, err, "写入测试文件应该成功")
+	err = ApplyDiff(tempDir, "test_file2.txt", diff3)
+	assert.NoError(t, err, "应用 diff3 应该成功")
 }
