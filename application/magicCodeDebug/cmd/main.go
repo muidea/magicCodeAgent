@@ -12,7 +12,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 
-	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/debug"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/recorder"
 )
 
 var (

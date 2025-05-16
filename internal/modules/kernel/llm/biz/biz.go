@@ -12,8 +12,8 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	imbrc "github.com/muidea/magicCodeAgent/internal/modules/blocks/recorder/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
-	imkdc "github.com/muidea/magicCodeAgent/internal/modules/kernel/debug/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz/deepseek"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz/provider"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
@@ -209,6 +209,6 @@ func (s *LLM) OnMessage(msgPtr *models.MessageInfo) {
 		return
 	}
 
-	debugEvent := event.NewEvent(imkdc.DebugRealtimeMessage, s.ID(), imkdc.DebugModule, nil, appendVal)
+	debugEvent := event.NewEvent(imbrc.RecordRealtimeMessage, s.ID(), imbrc.RecorderModule, nil, appendVal)
 	s.PostEvent(debugEvent)
 }

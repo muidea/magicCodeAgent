@@ -18,13 +18,13 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	imkdc "github.com/muidea/magicCodeAgent/internal/modules/blocks/recorder/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
-	imkdc "github.com/muidea/magicCodeAgent/internal/modules/kernel/debug/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type Debug struct {
+type Recorder struct {
 	biz.Base
 
 	dataDir string
@@ -33,22 +33,22 @@ type Debug struct {
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
-) *Debug {
-	ptr := &Debug{
-		Base:    biz.New(imkdc.DebugModule, eventHub, backgroundRoutine),
+) *Recorder {
+	ptr := &Recorder{
+		Base:    biz.New(imkdc.RecorderModule, eventHub, backgroundRoutine),
 		dataDir: filepath.Join(config.CurrentWorkPath(), "data"),
 	}
 
 	if config.DebugFlag() {
-		ptr.SubscribeFunc(imkdc.DebugRealtimeMessage, ptr.recordRealtimeMessage)
+		ptr.SubscribeFunc(imkdc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
 
-		ptr.SubscribeFunc(imkdc.DebugHistoryMessage, ptr.recordHistoryMessage)
+		ptr.SubscribeFunc(imkdc.RecordHistoryMessage, ptr.recordHistoryMessage)
 	}
 
 	return ptr
 }
 
-func (s *Debug) Run() (err *cd.Error) {
+func (s *Recorder) Run() (err *cd.Error) {
 	if !config.DebugFlag() {
 		return
 	}
@@ -60,7 +60,7 @@ func (s *Debug) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Debug) checkDataDir(dataDir string) (err *cd.Error) {
+func (s *Recorder) checkDataDir(dataDir string) (err *cd.Error) {
 	// 清空或创建data目录
 	if errVal := os.RemoveAll(dataDir); errVal != nil {
 		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("clear data dir failed, error:%s", errVal.Error()))
@@ -75,7 +75,7 @@ func (s *Debug) checkDataDir(dataDir string) (err *cd.Error) {
 	return
 }
 
-func (s *Debug) recordRealtimeMessage(ev event.Event, re event.Result) {
+func (s *Recorder) recordRealtimeMessage(ev event.Event, re event.Result) {
 	var err *cd.Error
 	defer func() {
 		if re != nil {
@@ -93,7 +93,7 @@ func (s *Debug) recordRealtimeMessage(ev event.Event, re event.Result) {
 	s.traceContent(s.dataDir, msgPtr)
 }
 
-func (s *Debug) recordHistoryMessage(ev event.Event, re event.Result) {
+func (s *Recorder) recordHistoryMessage(ev event.Event, re event.Result) {
 	var err *cd.Error
 	defer func() {
 		if re != nil {
@@ -109,7 +109,7 @@ func (s *Debug) recordHistoryMessage(ev event.Event, re event.Result) {
 	err = s.traceAllHistoryContent(s.dataDir)
 }
 
-func (s *Debug) traceAllHistoryContent(dataDir string) (err *cd.Error) {
+func (s *Recorder) traceAllHistoryContent(dataDir string) (err *cd.Error) {
 	filter := &common.MessageFilter{
 		PageIndex: 1,
 		PageSize:  100,
@@ -128,7 +128,7 @@ func (s *Debug) traceAllHistoryContent(dataDir string) (err *cd.Error) {
 	return
 }
 
-func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
+func (s *Recorder) traceContent(dataDir string, message *models.MessageInfo) {
 	// 按sn创建子目录
 	snStr := strconv.FormatInt(message.SN, 10)
 	snDir := filepath.Join(dataDir, snStr)
@@ -188,7 +188,7 @@ func (s *Debug) traceContent(dataDir string, message *models.MessageInfo) {
 	}
 }
 
-func (s *Debug) filterMessage(filter *common.MessageFilter) []*models.MessageInfo {
+func (s *Recorder) filterMessage(filter *common.MessageFilter) []*models.MessageInfo {
 	result := &imbtc.MessageInfoListResult{}
 
 	vals := url.Values{}
