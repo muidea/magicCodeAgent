@@ -2,8 +2,11 @@ package biz
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
@@ -48,9 +51,15 @@ func (s *AttemptCompletionTool) Execute(workspaceDir, stage string, param imbtc.
 		err = fmt.Errorf("missing or invalid result parameter")
 		return
 	}
-
+	fullPath := filepath.Join(workspaceDir, stage)
+	if !fp.Exist(fullPath) {
+		err = os.MkdirAll(fullPath, 0755)
+		if err != nil {
+			return
+		}
+	}
 	command, _ := param["command"].(string)
-	result, err = AttemptCompletion(resultVal, command)
+	result, err = AttemptCompletion(fullPath, resultVal, command)
 	if err != nil {
 		err = fmt.Errorf("failed to attempt completion: %v", err)
 		return
@@ -99,9 +108,10 @@ I've updated the CSS
 */
 
 // AttemptCompletion 实现attempt_completion工具功能
-func AttemptCompletion(result, command string) (string, error) {
+func AttemptCompletion(workspaceDir, result, command string) (string, error) {
 	// Return completion result and optional command
 	if command != "" {
+		ExecuteCommand(workspaceDir, command, []string{}, "")
 		return fmt.Sprintf("Result: %s\nCommand: %s", result, command), nil
 	}
 
