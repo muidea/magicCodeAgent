@@ -19,6 +19,7 @@ import (
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/module"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/recorder"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/debugger"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm"
