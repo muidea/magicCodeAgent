@@ -11,6 +11,7 @@ import (
 	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -36,13 +37,13 @@ func (s *ReadFileTool) Execute(workspaceDir, stage string, param imbtc.ToolParam
 	defer func() {
 		ret = &imbtc.ToolResult{
 			Result: models.MessageItem{
+				Role: common.Tool,
 				Content: []string{
 					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
 		if err != nil {
-			ret.Final = true
 			ret.Result.Content = append(ret.Result.Content, err.Error())
 		} else {
 			ret.Result.Content = append(ret.Result.Content, result)

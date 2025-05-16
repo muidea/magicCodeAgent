@@ -5,6 +5,7 @@ import (
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -61,6 +62,7 @@ func (s *ToolRegistry) Execute(workspaceDir, stage, toolName string, param imbtc
 		return &imbtc.ToolResult{
 			Final: true,
 			Result: models.MessageItem{
+				Role: common.Tool,
 				Content: []string{
 					fmt.Sprintf("tool '%s' does not exist. Available tools: %v", toolName, availableTools),
 				},

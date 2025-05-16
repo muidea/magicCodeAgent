@@ -398,7 +398,7 @@ func (s *Station) OnRecv(event string, content string) {
 				continue
 			}
 
-			resultVal.Role = common.User
+			//resultVal.Role = common.User
 			s.ChatMessage(context.Background(), s.currentWorkStage, &resultVal)
 		}
 	})

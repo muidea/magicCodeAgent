@@ -55,7 +55,7 @@ func New(
 	//ptr.toolRegistry.Register(&AccessMcpResourceTool{})
 	ptr.toolRegistry.Register(&AskFollowupQuestionTool{})
 	ptr.toolRegistry.Register(&AttemptCompletionTool{})
-	ptr.toolRegistry.Register(&SwitchModeTool{})
+	//ptr.toolRegistry.Register(&SwitchModeTool{})
 	//ptr.toolRegistry.Register(&NewTaskTool{})
 	ptr.toolRegistry.Register(&CreateServiceModuleTool{})
 	ptr.toolRegistry.Register(&CreateServiceInitatorTool{})
@@ -131,8 +131,8 @@ func (s *Tools) execDataContent(workspaceDir, stage, dataContent string) (string
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
 		return "", &imbtc.ToolResult{
-			Final: true,
 			Result: models.MessageItem{
+				Role:    common.Tool,
 				Content: []string{fmt.Sprintf("failed to parse param content: %s", toolErr.Error())},
 			},
 		}
@@ -140,8 +140,8 @@ func (s *Tools) execDataContent(workspaceDir, stage, dataContent string) (string
 	if toolName == "" {
 		log.Errorf("tool name cannot be empty")
 		return "", &imbtc.ToolResult{
-			Final: true,
 			Result: models.MessageItem{
+				Role:    common.Tool,
 				Content: []string{"tool name cannot be empty"},
 			},
 		}
@@ -151,6 +151,7 @@ func (s *Tools) execDataContent(workspaceDir, stage, dataContent string) (string
 		return "thinking", &imbtc.ToolResult{
 			Final: true,
 			Result: models.MessageItem{
+				Role:    common.Tool,
 				Content: []string{"thinking ok!"},
 			},
 		}
