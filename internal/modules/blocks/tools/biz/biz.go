@@ -61,6 +61,8 @@ func New(
 	ptr.toolRegistry.Register(&CreateServiceInitatorTool{})
 	ptr.toolRegistry.Register(&InitializationServiceProjectTool{})
 	ptr.toolRegistry.Register(&InitializationWebProjectTool{})
+	ptr.toolRegistry.Register(&DebugServiceProjectTool{})
+	ptr.toolRegistry.Register(&DebugWebProjectTool{})
 
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
 	return ptr

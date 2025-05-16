@@ -8,7 +8,7 @@ Parameters:
 
 Usage:
 <initialization_service_project>
-<name>Demo</name>
+<name>projectName</name>
 <description>这是一个示例项目</description>
 </initialization_service_project>
 
