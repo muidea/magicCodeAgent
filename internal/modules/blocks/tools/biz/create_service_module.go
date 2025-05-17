@@ -29,7 +29,7 @@ func (s *CreateServiceModuleTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *CreateServiceModuleTool) Tags() []string { return []string{iipc.Global} }
+func (s *CreateServiceModuleTool) Tags() []string { return []string{iipc.Service} }
 
 func (s *CreateServiceModuleTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

@@ -29,7 +29,7 @@ func (s *CreateServiceInitatorTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *CreateServiceInitatorTool) Tags() []string { return []string{iipc.Global} }
+func (s *CreateServiceInitatorTool) Tags() []string { return []string{iipc.Service} }
 
 func (s *CreateServiceInitatorTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

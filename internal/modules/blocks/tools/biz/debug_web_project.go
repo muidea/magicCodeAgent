@@ -32,7 +32,7 @@ func (s *DebugWebProjectTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *DebugWebProjectTool) Tags() []string { return []string{iipc.Global} }
+func (s *DebugWebProjectTool) Tags() []string { return []string{iipc.Web} }
 
 func (s *DebugWebProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

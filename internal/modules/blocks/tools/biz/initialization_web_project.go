@@ -30,7 +30,7 @@ func (s *InitializationWebProjectTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *InitializationWebProjectTool) Tags() []string { return []string{iipc.Global} }
+func (s *InitializationWebProjectTool) Tags() []string { return []string{iipc.Web} }
 
 func (s *InitializationWebProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

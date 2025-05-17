@@ -5,7 +5,9 @@ const PromptsInitator = "/internal/initators/prompts"
 const SectionPromptsBasePath = "assets/prompts/section"
 
 const (
-	Global = "*"
+	Global  = "*"
+	Service = "service"
+	Web     = "web"
 )
 
 type PromptsRegistryHeper interface {

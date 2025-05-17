@@ -32,7 +32,7 @@ func (s *DebugServiceProjectTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *DebugServiceProjectTool) Tags() []string { return []string{iipc.Global} }
+func (s *DebugServiceProjectTool) Tags() []string { return []string{iipc.Service} }
 
 func (s *DebugServiceProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
