@@ -9,35 +9,35 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	iirc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/debugger/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/debugger/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/debugger/service"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/service"
 )
 
 func init() {
 	module.Register(New())
 }
 
-type Debugger struct {
-	bizPtr     *biz.Debugger
-	servicePtr *service.Debugger
+type Commander struct {
+	bizPtr     *biz.Commander
+	servicePtr *service.Commander
 }
 
-func New() *Debugger {
-	return &Debugger{}
+func New() *Commander {
+	return &Commander{}
 }
 
-func (s *Debugger) ID() string {
-	return common.DebuggerModule
+func (s *Commander) ID() string {
+	return common.CommanderModule
 }
 
-func (s *Debugger) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+func (s *Commander) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	var routeRegistryHelperVal iirc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
 	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(iirc.RouteRegistryInitator, routeRegistryHelperVal)
 	if routeRegistryHelperErr != nil {
 		err = routeRegistryHelperErr
-		log.Errorf("Debugger setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
+		log.Errorf("Commander setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
 		return
 	}
 
@@ -48,7 +48,7 @@ func (s *Debugger) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRo
 	return nil
 }
 
-func (s *Debugger) Run() (err *cd.Error) {
+func (s *Commander) Run() (err *cd.Error) {
 	err = s.bizPtr.Run()
 	if err != nil {
 		return
@@ -58,5 +58,5 @@ func (s *Debugger) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Debugger) Teardown() {
+func (s *Commander) Teardown() {
 }
