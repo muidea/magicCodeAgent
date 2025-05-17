@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -27,6 +28,8 @@ func (s *CreateServiceModuleTool) Prompt() string {
 
 	return promptsVal
 }
+
+func (s *CreateServiceModuleTool) Tags() []string { return []string{iipc.Global} }
 
 func (s *CreateServiceModuleTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

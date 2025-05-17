@@ -43,6 +43,8 @@ func (s *ToolRegistry) Prompt() string {
 	return ""
 }
 
+func (s *ToolRegistry) Tags() []string { return []string{iipc.Global} }
+
 func (s *ToolRegistry) Register(tool imbtc.Tool) {
 	if s.promptsRegistry != nil {
 		s.promptsRegistry.AddPrompts(s.Name(), tool)

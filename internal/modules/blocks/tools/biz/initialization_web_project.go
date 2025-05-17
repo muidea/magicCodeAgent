@@ -6,6 +6,7 @@ import (
 	"path"
 	"path/filepath"
 
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -28,6 +29,8 @@ func (s *InitializationWebProjectTool) Prompt() string {
 
 	return promptsVal
 }
+
+func (s *InitializationWebProjectTool) Tags() []string { return []string{iipc.Global} }
 
 func (s *InitializationWebProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

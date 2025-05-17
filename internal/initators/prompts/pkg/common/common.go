@@ -4,6 +4,10 @@ const PromptsInitator = "/internal/initators/prompts"
 
 const SectionPromptsBasePath = "assets/prompts/section"
 
+const (
+	Global = "*"
+)
+
 type PromptsRegistryHeper interface {
 	GetPromptsRegistry() (ret PromptsRegistry)
 }
@@ -11,6 +15,7 @@ type PromptsRegistryHeper interface {
 type Prompt interface {
 	Name() string
 	Prompt() string
+	Tags() []string
 }
 
 type PromptsRegistry interface {

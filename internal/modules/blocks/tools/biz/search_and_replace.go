@@ -11,6 +11,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
 
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -28,6 +29,8 @@ func (s *SearchAndReplaceTool) Prompt() string {
 
 	return promptsVal
 }
+
+func (s *SearchAndReplaceTool) Tags() []string { return []string{iipc.Global} }
 
 func (s *SearchAndReplaceTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

@@ -8,6 +8,7 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/foundation/log"
 
+	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -30,6 +31,8 @@ func (s *DebugServiceProjectTool) Prompt() string {
 
 	return promptsVal
 }
+
+func (s *DebugServiceProjectTool) Tags() []string { return []string{iipc.Global} }
 
 func (s *DebugServiceProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
