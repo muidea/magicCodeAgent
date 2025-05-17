@@ -1,12 +1,16 @@
 package biz
 
 import (
+	"errors"
 	"fmt"
+	"path/filepath"
+
+	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
-	"github.com/muidea/magicCommon/foundation/log"
 )
 
 type DebugWebProjectTool struct {
@@ -45,8 +49,44 @@ func (s *DebugWebProjectTool) Execute(workspaceDir, stage string, param imbtc.To
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
+	workspaceName, workspaceOK := param["name"]
+	if !workspaceOK {
+		err = fmt.Errorf("error: workspace name not found")
+		return
+	}
+	var restart bool
+	restartVal, restartOK := param["restart"]
+	if restartOK {
+		restart = restartVal.(bool)
+	}
 
-	//fullPath := filepath.Join(workspaceDir, stage)
+	var runStatusMsg, runErrorMsg string
+	var runErr *cd.Error
+	fullPath := filepath.Join(workspaceDir, stage)
+	// yarn install
+	_, runErrorMsg, runErr = s.commander.RunCommand(workspaceName.(string), fullPath, "yarn", restart, []string{"install"})
+	if runErr != nil {
+		err = errors.New(runErr.Error())
+		return
+	}
+	if runErrorMsg != "" {
+		result = runErrorMsg
+		return
+	}
+
+	// yarn lint
+	runStatusMsg, runErrorMsg, runErr = s.commander.RunCommand(workspaceName.(string), fullPath, "yarn", restart, []string{"lint"})
+	if runErr != nil {
+		err = errors.New(runErr.Error())
+		return
+	}
+	if runErrorMsg != "" {
+		result = runErrorMsg
+		return
+	}
+
+	result = runStatusMsg
+
 	// TODO 执行调试命令
 	// yarn install 安装依赖
 	// lint

@@ -1,13 +1,16 @@
 package biz
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
+
+	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/log"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
-	"github.com/muidea/magicCommon/foundation/log"
 )
 
 type DebugServiceProjectTool struct {
@@ -58,9 +61,21 @@ func (s *DebugServiceProjectTool) Execute(workspaceDir, stage string, param imbt
 		restart = restartVal.(bool)
 	}
 
-	fullPath := filepath.Join(workspaceDir, stage)
-	s.commander.RunCommand(workspaceName.(string), fullPath, "go", restart, []string{"lint", "tidy"})
+	var runStatusMsg, runErrorMsg string
+	var runErr *cd.Error
 
+	fullPath := filepath.Join(workspaceDir, stage)
+	runStatusMsg, runErrorMsg, runErr = s.commander.RunCommand(workspaceName.(string), fullPath, "go", restart, []string{"test", "-v", "./..."})
+	if runErr != nil {
+		err = errors.New(runErr.Error())
+		return
+	}
+	if runErrorMsg != "" {
+		result = runErrorMsg
+		return
+	}
+
+	result = runStatusMsg
 	//
 	// TODO 执行调试命令
 	// lint
