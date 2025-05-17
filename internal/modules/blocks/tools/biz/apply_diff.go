@@ -35,7 +35,7 @@ func (s *ApplyDiffTool) Prompt() string {
 
 func (s *ApplyDiffTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ApplyDiffTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *ApplyDiffTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

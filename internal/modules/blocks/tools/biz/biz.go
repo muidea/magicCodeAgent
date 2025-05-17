@@ -55,24 +55,29 @@ func New(
 	ptr.toolRegistry.Register(&WriteToFileTool{})
 	ptr.toolRegistry.Register(&InsertContentTool{})
 	ptr.toolRegistry.Register(&SearchAndReplaceTool{})
-	ptr.toolRegistry.Register(&ExecuteCommandTool{})
+	ptr.toolRegistry.Register(&ExecuteCommandTool{
+		commander: ptr,
+	})
 	//ptr.toolRegistry.Register(&UseMcpToolTool{})
 	//ptr.toolRegistry.Register(&AccessMcpResourceTool{})
 	ptr.toolRegistry.Register(&AskFollowupQuestionTool{})
-	ptr.toolRegistry.Register(&AttemptCompletionTool{})
+	ptr.toolRegistry.Register(&AttemptCompletionTool{
+		commander: ptr,
+	})
 	//ptr.toolRegistry.Register(&SwitchModeTool{})
 	//ptr.toolRegistry.Register(&NewTaskTool{})
-	ptr.toolRegistry.Register(&CreateServiceModuleTool{})
-	ptr.toolRegistry.Register(&CreateServiceInitatorTool{})
-	ptr.toolRegistry.Register(&InitializationServiceProjectTool{})
-	ptr.toolRegistry.Register(&InitializationWebProjectTool{})
-	ptr.toolRegistry.Register(&DebugServiceProjectTool{
+	ptr.toolRegistry.Register(&CreateServiceModuleTool{
 		commander: ptr,
 	})
-	ptr.toolRegistry.Register(&DebugWebProjectTool{
+	ptr.toolRegistry.Register(&CreateServiceInitatorTool{
 		commander: ptr,
 	})
-
+	ptr.toolRegistry.Register(&InitializationServiceProjectTool{
+		commander: ptr,
+	})
+	ptr.toolRegistry.Register(&InitializationWebProjectTool{
+		commander: ptr,
+	})
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
 	return ptr
 }
@@ -94,7 +99,7 @@ func (s *Tools) Run() (err *cd.Error) {
 
 	dataContent := localConfig.GetDataContent()
 	if dataContent != "" {
-		_, resultVal := s.execDataContent(currentWorkDir, "", dataContent)
+		_, resultVal := s.execDataContent("anonymous", currentWorkDir, "", dataContent)
 		if resultVal != nil {
 			log.Infof("exec data content result.\n%v", resultVal.Result.String())
 		}
@@ -124,7 +129,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 
 	byteBuilder := strings.Builder{}
 	for idx, block := range blocksList {
-		_, toolResult := s.execDataContent(workspaceDir, "", block)
+		_, toolResult := s.execDataContent("anonymous", workspaceDir, "", block)
 		if toolResult != nil {
 			if idx > 0 {
 				byteBuilder.WriteString("=======\n")
@@ -135,7 +140,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 	return byteBuilder.String(), nil
 }
 
-func (s *Tools) execDataContent(workspaceDir, stage, dataContent string) (string, *imbtc.ToolResult) {
+func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent string) (string, *imbtc.ToolResult) {
 	toolName, toolParam, toolErr := parseParamContent(dataContent)
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
@@ -166,7 +171,7 @@ func (s *Tools) execDataContent(workspaceDir, stage, dataContent string) (string
 		}
 	}
 
-	return toolName, s.toolRegistry.Execute(workspaceDir, stage, toolName, toolParam)
+	return toolName, s.toolRegistry.Execute(workspaceName, workspaceDir, stage, toolName, toolParam)
 }
 
 // 解析执行参数
@@ -369,6 +374,13 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		log.Warnf("content is not string, dataVal:%v", dataVal)
 		return
 	}
+	workspaceNameVal := ev.GetData("workspaceName")
+	workspaceName, workspaceNameOK := workspaceNameVal.(string)
+	if !workspaceNameOK {
+		err = cd.NewError(cd.IllegalParam, "execute tool failed, invalid workspaceName")
+		log.Warnf("workspaceName is not string, workspaceNameVal:%v", workspaceNameVal)
+		return
+	}
 	workspaceDirVal := ev.GetData("workspaceDir")
 	workspaceDir, workspaceDirOK := workspaceDirVal.(string)
 	if !workspaceDirOK {
@@ -382,7 +394,7 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		log.Warnf("stage is not valid, stage:%v", stageVal)
 		return
 	}
-	executeToolName, executeResult = s.execDataContent(workspaceDir, stageVal, contentVal)
+	executeToolName, executeResult = s.execDataContent(workspaceName, workspaceDir, stageVal, contentVal)
 }
 
 func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (statusMsg, errorMsg string, err *cd.Error) {

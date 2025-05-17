@@ -47,4 +47,12 @@
 
 3. 所有的initator和module在定义完成后，都需要在main.go 进行显示引用，以便系统启动时加载
 
+### 项目辅助工具和命令
+
+1. 可以使用execute_command工具执行`go fmt ./...` 命令来格式化项目代码。
+2. 可以使用execute_command工具执行`go vet ./...` 命令来对项目进行代码静态检查。
+3. 可以使用execute_command工具执行`go mod tidy` 命令来整理和优化 go.mod 文件。
+4. 可以使用execute_command工具执行`go test ./...` 命令来运行项目测试用例。
+
+
 **强调说明：如果当前项目未完成初始化，请先执行`initialization_service_project`工具进行初始化**

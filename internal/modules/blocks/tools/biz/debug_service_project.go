@@ -35,7 +35,7 @@ func (s *DebugServiceProjectTool) Prompt() string {
 
 func (s *DebugServiceProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
 
-func (s *DebugServiceProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *DebugServiceProjectTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -54,11 +54,6 @@ func (s *DebugServiceProjectTool) Execute(workspaceDir, stage string, param imbt
 		}
 	}()
 
-	workspaceName, workspaceOK := param["name"]
-	if !workspaceOK {
-		err = fmt.Errorf("error: workspace name not found")
-		return
-	}
 	var restart bool
 	restartVal, restartOK := param["restart"]
 	if restartOK {
@@ -69,7 +64,7 @@ func (s *DebugServiceProjectTool) Execute(workspaceDir, stage string, param imbt
 	var runErr *cd.Error
 
 	fullPath := filepath.Join(workspaceDir, stage)
-	runStatusMsg, runErrorMsg, runErr = s.commander.RunCommand(workspaceName.(string), fullPath, "go", restart, []string{"test", "-v", "./..."})
+	runStatusMsg, runErrorMsg, runErr = s.commander.RunCommand(workspaceName, fullPath, "go", restart, []string{"test", "-v", "./..."})
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return

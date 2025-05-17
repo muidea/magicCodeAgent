@@ -14,7 +14,9 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
-type CreateServiceModuleTool struct{}
+type CreateServiceModuleTool struct {
+	commander Commander
+}
 
 func (s *CreateServiceModuleTool) Name() string {
 	return "create_service_module"
@@ -32,7 +34,7 @@ func (s *CreateServiceModuleTool) Prompt() string {
 
 func (s *CreateServiceModuleTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
 
-func (s *CreateServiceModuleTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *CreateServiceModuleTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

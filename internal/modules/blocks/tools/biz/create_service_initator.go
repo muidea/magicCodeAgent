@@ -14,7 +14,9 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
-type CreateServiceInitatorTool struct{}
+type CreateServiceInitatorTool struct {
+	commander Commander
+}
 
 func (s *CreateServiceInitatorTool) Name() string {
 	return "create_service_initator"
@@ -32,7 +34,7 @@ func (s *CreateServiceInitatorTool) Prompt() string {
 
 func (s *CreateServiceInitatorTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
 
-func (s *CreateServiceInitatorTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *CreateServiceInitatorTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

@@ -15,7 +15,9 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
-type InitializationServiceProjectTool struct{}
+type InitializationServiceProjectTool struct {
+	commander Commander
+}
 
 func (s *InitializationServiceProjectTool) Name() string {
 	return "initialization_service_project"
@@ -33,7 +35,7 @@ func (s *InitializationServiceProjectTool) Prompt() string {
 
 func (s *InitializationServiceProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
 
-func (s *InitializationServiceProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *InitializationServiceProjectTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

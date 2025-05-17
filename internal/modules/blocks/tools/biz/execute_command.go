@@ -17,7 +17,9 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type ExecuteCommandTool struct{}
+type ExecuteCommandTool struct {
+	commander Commander
+}
 
 func (s *ExecuteCommandTool) Name() string { return "execute_command" }
 func (s *ExecuteCommandTool) Prompt() string {
@@ -32,7 +34,7 @@ func (s *ExecuteCommandTool) Prompt() string {
 
 func (s *ExecuteCommandTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ExecuteCommandTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

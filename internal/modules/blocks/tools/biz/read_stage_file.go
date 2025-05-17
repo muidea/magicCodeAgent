@@ -34,7 +34,7 @@ func (s *ReadStageFileTool) Prompt() string {
 
 func (s *ReadStageFileTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ReadStageFileTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *ReadStageFileTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

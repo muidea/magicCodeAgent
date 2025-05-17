@@ -48,7 +48,7 @@ type ToolResult struct {
 
 type Tool interface {
 	iipc.Prompt
-	Execute(workspaceDir, stage string, param ToolParam) *ToolResult
+	Execute(workspaceName, workspaceDir, stage string, param ToolParam) *ToolResult
 }
 
 func ReadToolsPrompts(toolName string) (ret string, err error) {

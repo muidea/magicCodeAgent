@@ -51,6 +51,10 @@ type Workspace struct {
 	UpdateTime  string       `json:"updateTime"`
 }
 
+func (s *Workspace) GetName() string {
+	return s.Name
+}
+
 func (s *Workspace) GetStage() string {
 	return s.Stage
 }

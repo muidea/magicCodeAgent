@@ -137,5 +137,11 @@ export default function Page() {
 
 其中，`useModel()` 方法传入的参数为 Model 的**命名空间**
 
+### 项目辅助工具和命令
+
+1. 可以使用execute_command工具执行`yarn run format` 命令来格式化项目代码。
+2. 可以使用execute_command工具执行`yarn run lint` 命令来对项目进行代码静态检查。
+3. 可以使用execute_command工具执行`yarn install` 命令来安装项目依赖。
+4. 可以使用execute_command工具执行`rm -rf ./dist src/.umi src/.umi-production` 命令来清理项目临时文件。
 
 **强调说明：1. 如果当前项目未完成初始化，请先执行`initialization_web_project`工具进行初始化 2. 项目使用yarn 作为包管理器**

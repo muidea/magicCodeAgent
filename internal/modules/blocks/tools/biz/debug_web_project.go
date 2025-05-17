@@ -35,7 +35,7 @@ func (s *DebugWebProjectTool) Prompt() string {
 
 func (s *DebugWebProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Web} }
 
-func (s *DebugWebProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *DebugWebProjectTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -53,11 +53,6 @@ func (s *DebugWebProjectTool) Execute(workspaceDir, stage string, param imbtc.To
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
-	workspaceName, workspaceOK := param["name"]
-	if !workspaceOK {
-		err = fmt.Errorf("error: workspace name not found")
-		return
-	}
 	var restart bool
 	restartVal, restartOK := param["restart"]
 	if restartOK {
@@ -68,7 +63,7 @@ func (s *DebugWebProjectTool) Execute(workspaceDir, stage string, param imbtc.To
 	var runErr *cd.Error
 	fullPath := filepath.Join(workspaceDir, stage)
 	// yarn install
-	_, runErrorMsg, runErr = s.commander.RunCommand(workspaceName.(string), fullPath, "yarn", restart, []string{"install"})
+	_, runErrorMsg, runErr = s.commander.RunCommand(workspaceName, fullPath, "yarn", restart, []string{"install"})
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return
@@ -79,7 +74,7 @@ func (s *DebugWebProjectTool) Execute(workspaceDir, stage string, param imbtc.To
 	}
 
 	// yarn lint
-	runStatusMsg, runErrorMsg, runErr = s.commander.RunCommand(workspaceName.(string), fullPath, "yarn", restart, []string{"lint"})
+	runStatusMsg, runErrorMsg, runErr = s.commander.RunCommand(workspaceName, fullPath, "yarn", restart, []string{"lint"})
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return

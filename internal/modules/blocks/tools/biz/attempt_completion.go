@@ -15,7 +15,9 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type AttemptCompletionTool struct{}
+type AttemptCompletionTool struct {
+	commander Commander
+}
 
 func (s *AttemptCompletionTool) Name() string { return "attempt_completion" }
 func (s *AttemptCompletionTool) Prompt() string {
@@ -30,7 +32,7 @@ func (s *AttemptCompletionTool) Prompt() string {
 
 func (s *AttemptCompletionTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *AttemptCompletionTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

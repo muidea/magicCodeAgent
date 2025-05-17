@@ -27,7 +27,7 @@ func (s *SwitchModeTool) Prompt() string {
 
 func (s *SwitchModeTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *SwitchModeTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *SwitchModeTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

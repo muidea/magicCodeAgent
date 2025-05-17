@@ -15,7 +15,9 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
-type InitializationWebProjectTool struct{}
+type InitializationWebProjectTool struct {
+	commander Commander
+}
 
 func (s *InitializationWebProjectTool) Name() string {
 	return "initialization_web_project"
@@ -33,7 +35,7 @@ func (s *InitializationWebProjectTool) Prompt() string {
 
 func (s *InitializationWebProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Web} }
 
-func (s *InitializationWebProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *InitializationWebProjectTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {

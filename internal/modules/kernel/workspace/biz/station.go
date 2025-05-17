@@ -387,7 +387,7 @@ func (s *Station) OnRecv(event string, content string) {
 		}
 
 		for _, block := range blockList {
-			resultVal, resultFinal := s.localWorker.DoWork(s.configPtr.GetWorkspaceDir(), s.configPtr.GetStage(), block)
+			resultVal, resultFinal := s.localWorker.DoWork(s.configPtr, block)
 			if resultFinal {
 				//s.DisposeRecvMessage(&models.MessageInfo{
 				//	Item:       resultVal,
