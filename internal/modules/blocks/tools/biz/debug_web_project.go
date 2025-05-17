@@ -2,18 +2,16 @@ package biz
 
 import (
 	"fmt"
-	"os"
-	"path"
-	"path/filepath"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
-type DebugWebProjectTool struct{}
+type DebugWebProjectTool struct {
+	commander Commander
+}
 
 func (s *DebugWebProjectTool) Name() string {
 	return "debug_web_project"
@@ -48,36 +46,13 @@ func (s *DebugWebProjectTool) Execute(workspaceDir, stage string, param imbtc.To
 		}
 	}()
 
-	name, ok := param["name"].(string)
-	if !ok || name == "" {
-		err = fmt.Errorf("missing or invalid name parameter")
-		return
-	}
-
-	description := ""
-	descriptionVal, descriptionOK := param["description"]
-	if descriptionOK {
-		description = descriptionVal.(string)
-	}
-	fullPath := filepath.Join(workspaceDir, stage)
-	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
-	}
-	command := "magicCodeCli"
-	var args = []string{
-		"-actionType", "project",
-		"-executeAction", "create",
-		"-projectName", path.Join("service", name),
-		"-projectDescription", description,
-	}
-	result, err = ExecuteCommand(fullPath, command, args, "")
-	if err != nil {
-		log.Errorf("failed to execute command: %v", err)
-		return
-	}
+	//fullPath := filepath.Join(workspaceDir, stage)
+	// TODO 执行调试命令
+	// yarn install 安装依赖
+	// lint
+	// test
+	// build
+	// 这其中任意一个命令执行出错，就返回失败
 
 	return
 }

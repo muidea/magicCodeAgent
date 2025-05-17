@@ -72,6 +72,11 @@ func (s *Base) SyncTask(funcPtr func()) {
 	s.backgroundRoutine.SyncTask(taskPtr)
 }
 
+func (s *Base) SyncTaskWithTimeOut(funcPtr func(), timeout time.Duration) {
+	taskPtr := &routineTask{funcPtr: funcPtr}
+	s.backgroundRoutine.SyncTaskWithTimeOut(taskPtr, timeout)
+}
+
 func (s *Base) AsyncTask(funcPtr func()) {
 	taskPtr := &routineTask{funcPtr: funcPtr}
 	s.backgroundRoutine.AsyncTask(taskPtr)

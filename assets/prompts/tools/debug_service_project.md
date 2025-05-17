@@ -9,7 +9,7 @@ Parameters:
 Usage:
 <debug_service_project>
 <name>projectName</name>
-- restart: (optional) 是否重新开始调试
+<restart>true</restart>
 </debug_service_project>
 
 Example: 调试Demo项目

@@ -35,57 +35,57 @@ func (s *CommandBuffer) Reset() {
 }
 
 // Write 实现io.Writer接口，将数据按行写入缓冲区
-func (b *CommandBuffer) Write(p []byte) (n int, err error) {
-	b.bufferMutex.Lock()
-	defer b.bufferMutex.Unlock()
+func (s *CommandBuffer) Write(p []byte) (n int, err error) {
+	s.bufferMutex.Lock()
+	defer s.bufferMutex.Unlock()
 
 	// 将新数据与之前的不完整行合并
-	combined := b.partialLine + string(p)
+	combined := s.partialLine + string(p)
 
 	// 按换行符分割
 	lines := bytes.Split([]byte(combined), []byte("\n"))
 
 	// 最后一行可能是不完整的，保存起来
-	b.partialLine = string(lines[len(lines)-1])
+	s.partialLine = string(lines[len(lines)-1])
 
 	// 处理完整的行（除了最后一行）
 	for i := 0; i < len(lines)-1; i++ {
 		line := string(lines[i])
-		b.bufferLines = append(b.bufferLines, line)
+		s.bufferLines = append(s.bufferLines, line)
 	}
 
 	// 如果缓冲区超过最大大小，移除最旧的记录
-	if len(b.bufferLines) > b.maxBufferLinesSize {
-		b.bufferLines = b.bufferLines[len(b.bufferLines)-b.maxBufferLinesSize:]
+	if len(s.bufferLines) > s.maxBufferLinesSize {
+		s.bufferLines = s.bufferLines[len(s.bufferLines)-s.maxBufferLinesSize:]
 	}
 
 	return len(p), nil
 }
 
 // SetBufferSize 设置缓冲区大小
-func (b *CommandBuffer) SetBufferSize(size int) {
+func (s *CommandBuffer) SetBufferSize(size int) {
 	if size <= 0 {
 		return
 	}
 
-	b.bufferMutex.Lock()
-	defer b.bufferMutex.Unlock()
+	s.bufferMutex.Lock()
+	defer s.bufferMutex.Unlock()
 
-	b.maxBufferLinesSize = size
+	s.maxBufferLinesSize = size
 
 	// 如果当前缓冲区超过新的大小限制，则裁剪
-	if len(b.bufferLines) > b.maxBufferLinesSize {
-		b.bufferLines = b.bufferLines[len(b.bufferLines)-b.maxBufferLinesSize:]
+	if len(s.bufferLines) > s.maxBufferLinesSize {
+		s.bufferLines = s.bufferLines[len(s.bufferLines)-s.maxBufferLinesSize:]
 	}
 }
 
 // GetFunctionRecords 查询包含指定函数名的记录
-func (b *CommandBuffer) GetFunctionRecords(functionName string) []string {
-	b.bufferMutex.Lock()
-	defer b.bufferMutex.Unlock()
+func (s *CommandBuffer) GetFunctionRecords(functionName string) []string {
+	s.bufferMutex.Lock()
+	defer s.bufferMutex.Unlock()
 
 	var results []string
-	for _, line := range b.bufferLines {
+	for _, line := range s.bufferLines {
 		// 检查记录是否包含指定的函数名
 		if functionName == "" || strings.Contains(line, functionName) {
 			results = append(results, line)
@@ -96,21 +96,21 @@ func (b *CommandBuffer) GetFunctionRecords(functionName string) []string {
 }
 
 // GetAllRecords 获取所有缓冲的记录
-func (b *CommandBuffer) GetAllRecords() []string {
-	b.bufferMutex.Lock()
-	defer b.bufferMutex.Unlock()
+func (s *CommandBuffer) GetAllRecords() []string {
+	s.bufferMutex.Lock()
+	defer s.bufferMutex.Unlock()
 
 	// 返回缓冲区记录的副本
-	result := make([]string, len(b.bufferLines))
-	copy(result, b.bufferLines)
+	result := make([]string, len(s.bufferLines))
+	copy(result, s.bufferLines)
 
 	return result
 }
 
 // GetLatestRecords 获取最新的N行记录
-func (b *CommandBuffer) GetLatestRecords(count int) []string {
-	b.bufferMutex.Lock()
-	defer b.bufferMutex.Unlock()
+func (s *CommandBuffer) GetLatestRecords(count int) []string {
+	s.bufferMutex.Lock()
+	defer s.bufferMutex.Unlock()
 
 	// 如果请求的行数小于等于0，返回空切片
 	if count <= 0 {
@@ -118,24 +118,30 @@ func (b *CommandBuffer) GetLatestRecords(count int) []string {
 	}
 
 	// 如果缓冲区为空且没有不完整行，返回空切片
-	if len(b.bufferLines) == 0 && b.partialLine == "" {
+	if len(s.bufferLines) == 0 && s.partialLine == "" {
 		return []string{}
 	}
 
 	// 计算起始索引
-	startIndex := len(b.bufferLines) - count
+	startIndex := len(s.bufferLines) - count
 	if startIndex < 0 {
 		startIndex = 0 // 如果请求的行数超过缓冲区大小，则从头开始
 	}
 
 	// 获取最新的N行记录
-	result := make([]string, len(b.bufferLines)-startIndex)
-	copy(result, b.bufferLines[startIndex:])
+	result := make([]string, len(s.bufferLines)-startIndex)
+	copy(result, s.bufferLines[startIndex:])
 
 	// 如果存在不完整行，将其添加到结果中
-	if b.partialLine != "" {
-		result = append(result, b.partialLine)
+	if s.partialLine != "" {
+		result = append(result, s.partialLine)
 	}
 
 	return result
+}
+
+func (s *CommandBuffer) IsEmpty() bool {
+	s.bufferMutex.Lock()
+	defer s.bufferMutex.Unlock()
+	return len(s.bufferLines) == 0 && s.partialLine == ""
 }

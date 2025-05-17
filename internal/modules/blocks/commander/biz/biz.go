@@ -1,7 +1,9 @@
 package biz
 
 import (
+	"fmt"
 	"sync"
+	"time"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -39,13 +41,13 @@ func (s *Commander) Run() (err *cd.Error) {
 func (s *Commander) runCommand(ev event.Event, re event.Result) {
 	workspace := ev.Data().(string)
 	commandPtr := ev.GetData("command").(*imbcc.CommanderParam)
-	result, err := s.RunCommand(workspace, *commandPtr)
+	result, err := s.RunCommand(workspace, commandPtr)
 	if re != nil {
 		re.Set(result, err)
 	}
 }
 
-func (s *Commander) RunCommand(workspace string, commandPtr imbcc.CommanderParam) (ret *imbcc.CommanderResult, err *cd.Error) {
+func (s *Commander) RunCommand(workspace string, paramPtr *imbcc.CommanderParam) (ret *imbcc.CommanderResult, err *cd.Error) {
 	var commanderPtr *BaseCommander
 	commanderVal, commanderOK := s.workspace2Commander.Load(workspace)
 	if !commanderOK {
@@ -54,7 +56,14 @@ func (s *Commander) RunCommand(workspace string, commandPtr imbcc.CommanderParam
 		commanderPtr = commanderVal.(*BaseCommander)
 	}
 
-	runErr := commanderPtr.Run(commandPtr.WorkspaceDir, commandPtr.Command, commandPtr.Args)
+	if paramPtr.Restart {
+		commanderPtr.Terminate()
+	}
+
+	var runErr error
+	s.Base.SyncTaskWithTimeOut(func() {
+		runErr = commanderPtr.Run(paramPtr.WorkspaceDir, paramPtr.Command, paramPtr.Args)
+	}, time.Second*5)
 	if runErr != nil {
 		err = cd.NewError(cd.Unexpected, runErr.Error())
 		return
@@ -62,8 +71,8 @@ func (s *Commander) RunCommand(workspace string, commandPtr imbcc.CommanderParam
 
 	ret = &imbcc.CommanderResult{
 		Workspace: workspace,
-		Status:    commanderPtr.Status(),
 	}
+	ret.StatusMessage, ret.ErrorMessage = commanderPtr.Status()
 
 	return
 }
@@ -88,8 +97,8 @@ func (s *Commander) TerminateCommand(workspace string) (ret *imbcc.CommanderResu
 		return
 	}
 	ret = &imbcc.CommanderResult{
-		Workspace: workspace,
-		Status:    "terminated ok!",
+		Workspace:     workspace,
+		StatusMessage: "terminated ok!",
 	}
 	return
 }
@@ -103,15 +112,17 @@ func (s *Commander) statusCommand(ev event.Event, re event.Result) {
 }
 
 func (s *Commander) StatusCommand(workspace string) (ret *imbcc.CommanderResult, err *cd.Error) {
-	var statusValue string = "workspace not found"
+	var statusMessage string
+	var errorMessage string = fmt.Sprintf("error: workspace%s not found", workspace)
 	commanderVal, commanderOK := s.workspace2Commander.Load(workspace)
 	if commanderOK {
 		commanderPtr := commanderVal.(*BaseCommander)
-		statusValue = commanderPtr.Status()
+		statusMessage, errorMessage = commanderPtr.Status()
 	}
 	ret = &imbcc.CommanderResult{
-		Workspace: workspace,
-		Status:    statusValue,
+		Workspace:     workspace,
+		StatusMessage: statusMessage,
+		ErrorMessage:  errorMessage,
 	}
 	return
 }

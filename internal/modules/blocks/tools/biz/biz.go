@@ -16,12 +16,17 @@ import (
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	imbcc "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
 	localConfig "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 )
+
+type Commander interface {
+	RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (statusMsg, errorMsg string, err *cd.Error)
+}
 
 type Tools struct {
 	biz.Base
@@ -61,8 +66,12 @@ func New(
 	ptr.toolRegistry.Register(&CreateServiceInitatorTool{})
 	ptr.toolRegistry.Register(&InitializationServiceProjectTool{})
 	ptr.toolRegistry.Register(&InitializationWebProjectTool{})
-	ptr.toolRegistry.Register(&DebugServiceProjectTool{})
-	ptr.toolRegistry.Register(&DebugWebProjectTool{})
+	ptr.toolRegistry.Register(&DebugServiceProjectTool{
+		commander: ptr,
+	})
+	ptr.toolRegistry.Register(&DebugWebProjectTool{
+		commander: ptr,
+	})
 
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
 	return ptr
@@ -374,4 +383,39 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		return
 	}
 	executeToolName, executeResult = s.execDataContent(workspaceDir, stageVal, contentVal)
+}
+
+func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (statusMsg, errorMsg string, err *cd.Error) {
+	defer func() {
+		if err != nil {
+			log.Errorf("run command failed, err:%v", err)
+		}
+	}()
+	commandEvent := event.NewEvent(imbcc.CommandRun, s.ID(), imbcc.CommanderModule, nil, workspace)
+	paramPtr := &imbcc.CommanderParam{
+		Args:         args,
+		Command:      command,
+		Restart:      restart,
+		WorkspaceDir: workspaceDir,
+	}
+	commandEvent.SetData("command", paramPtr)
+
+	result := s.Base.SendEvent(commandEvent)
+	if result == nil {
+		err = cd.NewError(cd.Unexpected, "run command failed, result is nil")
+		return
+	}
+	commandResult, commandErr := result.Get()
+	if commandErr != nil {
+		err = commandErr
+		return
+	}
+	commandResultPtr := commandResult.(*imbcc.CommanderResult)
+	if commandResultPtr.Workspace != workspace {
+		err = cd.NewError(cd.Unexpected, "run command failed, workspace not match")
+		return
+	}
+	statusMsg = commandResultPtr.StatusMessage
+	errorMsg = commandResultPtr.ErrorMessage
+	return
 }

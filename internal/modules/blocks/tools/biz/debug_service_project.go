@@ -2,18 +2,17 @@ package biz
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"path/filepath"
 
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
-type DebugServiceProjectTool struct{}
+type DebugServiceProjectTool struct {
+	commander Commander
+}
 
 func (s *DebugServiceProjectTool) Name() string {
 	return "debug_service_project"
@@ -48,36 +47,25 @@ func (s *DebugServiceProjectTool) Execute(workspaceDir, stage string, param imbt
 		}
 	}()
 
-	name, ok := param["name"].(string)
-	if !ok || name == "" {
-		err = fmt.Errorf("missing or invalid name parameter")
+	workspaceName, workspaceOK := param["name"]
+	if !workspaceOK {
+		err = fmt.Errorf("error: workspace name not found")
 		return
 	}
-
-	description := ""
-	descriptionVal, descriptionOK := param["description"]
-	if descriptionOK {
-		description = descriptionVal.(string)
+	var restart bool
+	restartVal, restartOK := param["restart"]
+	if restartOK {
+		restart = restartVal.(bool)
 	}
+
 	fullPath := filepath.Join(workspaceDir, stage)
-	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
-	}
-	command := "magicCodeCli"
-	var args = []string{
-		"-actionType", "project",
-		"-executeAction", "create",
-		"-projectName", path.Join("service", name),
-		"-projectDescription", description,
-	}
-	result, err = ExecuteCommand(fullPath, command, args, "")
-	if err != nil {
-		log.Errorf("failed to execute command: %v", err)
-		return
-	}
+	s.commander.RunCommand(workspaceName.(string), fullPath, "go", restart, []string{"lint", "tidy"})
 
+	//
+	// TODO 执行调试命令
+	// lint
+	// test
+	// build
+	// 这其中任意一个命令执行出错，就返回失败
 	return
 }
