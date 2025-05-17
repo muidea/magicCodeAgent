@@ -10,6 +10,7 @@ import (
 
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -30,7 +31,7 @@ func (s *SearchAndReplaceTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SearchAndReplaceTool) Tags() []string { return []string{iipc.Global} }
+func (s *SearchAndReplaceTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
 func (s *SearchAndReplaceTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

@@ -12,6 +12,7 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 type InitializationServiceProjectTool struct{}
@@ -30,9 +31,7 @@ func (s *InitializationServiceProjectTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *InitializationServiceProjectTool) Tags() []string {
-	return []string{iipc.Service}
-}
+func (s *InitializationServiceProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
 
 func (s *InitializationServiceProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

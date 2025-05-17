@@ -9,6 +9,7 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 	"github.com/muidea/magicCommon/foundation/log"
+	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 type ToolRegistry struct {
@@ -43,7 +44,7 @@ func (s *ToolRegistry) Prompt() string {
 	return ""
 }
 
-func (s *ToolRegistry) Tags() []string { return []string{iipc.Global} }
+func (s *ToolRegistry) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
 func (s *ToolRegistry) Register(tool imbtc.Tool) {
 	if s.promptsRegistry != nil {

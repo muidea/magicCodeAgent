@@ -1,5 +1,9 @@
 package common
 
+import (
+	fu "github.com/muidea/magicCommon/foundation/util"
+)
+
 const PromptsInitator = "/internal/initators/prompts"
 
 const SectionPromptsBasePath = "assets/prompts/section"
@@ -17,17 +21,13 @@ type PromptsRegistryHeper interface {
 type Prompt interface {
 	Name() string
 	Prompt() string
-	Tags() []string
+	Tags() fu.StringSet
 }
 
 type PromptsRegistry interface {
 	AddSection(sectionPrompt Prompt)
 	// 添加自定section的prompts
 	AddPrompts(sectionPrompt string, prompt Prompt)
-	// 查询自定section的prompts
-	GetSectionPrompts(sectionPrompt string) []Prompt
-	// 查询执行自定section的prompts内容，以Md格式进行返回
-	GetSectionPromptsContent(sectionPrompt string) string
-	GetPromptsContent(stage string) string
+	GetPromptsContent(stage string, filterTags fu.StringSet) string
 	ReadSectionPromptContent(sectionPrompt string) string
 }

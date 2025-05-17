@@ -12,6 +12,7 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 type InitializationWebProjectTool struct{}
@@ -30,7 +31,7 @@ func (s *InitializationWebProjectTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *InitializationWebProjectTool) Tags() []string { return []string{iipc.Web} }
+func (s *InitializationWebProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Web} }
 
 func (s *InitializationWebProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

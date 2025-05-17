@@ -74,7 +74,7 @@ func (s *Station) getWorkspaceType() string {
 }
 
 func (s *Station) systemPrompt() string {
-	return s.promptsRegistry.GetPromptsContent(s.configPtr.GetStage())
+	return s.promptsRegistry.GetPromptsContent(s.configPtr.GetStage(), s.configPtr.TechStack)
 }
 
 func (s *Station) envPrompt() string {

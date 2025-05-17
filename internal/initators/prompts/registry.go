@@ -53,30 +53,13 @@ func (s *promptsRegistry) AddPrompts(sectionName string, prompt iipc.Prompt) {
 	sectionObj.AddPrompt(prompt)
 }
 
-func (s *promptsRegistry) GetSectionPrompts(sectionName string) []iipc.Prompt {
-	sectionObj, ok := s.findSection(sectionName)
-	if !ok {
-		log.Warnf("section prompts not found:%s", sectionName)
-		return nil
-	}
-	return sectionObj.GetPrompts()
-}
-
-func (s *promptsRegistry) GetSectionPromptsContent(sectionName string) string {
-	sectionObj, ok := s.findSection(sectionName)
-	if !ok {
-		return ""
-	}
-	return sectionObj.GetPromptsContent()
-}
-
-func (s *promptsRegistry) GetPromptsContent(stage string) string {
+func (s *promptsRegistry) GetPromptsContent(stage string, filterTags fu.StringSet) string {
 	var builder strings.Builder
 	builder.WriteString(s.getRolePrompts(stage))
 	builder.WriteString("\n\n")
 
 	for _, section := range s.sections {
-		builder.WriteString(section.GetPromptsContent())
+		builder.WriteString(section.GetPromptsContent(filterTags))
 		builder.WriteString("\n\n")
 	}
 

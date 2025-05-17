@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -24,7 +25,7 @@ func (s *SwitchModeTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *SwitchModeTool) Tags() []string { return []string{iipc.Global} }
+func (s *SwitchModeTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
 func (s *SwitchModeTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

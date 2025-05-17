@@ -11,6 +11,7 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 type CreateServiceModuleTool struct{}
@@ -29,7 +30,7 @@ func (s *CreateServiceModuleTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *CreateServiceModuleTool) Tags() []string { return []string{iipc.Service} }
+func (s *CreateServiceModuleTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
 
 func (s *CreateServiceModuleTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

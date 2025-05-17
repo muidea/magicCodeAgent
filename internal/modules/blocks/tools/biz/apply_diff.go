@@ -12,6 +12,7 @@ import (
 
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -32,7 +33,7 @@ func (s *ApplyDiffTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *ApplyDiffTool) Tags() []string { return []string{iipc.Global} }
+func (s *ApplyDiffTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
 func (s *ApplyDiffTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

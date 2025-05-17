@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -24,7 +25,7 @@ func (s *FetchInstructionsTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *FetchInstructionsTool) Tags() []string { return []string{iipc.Global} }
+func (s *FetchInstructionsTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
 func (s *FetchInstructionsTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

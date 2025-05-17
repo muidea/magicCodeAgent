@@ -7,6 +7,7 @@ import (
 
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -27,7 +28,7 @@ func (s *AttemptCompletionTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AttemptCompletionTool) Tags() []string { return []string{iipc.Global} }
+func (s *AttemptCompletionTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
 func (s *AttemptCompletionTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

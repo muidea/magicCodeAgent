@@ -7,6 +7,7 @@ import (
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/foundation/log"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -32,7 +33,7 @@ func (s *DebugWebProjectTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *DebugWebProjectTool) Tags() []string { return []string{iipc.Web} }
+func (s *DebugWebProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Web} }
 
 func (s *DebugWebProjectTool) Execute(workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error

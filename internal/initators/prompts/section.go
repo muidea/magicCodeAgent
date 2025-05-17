@@ -3,6 +3,8 @@ package prompts
 import (
 	"strings"
 
+	fu "github.com/muidea/magicCommon/foundation/util"
+
 	"github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 )
 
@@ -28,7 +30,7 @@ func (s *Section) GetPrompts() []common.Prompt {
 	return s.prompts
 }
 
-func (s *Section) GetPromptsContent() string {
+func (s *Section) GetPromptsContent(filterTags fu.StringSet) string {
 	var builder strings.Builder
 	if s.description != "" {
 		builder.WriteString(s.description)
@@ -39,6 +41,19 @@ func (s *Section) GetPromptsContent() string {
 	builder.WriteString(s.name)
 	builder.WriteString(" list\n\n")
 	for _, prompt := range s.prompts {
+		// prompt的tags包含Global,或者是filterTags的子集满足要求
+		notAvailable := false
+		tags := prompt.Tags()
+		for _, tv := range tags {
+			if tv != common.Global && !filterTags.Exist(tv) {
+				notAvailable = true
+				break
+			}
+		}
+		if notAvailable {
+			continue
+		}
+
 		builder.WriteString(prompt.Prompt())
 		builder.WriteString("\n\n")
 	}
