@@ -84,7 +84,19 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, paramPtr *i
 		Role:    common.User,
 		Content: []string{paramPtr.Content},
 	}
-	err = stationPtr.ChatMessage(ctx, paramPtr.Mode, messageItemPtr)
+	err = stationPtr.ChatMessage(ctx, paramPtr.Stage, messageItemPtr)
+	return
+}
+
+func (s *Workspace) ChatWorkspaceContentTerminate(ctx context.Context, paramPtr *imkwc.ChatMessage) (err *cd.Error) {
+	curWorkspace, ok := s.workspaceStationCache.Load(paramPtr.Workspace)
+	if !ok {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", paramPtr.Workspace))
+		log.Errorf("workspace:%s not found", paramPtr.Workspace)
+		return
+	}
+	stationPtr := curWorkspace.(*Station)
+	err = stationPtr.ChatTerminate(ctx, paramPtr.Stage)
 	return
 }
 

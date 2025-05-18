@@ -53,6 +53,7 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(imkwc.QueryWorkspaceFileContent, engine.GET, s.queryFileContent)
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentSSE, engine.GET, s.chatWorkspaceContentSSE)
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentMessage, engine.POST, s.chatWorkspaceContentMessage)
+	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentTerminate, engine.POST, s.chatWorkspaceContentTerminate)
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentHistory, engine.GET, s.chatWorkspaceContentHistory)
 }
 
@@ -292,6 +293,41 @@ func (s *Workspace) chatWorkspaceContentMessage(ctx context.Context, res http.Re
 		if errVal != nil {
 			log.Errorf("chat workspace content message error: %s", errVal.Error())
 			return errors.New("chat workspace content message error")
+		}
+
+		return nil
+	}
+	err = holder.Run(taskFunc)
+	if err != nil {
+		result.Error = cd.NewError(cd.Unexpected, err.Error())
+		return
+	}
+
+	result.Error = nil
+}
+
+func (s *Workspace) chatWorkspaceContentTerminate(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	param := &imkwc.ChatMessage{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		log.Errorf("parse body error: %s", err.Error())
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	result := &imkwc.ChatMessageResult{}
+	defer fn.PackageHTTPResponse(res, result)
+	holder := s.sseHolderRegistry.GetHolder(res, req)
+	if holder == nil {
+		log.Errorf("invalid sse request")
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	taskFunc := func() error {
+		errVal := s.bizPtr.ChatWorkspaceContentTerminate(ctx, param)
+		if errVal != nil {
+			log.Errorf("chat workspace content terminate error: %s", errVal.Error())
+			return errors.New("chat workspace content terminate error")
 		}
 
 		return nil

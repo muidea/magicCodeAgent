@@ -16,23 +16,24 @@ import (
 const WorkspaceModule = "/internal/modules/kernel/workspace"
 
 const (
-	QueryWorkspace              = "/workspace/query"
-	CreateWorkspace             = "/workspace/create"
-	DestroyWorkspace            = "/workspace/destroy"
-	AddWorkspace                = "/workspace/add"
-	UpdateWorkspace             = "/workspace/update"
-	RemoveWorkspace             = "/workspace/remove"
-	RefreshWorkspace            = "/workspace/refresh"
-	EnableWorkspace             = "/workspace/enable"
-	DisableWorkspace            = "/workspace/disable"
-	UpdateWorkspaceStage        = "/workspace/stage/update"
-	FilterWorkspace             = "/workspace/filter"
-	FilterWorkspaceFile         = "/workspace/file/filter"
-	FilterWorkspaceFileTree     = "/workspace/file/tree/filter"
-	QueryWorkspaceFileContent   = "/workspace/file/content/query"
-	ChatWorkspaceContentSSE     = "/workspace/content/chat/sse"
-	ChatWorkspaceContentMessage = "/workspace/content/chat/message"
-	ChatWorkspaceContentHistory = "/workspace/content/chat/history"
+	QueryWorkspace                = "/workspace/query"
+	CreateWorkspace               = "/workspace/create"
+	DestroyWorkspace              = "/workspace/destroy"
+	AddWorkspace                  = "/workspace/add"
+	UpdateWorkspace               = "/workspace/update"
+	RemoveWorkspace               = "/workspace/remove"
+	RefreshWorkspace              = "/workspace/refresh"
+	EnableWorkspace               = "/workspace/enable"
+	DisableWorkspace              = "/workspace/disable"
+	UpdateWorkspaceStage          = "/workspace/stage/update"
+	FilterWorkspace               = "/workspace/filter"
+	FilterWorkspaceFile           = "/workspace/file/filter"
+	FilterWorkspaceFileTree       = "/workspace/file/tree/filter"
+	QueryWorkspaceFileContent     = "/workspace/file/content/query"
+	ChatWorkspaceContentSSE       = "/workspace/content/chat/sse"
+	ChatWorkspaceContentMessage   = "/workspace/content/chat/message"
+	ChatWorkspaceContentTerminate = "/workspace/content/chat/terminate"
+	ChatWorkspaceContentHistory   = "/workspace/content/chat/history"
 )
 
 type WorkspaceResult struct {
@@ -128,7 +129,7 @@ type FileContentResult struct {
 
 type ChatMessage struct {
 	Workspace string `json:"workspace"`
-	Mode      string `json:"mode"`
+	Stage     string `json:"stage"`
 	Content   string `json:"content"`
 }
 

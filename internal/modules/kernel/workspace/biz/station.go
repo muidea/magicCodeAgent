@@ -38,6 +38,9 @@ type Station struct {
 
 	currentWorkStage string
 
+	// 聊天终止标志
+	terminateChatFlag bool
+
 	stationMutex sync.RWMutex
 	observerList []Observer
 
@@ -287,6 +290,7 @@ func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr 
 	}
 
 	s.currentWorkStage = stage
+	s.terminateChatFlag = false
 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
@@ -300,6 +304,12 @@ func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr 
 		log.Errorf("ChatMessage, s.localAssistant.Chat error:%v", msgErr)
 		return
 	}
+
+	return
+}
+
+func (s *Station) ChatTerminate(ctx context.Context, stage string) (err *cd.Error) {
+	s.terminateChatFlag = true
 
 	return
 }
@@ -378,6 +388,11 @@ func (s *Station) OnRecv(event string, content string) {
 	}
 
 	s.DisposeRecvMessage(msgPtr)
+
+	// 如果处于终止状态，则不处理
+	if s.terminateChatFlag {
+		return
+	}
 
 	s.bizBasePtr.AsyncTask(func() {
 		blockList, blockErr := util.SpliteBlocks(content)
