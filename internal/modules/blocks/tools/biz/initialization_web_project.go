@@ -81,16 +81,12 @@ func (s *InitializationWebProjectTool) Execute(workspaceName, workspaceDir, stag
 		"-projectName", path.Join("web", name),
 		"-projectDescription", description,
 	}
-	runStatusMsg, runErrorMsg, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return
 	}
-	if runErrorMsg != "" {
-		result = runErrorMsg
-		return
-	}
-	result = runStatusMsg
+	result = runResult
 	if result == "" {
 		result = "初始化项目成功"
 	}

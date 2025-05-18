@@ -80,16 +80,12 @@ func (s *InitializationServiceProjectTool) Execute(workspaceName, workspaceDir, 
 		"-projectName", path.Join("service", name),
 		"-projectDescription", description,
 	}
-	runStatusMsg, runErrorMsg, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return
 	}
-	if runErrorMsg != "" {
-		result = runErrorMsg
-		return
-	}
-	result = runStatusMsg
+	result = runResult
 	if result == "" {
 		result = "初始化项目成功"
 	}

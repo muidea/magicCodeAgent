@@ -62,8 +62,23 @@ func (s *WriteToFileTool) Execute(workspaceName, workspaceDir, stage string, par
 	}
 
 	lineCount := 0
-	if lineCountParam, ok := param["line_count"].(float64); ok {
-		lineCount = int(lineCountParam)
+	if lineCountParam, ok := param["line_count"]; ok {
+		switch v := lineCountParam.(type) {
+		case float64:
+			lineCount = int(v)
+		case int:
+			lineCount = v
+		case string:
+			_, err = fmt.Sscanf(v, "%d", &lineCount)
+		default:
+			err = fmt.Errorf("line_count parameter must be a number")
+		}
+		if lineCount < 1 {
+			err = fmt.Errorf("line_count parameter must be greater than 0")
+		}
+	}
+	if err != nil {
+		return
 	}
 	fullPath := filepath.Join(workspaceDir, stage)
 	if !fp.Exist(fullPath) {

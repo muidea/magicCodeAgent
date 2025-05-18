@@ -78,16 +78,12 @@ func (s *CreateServiceInitatorTool) Execute(workspaceName, workspaceDir, stage s
 		"-executeAction", "create",
 		"-moduleName", name,
 	}
-	runStatusMsg, runErrorMsg, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return
 	}
-	if runErrorMsg != "" {
-		result = runErrorMsg
-		return
-	}
-	result = runStatusMsg
+	result = runResult
 	if result == "" {
 		result = "创建initator成功"
 	}

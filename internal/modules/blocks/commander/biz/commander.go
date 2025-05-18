@@ -31,23 +31,25 @@ func NewBaseCommander(maxLineSize int) *BaseCommander {
 
 func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err error) {
 	var cmdPtr *exec.Cmd
+	currentCmd := fmt.Sprintf("%s %s", command, args)
 	func() {
 		s.debugger.Lock()
 		defer s.debugger.Unlock()
-		currentCmad := fmt.Sprintf("%s %s", command, args)
-		if s.currentCommand == currentCmad {
+		if s.currentCommand == currentCmd {
 			return
 		}
 		if s.cancelCommanderFunc != nil {
 			s.cancelCommanderFunc()
 		}
 
-		log.Infof("run command: %s", currentCmad)
+		log.Infof("run command: %s", currentCmd)
 		s.stdErrBuffer.Reset()
 		s.stdOutBuffer.Reset()
-		s.currentCommand = currentCmad
+		s.currentCommand = currentCmd
 		cancelContext, cancelFunc := context.WithCancel(context.Background())
-		cmdPtr = exec.CommandContext(cancelContext, command, args...)
+		// 通过/bin/bash -c 命令执行command args
+		paramStr := command + " " + strings.Join(args, " ")
+		cmdPtr = exec.CommandContext(cancelContext, "/bin/bash", "-c", paramStr)
 		s.cancelCommanderFunc = cancelFunc
 		cmdPtr.Env = os.Environ()
 		cmdPtr.Dir = workspaceDir

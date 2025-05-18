@@ -25,7 +25,7 @@ import (
 )
 
 type Commander interface {
-	RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (statusMsg, errorMsg string, err *cd.Error)
+	RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (result string, err *cd.Error)
 }
 
 type Tools struct {
@@ -397,7 +397,7 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 	executeToolName, executeResult = s.execDataContent(workspaceName, workspaceDir, stageVal, contentVal)
 }
 
-func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (statusMsg, errorMsg string, err *cd.Error) {
+func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (result string, err *cd.Error) {
 	defer func() {
 		if err != nil {
 			log.Errorf("run command failed, err:%v", err)
@@ -412,12 +412,12 @@ func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool
 	}
 	commandEvent.SetData("command", paramPtr)
 
-	result := s.Base.SendEvent(commandEvent)
-	if result == nil {
+	eventResult := s.Base.SendEvent(commandEvent)
+	if eventResult == nil {
 		err = cd.NewError(cd.Unexpected, "run command failed, result is nil")
 		return
 	}
-	commandResult, commandErr := result.Get()
+	commandResult, commandErr := eventResult.Get()
 	if commandErr != nil {
 		err = commandErr
 		return
@@ -427,7 +427,13 @@ func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool
 		err = cd.NewError(cd.Unexpected, "run command failed, workspace not match")
 		return
 	}
-	statusMsg = commandResultPtr.StatusMessage
-	errorMsg = commandResultPtr.ErrorMessage
+	stringBuff := &strings.Builder{}
+	if commandResultPtr.StatusMessage != "" {
+		stringBuff.WriteString(commandResultPtr.StatusMessage + "\n\n")
+	}
+	if commandResultPtr.ErrorMessage != "" {
+		stringBuff.WriteString(commandResultPtr.ErrorMessage + "\n\n")
+	}
+	result = stringBuff.String()
 	return
 }

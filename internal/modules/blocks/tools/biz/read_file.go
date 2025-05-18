@@ -72,14 +72,17 @@ func (s *ReadFileTool) Execute(workspaceName, workspaceDir, stage string, param 
 			startLine = int(v)
 		case int:
 			startLine = v
+		case string:
+			_, err = fmt.Sscanf(v, "%d", &startLine)
 		default:
 			err = fmt.Errorf("start_line parameter must be a number")
-			return
 		}
 		if startLine < 1 {
 			err = fmt.Errorf("start_line parameter must be greater than 0")
-			return
 		}
+	}
+	if err != nil {
+		return
 	}
 
 	endLine := 0 // 0表示读取到文件末尾
@@ -89,15 +92,19 @@ func (s *ReadFileTool) Execute(workspaceName, workspaceDir, stage string, param 
 			endLine = int(v)
 		case int:
 			endLine = v
+		case string:
+			_, err = fmt.Sscanf(v, "%d", &endLine)
 		default:
 			err = fmt.Errorf("end_line parameter must be a number")
-			return
 		}
 		if endLine > 0 && endLine < startLine {
 			err = fmt.Errorf("end_line parameter must be greater than start_line")
-			return
 		}
 	}
+	if err != nil {
+		return
+	}
+
 	fullPath := filepath.Join(workspaceDir, stage)
 	if !fp.Exist(fullPath) {
 		err = os.MkdirAll(fullPath, 0755)

@@ -7,6 +7,7 @@ import (
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
@@ -60,19 +61,15 @@ func (s *Commander) RunCommand(workspace string, paramPtr *imbcc.CommanderParam)
 		commanderPtr.Terminate()
 	}
 
-	var runErr error
 	s.Base.SyncTaskWithTimeOut(func() {
-		runErr = commanderPtr.Run(paramPtr.WorkspaceDir, paramPtr.Command, paramPtr.Args)
+		_ = commanderPtr.Run(paramPtr.WorkspaceDir, paramPtr.Command, paramPtr.Args)
 	}, time.Second*5)
-	if runErr != nil {
-		err = cd.NewError(cd.Unexpected, runErr.Error())
-		return
-	}
 
 	ret = &imbcc.CommanderResult{
 		Workspace: workspace,
 	}
 	ret.StatusMessage, ret.ErrorMessage = commanderPtr.Status()
+	log.Infof("run command result: \n%s, \n%s", ret.StatusMessage, ret.ErrorMessage)
 
 	return
 }
