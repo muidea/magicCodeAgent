@@ -9,10 +9,10 @@ import (
 	fp "github.com/muidea/magicCommon/foundation/path"
 	"github.com/muidea/magicCommon/task"
 
+	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/initator/pkg/common"
 	tc "github.com/muidea/magicCodeAgent/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Initator struct {
@@ -53,7 +53,7 @@ func (s *Initator) create(ev event.Event, re event.Result) {
 		}
 	}
 
-	projectName, prefixPath, err := util.VerifyInitatorWorkPath(paramPtr.WorkingPath)
+	projectName, prefixPath, err := config.VerifyInitatorWorkPath(paramPtr.WorkingPath)
 	if err != nil {
 		log.Errorf("create initator failed, verify initator working path failed, err: %v", err)
 		if re != nil {

@@ -15,9 +15,8 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
-	tc "github.com/muidea/magicCodeAgent/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/util"
+	imbpc "github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 type Project struct {
@@ -29,18 +28,18 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Project {
 	ret := &Project{
-		Base: biz.New(common.ProjectModule, eventHub, backgroundRoutine),
+		Base: biz.New(imbpc.ProjectModule, eventHub, backgroundRoutine),
 	}
 
-	ret.SubscribeFunc(common.CreateNewProject, ret.create)
-	ret.SubscribeFunc(common.RefreshProject, ret.refresh)
-	ret.SubscribeFunc(common.DestroyProject, ret.destroy)
+	ret.SubscribeFunc(imbpc.CreateNewProject, ret.create)
+	ret.SubscribeFunc(imbpc.RefreshProject, ret.refresh)
+	ret.SubscribeFunc(imbpc.DestroyProject, ret.destroy)
 
 	return ret
 }
 
 func (s *Project) create(ev event.Event, re event.Result) {
-	paramPtr, paramOK := ev.Data().(*tc.CreateParam)
+	paramPtr, paramOK := ev.Data().(*common.CreateParam)
 	if !paramOK {
 		log.Errorf("create project failed, illegal create project param")
 		if re != nil {
@@ -51,7 +50,7 @@ func (s *Project) create(ev event.Event, re event.Result) {
 
 	items := strings.Split(paramPtr.ProjectName, "/")
 	projectType := items[0]
-	err := util.VerifyProjectWorkPath(projectType, paramPtr.WorkingPath)
+	err := config.VerifyProjectWorkPath(projectType, paramPtr.WorkingPath)
 	if err != nil {
 		log.Errorf("verify project work path failed, workingPath:%s, err:%s", paramPtr.WorkingPath, err.Error())
 
@@ -68,7 +67,7 @@ func (s *Project) create(ev event.Event, re event.Result) {
 	}
 
 	projectName := items[1]
-	helper := biz.NewHelper(path.Join(common.ProjectTemplateBasePath, projectType))
+	helper := biz.NewHelper(path.Join(imbpc.ProjectTemplateBasePath, projectType))
 
 	// 这里主动修正一下ProjectName，因为在传入参数时的ProprojectName里指定了类型，所以这里需要修正一下
 	paramPtr.ProjectName = projectName
@@ -81,7 +80,7 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	if projectType == config.Service {
+	if projectType == common.Service {
 		if err := s.initializeService(projectName, paramPtr.WorkingPath); err != nil {
 			log.Errorf("initialize service failed, err:%s", err.Error())
 			if re != nil {
@@ -91,7 +90,7 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		}
 	}
 
-	if projectType == config.Web {
+	if projectType == common.Web {
 		if err := s.initializeWeb(projectName, paramPtr.WorkingPath); err != nil {
 			log.Errorf("initialize web failed, err:%s", err.Error())
 			if re != nil {

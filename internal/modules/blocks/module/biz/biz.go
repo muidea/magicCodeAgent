@@ -9,10 +9,10 @@ import (
 	fp "github.com/muidea/magicCommon/foundation/path"
 	"github.com/muidea/magicCommon/task"
 
+	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
 	tc "github.com/muidea/magicCodeAgent/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Module struct {
@@ -53,7 +53,7 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		}
 	}
 
-	projectName, prefixPath, err := util.VerifyModuleWorkPath(paramPtr.WorkingPath)
+	projectName, prefixPath, err := config.VerifyModuleWorkPath(paramPtr.WorkingPath)
 	if err != nil {
 		log.Errorf("verify module work path failed, workingPath:%s, err:%s", paramPtr.WorkingPath, err.Error())
 

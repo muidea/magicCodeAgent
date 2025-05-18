@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -12,8 +11,6 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-	cd "github.com/muidea/magicCommon/def"
-	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
 const (
@@ -66,121 +63,4 @@ func GetTemplateContent(templatePath, filePath, fileName string) (ret string, er
 
 	ret = string(contentVal)
 	return
-}
-
-var sep = string(filepath.Separator)
-var validModuleParentPaths = []string{
-	filepath.Join("internal", "modules"),
-	filepath.Join("internal", "modules", "blocks"),
-	filepath.Join("internal", "modules", "kernel"),
-}
-
-// VerifyModuleWorkPath 校验工作路径是否合法，并返回路径中ProjectName
-// 1.工作路径的父级路径必须是以下几种：xxx/[ProjectName]/internal/modules,xxx/[ProjectName]/internal/modules/blocks,xxx/xxx/[ProjectName]/internal/modules/kernel
-// 2. 其他路径非法
-// 3. 工作路径不能是空
-// 4. 工作路径不能是相对路径
-// 5. 非法路径举例： /home/xxx/internal/modules/xxx/
-func VerifyModuleWorkPath(pathVal string) (projectName, prefixPath string, err *cd.Error) {
-	projectName, prefixPath, err = verifyWorkPath(pathVal, validModuleParentPaths)
-	return
-}
-
-var validInitatorParentPaths = []string{
-	filepath.Join("internal", "initators"),
-}
-
-// VerifyInitatorWorkPath 校验工作路径是否合法
-// 1.工作路径的父级路径必须是以下几种：xxx/xxx/internal/initators
-// 2. 其他路径非法
-// 3. 工作路径不能是空
-// 4. 工作路径不能是相对路径
-// 5. 非法路径举例： /home/xxx/internal/modules/xxx/
-func VerifyInitatorWorkPath(pathVal string) (projectName, prefixPath string, err *cd.Error) {
-	projectName, prefixPath, err = verifyWorkPath(pathVal, validInitatorParentPaths)
-	return
-}
-
-func verifyWorkPath(pathVal string, validParentPath []string) (projectName, prefixPath string, err *cd.Error) {
-	if pathVal == "" {
-		return "", "", cd.NewError(cd.IllegalParam, "work path cannot be empty")
-	}
-
-	// 检查相对路径
-	if !filepath.IsAbs(pathVal) {
-		return "", "", cd.NewError(cd.IllegalParam, "work path must be absolute path")
-	}
-
-	// 标准化路径
-	normalizedPath := filepath.Clean(pathVal)
-	for _, validPath := range validParentPath {
-		// 检查路径是否以validPath结尾
-		if strings.HasSuffix(normalizedPath, validPath) {
-			prefix := normalizedPath[:len(normalizedPath)-len(validPath)-1]
-			projectName = prefix[strings.LastIndex(prefix, sep)+1:]
-			prefixPath = validPath
-			return
-		}
-	}
-
-	return "", "", cd.NewError(cd.IllegalParam,
-		fmt.Sprintf("invalid work path %s, parent path must be one of: %v", normalizedPath, validParentPath))
-}
-
-// VerifyProjectWorkPath 校验项目工作目录
-// 1. 当前目录下无子目录或子文件
-// 2. 当天目录下同时存在如下文件go.mod,go.sum,Makefile, 及application,internal,pkg,vendor目录
-func VerifyProjectWorkPath(projectType, pathVal string) *cd.Error {
-	// 空路径视为合法
-	if pathVal == "" {
-		return cd.NewError(cd.IllegalParam, "project work path cannot be empty")
-	}
-
-	// 检查目录是否为空
-	entries, readErr := os.ReadDir(pathVal)
-	if readErr != nil {
-		return cd.NewError(cd.IllegalParam, fmt.Sprintf("failed to read directory: %v", readErr))
-	}
-	if len(entries) == 0 {
-		return nil
-	}
-
-	// 检查相对路径
-	if !filepath.IsAbs(pathVal) {
-		return cd.NewError(cd.IllegalParam, "work path must be absolute path")
-	}
-
-	if projectType == config.Service {
-		// 检查必需文件
-		requiredFiles := []string{"go.mod", "go.sum", "Makefile"}
-		for _, file := range requiredFiles {
-			filePath := filepath.Join(pathVal, file)
-			if !fp.Exist(filePath) {
-				return cd.NewError(cd.IllegalParam, fmt.Sprintf("required file %s not found in project", file))
-			}
-		}
-
-		// 检查必需目录
-		requiredDirs := []string{"application", "internal", "pkg", "vendor"}
-		for _, dir := range requiredDirs {
-			dirPath := filepath.Join(pathVal, dir)
-			if !fp.Exist(dirPath) {
-				return cd.NewError(cd.IllegalParam, fmt.Sprintf("required directory %s not found in project", dir))
-			}
-		}
-		return nil
-	}
-
-	if projectType == config.Web {
-		requiredDirs := []string{"package.json", "yarn.lock", "src", "node_modules", "tsconfig.json"}
-		for _, dir := range requiredDirs {
-			dirPath := filepath.Join(pathVal, dir)
-			if !fp.Exist(dirPath) {
-				return cd.NewError(cd.IllegalParam, fmt.Sprintf("required directory %s not found in project", dir))
-			}
-		}
-		return nil
-	}
-
-	return nil
 }

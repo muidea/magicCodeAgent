@@ -43,3 +43,15 @@ func ValidStage(stage string) bool {
 		return false
 	}
 }
+
+const (
+	WorkspaceName  = "workspace"
+	WorkspaceDir   = "workspaceDir"
+	WorkspaceStage = "workspaceStage"
+	WorkspaceType  = "workspaceType"
+)
+
+const (
+	Service = "service"
+	Web     = "web"
+)
