@@ -43,6 +43,7 @@ func (s *AskFollowupQuestionTool) Execute(workspaceName, workspaceDir, stage str
 		if err != nil {
 			ret.Result.Content = append(ret.Result.Content, err.Error())
 		} else {
+			ret.Final = true
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()

@@ -67,23 +67,25 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, stage strin
 		}
 	}
 	command, _ := param["command"].(string)
-
-	var args []string
-	items := strings.Split(command, " ")
-	if len(items) > 0 {
-		command = items[0]
-		args = items[1:]
-		runStatusMsg, runErrorMsg, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
-		if runErr != nil {
-			err = errors.New(runErr.Error())
+	log.Infof("command: [%s]", command)
+	if command != "" {
+		var args []string
+		items := strings.Split(strings.TrimSpace(command), " ")
+		if len(items) > 0 {
+			command = items[0]
+			args = items[1:]
+			runStatusMsg, runErrorMsg, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+			if runErr != nil {
+				err = errors.New(runErr.Error())
+				return
+			}
+			if runErrorMsg != "" {
+				result = runErrorMsg
+				return
+			}
+			result = runStatusMsg
 			return
 		}
-		if runErrorMsg != "" {
-			result = runErrorMsg
-			return
-		}
-		result = runStatusMsg
-		return
 	}
 	result = resultVal
 	return

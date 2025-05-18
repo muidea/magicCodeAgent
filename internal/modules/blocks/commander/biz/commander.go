@@ -3,9 +3,12 @@ package biz
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
+
+	"github.com/muidea/magicCommon/foundation/log"
 )
 
 type BaseCommander struct {
@@ -39,12 +42,14 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 			s.cancelCommanderFunc()
 		}
 
+		log.Infof("run command: %s", currentCmad)
 		s.stdErrBuffer.Reset()
 		s.stdOutBuffer.Reset()
 		s.currentCommand = currentCmad
 		cancelContext, cancelFunc := context.WithCancel(context.Background())
 		cmdPtr = exec.CommandContext(cancelContext, command, args...)
 		s.cancelCommanderFunc = cancelFunc
+		cmdPtr.Env = os.Environ()
 		cmdPtr.Dir = workspaceDir
 		cmdPtr.Stderr = s.stdErrBuffer
 		cmdPtr.Stdout = s.stdOutBuffer

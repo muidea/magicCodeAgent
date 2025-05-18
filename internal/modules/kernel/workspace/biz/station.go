@@ -398,7 +398,8 @@ func (s *Station) OnRecv(event string, content string) {
 				continue
 			}
 
-			//resultVal.Role = common.User
+			// 这里强制切换Role为User，否则会导致deepseek解析报错
+			resultVal.Role = common.User
 			s.ChatMessage(context.Background(), s.currentWorkStage, &resultVal)
 		}
 	})
