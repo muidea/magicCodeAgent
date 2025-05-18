@@ -357,8 +357,8 @@ func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.Mes
 func (s *Station) OnClose() {
 	msgPtr := &models.MessageInfo{
 		Item: models.MessageItem{
-			Role:    common.Recorder,
-			Content: []string{"terminate"},
+			Role:    common.Assistant,
+			Content: []string{"通讯中断，需要重试！"},
 		},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.configPtr.Name,

@@ -24,7 +24,6 @@ const (
 	Function  = openai.ChatMessageRoleFunction
 	Tool      = openai.ChatMessageRoleTool
 	Developer = openai.ChatMessageRoleDeveloper
-	Recorder  = "recorder"
 )
 
 const (

@@ -142,7 +142,7 @@ func (s *Recorder) traceContent(dataDir string, message *models.MessageInfo) {
 	// 处理Item
 	item := message.Item
 	switch message.Item.Role {
-	case common.Assistant, common.Recorder:
+	case common.Assistant:
 		fileName := filepath.Join(snDir, fmt.Sprintf("%s.md", message.Item.Role))
 		if err := os.WriteFile(fileName, []byte(item.Content[0]), 0644); err != nil {
 			log.Errorf("save assistant content failed, role:%s, err:%s", message.Item.Role, err)

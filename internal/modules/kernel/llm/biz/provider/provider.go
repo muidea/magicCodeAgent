@@ -34,6 +34,7 @@ type StreamTunnel struct {
 }
 
 func (s *StreamTunnel) OnClose() {
+	log.Warnf("OnClose")
 	s.sseClient.Close()
 	if s.contextStreamSinker != nil {
 		s.contextStreamSinker.OnClose()
@@ -150,8 +151,8 @@ func NewProvider(
 func (s *Provider) OnClose() {
 	closeMsg := &models.MessageInfo{
 		Item: models.MessageItem{
-			Role:    common.Recorder,
-			Content: []string{"terminate"}},
+			Role:    common.Assistant,
+			Content: []string{"通讯中断，需要重试"}},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.workspaceName,
 	}
