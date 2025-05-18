@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -80,11 +81,18 @@ func (s *InitializationWebProjectTool) Execute(workspaceName, workspaceDir, stag
 		"-projectName", path.Join("web", name),
 		"-projectDescription", description,
 	}
-	result, err = ExecuteCommand(fullPath, command, args, "")
-	if err != nil {
-		log.Errorf("failed to execute command: %v", err)
+	runStatusMsg, runErrorMsg, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	if runErr != nil {
+		err = errors.New(runErr.Error())
 		return
 	}
-
+	if runErrorMsg != "" {
+		result = runErrorMsg
+		return
+	}
+	result = runStatusMsg
+	if result == "" {
+		result = "初始化项目成功"
+	}
 	return
 }

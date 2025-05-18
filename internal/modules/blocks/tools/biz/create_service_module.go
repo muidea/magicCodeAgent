@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -77,11 +78,18 @@ func (s *CreateServiceModuleTool) Execute(workspaceName, workspaceDir, stage str
 		"-executeAction", "create",
 		"-moduleName", name,
 	}
-	result, err = ExecuteCommand(fullPath, command, args, path)
-	if err != nil {
-		log.Errorf("failed to execute command: %v", err)
+	runStatusMsg, runErrorMsg, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	if runErr != nil {
+		err = errors.New(runErr.Error())
 		return
 	}
-
+	if runErrorMsg != "" {
+		result = runErrorMsg
+		return
+	}
+	result = runStatusMsg
+	if result == "" {
+		result = "创建Module成功"
+	}
 	return
 }
