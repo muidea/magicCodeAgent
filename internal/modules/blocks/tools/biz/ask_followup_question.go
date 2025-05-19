@@ -53,9 +53,9 @@ func (s *AskFollowupQuestionTool) Execute(workspaceName, workspaceDir, stage str
 		err = fmt.Errorf("missing or invalid question parameter")
 		return
 	}
-	flowUp, ok := param["flow_up"].([]string)
+	flowUp, ok := param["follow_up"].([]string)
 	if !ok || len(flowUp) == 0 {
-		err = fmt.Errorf("missing or invalid flow_up parameter")
+		err = fmt.Errorf("missing or invalid follow_up parameter")
 		return
 	}
 

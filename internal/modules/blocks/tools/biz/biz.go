@@ -78,7 +78,7 @@ func New(
 	ptr.toolRegistry.Register(&InitializationWebProjectTool{
 		commander: ptr,
 	})
-	ptr.toolRegistry.Register(&DecomposeDesignSubtaskTask{
+	ptr.toolRegistry.Register(&DecomposeDesignSubtaskTool{
 		promptsRegistry: promptsRegistry,
 	})
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
