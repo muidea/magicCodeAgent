@@ -95,10 +95,12 @@ func (s *Station) envPrompt() string {
 	stringBuilder.WriteString("\n\n")
 
 	//## 项目规划目录
-	structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()))
-	if structContent != "" {
-		stringBuilder.WriteString(structContent)
-		stringBuilder.WriteString("\n\n")
+	if s.configPtr.GetStage() != common.DesignStage {
+		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()))
+		if structContent != "" {
+			stringBuilder.WriteString(structContent)
+			stringBuilder.WriteString("\n\n")
+		}
 	}
 
 	//## 项目状态

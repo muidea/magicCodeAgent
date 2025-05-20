@@ -2,17 +2,19 @@ package biz
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
-	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
-	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 type DecomposeDesignSubtaskTool struct {
@@ -70,29 +72,55 @@ func (s *DecomposeDesignSubtaskTool) Execute(workspaceName, workspaceDir, stage 
 		return
 	}
 
-	stringBuffer := strings.Builder{}
-	stringBuffer.WriteString("## " + name + " - 分解计划\n\n")
-	stringBuffer.WriteString("### 待分解功能描述\n\n")
-	stringBuffer.WriteString(description + "\n\n")
-
-	// ### 任务分解要求
-	levelSectionName := fmt.Sprintf("decompose-design-%s-plan", level)
+	constraintsBuffer := strings.Builder{}
+	levelSectionName := fmt.Sprintf("decompose-design-plan-%s", level)
 	content := s.promptsRegistry.ReadSectionPromptContent(levelSectionName)
 	if content != "" {
-		stringBuffer.WriteString(content)
-		stringBuffer.WriteString("\n\n")
+		constraintsBuffer.WriteString(content)
+		constraintsBuffer.WriteString("\n\n")
+	}
+	constraints := constraintsBuffer.String()
+	siblingsList, childList, workPath := s.getSiblingsAndChilds(workspaceDir, stage, name, level)
+
+	planFileName := "decompose-design-plan"
+	planContent := s.promptsRegistry.ReadSectionPromptContent(planFileName)
+	planParam := map[string]string{
+		"Name":             name,
+		"Description":      description,
+		"Constraints":      constraints,
+		"Siblings":         siblingsList,
+		"Childrens":        childList,
+		"WorkingDirectory": workPath,
 	}
 
-	// 查看兄弟层级分解清单
+	tmpl, err := template.New(planFileName).Parse(planContent)
+	if err != nil {
+		log.Errorf("parse decompose-design-plan template failed:%s", err.Error())
+		return
+	}
+
+	var builder strings.Builder
+	err = tmpl.Execute(&builder, planParam)
+	if err != nil {
+		log.Errorf("execute decompose-design-plan template failed:%s", err.Error())
+		return
+	}
+
+	result = builder.String()
+	return
+}
+
+func (s *DecomposeDesignSubtaskTool) getSiblingsAndChilds(workspaceDir, stage, name, level string) (siblings, childs, workPath string) {
 	rootPath := filepath.Join(workspaceDir, stage)
 	if !fp.Exist(rootPath) {
 		os.MkdirAll(rootPath, 0755)
 	}
 	fileList, fileErr := fp.ListPath(rootPath, "*.md", true)
 	if fileErr != nil {
-		err = fileErr
 		return
 	}
+
+	log.Infof("rootPath:\n%s\n%s\n", rootPath, fileList)
 
 	currentPath := "."
 	childPath := "."
@@ -107,6 +135,8 @@ func (s *DecomposeDesignSubtaskTool) Execute(workspaceName, workspaceDir, stage 
 		offset = 1
 	case "block":
 		offset = 2
+	case "point":
+		offset = 3
 	}
 
 	for _, val := range fileList {
@@ -130,27 +160,22 @@ func (s *DecomposeDesignSubtaskTool) Execute(workspaceName, workspaceDir, stage 
 		siblingList, _ = fp.ListPath(currentPath, "*.md", false)
 	}
 
-	if level != "project" {
-		stringBuffer.WriteString("### 同级功能清单\n\n")
-		if len(siblingList) > 0 {
-			for _, item := range siblingList {
-				stringBuffer.WriteString("- " + item + "\n")
-			}
-			stringBuffer.WriteString("\n")
-		}
+	siblingBuffer := strings.Builder{}
+	for _, item := range siblingList {
+		siblingBuffer.WriteString("- " + item + "\n")
 	}
-	stringBuffer.WriteString("### 已分解子功能清单\n\n")
-	if len(fileList) > 0 {
-		for _, item := range childList {
-			stringBuffer.WriteString("- " + item + "\n")
-		}
-		stringBuffer.WriteString("\n")
+	siblingBuffer.WriteString("\n")
+	siblings = siblingBuffer.String()
+
+	childBuffer := strings.Builder{}
+	for _, item := range childList {
+		childBuffer.WriteString("- " + item + "\n")
 	}
+	childBuffer.WriteString("\n")
+	childs = childBuffer.String()
 
-	stringBuffer.WriteString("### 工作目录信息\n\n")
-	stringBuffer.WriteString("当前分解任务所在目录：" + currentPath + "\n")
-	stringBuffer.WriteString("子功能任务所在目录：" + childPath + "\n")
+	workPath = currentPath
 
-	result = stringBuffer.String()
+	log.Infof("slibling:\n%s \nchild:\n%s\nworkPath:%s\n", siblings, childs, workPath)
 	return
 }
