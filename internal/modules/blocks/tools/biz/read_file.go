@@ -116,6 +116,9 @@ func (s *ReadFileTool) Execute(workspaceName, workspaceDir, stage string, param 
 	if err != nil {
 		log.Errorf("ReadFile failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
 	}
+	if result == "" {
+		result = "warning: 当前文件内容为空"
+	}
 	return
 }
 

@@ -16,6 +16,7 @@ Description: 在功能设计阶段，用来执行分解计划，需要根据当�
 
 Parameters:
 - name: (required) 当前任务名
+- path: (required) 当前任务对应的md文件路径
 - level: (required) 当前任务层级
 - description: (required) 当前任务的描述
 
@@ -33,6 +34,7 @@ Parameters:
 Usage:
 <decompose_design_subtask>
 <name>当前任务名</name>
+<path>当前任务对应的md文件路径</path>
 <level>taskLevel</level>
 <description>基于当前任务背景描述</description>
 </decompose_design_subtask>
@@ -41,6 +43,7 @@ Example:
 
 <decompose_design_subtask>
 <name>人员信息管理项目功能设计</name>
+<path>./人员信息管理项目功能设计.md</path>
 <level>project</level>
 <description>当前正在进行人员信息管理项目功能设计</description>
 </decompose_design_subtask>
