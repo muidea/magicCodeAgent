@@ -34,7 +34,7 @@ type Observer interface {
 type Station struct {
 	bizBasePtr *biz.Base
 	configPtr  *config.Workspace
-	fileInfo   sync.Map
+	fileInfo   util.FileManager
 
 	currentWorkStage string
 
@@ -113,9 +113,9 @@ func (s *Station) envPrompt() string {
 	previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
 	if previousPath != "" {
 		stringBuilder.WriteString(fmt.Sprintf("### %s\n", previousLabel))
-		s.fileInfo.Range(func(key, value interface{}) bool {
-			if strings.HasPrefix(key.(string), previousPath) {
-				relativePath := key.(string)[len(previousPath)+1:]
+		s.fileInfo.Range(func(filePath string) bool {
+			if strings.HasPrefix(filePath, previousPath) {
+				relativePath := filePath[len(previousPath)+1:]
 				stringBuilder.WriteString("- " + relativePath + "\n")
 			}
 			return true
@@ -125,9 +125,9 @@ func (s *Station) envPrompt() string {
 
 	stagePath := s.configPtr.GetCurrentStagePath()
 	stringBuilder.WriteString("### 当前文件清单\n")
-	s.fileInfo.Range(func(key, value interface{}) bool {
-		if strings.HasPrefix(key.(string), stagePath) {
-			relativePath := key.(string)[len(stagePath)+1:]
+	s.fileInfo.Range(func(filePath string) bool {
+		if strings.HasPrefix(filePath, stagePath) {
+			relativePath := filePath[len(stagePath)+1:]
 			stringBuilder.WriteString("- " + relativePath + "\n")
 		}
 		return true
@@ -176,7 +176,7 @@ func (s *Station) AddFile(filePath string) bool {
 		return true
 	}
 
-	s.fileInfo.Store(filePath, nil)
+	s.fileInfo.Store(filePath)
 	return true
 }
 
@@ -198,7 +198,7 @@ func (s *Station) AddDir(dirPath string) bool {
 			return nil
 		}
 
-		s.fileInfo.Store(path, nil)
+		s.fileInfo.Store(path)
 		return nil
 	})
 
@@ -227,9 +227,9 @@ func (s *Station) ClearDir(dirPath string) bool {
 		return true
 	}
 
-	s.fileInfo.Range(func(key, value interface{}) bool {
-		if strings.HasPrefix(key.(string), dirPath) {
-			s.fileInfo.Delete(key)
+	s.fileInfo.Range(func(filePath string) bool {
+		if strings.HasPrefix(filePath, dirPath) {
+			s.fileInfo.Delete(filePath)
 		}
 		return true
 	})
@@ -238,11 +238,11 @@ func (s *Station) ClearDir(dirPath string) bool {
 }
 
 func (s *Station) Filter(filter fu.Filter) (ret []string) {
-	s.fileInfo.Range(func(key, value interface{}) bool {
-		if filter != nil && filter.Filter(key) {
-			ret = append(ret, key.(string))
+	s.fileInfo.Range(func(filePath string) bool {
+		if filter != nil && filter.Filter(filePath) {
+			ret = append(ret, filePath)
 		} else if filter == nil {
-			ret = append(ret, key.(string))
+			ret = append(ret, filePath)
 		}
 
 		return true
