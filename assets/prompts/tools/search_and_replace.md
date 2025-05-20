@@ -2,7 +2,7 @@
 
 Description: Request to perform search and replace operations on a file. Each operation can specify a search pattern (string or regex) and replacement text, with optional line range restrictions and regex flags. Shows a diff preview before applying changes.
 Parameters:
-- path: (required) The path of the file to modify (relative to the current workspace directory /home/rangh/webspace)
+- path: (required) The path of the file to modify (relative to the current workspace directory)
 - operations: (required) A JSON array of search/replace operations. Each operation is an object with:
     * search: (required) The text or pattern to search for
     * replace: (required) The text to replace matches with. If multiple lines need to be replaced, use "\n" for newlines
