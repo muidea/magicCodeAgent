@@ -64,6 +64,7 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		if re != nil {
 			re.Set(nil, cd.NewError(cd.InvalidParameter, "invalid project name"))
 		}
+		return
 	}
 
 	projectName := items[1]
@@ -115,7 +116,7 @@ func (s *Project) destroy(ev event.Event, re event.Result) {
 
 func (s *Project) initializeService(projectName, projectPath string) (err error) {
 	rawPath := path.Join(projectPath, "application", "main.go")
-	dstPath := path.Join(projectPath, "application", projectName)
+	dstPath := path.Join(projectPath, "application", projectName, "cmd")
 	if !fp.Exist(dstPath) {
 		os.MkdirAll(dstPath, 0755)
 	}
