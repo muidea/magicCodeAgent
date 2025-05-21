@@ -3,14 +3,14 @@ package prompts
 import (
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/framework/plugin/initator"
+	"github.com/muidea/magicCommon/framework/plugin/initiator"
 	"github.com/muidea/magicCommon/task"
 
-	"github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 )
 
 func init() {
-	initator.Register(New())
+	initiator.Register(New())
 }
 
 type Prompts struct {
@@ -24,7 +24,7 @@ func New() *Prompts {
 }
 
 func (s *Prompts) ID() string {
-	return common.PromptsInitator
+	return common.PromptsInitiator
 }
 
 func (s *Prompts) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {

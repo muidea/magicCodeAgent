@@ -17,7 +17,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"

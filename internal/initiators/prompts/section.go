@@ -5,7 +5,7 @@ import (
 
 	fu "github.com/muidea/magicCommon/foundation/util"
 
-	"github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 )
 
 type Section struct {

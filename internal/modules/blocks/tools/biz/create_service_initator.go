@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -15,15 +15,15 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
-type CreateServiceInitatorTool struct {
+type CreateServiceInitiatorTool struct {
 	commander Commander
 }
 
-func (s *CreateServiceInitatorTool) Name() string {
-	return "create_service_initator"
+func (s *CreateServiceInitiatorTool) Name() string {
+	return "create_service_initiator"
 }
 
-func (s *CreateServiceInitatorTool) Prompt() string {
+func (s *CreateServiceInitiatorTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
@@ -33,9 +33,9 @@ func (s *CreateServiceInitatorTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *CreateServiceInitatorTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
+func (s *CreateServiceInitiatorTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
 
-func (s *CreateServiceInitatorTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
+func (s *CreateServiceInitiatorTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
 	var err error
 	var result string
 	defer func() {
@@ -74,7 +74,7 @@ func (s *CreateServiceInitatorTool) Execute(workspaceName, workspaceDir, stage s
 
 	command := "magicCodeCli"
 	var args = []string{
-		"-actionType", "initator",
+		"-actionType", "initiator",
 		"-executeAction", "create",
 		"-moduleName", name,
 	}
@@ -85,7 +85,7 @@ func (s *CreateServiceInitatorTool) Execute(workspaceName, workspaceDir, stage s
 	}
 	result = runResult
 	if result == "" {
-		result = "创建initator成功"
+		result = "创建initiator成功"
 	}
 	return
 }

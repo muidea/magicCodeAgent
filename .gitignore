@@ -16,8 +16,3 @@ data
 !application/magicCodeCli/cmd/main.go
 !application/magicCodeDebug/cmd/main.go
 !application/magicCodeAgent/cmd/main.go
-
-magicCodeCli
-magicCodeTool
-magicCodeDebug
-magicCodeAgent

@@ -10,8 +10,8 @@ import (
 
 	"github.com/muidea/{{.ProjectName}}/internal/config"
 
-	_ "github.com/muidea/{{.ProjectName}}/internal/initators/pprof"
-	_ "github.com/muidea/{{.ProjectName}}/internal/initators/routeregistry"
+	_ "github.com/muidea/{{.ProjectName}}/internal/initiators/pprof"
+	_ "github.com/muidea/{{.ProjectName}}/internal/initiators/routeregistry"
 )
 
 var (

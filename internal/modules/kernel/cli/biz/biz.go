@@ -11,7 +11,7 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/cli/pkg/common"
 	tc "github.com/muidea/magicCodeAgent/pkg/common"
 
-	ic "github.com/muidea/magicCodeAgent/internal/modules/blocks/initator/pkg/common"
+	ic "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/pkg/common"
 	mc "github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
 	pc "github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
 )
@@ -41,8 +41,8 @@ func (s *Cli) Run() {
 	switch actionType {
 	case config.ModuleVal:
 		s.runModuleAction()
-	case config.InitatorVal:
-		s.runInitatorAction()
+	case config.InitiatorVal:
+		s.runInitiatorAction()
 	case config.ProjectVal:
 		s.runProjectAction()
 	default:
@@ -72,7 +72,7 @@ func (s *Cli) runModuleAction() {
 	s.SendEvent(ev)
 }
 
-func (s *Cli) runInitatorAction() {
+func (s *Cli) runInitiatorAction() {
 	param := &tc.CreateParam{
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
@@ -82,11 +82,11 @@ func (s *Cli) runInitatorAction() {
 	var ev event.Event
 	switch config.GetExecuteAction() {
 	case config.CreateVal:
-		ev = event.NewEvent(ic.CreateNewInitator, s.ID(), ic.InitatorModule, nil, param)
+		ev = event.NewEvent(ic.CreateNewInitiator, s.ID(), ic.InitiatorModule, nil, param)
 	case config.DestroyVal:
-		ev = event.NewEvent(ic.DestroyInitator, s.ID(), ic.InitatorModule, nil, param)
+		ev = event.NewEvent(ic.DestroyInitiator, s.ID(), ic.InitiatorModule, nil, param)
 	case config.RefreshVal:
-		ev = event.NewEvent(ic.RefreshInitator, s.ID(), ic.InitatorModule, nil, param)
+		ev = event.NewEvent(ic.RefreshInitiator, s.ID(), ic.InitiatorModule, nil, param)
 	default:
 		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
 	}

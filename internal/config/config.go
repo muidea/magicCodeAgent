@@ -401,18 +401,18 @@ func VerifyModuleWorkPath(pathVal string) (projectName, prefixPath string, err *
 	return
 }
 
-var validInitatorParentPaths = []string{
-	filepath.Join("internal", "initators"),
+var validInitiatorParentPaths = []string{
+	filepath.Join("internal", "initiators"),
 }
 
-// VerifyInitatorWorkPath 校验工作路径是否合法
-// 1.工作路径的父级路径必须是以下几种：xxx/xxx/internal/initators
+// VerifyInitiatorWorkPath 校验工作路径是否合法
+// 1.工作路径的父级路径必须是以下几种：xxx/xxx/internal/initiators
 // 2. 其他路径非法
 // 3. 工作路径不能是空
 // 4. 工作路径不能是相对路径
 // 5. 非法路径举例： /home/xxx/internal/modules/xxx/
-func VerifyInitatorWorkPath(pathVal string) (projectName, prefixPath string, err *cd.Error) {
-	projectName, prefixPath, err = verifyWorkPath(pathVal, validInitatorParentPaths)
+func VerifyInitiatorWorkPath(pathVal string) (projectName, prefixPath string, err *cd.Error) {
+	projectName, prefixPath, err = verifyWorkPath(pathVal, validInitiatorParentPaths)
 	return
 }
 

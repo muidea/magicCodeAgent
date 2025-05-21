@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"

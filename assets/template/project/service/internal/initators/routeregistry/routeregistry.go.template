@@ -3,18 +3,18 @@ package routeregistry
 import (
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/framework/plugin/initator"
+	"github.com/muidea/magicCommon/framework/plugin/initiator"
 	"github.com/muidea/magicCommon/task"
 
 	engine "github.com/muidea/magicEngine/http"
 
 	"github.com/muidea/{{.ProjectName}}/internal/config"
-	iirc "github.com/muidea/{{.ProjectName}}/internal/initators/routeregistry/pkg/common"
+	iirc "github.com/muidea/{{.ProjectName}}/internal/initiators/routeregistry/pkg/common"
 	"github.com/muidea/{{.ProjectName}}/pkg/common"
 )
 
 func init() {
-	initator.Register(New())
+	initiator.Register(New())
 }
 
 func New() *routeRegistry {
@@ -27,7 +27,7 @@ type routeRegistry struct {
 }
 
 func (s *routeRegistry) ID() string {
-	return iirc.RouteRegistryInitator
+	return iirc.RouteRegistryInitiator
 }
 
 func (s *routeRegistry) Setup(_ event.Hub, _ task.BackgroundRoutine) (err *cd.Error) {

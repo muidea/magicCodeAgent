@@ -14,7 +14,7 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/cache"

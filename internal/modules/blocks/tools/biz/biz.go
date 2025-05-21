@@ -14,7 +14,7 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 	"github.com/muidea/magicCommon/task"
 
-	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imbcc "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
 	localConfig "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
@@ -69,7 +69,7 @@ func New(
 	ptr.toolRegistry.Register(&CreateServiceModuleTool{
 		commander: ptr,
 	})
-	ptr.toolRegistry.Register(&CreateServiceInitatorTool{
+	ptr.toolRegistry.Register(&CreateServiceInitiatorTool{
 		commander: ptr,
 	})
 	ptr.toolRegistry.Register(&InitializationServiceProjectTool{

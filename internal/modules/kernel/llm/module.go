@@ -4,11 +4,11 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
-	"github.com/muidea/magicCommon/framework/plugin/initator"
+	"github.com/muidea/magicCommon/framework/plugin/initiator"
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
-	iirc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
+	iirc "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/service"
@@ -34,10 +34,10 @@ func (s *LLM) ID() string {
 func (s *LLM) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	var routeRegistryHelperVal iirc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
-	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(iirc.RouteRegistryInitator, routeRegistryHelperVal)
+	routeRegistryHelperVal, routeRegistryHelperErr = initiator.GetEntity(iirc.RouteRegistryInitiator, routeRegistryHelperVal)
 	if routeRegistryHelperErr != nil {
 		err = routeRegistryHelperErr
-		log.Errorf("LLM setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
+		log.Errorf("LLM setup failed, initiator.GetEntity error:%s", routeRegistryHelperErr.Error())
 		return
 	}
 

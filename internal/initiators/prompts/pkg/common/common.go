@@ -4,7 +4,7 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
-const PromptsInitator = "/internal/initators/prompts"
+const PromptsInitiator = "/internal/initiators/prompts"
 
 const SectionPromptsBasePath = "assets/prompts/section"
 

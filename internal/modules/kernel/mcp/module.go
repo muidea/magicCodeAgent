@@ -4,11 +4,11 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
-	"github.com/muidea/magicCommon/framework/plugin/initator"
+	"github.com/muidea/magicCommon/framework/plugin/initiator"
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
-	rc "github.com/muidea/magicCodeAgent/internal/initators/routeregistry/pkg/common"
+	rc "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry/pkg/common"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp/pkg/common"
@@ -37,10 +37,10 @@ func (s *MCP) Setup(
 	backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	var routeRegistryHelperVal rc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
-	routeRegistryHelperVal, routeRegistryHelperErr = initator.GetEntity(rc.RouteRegistryInitator, routeRegistryHelperVal)
+	routeRegistryHelperVal, routeRegistryHelperErr = initiator.GetEntity(rc.RouteRegistryInitiator, routeRegistryHelperVal)
 	if routeRegistryHelperErr != nil {
 		err = routeRegistryHelperErr
-		log.Errorf("MCP setup failed, initator.GetEntity error:%s", routeRegistryHelperErr.Error())
+		log.Errorf("MCP setup failed, initiator.GetEntity error:%s", routeRegistryHelperErr.Error())
 		return
 	}
 

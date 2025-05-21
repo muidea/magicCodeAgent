@@ -8,15 +8,15 @@ import (
 )
 
 const (
-	ModuleVal   = "module"
-	InitatorVal = "initator"
-	ProjectVal  = "project"
-	CreateVal   = "create"
-	DestroyVal  = "destroy"
-	RefreshVal  = "refresh"
+	ModuleVal    = "module"
+	InitiatorVal = "initiator"
+	ProjectVal   = "project"
+	CreateVal    = "create"
+	DestroyVal   = "destroy"
+	RefreshVal   = "refresh"
 )
 
-// actionType: module,initator,project
+// actionType: module,initiator,project
 var actionType string
 
 // executeAction: create,destroy,refresh
@@ -28,7 +28,7 @@ var enableService bool
 var enableDao bool
 
 func init() {
-	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initator/project)")
+	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initiator/project)")
 	flag.StringVar(&executeAction, "executeAction", "", "execute action (required, options: create/destroy/refresh)")
 	flag.StringVar(&projectName, "projectName", "", "project name (required, must start with letter and contain only alphanumeric chars)")
 	flag.StringVar(&projectDescription, "projectDescription", "", "project description")
@@ -69,7 +69,7 @@ var modulePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*)$`)
 var projectPattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*|(service|web)\/[a-zA-Z][a-zA-Z0-9]*)$`)
 
 // 校验输入参数
-// 1. moduleType只能是module,initator,project其中一种，必选参数，如果参数为空则失败，返回参数错误
+// 1. moduleType只能是module,initiator,project其中一种，必选参数，如果参数为空则失败，返回参数错误
 // 2. executeAction只能是create,destroy,refresh其中一种，必选参数，如果参数为空则失败，返回参数错误
 // 3. moduleName为必选参数，只能是字母开头的普通单词，不能包含其他字符，不能是数字或其他字符，如果参数为空则失败，返回参数错误
 // 4. enableService,enableDao为可选参数，如果参数为空则默认为false，如果参数不为空则判断是否为true或false，如果参数不为true或false则失败，返回参数错误
@@ -85,8 +85,8 @@ func VerifyVar() (err *cd.Error) {
 		err = cd.NewError(cd.IllegalParam, "actionType不能为空")
 		return
 	}
-	if actionType != "module" && actionType != "initator" && actionType != "project" {
-		err = cd.NewError(cd.IllegalParam, "actionType必须是module/initator/project之一")
+	if actionType != "module" && actionType != "initiator" && actionType != "project" {
+		err = cd.NewError(cd.IllegalParam, "actionType必须是module/initiator/project之一")
 		return
 	}
 
@@ -101,7 +101,7 @@ func VerifyVar() (err *cd.Error) {
 	}
 
 	switch actionType {
-	case "module", "initator":
+	case "module", "initiator":
 		if !modulePattern.MatchString(moduleName) {
 			err = cd.NewError(cd.IllegalParam, "moduleName必须以字母开头且只能包含字母数字")
 			return

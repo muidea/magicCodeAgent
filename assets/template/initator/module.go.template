@@ -3,14 +3,14 @@ package {{toLower .ModuleName}}
 import (
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/framework/plugin/initator"
+	"github.com/muidea/magicCommon/framework/plugin/initiator"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/{{.ProjectName}}/{{.ModulePath}}/pkg/common"
 )
 
 func init() {
-	initator.Register(New())
+	initiator.Register(New())
 }
 
 type {{.ModuleName}} struct {}
@@ -20,7 +20,7 @@ func New() *{{.ModuleName}} {
 }
 
 func (s *{{.ModuleName}}) ID() string {
-	return common.{{.ModuleName}}Initator
+	return common.{{.ModuleName}}Initiator
 }
 
 func (s *{{.ModuleName}}) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {

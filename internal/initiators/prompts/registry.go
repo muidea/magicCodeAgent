@@ -7,7 +7,7 @@ import (
 
 	fu "github.com/muidea/magicCommon/foundation/util"
 
-	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 	"github.com/muidea/magicCommon/foundation/log"

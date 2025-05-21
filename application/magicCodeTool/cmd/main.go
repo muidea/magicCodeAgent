@@ -12,7 +12,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 
-	_ "github.com/muidea/magicCodeAgent/internal/initators/prompts"
+	_ "github.com/muidea/magicCodeAgent/internal/initiators/prompts"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools"
 )
 

@@ -4,7 +4,7 @@ import (
 	engine "github.com/muidea/magicEngine/http"
 )
 
-const RouteRegistryInitator = "/internal/initators/routeregistry"
+const RouteRegistryInitiator = "/internal/initiators/routeregistry"
 
 type RouteRegistryHelper interface {
 	GetRouteRegistry() (ret engine.RouteRegistry)

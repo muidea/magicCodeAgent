@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	iipc "github.com/muidea/magicCodeAgent/internal/initators/prompts/pkg/common"
+	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
 )

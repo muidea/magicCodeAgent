@@ -6,15 +6,15 @@ import (
 
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
-	"github.com/muidea/magicCommon/framework/plugin/initator"
+	"github.com/muidea/magicCommon/framework/plugin/initiator"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/{{.ProjectName}}/internal/config"
-	"github.com/muidea/{{.ProjectName}}/internal/initators/pprof/pkg/common"
+	"github.com/muidea/{{.ProjectName}}/internal/initiators/pprof/pkg/common"
 )
 
 func init() {
-	initator.Register(New())
+	initiator.Register(New())
 }
 
 type pprof struct{}
@@ -24,7 +24,7 @@ func New() *pprof {
 }
 
 func (s *pprof) ID() string {
-	return common.PProfInitator
+	return common.PProfInitiator
 }
 
 func (s *pprof) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) {

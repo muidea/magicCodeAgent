@@ -47,7 +47,7 @@ github.com/muidea/magicCommon/foundation/system
 github.com/muidea/magicCommon/foundation/util
 github.com/muidea/magicCommon/framework/application
 github.com/muidea/magicCommon/framework/plugin/common
-github.com/muidea/magicCommon/framework/plugin/initator
+github.com/muidea/magicCommon/framework/plugin/initiator
 github.com/muidea/magicCommon/framework/plugin/module
 github.com/muidea/magicCommon/framework/service
 github.com/muidea/magicCommon/session
