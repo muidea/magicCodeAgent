@@ -1,6 +1,6 @@
 ## 项目规划目录结构
 
-```
+```plaintext
 ├── .gitignore           # Git忽略规则文件
 ├── Makefile             # 项目构建Makefile
 ├── README.md            # 项目说明文档
@@ -16,43 +16,73 @@
 │   └── build.sh         # Docker构建脚本
 ├── internal/            # 内部模块(主要业务逻辑)
 │   ├── config/          # 配置管理
-│   ├── initators/       # 各类initator模块,每个模块对应不同子目录
-│   │   ├── pprof/       # 性能分析initator模块，默认内置基础模块
-│   │   ├── routeregistry/ # 路由管理initator模块，支持HTTP API访问的基础模块(可选)
-│   │   └── timer/       # 定时任务initator模块，支持启动定时任务的基础模块(可选)
-│   │   └── {自定义模块名}/ # 其他自定义initator模块(可选)
+│   ├── initiators/      # 各类initiator模块，每个模块对应不同子目录
+│   │   ├── pprof/       # 性能分析initiator模块，默认内置基础模块
+│   │   ├── routeregistry/ # 路由管理initiator模块，支持HTTP API访问的基础模块(可选)
+│   │   ├── timer/       # 定时任务initiator模块，支持启动定时任务的基础模块(可选)
+│   │   └── {自定义模块名}/ # 其他自定义initiator模块(可选)
 │   └── modules/         # 业务模块，包含各类子功能的业务模块
 │       ├── blocks/      # 基础子功能业务块模块，每个子功能模块对应不同子目录
 │       │   └── {自定义模块名}/ # 各业务自定义基础业务模块
-│       └── kernel/      # 核心业务模块模块
-│       │   └── {自定义模块名}/ # 各业务自定义业务模块
-│       └── {自定义模块名}/     # 各业务自定义业务模块
+│       ├── kernel/      # 核心业务模块模块
+│       │   └── {自定义模块名}/ # 各业务自定义核心业务模块
+│       └── {自定义模块名}/     # 其他自定义业务模块
 ├── pkg/                 # 公共库(可被外部引用)
 ├── test/                # 测试相关代码目录
 └── vendor/              # 项目依赖(Go vendor目录)
-```
+````
 
-### initator与module的目录结构
+---
 
-├── biz/                # 业务逻辑层，包含业务逻辑代码，包括发起和响应模块间EventHub调用，initator不支持通过EventHub进行模块间调用
+### Initiator与Module的目录结构
+
+```plaintext
+├── biz/                # 业务逻辑层，包含业务逻辑代码，包括发起和响应模块间EventHub调用，initiator不支持通过EventHub进行模块间调用
 ├── module.go           # 模块主文件，实现模块接口
 ├── pkg/                # 公共定义和工具
-└── service/            # 服务层，提供HTTP API接口，initator不包含service层
+└── service/            # 服务层，提供HTTP API接口，initiator不包含service层
+```
 
-### initator与module的区别说明
+---
 
-1. initator: 系统内部模块，主要用来辅助系统内部的功能，以插件的方式扩展系统基础功能，对外提供业务访问接口，不支持通过EventHub的方式进行功能调用。initator可以通过create_service_initator工具创建，再完善模块功能
+### Initiator与Module的区别说明
 
-2. module: 业务模块，主要用来实现业务功能，对外提供业务访问接口，支持通过EventHub的方式进行功能调用，module可以包含多个子功能模块，如blocks、kernel等，各个module之间都可以对外提供子功能项，可以调用initators中的功能模块，各个module之间通过EventHub的方式进行功能调用。module可以通过create_service_module工具创建，再完善模块功能。各个自定义module的存放目录，根据其业务承载的业务性质进行分组，如blocks、kernel等。
+1. **Initiator**：系统内部模块，主要用于扩展系统内部功能，以插件的方式实现基础功能支持，不支持通过EventHub进行模块间调用。适用于提供通用功能（如性能监控、路由管理等）。可以通过 `create_service_initiator` 工具创建并完善模块功能。
 
-3. 所有的initator和module在定义完成后，都需要在main.go 进行显示引用，以便系统启动时加载
+2. **Module**：业务模块，专注于实现具体的业务功能。支持通过EventHub进行模块间调用，可包含多个子功能模块（如 `blocks`、`kernel`）。Module之间可以互相调用initiators中的功能模块。可以通过 `create_service_module` 工具创建并完善功能，并根据业务性质分组存放（如 `blocks`、`kernel`）。
+
+3. **引用说明**：所有定义完成的initiator和module，必须在 `main.go` 中显式引用，以确保系统启动时正确加载。
+
+---
 
 ### 项目辅助工具和命令
 
-1. 可以使用execute_command工具执行`go fmt ./...` 命令来格式化项目代码。
-2. 可以使用execute_command工具执行`go vet ./...` 命令来对项目进行代码静态检查。
-3. 可以使用execute_command工具执行`go mod tidy` 命令来整理和优化 go.mod 文件。
-4. 可以使用execute_command工具执行`go test ./...` 命令来运行项目测试用例。
+1. **代码格式化**：使用 `execute_command` 工具执行以下命令格式化代码：
 
+   ```bash
+   go fmt ./...
+   ```
 
-**强调说明：如果当前项目未完成初始化，请先执行`initialization_service_project`工具进行初始化**
+2. **静态检查**：使用 `execute_command` 工具执行以下命令对项目进行静态检查：
+
+   ```bash
+   go vet ./...
+   ```
+
+3. **依赖整理**：使用 `execute_command` 工具执行以下命令整理和优化 `go.mod` 文件：
+
+   ```bash
+   go mod tidy
+   ```
+
+4. **运行测试**：使用 `execute_command` 工具执行以下命令运行所有测试用例：
+
+   ```bash
+   go test ./...
+   ```
+
+---
+
+### 特别提示
+
+* **项目初始化**：如果当前项目尚未初始化，请先使用 `initialization_service_project` 工具完成项目初始化，确保目录结构和配置文件已正确生成后再进行其他操作。

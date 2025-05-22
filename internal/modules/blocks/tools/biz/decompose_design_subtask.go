@@ -72,22 +72,13 @@ func (s *DecomposeDesignSubtaskTool) Execute(workspaceName, workspaceDir, stage 
 		return
 	}
 
-	constraintsBuffer := strings.Builder{}
-	levelSectionName := fmt.Sprintf("decompose-design-plan-%s", level)
-	content := s.promptsRegistry.ReadSectionPromptContent(levelSectionName)
-	if content != "" {
-		constraintsBuffer.WriteString(content)
-		constraintsBuffer.WriteString("\n\n")
-	}
-	constraints := constraintsBuffer.String()
 	siblingsList, childList, workPath := s.getSiblingsAndChilds(workspaceDir, stage, name, level)
 
-	planFileName := "decompose-design-plan"
+	planFileName := fmt.Sprintf("decompose-design-plan-%s", level)
 	planContent := s.promptsRegistry.ReadSectionPromptContent(planFileName)
 	planParam := map[string]string{
 		"Name":             name,
 		"Description":      description,
-		"Constraints":      constraints,
 		"Siblings":         siblingsList,
 		"Childrens":        childList,
 		"WorkingDirectory": workPath,

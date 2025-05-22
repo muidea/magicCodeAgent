@@ -1,78 +1,81 @@
 ## 项目规划目录结构
 
-```
+```plaintext
 .
-├── config // 与 [`.umirc.ts`]相同，区别是你可以单独在一个 `config` 文件夹下集中管理所有的配置，保持项目根目录整洁。
+├── config              // 配置文件目录，集中管理项目配置，与 .umirc.ts 文件功能相同，二者二选一。
 │   └── config.ts
-├── dist  // 执行 `max build` 后产物的默认输出文件夹。
-├── mock
+├── dist                // 默认输出文件夹，执行 `max build` 后的构建产物。
+├── mock                // 模拟数据文件夹，用于开发时的 Mock 数据。
 │   └── app.ts｜tsx
-├── src
-│   ├── .umi
-│   ├── .umi-production
-│   ├── models
-│   │   ├── global.ts
+├── src                 // 源代码目录
+│   ├── .umi            // umi 的临时文件目录（开发环境）
+│   ├── .umi-production // umi 的临时文件目录（生产环境）
+│   ├── models          // 数据流管理模型文件夹
+│   │   ├── global.ts   // 全局 Model 文件
+│   │   └── index.ts    // Model 索引文件
+│   ├── pages           // 页面目录（约定式路由）
+│   │   ├── index.less  // 首页样式文件
+│   │   └── index.tsx   // 首页组件
+│   ├── utils           // 工具函数目录（推荐使用）
 │   │   └── index.ts
-│   ├── pages
-│   │   ├── index.less
-│   │   └── index.tsx
-│   ├── utils // 推荐目录
-│   │   └── index.ts
-│   ├── services // 推荐目录
+│   ├── services        // 服务请求目录（推荐使用）
 │   │   └── api.ts
-│   ├── app.(ts|tsx)  // 运行时配置文件，可以在这里扩展运行时的能力，比如修改路由、修改 render 方法等。
-│   ├── global.ts   //全局前置脚本文件。
-│   ├── global.(css|less|sass|scss)   //全局样式文件。
-│   ├── overrides.(css|less|sass|scss)  //高优先级全局样式文件。
-│   ├── favicon.(ico|gif|png|jpg|jpeg|svg|avif|webp)
-│   └── loading.(tsx|jsx)   // 全局加载组件。
-├── node_modules
-├── .umirc.ts // 非运行时配置 与 config/config 文件 2 选一
-├── package.json
-├── tsconfig.json
-└── typings.d.ts
-```
+│   ├── app.(ts|tsx)    // 运行时配置文件，可扩展运行时能力，如修改路由、render 方法等。
+│   ├── global.ts       // 全局前置脚本文件
+│   ├── global.(css|less|sass|scss) // 全局样式文件
+│   ├── overrides.(css|less|sass|scss) // 高优先级全局样式文件
+│   ├── favicon.(ico|gif|png|jpg|jpeg|svg|avif|webp) // 网站图标
+│   └── loading.(tsx|jsx) // 全局加载组件
+├── node_modules        // 项目依赖文件夹
+├── .umirc.ts           // 非运行时配置文件，与 config/config 文件二选一
+├── package.json        // 项目配置文件
+├── tsconfig.json       // TypeScript 配置文件
+└── typings.d.ts        // TypeScript 类型定义文件
+````
+
+---
 
 ### 路由定义说明
 
-#### pages 目录
+#### Pages 目录
 
-约定式路由默认以 `pages/*` 文件夹的文件层级结构来生成路由表。
+* **约定式路由**：`pages/*` 文件夹的文件层级结构将自动生成路由表。
+* **配置式路由**：若 `component` 写为相对路径，文件会从 `pages` 文件夹开始寻找。
 
-在配置式路由中，`component` 若写为相对路径，将从该文件夹为起点开始寻找文件：
+示例配置：
 
 ```ts
-  routes: [
-    // `./index` === `@/pages/index`
-    { path: '/', component: './index' }
-  ]
+routes: [
+  // `./index` === `@/pages/index`
+  { path: '/', component: './index' },
+];
 ```
 
 ##### 基础路由
 
-假设 `pages` 目录结构如下：
+目录结构：
 
-```
+```plaintext
 + pages/
   + users/
     - index.tsx
   - index.tsx
 ```
 
-那么，会自动生成路由配置如下：
+生成的路由配置：
 
 ```ts
 [
   { path: '/', component: '@/pages/index.tsx' },
   { path: '/users/', component: '@/pages/users/index.tsx' },
-]
+];
 ```
 
 ##### 动态路由
 
-约定带 `$` 前缀的目录或文件为动态路由。若 `$` 后不指定参数名，则代表 `*` 通配，比如以下目录结构：
+带 `$` 前缀的目录或文件为动态路由，例如：
 
-```
+```plaintext
 + pages/
   + foo/
     - $slug.tsx
@@ -81,46 +84,51 @@
   - index.tsx
 ```
 
-会生成路由配置如下：
+生成的路由配置：
 
 ```ts
 [
   { path: '/', component: '@/pages/index.tsx' },
   { path: '/foo/:slug', component: '@/pages/foo/$slug.tsx' },
   { path: '/:bar/*', component: '@/pages/$bar/$.tsx' },
-]
+];
 ```
 
-##### pages/404.tsx
+##### 404 页面
 
-在使用约定式路由时，该文件会自动被注册为全局 404 的 fallback 页面。若你使用配置式路由，需要自行配置兜底路由到路由表最后一个：
+在约定式路由中，`pages/404.tsx` 会自动注册为全局 404 页面。若使用配置式路由，需要手动在最后一项添加兜底路由：
 
 ```ts
-  routes: [
-    // other routes ...
-    { path: '/*', component: '@/pages/404.tsx' }
-  ]
+routes: [
+  // other routes...
+  { path: '/*', component: '@/pages/404.tsx' },
+];
 ```
 
-### Model的使用说明
+---
+
+### Model 的使用说明
 
 #### 创建 Model
 
-数据流管理插件采用约定式目录结构，我们约定可以在 `src/models`, `src/pages/xxxx/models/`目录中，和 `src/pages/xxxx/model.{ts,tsx}` 文件引入 Model 文件。
-Model 文件允许使用 `.(tsx|ts)` 四种后缀格式，**命名空间（namespace）** 生成规则如下。
+数据流管理采用约定式目录结构，可在以下位置定义 Model 文件：
 
-| 路径 | 命名空间 | 说明 |
-| :--- |:--- | :--- |
-| `src/models/count.ts` | `count` | `src/models` 目录下不支持目录嵌套定义 model |
-| `src/pages/pageA/model.ts` | `pageA.model` |  |
-| `src/pages/pageB/models/product.ts` | `pageB.product` |  |
-| `src/pages/pageB/models/fruit/apple.ts` | `pageB.fruit.apple` |  `pages/xxx/models` 下 model 定义支持嵌套定义 |
+* `src/models`
+* `src/pages/xxxx/models/`
+* `src/pages/xxxx/model.{ts,tsx}`
 
-当我们需要获取 Model 中的全局数据时，调用该命名空间即可。例如，对于 Model 文件 `userModel.ts`，它的命名空间为 `userModel`。
+**命名空间规则**：
+
+| 路径                                      | 命名空间                | 说明                            |
+| :-------------------------------------- | :------------------ | :---------------------------- |
+| `src/models/count.ts`                   | `count`             | `src/models` 下不支持嵌套目录定义 Model |
+| `src/pages/pageA/model.ts`              | `pageA.model`       |                               |
+| `src/pages/pageB/models/product.ts`     | `pageB.product`     |                               |
+| `src/pages/pageB/models/fruit/apple.ts` | `pageB.fruit.apple` | 支持嵌套目录定义 Model                |
 
 #### 使用 Model
 
-现在，您想要在某个组件中使用全局的 Model。以用户信息为例，只需要调用 `useModel` 这一钩子函数：
+示例代码：
 
 ```tsx
 // src/components/Username/index.tsx
@@ -129,19 +137,43 @@ import { useModel } from '@umijs/max';
 export default function Page() {
   const { user, loading } = useModel('userModel');
 
-  return (
-    {loading ? <></>: <div>{user.username}</div>}
-  );
+  return loading ? <></> : <div>{user.username}</div>;
 }
 ```
 
-其中，`useModel()` 方法传入的参数为 Model 的**命名空间**
+`useModel()` 的参数为 Model 的命名空间。
+
+---
 
 ### 项目辅助工具和命令
 
-1. 可以使用execute_command工具执行`yarn run format --quiet --write --ignore-path .prettierignore` 命令来格式化项目代码。
-2. 可以使用execute_command工具执行`yarn lint --quiet --max-warnings 0` 命令来对项目进行代码静态检查。
-3. 可以使用execute_command工具执行`yarn install --silent --no-progress` 命令来安装项目依赖。
-4. 可以使用execute_command工具执行`rm -rf ./dist src/.umi src/.umi-production` 命令来清理项目临时文件。
+1. **代码格式化**：
 
-**强调说明：1. 如果当前项目未完成初始化，请先执行`initialization_web_project`工具进行初始化 2. 项目使用yarn 作为包管理器**
+   ```bash
+   yarn run format --quiet --write --ignore-path .prettierignore
+   ```
+
+2. **静态检查**：
+
+   ```bash
+   yarn lint --quiet --max-warnings 0
+   ```
+
+3. **安装依赖**：
+
+   ```bash
+   yarn install --silent --no-progress
+   ```
+
+4. **清理临时文件**：
+
+   ```bash
+   rm -rf ./dist src/.umi src/.umi-production
+   ```
+
+---
+
+### 特别提示
+
+1. **项目初始化**：请先使用 `initialization_web_project` 工具完成项目初始化，确保目录结构和配置文件正确生成。
+2. **包管理器**：本项目使用 `yarn` 作为包管理工具。

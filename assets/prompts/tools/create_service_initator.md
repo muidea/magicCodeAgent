@@ -1,18 +1,17 @@
-### create_service_initator
+### create_service_initiator
 
-Description: 创建一个新的服务模块(initator)
-Parameters:
-- path: (required) 服务模块在项目中的相对路径，模块会创建在该目录下
-- name: (required) 模块名
-Usage:
-<create_service_initator>
-<path>initatorPath</path>
-<name>initatorName</name>
-</create_service_initator>
+描述: 创建一个新的服务模块 (initiator)
+参数:
+- **path**: (必填) 服务模块在项目中的相对路径，模块会创建在该目录下。
+- **name**: (必填) 模块名。
 
-Example: 在/home/test/demo/internal/initators目录下创建routeRegistry模块, /home/test/demo是项目根目录
+用法示例:
+```xml
+<create_service_initiator>
+  <path>internal/initiators</path>
+  <name>routeRegistry</name>
+</create_service_initiator>
+````
 
-<create_service_initator>
-<path>internal/initators</path>
-<name>routeRegistry</name>
-</create_service_initator>
+说明:
+在项目根目录 `/home/test/demo` 下的 `internal/initiators` 目录中创建一个名为 `routeRegistry` 的服务模块。
