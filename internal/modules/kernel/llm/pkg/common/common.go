@@ -78,18 +78,18 @@ type BalanceDetail struct {
 // UserBalanceResponse 用户余额响应
 /*
 {
-  "is_available": true,
-  "balance_infos": [
-    {
-      "currency": "CNY",
-      "total_balance": "110.00",
-      "granted_balance": "10.00",
-      "topped_up_balance": "100.00"
-    }
-  ]
+    "is_available": true,
+    "balance_infos": [
+        {
+            "currency": "CNY",
+            "total_balance": "40.05",
+            "granted_balance": "0.00",
+            "topped_up_balance": "40.05"
+        }
+    ]
 }
 */
 type UserBalanceResponse struct {
 	IsAvailable   bool          `json:"is_available"`
-	Balance_infos BalanceDetail `json:"balance_infos"`
+	Balance_infos []BalanceDetail `json:"balance_infos"`
 }
