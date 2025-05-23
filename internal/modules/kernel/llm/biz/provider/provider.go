@@ -151,7 +151,7 @@ func NewProvider(
 func (s *Provider) OnClose() {
 	closeMsg := &models.MessageInfo{
 		Item: models.MessageItem{
-			Role:    common.Assistant,
+			Role:    common.User,
 			Content: []string{"通讯中断，需要重试"}},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.workspaceName,

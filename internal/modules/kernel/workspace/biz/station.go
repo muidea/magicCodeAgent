@@ -30,6 +30,7 @@ const (
 	Idle      = "idle"
 	Terminate = "terminate"
 	Chatting  = "chatting"
+	Finished  = "finished"
 )
 
 type Observer interface {
@@ -85,7 +86,7 @@ func (s *Station) systemPrompt() string {
 	return s.promptsRegistry.GetPromptsContent(s.configPtr.GetStage(), s.configPtr.TechStack)
 }
 
-func (s *Station) envPrompt() string {
+func (s *Station) envPrompt(ptr *models.Flow) string {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
 	stringBuilder.WriteString("# 项目名称：" + s.configPtr.Name + "\n\n\n")
@@ -115,6 +116,7 @@ func (s *Station) envPrompt() string {
 		stringBuilder.WriteString("\n\n")
 	}
 
+	// 前一阶段输出物清单
 	previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
 	if previousPath != "" {
 		stringBuilder.WriteString(fmt.Sprintf("### %s\n", previousLabel))
@@ -129,6 +131,44 @@ func (s *Station) envPrompt() string {
 	}
 
 	stagePath := s.configPtr.GetCurrentStagePath()
+	// 当前任务执行状态
+	// 新增，删除，修改的文件清单
+	stringBuilder.WriteString("### 当前任务执行状态\n")
+	if ptr.AddFiles.Len() > 0 {
+		stringBuilder.WriteString("#### 新增文件清单\n")
+		ptr.AddFiles.Range(func(filePath string) bool {
+			if strings.HasPrefix(filePath, stagePath) {
+				relativePath := filePath[len(stagePath)+1:]
+				stringBuilder.WriteString("- " + relativePath + "\n")
+			}
+			return true
+		})
+		stringBuilder.WriteString("\n")
+	}
+	if ptr.DelFiles.Len() > 0 {
+		stringBuilder.WriteString("#### 删除文件清单\n")
+		ptr.DelFiles.Range(func(filePath string) bool {
+			if strings.HasPrefix(filePath, stagePath) {
+				relativePath := filePath[len(stagePath)+1:]
+				stringBuilder.WriteString("- " + relativePath + "\n")
+			}
+			return true
+		})
+		stringBuilder.WriteString("\n")
+	}
+	if ptr.ModFiles.Len() > 0 {
+		stringBuilder.WriteString("#### 修改文件清单\n")
+		ptr.ModFiles.Range(func(filePath string) bool {
+			if strings.HasPrefix(filePath, stagePath) {
+				relativePath := filePath[len(stagePath)+1:]
+				stringBuilder.WriteString("- " + relativePath + "\n")
+			}
+			return true
+		})
+		stringBuilder.WriteString("\n")
+	}
+	stringBuilder.WriteString("\n\n")
+	
 	stringBuilder.WriteString("### 当前文件清单\n")
 	s.fileInfo.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, stagePath) {
@@ -181,6 +221,11 @@ func (s *Station) AddFile(filePath string) bool {
 		return true
 	}
 
+	curFlowPtr := s.localFlowManger.GetCurrentFlow()
+	if curFlowPtr != nil {
+		curFlowPtr.AddFile(filePath)
+	}
+
 	s.fileInfo.Store(filePath)
 	return true
 }
@@ -203,6 +248,11 @@ func (s *Station) AddDir(dirPath string) bool {
 			return nil
 		}
 
+		curFlowPtr := s.localFlowManger.GetCurrentFlow()
+		if curFlowPtr != nil {
+			curFlowPtr.AddFile(path)
+		}
+
 		s.fileInfo.Store(path)
 		return nil
 	})
@@ -219,7 +269,28 @@ func (s *Station) RemoveFile(filePath string) bool {
 		return true
 	}
 
+	curFlowPtr := s.localFlowManger.GetCurrentFlow()
+	if curFlowPtr != nil {
+		curFlowPtr.AddFile(filePath)
+	}
+
 	s.fileInfo.Delete(filePath)
+	return true
+}
+
+func (s *Station) WriteFile(filePath string) bool {
+	if !strings.HasPrefix(filePath, s.configPtr.Path) {
+		return false
+	}
+
+	if s.checkIgnore(filePath) {
+		return true
+	}
+
+	curFlowPtr := s.localFlowManger.GetCurrentFlow()
+	if curFlowPtr != nil {
+		curFlowPtr.ModFile(filePath)
+	}
 	return true
 }
 
@@ -234,6 +305,12 @@ func (s *Station) ClearDir(dirPath string) bool {
 
 	s.fileInfo.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, dirPath) {
+
+			curFlowPtr := s.localFlowManger.GetCurrentFlow()
+			if curFlowPtr != nil {
+				curFlowPtr.AddFile(filePath)
+			}
+
 			s.fileInfo.Delete(filePath)
 		}
 		return true
@@ -302,7 +379,7 @@ func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
 	stationSystemPrompt := s.systemPrompt()
-	stationEnvPrompt := s.envPrompt()
+	stationEnvPrompt := s.envPrompt(curFlow)
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
 	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, stationSystemPrompt, stationEnvPrompt, curFlow.GetFlowPath())
@@ -374,7 +451,7 @@ func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.Mes
 func (s *Station) OnClose() {
 	msgPtr := &models.MessageInfo{
 		Item: models.MessageItem{
-			Role:    common.Assistant,
+			Role:    common.User,
 			Content: []string{"通讯中断，需要重试！"},
 		},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -409,6 +486,33 @@ func (s *Station) OnRecv(event string, content string) {
 			return
 		}
 
+		/*
+			chatMsg := &models.MessageItem{}
+			for _, block := range blockList {
+				resultVal, resultFinal, resultErr := s.localWorker.DoWork(s.configPtr, block)
+				if resultErr != nil {
+					s.chatRunningStatus = Terminate
+					log.Errorf("OnRecv, err:%v", resultErr)
+					return
+				}
+
+				if resultFinal {
+					continue
+				}
+
+				chatMsg.Content = append(chatMsg.Content, resultVal.Content...)
+			}
+
+			// 如果有数据需要继续chat，否则检查curFlow的工作是否处理完毕，未处理完毕，则继续发起chat
+			if len(chatMsg.Content) > 0 {
+				chatMsg.Role = common.User
+				s.ChatMessage(context.Background(), s.currentWorkStage, chatMsg)
+				return
+			}
+
+			// TODO
+		*/
+
 		for _, block := range blockList {
 			resultVal, resultFinal, resultErr := s.localWorker.DoWork(s.configPtr, block)
 			if resultErr != nil {
@@ -418,12 +522,6 @@ func (s *Station) OnRecv(event string, content string) {
 			}
 
 			if resultFinal {
-				//s.DisposeRecvMessage(&models.MessageInfo{
-				//	Item:       resultVal,
-				//	CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-				//	Workspace:  s.configPtr.Name,
-				//})
-
 				continue
 			}
 

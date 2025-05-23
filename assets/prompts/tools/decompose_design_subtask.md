@@ -18,7 +18,7 @@
 
 **参数：**  
 - **name** (必填)：当前任务名。  
-- **path** (必填)：当前任务对应的 MD 文件路径。  
+- **path** (必填)：当前任务对应的路径。  
 - **level** (必填)：当前任务层级。  
 - **description** (必填)：当前任务的描述。  
 
@@ -36,8 +36,8 @@
 
 ```xml
 <decompose_design_subtask>
-    <name>人员信息管理项目功能设计</name>
-    <path>./人员信息管理项目功能设计.md</path>
-    <level>project</level>
-    <description>当前正在进行人员信息管理项目功能设计</description>
+    <name>产品详情展示</name>
+    <path>./产品管理/产品详情展示</path>
+    <level>block</level>
+    <description>展示产品详细信息，包括基础信息、规格参数、图片展示等</description>
 </decompose_design_subtask>

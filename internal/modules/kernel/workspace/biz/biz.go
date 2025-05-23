@@ -94,6 +94,8 @@ func (s *Workspace) workspaceTask() {
 				s.disposeRemove(event)
 			case fsnotify.Rename:
 				s.disposeRename(event)
+			case fsnotify.Write:
+				s.disposeWrite(event)
 			}
 			//})
 		case err := <-s.fsWatcher.Errors:
@@ -185,6 +187,20 @@ func (s *Workspace) disposeRename(event fsnotify.Event) {
 		})
 	}
 }
+
+func (s *Workspace) disposeWrite(event fsnotify.Event) {
+	s.workspaceStationCache.Range(func(key, value interface{}) bool {
+		workspaceVal, workspaceOK := value.(*Station)
+		if !workspaceOK {
+			return true
+		}
+		if workspaceVal.WriteFile(event.Name) {
+			return false
+		}
+		return true
+	})
+}
+
 func (s *Workspace) queryWorkspace(ev event.Event, re event.Result) {
 	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
 	if !workspaceOK {
