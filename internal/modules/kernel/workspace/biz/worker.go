@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
@@ -14,17 +15,17 @@ import (
 )
 
 type Worker interface {
-	DoWork(workspaceConfig *config.Workspace, content string) (result models.MessageItem, final bool)
+	DoWork(workspaceConfig *config.Workspace, content string) (result models.MessageItem, final bool, err *cd.Error)
 }
 
-func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (result models.MessageItem, final bool) {
+func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (result models.MessageItem, final bool, err *cd.Error) {
 	workspaceDir := workspaceConfig.GetWorkspaceDir()
 	if !fp.Exist(workspaceConfig.GetWorkspaceDir()) {
-		if err := os.MkdirAll(workspaceDir, 0755); err != nil {
+		if osErr := os.MkdirAll(workspaceDir, 0755); osErr != nil {
 			result = models.MessageItem{
-				Content: []string{fmt.Sprintf("create work dir failed, error%s", err.Error())},
+				Content: []string{fmt.Sprintf("create work dir failed, error%s", osErr.Error())},
 			}
-			final = true
+			err = cd.NewError(cd.Unexpected, fmt.Sprintf("create work dir failed, error%s", osErr.Error()))
 			return
 		}
 	}
@@ -38,8 +39,8 @@ func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (r
 		result = models.MessageItem{
 			Content: []string{resultErr.Error()},
 		}
-		final = true
 		log.Errorf("do work failed, %s", resultErr)
+		err = resultErr
 		return //"", fmt.Errorf("do work failed, %s", resultErr)
 	}
 
@@ -48,7 +49,7 @@ func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (r
 		result = models.MessageItem{
 			Content: []string{"do work failed, illegal result"},
 		}
-		final = true
+		err = cd.NewError(cd.Unexpected, "do work failed, illegal result")
 		return //"", fmt.Errorf("do work failed, %s", resultErr)
 	}
 

@@ -28,8 +28,7 @@ func (s *UseMcpToolTool) Prompt() string {
 
 func (s *UseMcpToolTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *UseMcpToolTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
-	var err error
+func (s *UseMcpToolTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{

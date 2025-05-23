@@ -90,6 +90,6 @@ type BalanceDetail struct {
 }
 */
 type UserBalanceResponse struct {
-	IsAvailable   bool          `json:"is_available"`
+	IsAvailable   bool            `json:"is_available"`
 	Balance_infos []BalanceDetail `json:"balance_infos"`
 }

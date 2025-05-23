@@ -26,6 +26,12 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
+const (
+	Idle      = "idle"
+	Terminate = "terminate"
+	Chatting  = "chatting"
+)
+
 type Observer interface {
 	ID() string
 	OnMessage(msgPtr *models.MessageInfo)
@@ -38,8 +44,7 @@ type Station struct {
 
 	currentWorkStage string
 
-	// 聊天终止标志
-	terminateChatFlag bool
+	chatRunningStatus string
 
 	stationMutex sync.RWMutex
 	observerList []Observer
@@ -292,7 +297,7 @@ func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr 
 	}
 
 	s.currentWorkStage = stage
-	s.terminateChatFlag = false
+	s.chatRunningStatus = Chatting
 
 	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
 
@@ -311,7 +316,7 @@ func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr 
 }
 
 func (s *Station) ChatTerminate(ctx context.Context, stage string) (err *cd.Error) {
-	s.terminateChatFlag = true
+	s.chatRunningStatus = Terminate
 
 	return
 }
@@ -392,19 +397,26 @@ func (s *Station) OnRecv(event string, content string) {
 	s.DisposeRecvMessage(msgPtr)
 
 	// 如果处于终止状态，则不处理
-	if s.terminateChatFlag {
+	if s.chatRunningStatus == Terminate {
 		return
 	}
 
 	s.bizBasePtr.AsyncTask(func() {
 		blockList, blockErr := util.SpliteBlocks(content)
 		if blockErr != nil {
+			s.chatRunningStatus = Terminate
 			log.Errorf("OnRecv, err:%v", blockErr)
 			return
 		}
 
 		for _, block := range blockList {
-			resultVal, resultFinal := s.localWorker.DoWork(s.configPtr, block)
+			resultVal, resultFinal, resultErr := s.localWorker.DoWork(s.configPtr, block)
+			if resultErr != nil {
+				s.chatRunningStatus = Terminate
+				log.Errorf("OnRecv, err:%v", resultErr)
+				return
+			}
+
 			if resultFinal {
 				//s.DisposeRecvMessage(&models.MessageInfo{
 				//	Item:       resultVal,

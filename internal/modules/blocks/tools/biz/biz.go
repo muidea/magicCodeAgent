@@ -2,6 +2,7 @@ package biz
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -102,9 +103,9 @@ func (s *Tools) Run() (err *cd.Error) {
 
 	dataContent := localConfig.GetDataContent()
 	if dataContent != "" {
-		_, resultVal := s.execDataContent("anonymous", currentWorkDir, "", dataContent)
+		_, resultVal, executeErr := s.execDataContent("anonymous", currentWorkDir, "", dataContent)
 		if resultVal != nil {
-			log.Infof("exec data content result.\n%v", resultVal.Result.String())
+			log.Infof("exec data content result.\n%v, error:%v", resultVal.Result.String(), executeErr)
 		}
 		return
 	}
@@ -132,7 +133,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 
 	byteBuilder := strings.Builder{}
 	for idx, block := range blocksList {
-		_, toolResult := s.execDataContent("anonymous", workspaceDir, "", block)
+		_, toolResult, _ := s.execDataContent("anonymous", workspaceDir, "", block)
 		if toolResult != nil {
 			if idx > 0 {
 				byteBuilder.WriteString("=======\n")
@@ -143,7 +144,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 	return byteBuilder.String(), nil
 }
 
-func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent string) (string, *imbtc.ToolResult) {
+func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent string) (string, *imbtc.ToolResult, error) {
 	toolName, toolParam, toolErr := parseParamContent(dataContent)
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
@@ -152,7 +153,7 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 				Role:    common.Tool,
 				Content: []string{fmt.Sprintf("failed to parse param content: %s", toolErr.Error())},
 			},
-		}
+		}, toolErr
 	}
 	if toolName == "" {
 		log.Errorf("tool name cannot be empty")
@@ -161,7 +162,7 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 				Role:    common.Tool,
 				Content: []string{"tool name cannot be empty"},
 			},
-		}
+		}, errors.New("tool name cannot be empty")
 	}
 
 	if toolName == "thinking" {
@@ -171,10 +172,11 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 				Role:    common.Tool,
 				Content: []string{"thinking ok!"},
 			},
-		}
+		}, nil
 	}
 
-	return toolName, s.toolRegistry.Execute(workspaceName, workspaceDir, stage, toolName, toolParam)
+	executeResult, executeErr := s.toolRegistry.Execute(workspaceName, workspaceDir, stage, toolName, toolParam)
+	return toolName, executeResult, executeErr
 }
 
 // 解析执行参数
@@ -363,6 +365,7 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 	var err *cd.Error
 	var executeToolName string
 	var executeResult *imbtc.ToolResult
+	var executeErr error
 	defer func() {
 		if re != nil {
 			re.Set(executeResult, err)
@@ -397,7 +400,12 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		log.Warnf("stage is not valid, stage:%v", stageVal)
 		return
 	}
-	executeToolName, executeResult = s.execDataContent(workspaceName, workspaceDir, stageVal, contentVal)
+	executeToolName, executeResult, executeErr = s.execDataContent(workspaceName, workspaceDir, stageVal, contentVal)
+	if executeErr != nil {
+		err = cd.NewError(cd.Unexpected, fmt.Sprintf("execute tool failed, executeErr:%v", executeErr.Error()))
+		log.Errorf("execute tool failed, executeErr:%v", executeErr)
+		return
+	}
 }
 
 func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (result string, err *cd.Error) {

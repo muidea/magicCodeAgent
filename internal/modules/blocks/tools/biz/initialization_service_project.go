@@ -36,8 +36,7 @@ func (s *InitializationServiceProjectTool) Prompt() string {
 
 func (s *InitializationServiceProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Service} }
 
-func (s *InitializationServiceProjectTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
-	var err error
+func (s *InitializationServiceProjectTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{

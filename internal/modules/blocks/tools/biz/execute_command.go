@@ -33,8 +33,7 @@ func (s *ExecuteCommandTool) Prompt() string {
 
 func (s *ExecuteCommandTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult) {
-	var err error
+func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
