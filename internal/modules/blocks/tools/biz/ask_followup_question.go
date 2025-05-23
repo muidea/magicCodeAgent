@@ -36,7 +36,7 @@ func (s *AskFollowupQuestionTool) Execute(workspaceName, workspaceDir, stage str
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{
-					fmt.Sprintf("execute tool: %s", s.Name()),
+					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
 				},
 			},
 		}
