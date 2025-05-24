@@ -35,6 +35,7 @@ type CreateParam struct {
 }
 
 type MessageSink interface {
+	OnTerminate(msgPtr *models.MessageInfo)
 	OnMessage(msgPtr *models.MessageInfo)
 }
 

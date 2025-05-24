@@ -195,6 +195,19 @@ func (s *LLM) UserBalance() (ret *imklc.UserBalanceResponse, err error) {
 	return
 }
 
+func (s *LLM) OnTerminate(msgPtr *models.MessageInfo) {
+	appendEvent := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
+	appendResult := s.SendEvent(appendEvent)
+	appendVal, appendErr := appendResult.Get()
+	if appendErr != nil {
+		log.Errorf("append message failed: %v", appendVal)
+		return
+	}
+
+	debugEvent := event.NewEvent(imbrc.RecordRealtimeMessage, s.ID(), imbrc.RecorderModule, nil, appendVal)
+	s.PostEvent(debugEvent)
+}
+
 func (s *LLM) OnMessage(msgPtr *models.MessageInfo) {
 	appendEvent := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
 	appendResult := s.SendEvent(appendEvent)

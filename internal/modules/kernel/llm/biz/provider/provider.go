@@ -33,6 +33,8 @@ type StreamTunnel struct {
 	packedContent      string
 }
 
+// sse.StreamSinker.OnClose
+// 与大模型通讯断开（已经是超过最大重试次数）
 func (s *StreamTunnel) OnClose() {
 	log.Warnf("OnClose")
 	s.sseClient.Close()
@@ -47,6 +49,8 @@ func (s *StreamTunnel) OnClose() {
 	}
 }
 
+// sse.StreamSinker.OnRecv
+// 接收到大模型返回数据
 func (s *StreamTunnel) OnRecv(event string, data []byte) {
 	if bytes.Equal(data, []byte(" [DONE]\n")) {
 		// 这里不需要主动断开连接可以方便后续继续使用
@@ -148,19 +152,23 @@ func NewProvider(
 	}
 }
 
+// common.ContentSinker.OnClose
+// 与大模型通讯断开
 func (s *Provider) OnClose() {
 	closeMsg := &models.MessageInfo{
 		Item: models.MessageItem{
-			Role:    common.User,
+			Role:    common.Assistant,
 			Content: []string{"通讯中断，需要重试"}},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.workspaceName,
 	}
 	if s.messageSink != nil {
-		s.messageSink.OnMessage(closeMsg)
+		s.messageSink.OnTerminate(closeMsg)
 	}
 }
 
+// common.ContentSinker.OnRecv
+// 接收到大模型返回数据
 func (s *Provider) OnRecv(event string, content string) {
 	recvMsg := &models.MessageInfo{
 		Item: models.MessageItem{

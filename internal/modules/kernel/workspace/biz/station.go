@@ -168,7 +168,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		stringBuilder.WriteString("\n")
 	}
 	stringBuilder.WriteString("\n\n")
-	
+
 	stringBuilder.WriteString("### 当前文件清单\n")
 	s.fileInfo.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, stagePath) {
@@ -398,6 +398,16 @@ func (s *Station) ChatTerminate(ctx context.Context, stage string) (err *cd.Erro
 	return
 }
 
+func (s *Station) DisposeTerminateMessage(msgPtr *models.MessageInfo) {
+	//log.Infof("DisposeTerminateMessage, :%v", msgPtr)
+	s.stationMutex.RLock()
+	defer s.stationMutex.RUnlock()
+
+	for _, val := range s.observerList {
+		val.OnMessage(msgPtr)
+	}
+}
+
 func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 	msgPtr = s.localMessageCache.Add(msgPtr)
 
@@ -451,14 +461,14 @@ func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.Mes
 func (s *Station) OnClose() {
 	msgPtr := &models.MessageInfo{
 		Item: models.MessageItem{
-			Role:    common.User,
+			Role:    common.Assistant,
 			Content: []string{"通讯中断，需要重试！"},
 		},
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.configPtr.Name,
 	}
 
-	s.DisposeRecvMessage(msgPtr)
+	s.DisposeTerminateMessage(msgPtr)
 }
 
 func (s *Station) OnRecv(event string, content string) {
