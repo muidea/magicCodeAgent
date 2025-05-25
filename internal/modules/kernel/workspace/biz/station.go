@@ -16,6 +16,7 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/cache"
 	"github.com/muidea/magicCodeAgent/pkg/common"
@@ -351,41 +352,46 @@ func (s *Station) UnbindObserver(observer Observer) {
 	}
 }
 
-func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr *models.MessageItem) (err *cd.Error) {
-	messageInfoPtr := &models.MessageInfo{
-		Item:       *messageItemPtr,
-		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		Workspace:  s.configPtr.Name,
-	}
+func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr *models.MessageItem) (err *cd.Error) {
 	var curFlow *models.Flow
-	flowIDVal := ctx.Value(common.FlowID{})
+	flowIDVal := chatContext.Value(common.FlowID{})
 	if flowIDVal != nil {
 		curFlow = s.localFlowManger.GetFlow(flowIDVal.(string))
 	} else {
 		curFlow = s.localFlowManger.GetCurrentFlow()
 	}
+	if curFlow == nil {
+		curFlow = s.localFlowManger.NewFlow(itemPtr, nil)
+	} else {
+		curFlow.AppendMessage(itemPtr)
+	}
 
 	s.currentWorkStage = stage
 	s.chatRunningStatus = Chatting
 
-	curFlow = s.DisposeSendMessage(messageInfoPtr, curFlow)
+	s.DisposeSendMessage(itemPtr)
 
-	stationSystemPrompt := s.systemPrompt()
-	stationEnvPrompt := s.envPrompt(curFlow)
-	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
-	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, stationSystemPrompt, stationEnvPrompt, curFlow.GetFlowPath())
-	if msgErr != nil {
-		err = msgErr
-		log.Errorf("ChatMessage, s.localAssistant.Chat error:%v", msgErr)
-		return
-	}
-
+	err = s.internalChat(chatContext, curFlow)
 	return
 }
 
 func (s *Station) ChatTerminate(ctx context.Context, stage string) (err *cd.Error) {
 	s.chatRunningStatus = Terminate
+
+	return
+}
+
+func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flow) (err *cd.Error) {
+	stationSystemPrompt := s.systemPrompt()
+	stationEnvPrompt := s.envPrompt(chatFlow)
+	contentContext := context.WithValue(chatContext, common.ContentSink{}, s)
+	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
+	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, stationSystemPrompt, stationEnvPrompt, chatFlow.GetFlowPath())
+	if msgErr != nil {
+		err = msgErr
+		log.Errorf("internalChat, s.localAssistant.Chat error:%v", msgErr)
+		return
+	}
 
 	return
 }
@@ -403,11 +409,6 @@ func (s *Station) DisposeTerminateMessage(msgPtr *models.MessageInfo) {
 func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 	msgPtr = s.localMessageCache.Add(msgPtr)
 
-	curFlow := s.localFlowManger.GetCurrentFlow()
-	if curFlow != nil {
-		curFlow.AppendMessage(msgPtr)
-	}
-
 	//log.Infof("DisposeRecvMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
 	defer s.stationMutex.RUnlock()
@@ -417,15 +418,14 @@ func (s *Station) DisposeRecvMessage(msgPtr *models.MessageInfo) {
 	}
 }
 
-func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models.Flow) (ret *models.Flow) {
-	msgPtr = s.localMessageCache.Add(msgPtr)
-
-	curFlow := s.localFlowManger.GetCurrentFlow()
-	if curFlow == nil {
-		curFlow = s.localFlowManger.NewFlow(msgPtr, flowPtr)
-	} else {
-		curFlow.AppendMessage(msgPtr)
+func (s *Station) DisposeSendMessage(itemPtr *models.MessageItem) {
+	messageInfoPtr := &models.MessageInfo{
+		Item:       *itemPtr,
+		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
+		Workspace:  s.configPtr.Name,
 	}
+
+	msgPtr := s.localMessageCache.Add(messageInfoPtr)
 
 	//log.Infof("DisposeSendMessage, :%v", msgPtr)
 	s.stationMutex.RLock()
@@ -434,9 +434,6 @@ func (s *Station) DisposeSendMessage(msgPtr *models.MessageInfo, flowPtr *models
 	for _, val := range s.observerList {
 		val.OnMessage(msgPtr)
 	}
-
-	ret = curFlow
-	return
 }
 
 func (s *Station) FilterMessage(filter *common.MessageFilter) (ret []*models.MessageInfo, err *cd.Error) {
@@ -473,6 +470,11 @@ func (s *Station) OnRecv(event string, content string) {
 		Workspace:  s.configPtr.Name,
 	}
 
+	curFlow := s.localFlowManger.GetCurrentFlow()
+	if curFlow != nil {
+		curFlow.AppendMessage(&msgPtr.Item)
+	}
+
 	s.DisposeRecvMessage(msgPtr)
 
 	// 如果处于终止状态，则不处理
@@ -484,72 +486,86 @@ func (s *Station) OnRecv(event string, content string) {
 		blockList, blockErr := util.SpliteBlocks(content)
 		if blockErr != nil {
 			s.chatRunningStatus = Terminate
-			log.Errorf("OnRecv, err:%v", blockErr)
+			log.Errorf("OnRecv, util.SpliteBlocks err:%v", blockErr)
 			return
 		}
 
 		curFlow := s.localFlowManger.GetCurrentFlow()
-		chatMsg := &models.MessageItem{}
 		for _, block := range blockList {
 			workParam, workResult, workErr := s.localWorker.DoWork(s.configPtr, block)
 			if workErr != nil {
 				s.chatRunningStatus = Terminate
-				log.Errorf("OnRecv, err:%v", workErr)
+				log.Errorf("OnRecv, s.localWorker.DoWork err:%v", workErr)
 				return
 			}
 
-			if workResult.Name == "thinking" || workResult.Name == "ask_followup_question" {
-				continue
+			workResult.Result.Role = common.User
+			switch workResult.Name {
+			case "thinking":
+				// noting todo
+			case "ask_followup_question":
+				curFlow = s.tryToContinue(curFlow, workParam, workResult)
+			case "attempt_completion":
+				curFlow = s.tryToFinish(curFlow, workParam, workResult)
+			case "decompose_design_subtask":
+				curFlow = s.tryToSwitch(curFlow, workParam, workResult)
+			default:
+				curFlow = s.continueRun(curFlow, workParam, workResult)
 			}
 
-			if workResult.Name != "attempt_completion" {
-				continue
+			if curFlow != nil {
+				s.DisposeSendMessage(&workResult.Result)
+				s.internalChat(context.Background(), curFlow)
 			}
-
-			// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
-			// 同时这里进行校验，避免大模型跑偏了，
-			if workResult.Name == "decompose_design_subtask" {
-				level := workParam["level"].(string)
-				switch common.CompareLevel(curFlow.GetLevel(), level) {
-				case common.LevelGreater:
-					// 子级任务
-					//s.localFlowManger.NewFlow(chatMsg, curFlow)
-				case common.LevelEqual:
-					// 同级任务
-				case common.LevelLess:
-					// 父级任务
-				}
-			}
-
-			chatMsg.Content = append(chatMsg.Content, workResult.Result.Content...)
 		}
-
-		// 如果有数据需要继续chat，否则检查curFlow的工作是否处理完毕，未处理完毕，则继续发起chat
-		if len(chatMsg.Content) > 0 {
-			chatMsg.Role = common.User
-			s.ChatMessage(context.Background(), s.currentWorkStage, chatMsg)
-			return
-		}
-
-		// TODO
-
-		/*
-			for _, block := range blockList {
-				resultVal, resultFinal, resultErr := s.localWorker.DoWork(s.configPtr, block)
-				if resultErr != nil {
-					s.chatRunningStatus = Terminate
-					log.Errorf("OnRecv, err:%v", resultErr)
-					return
-				}
-
-				if resultFinal {
-					continue
-				}
-
-				// 这里强制切换Role为User，否则会导致deepseek解析报错
-				resultVal.Role = common.User
-				s.ChatMessage(context.Background(), s.currentWorkStage, &resultVal)
-			}
-		*/
 	})
+}
+
+func (s *Station) tryToContinue(_ *models.Flow, _ imbtc.ToolParam, _ *imbtc.ToolResult) (ret *models.Flow) {
+	// ask_followup_question
+	// 当前阶段是需要等待用户的输入的，不用做任何事情
+	return
+}
+
+func (s *Station) tryToFinish(curFlow *models.Flow, _ imbtc.ToolParam, _ *imbtc.ToolResult) (ret *models.Flow) {
+	// attempt_completion
+	// 检查所有的flow是否都执行完毕，如果执行完毕就
+	ret = s.localFlowManger.FinishFlow(curFlow)
+	return
+}
+
+func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, result *imbtc.ToolResult) (ret *models.Flow) {
+	// decompose_design_subtask
+	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
+	// 同时这里进行校验，避免大模型跑偏了，
+	level := param["level"].(string)
+	switch common.CompareLevel(curFlow.GetLevel(), level) {
+	case common.LevelGreater:
+		s.localFlowManger.NewFlow(&result.Result, curFlow)
+		// 子级任务
+		//s.localFlowManger.NewFlow(chatMsg, curFlow)
+	case common.LevelEqual:
+		// 同级任务
+		s.localFlowManger.NewFlow(&result.Result, curFlow.GetParent())
+	case common.LevelLess:
+		// 父级任务
+		parent := curFlow.GetParent()
+		if parent != nil {
+			s.localFlowManger.NewFlow(&result.Result, parent.GetParent())
+		} else {
+			// 到这里属于异常了，先记录日志看看情况
+			log.Warnf("curFlow.GetParent() is nil, %+v", curFlow.GetFlowPath())
+			s.localFlowManger.NewFlow(&result.Result, nil)
+		}
+	}
+
+	ret = s.localFlowManger.GetCurrentFlow()
+	return
+}
+
+func (s *Station) continueRun(curFlow *models.Flow, _ imbtc.ToolParam, result *imbtc.ToolResult) (ret *models.Flow) {
+	curFlow.AppendMessage(&result.Result)
+
+	ret = curFlow
+	return
 }

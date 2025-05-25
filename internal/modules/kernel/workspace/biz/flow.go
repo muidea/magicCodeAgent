@@ -19,11 +19,11 @@ func NewFlowManager() *FlowManager {
 	}
 }
 
-func (s *FlowManager) newRootFlow(msgPtr *models.MessageInfo) *models.Flow {
+func (s *FlowManager) newRootFlow(msgPtr *models.MessageItem) *models.Flow {
 	flowPtr := &models.Flow{
 		Id:        fmt.Sprintf("flow_%d", len(s.localFlows)),
 		Title:     msgPtr.String(),
-		Message:   []*models.MessageInfo{msgPtr},
+		Message:   []*models.MessageItem{msgPtr},
 		Status:    models.FLOW_STATUS_WAIT,
 		Parent:    nil,
 		Childrens: make([]*models.Flow, 0),
@@ -34,7 +34,7 @@ func (s *FlowManager) newRootFlow(msgPtr *models.MessageInfo) *models.Flow {
 	return flowPtr
 }
 
-func (s *FlowManager) NewFlow(msgPtr *models.MessageInfo, parentPtr *models.Flow) *models.Flow {
+func (s *FlowManager) NewFlow(msgPtr *models.MessageItem, parentPtr *models.Flow) *models.Flow {
 	if parentPtr == nil {
 		parentPtr = s.currentFlowPtr
 	}
@@ -46,7 +46,7 @@ func (s *FlowManager) NewFlow(msgPtr *models.MessageInfo, parentPtr *models.Flow
 	flowPtr := &models.Flow{
 		Id:      fmt.Sprintf("%s_%d", parentPtr.Id, len(parentPtr.Childrens)),
 		Title:   msgPtr.String(),
-		Message: []*models.MessageInfo{msgPtr},
+		Message: []*models.MessageItem{msgPtr},
 		Status:  models.FLOW_STATUS_WAIT,
 		Parent:  parentPtr,
 	}
@@ -93,18 +93,60 @@ func (s *FlowManager) AppendFlow(flowPtr *models.Flow, parentPtr *models.Flow) {
 	s.localFlows = append(s.localFlows, flowPtr)
 }
 
-func (s *FlowManager) FinishFlow(flowPtr *models.Flow) {
-	// 1. 将当前flowPtr的前一个兄弟节点置为currentFlowPtr
+func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
+	defer func() {
+		ret = s.currentFlowPtr
+	}()
+
+	// 1. 将当前flowPtr的status置为FLOW_STATUS_FINISH
+	flowPtr.Status = models.FLOW_STATUS_FINISH
+
+	// 2. 将当前flowPtr的其中一个未完成的兄弟节点置为currentFlowPtr
+	var curPtr *models.Flow
 	if parent := flowPtr.GetParent(); parent != nil {
 		children := parent.GetChildrens()
-		for i, child := range children {
-			if child == flowPtr && i > 0 {
-				s.currentFlowPtr = children[i-1]
+		for _, child := range children {
+			if !child.IsFinish() {
+				curPtr = child
+				break
+			}
+		}
+		// 如果所有的兄弟阶段都完成了，则该Parent也置为完成
+		if curPtr == nil {
+			parent.Status = models.FLOW_STATUS_FINISH
+		} else {
+			s.currentFlowPtr = curPtr
+			return
+		}
+
+		parent = parent.GetParent()
+		for {
+			if parent == nil {
+				// 表示所有的Flow都处理完毕
+				s.currentFlowPtr = nil
+				return
+			}
+
+			if parent.IsFinish() {
+				parent = parent.GetParent()
+				continue
+			}
+
+			children := parent.GetChildrens()
+			if len(children) == 0 {
+				// 如果当前Flow没有完成，并且无子Flow,把则将当前Flow设置为当前Flow
+				s.currentFlowPtr = parent
+				return
+			}
+
+			for _, child := range children {
+				if child.IsFinish() {
+					continue
+				}
+				parent = child
 				break
 			}
 		}
 	}
-
-	// 2. 将当前flowPtr的status置为FLOW_STATUS_FINISH
-	flowPtr.Status = models.FLOW_STATUS_FINISH
+	return
 }

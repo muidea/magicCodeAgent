@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
@@ -12,7 +14,7 @@ const (
 type Flow struct {
 	Id        string           `json:"id"`
 	Title     string           `json:"title"`
-	Message   []*MessageInfo   `json:"message"`
+	Message   []*MessageItem   `json:"message"`
 	Status    int              `json:"status"`
 	AddFiles  fu.StringSortSet `json:"addFiles"`
 	ModFiles  fu.StringSortSet `json:"modFiles"`
@@ -22,9 +24,13 @@ type Flow struct {
 	Level     string           `json:"level"`
 }
 
-func (s *Flow) AppendMessage(m *MessageInfo) {
+func (s *Flow) String() string {
+	return fmt.Sprintf("Flow:{%s}, level:%s, status:%d", s.Title, s.Level, s.Status)
+}
+
+func (s *Flow) AppendMessage(m *MessageItem) {
 	if s.Message == nil {
-		s.Message = make([]*MessageInfo, 0)
+		s.Message = make([]*MessageItem, 0)
 	}
 	s.Message = append(s.Message, m)
 }

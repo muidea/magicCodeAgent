@@ -33,7 +33,7 @@ func (s *Workspace) Chat(
 	userMessageList := models.MessageItemList{}
 	for _, curPtr := range flowPathList {
 		for _, message := range curPtr.Message {
-			userMessageList = append(userMessageList, message.Item)
+			userMessageList = append(userMessageList, *message)
 		}
 	}
 	userMessageList = append(userMessageList, models.MessageItem{
