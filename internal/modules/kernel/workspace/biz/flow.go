@@ -3,6 +3,7 @@ package biz
 import (
 	"fmt"
 
+	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -26,6 +27,7 @@ func (s *FlowManager) newRootFlow(msgPtr *models.MessageInfo) *models.Flow {
 		Status:    models.FLOW_STATUS_WAIT,
 		Parent:    nil,
 		Childrens: make([]*models.Flow, 0),
+		Level:     common.Project,
 	}
 
 	s.AppendFlow(flowPtr, nil)

@@ -42,7 +42,7 @@ func (s ToolParam) String() string {
 }
 
 type ToolResult struct {
-	Final  bool               `json:"final"`
+	Name   string             `json:"name"`
 	Result models.MessageItem `json:"result"`
 }
 

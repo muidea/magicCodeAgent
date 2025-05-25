@@ -38,6 +38,7 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, stage strin
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
+			Name: s.Name(),
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{
@@ -48,7 +49,6 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, stage strin
 		if err != nil {
 			ret.Result.Content = append(ret.Result.Content, err.Error())
 		} else {
-			ret.Final = true
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()

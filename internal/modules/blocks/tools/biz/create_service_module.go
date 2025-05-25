@@ -39,6 +39,7 @@ func (s *CreateServiceModuleTool) Execute(workspaceName, workspaceDir, stage str
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
+			Name: s.Name(),
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{

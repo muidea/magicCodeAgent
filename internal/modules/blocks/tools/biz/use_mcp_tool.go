@@ -32,6 +32,7 @@ func (s *UseMcpToolTool) Execute(workspaceName, workspaceDir, stage string, para
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
+			Name: s.Name(),
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{

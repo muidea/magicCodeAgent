@@ -54,3 +54,42 @@ const (
 	Service = "service"
 	Web     = "web"
 )
+
+const (
+	Project = "project"
+	Module  = "module"
+	Block   = "block"
+	Point   = "point"
+)
+
+const (
+	LevelGreater = 1
+	LevelEqual   = 0
+	LevelLess    = -1
+)
+
+// 比较l1, l3的层级关系
+// 如果l1 > l2, 返回1，表示l1比l2高一个层级
+// 如果l1 < l2, 返回-1，表示l1比l2低一个层级
+// 如果l1 == l2, 返回0，表示l1和l2在同一层级
+// Project > Module > Block > Point
+func CompareLevel(l1, l2 string) int {
+	levelMap := map[string]int{
+		"Project": 4,
+		"Module":  3,
+		"Block":   2,
+		"Point":   1,
+	}
+
+	l1Level := levelMap[l1]
+	l2Level := levelMap[l2]
+
+	switch {
+	case l1Level > l2Level:
+		return 1
+	case l1Level < l2Level:
+		return -1
+	default:
+		return 0
+	}
+}

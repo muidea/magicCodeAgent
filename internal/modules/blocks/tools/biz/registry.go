@@ -63,7 +63,7 @@ func (s *ToolRegistry) Execute(workspaceName, workspaceDir, stage, toolName stri
 			availableTools = append(availableTools, name)
 		}
 		return &imbtc.ToolResult{
-			Final: true,
+			Name: toolName,
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{

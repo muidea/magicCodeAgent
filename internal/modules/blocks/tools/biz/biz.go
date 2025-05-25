@@ -144,11 +144,12 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 	return byteBuilder.String(), nil
 }
 
-func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent string) (string, *imbtc.ToolResult, error) {
+func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent string) (imbtc.ToolParam, *imbtc.ToolResult, error) {
 	toolName, toolParam, toolErr := parseParamContent(dataContent)
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
-		return "", &imbtc.ToolResult{
+		return nil, &imbtc.ToolResult{
+			Name: toolName,
 			Result: models.MessageItem{
 				Role:    common.Tool,
 				Content: []string{fmt.Sprintf("failed to parse param content: %s", toolErr.Error())},
@@ -157,7 +158,8 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 	}
 	if toolName == "" {
 		log.Errorf("tool name cannot be empty")
-		return "", &imbtc.ToolResult{
+		return nil, &imbtc.ToolResult{
+			Name: toolName,
 			Result: models.MessageItem{
 				Role:    common.Tool,
 				Content: []string{"tool name cannot be empty"},
@@ -166,8 +168,8 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 	}
 
 	if toolName == "thinking" {
-		return "thinking", &imbtc.ToolResult{
-			Final: true,
+		return nil, &imbtc.ToolResult{
+			Name: toolName,
 			Result: models.MessageItem{
 				Role:    common.Tool,
 				Content: []string{"thinking ok!"},
@@ -176,7 +178,7 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 	}
 
 	executeResult, executeErr := s.toolRegistry.Execute(workspaceName, workspaceDir, stage, toolName, toolParam)
-	return toolName, executeResult, executeErr
+	return toolParam, executeResult, executeErr
 }
 
 // 解析执行参数
@@ -185,7 +187,7 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 // 执行函数是xml的root节点名
 // 执行函数的参数是root的子节点及子节点的值
 // 参照示例参见各个工具函数对应的注释信息
-func parseParamContent(content string) (string, map[string]any, error) {
+func parseParamContent(content string) (string, imbtc.ToolParam, error) {
 	// 检查内容是否为空
 	if strings.TrimSpace(content) == "" {
 		return "", nil, fmt.Errorf("empty content")
@@ -220,7 +222,7 @@ func parseParamContent(content string) (string, map[string]any, error) {
 	}
 
 	// 创建参数映射
-	param := make(map[string]any)
+	param := imbtc.ToolParam{}
 
 	// 特殊处理ask_followup_question工具，处理suggest标签
 	if tagName == "ask_followup_question" {
@@ -363,13 +365,13 @@ func parseParamContent(content string) (string, map[string]any, error) {
 
 func (s *Tools) Execute(ev event.Event, re event.Result) {
 	var err *cd.Error
-	var executeToolName string
+	var executeParam imbtc.ToolParam
 	var executeResult *imbtc.ToolResult
 	var executeErr error
 	defer func() {
 		if re != nil {
 			re.Set(executeResult, err)
-			re.SetVal("toolName", executeToolName)
+			re.SetVal("param", executeParam)
 		}
 	}()
 
@@ -400,7 +402,7 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		log.Warnf("stage is not valid, stage:%v", stageVal)
 		return
 	}
-	executeToolName, executeResult, executeErr = s.execDataContent(workspaceName, workspaceDir, stageVal, contentVal)
+	executeParam, executeResult, executeErr = s.execDataContent(workspaceName, workspaceDir, stageVal, contentVal)
 	if executeErr != nil {
 		err = cd.NewError(cd.Unexpected, fmt.Sprintf("execute tool failed, executeErr:%v", executeErr.Error()))
 		log.Errorf("execute tool failed, executeErr:%v", executeErr)

@@ -19,6 +19,7 @@ type Flow struct {
 	DelFiles  fu.StringSortSet `json:"delFiles"`
 	Parent    *Flow            `json:"parent"`
 	Childrens []*Flow          `json:"childrens"`
+	Level     string           `json:"level"`
 }
 
 func (s *Flow) AppendMessage(m *MessageInfo) {
@@ -68,4 +69,12 @@ func (s *Flow) ModFile(filePath string) {
 func (s *Flow) DelFile(filePath string) {
 	s.DelFiles = s.DelFiles.Add(filePath)
 	s.AddFiles = s.AddFiles.Remove(filePath)
+}
+
+func (s *Flow) GetLevel() string {
+	return s.Level
+}
+
+func (s *Flow) SetLevel(level string) {
+	s.Level = level
 }

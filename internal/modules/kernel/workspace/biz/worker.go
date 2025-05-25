@@ -11,20 +11,16 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Worker interface {
-	DoWork(workspaceConfig *config.Workspace, content string) (result models.MessageItem, final bool, err *cd.Error)
+	DoWork(workspaceConfig *config.Workspace, content string) (param imbtc.ToolParam, result *imbtc.ToolResult, err *cd.Error)
 }
 
-func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (result models.MessageItem, final bool, err *cd.Error) {
+func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (param imbtc.ToolParam, result *imbtc.ToolResult, err *cd.Error) {
 	workspaceDir := workspaceConfig.GetWorkspaceDir()
 	if !fp.Exist(workspaceConfig.GetWorkspaceDir()) {
 		if osErr := os.MkdirAll(workspaceDir, 0755); osErr != nil {
-			result = models.MessageItem{
-				Content: []string{fmt.Sprintf("create work dir failed, error%s", osErr.Error())},
-			}
 			err = cd.NewError(cd.Unexpected, fmt.Sprintf("create work dir failed, error%s", osErr.Error()))
 			return
 		}
@@ -36,9 +32,6 @@ func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (r
 	executeResult := s.SendEvent(executeEvent)
 	resultVal, resultErr := executeResult.Get()
 	if resultErr != nil {
-		result = models.MessageItem{
-			Content: []string{resultErr.Error()},
-		}
 		log.Errorf("do work failed, %s", resultErr)
 		err = resultErr
 		return //"", fmt.Errorf("do work failed, %s", resultErr)
@@ -46,14 +39,11 @@ func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (r
 
 	toolResultPtr, toolResultOK := resultVal.(*imbtc.ToolResult)
 	if !toolResultOK {
-		result = models.MessageItem{
-			Content: []string{"do work failed, illegal result"},
-		}
 		err = cd.NewError(cd.Unexpected, "do work failed, illegal result")
 		return //"", fmt.Errorf("do work failed, %s", resultErr)
 	}
 
-	result = toolResultPtr.Result
-	final = toolResultPtr.Final
+	param = executeResult.GetVal("param").(imbtc.ToolParam)
+	result = toolResultPtr
 	return
 }

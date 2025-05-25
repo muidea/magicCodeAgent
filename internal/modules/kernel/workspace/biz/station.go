@@ -351,14 +351,6 @@ func (s *Station) UnbindObserver(observer Observer) {
 	}
 }
 
-func (s *Station) GetCurrentFlow() *models.Flow {
-	return s.localFlowManger.GetCurrentFlow()
-}
-
-func (s *Station) GetFlow(id string) *models.Flow {
-	return s.localFlowManger.GetFlow(id)
-}
-
 func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr *models.MessageItem) (err *cd.Error) {
 	messageInfoPtr := &models.MessageInfo{
 		Item:       *messageItemPtr,
@@ -368,9 +360,9 @@ func (s *Station) ChatMessage(ctx context.Context, stage string, messageItemPtr 
 	var curFlow *models.Flow
 	flowIDVal := ctx.Value(common.FlowID{})
 	if flowIDVal != nil {
-		curFlow = s.GetFlow(flowIDVal.(string))
+		curFlow = s.localFlowManger.GetFlow(flowIDVal.(string))
 	} else {
-		curFlow = s.GetCurrentFlow()
+		curFlow = s.localFlowManger.GetCurrentFlow()
 	}
 
 	s.currentWorkStage = stage
@@ -496,8 +488,52 @@ func (s *Station) OnRecv(event string, content string) {
 			return
 		}
 
+		curFlow := s.localFlowManger.GetCurrentFlow()
+		chatMsg := &models.MessageItem{}
+		for _, block := range blockList {
+			workParam, workResult, workErr := s.localWorker.DoWork(s.configPtr, block)
+			if workErr != nil {
+				s.chatRunningStatus = Terminate
+				log.Errorf("OnRecv, err:%v", workErr)
+				return
+			}
+
+			if workResult.Name == "thinking" || workResult.Name == "ask_followup_question" {
+				continue
+			}
+
+			if workResult.Name != "attempt_completion" {
+				continue
+			}
+
+			// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
+			// 同时这里进行校验，避免大模型跑偏了，
+			if workResult.Name == "decompose_design_subtask" {
+				level := workParam["level"].(string)
+				switch common.CompareLevel(curFlow.GetLevel(), level) {
+				case common.LevelGreater:
+					// 子级任务
+					//s.localFlowManger.NewFlow(chatMsg, curFlow)
+				case common.LevelEqual:
+					// 同级任务
+				case common.LevelLess:
+					// 父级任务
+				}
+			}
+
+			chatMsg.Content = append(chatMsg.Content, workResult.Result.Content...)
+		}
+
+		// 如果有数据需要继续chat，否则检查curFlow的工作是否处理完毕，未处理完毕，则继续发起chat
+		if len(chatMsg.Content) > 0 {
+			chatMsg.Role = common.User
+			s.ChatMessage(context.Background(), s.currentWorkStage, chatMsg)
+			return
+		}
+
+		// TODO
+
 		/*
-			chatMsg := &models.MessageItem{}
 			for _, block := range blockList {
 				resultVal, resultFinal, resultErr := s.localWorker.DoWork(s.configPtr, block)
 				if resultErr != nil {
@@ -510,34 +546,10 @@ func (s *Station) OnRecv(event string, content string) {
 					continue
 				}
 
-				chatMsg.Content = append(chatMsg.Content, resultVal.Content...)
+				// 这里强制切换Role为User，否则会导致deepseek解析报错
+				resultVal.Role = common.User
+				s.ChatMessage(context.Background(), s.currentWorkStage, &resultVal)
 			}
-
-			// 如果有数据需要继续chat，否则检查curFlow的工作是否处理完毕，未处理完毕，则继续发起chat
-			if len(chatMsg.Content) > 0 {
-				chatMsg.Role = common.User
-				s.ChatMessage(context.Background(), s.currentWorkStage, chatMsg)
-				return
-			}
-
-			// TODO
 		*/
-
-		for _, block := range blockList {
-			resultVal, resultFinal, resultErr := s.localWorker.DoWork(s.configPtr, block)
-			if resultErr != nil {
-				s.chatRunningStatus = Terminate
-				log.Errorf("OnRecv, err:%v", resultErr)
-				return
-			}
-
-			if resultFinal {
-				continue
-			}
-
-			// 这里强制切换Role为User，否则会导致deepseek解析报错
-			resultVal.Role = common.User
-			s.ChatMessage(context.Background(), s.currentWorkStage, &resultVal)
-		}
 	})
 }
