@@ -34,6 +34,7 @@ const (
 	ChatWorkspaceContentMessage   = "/workspace/content/chat/message"
 	ChatWorkspaceContentTerminate = "/workspace/content/chat/terminate"
 	ChatWorkspaceContentHistory   = "/workspace/content/chat/history"
+	ChatWorkspaceContentDebug     = "/workspace/content/chat/debug"
 )
 
 type WorkspaceResult struct {
