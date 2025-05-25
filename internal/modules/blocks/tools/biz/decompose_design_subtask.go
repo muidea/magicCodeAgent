@@ -111,8 +111,6 @@ func (s *DecomposeDesignSubtaskTool) getSiblingsAndChilds(workspaceDir, stage, n
 		return
 	}
 
-	log.Infof("rootPath:\n%s\n%s\n", rootPath, fileList)
-
 	currentPath := "."
 	childPath := "."
 	siblingList := fu.StringSet{}
