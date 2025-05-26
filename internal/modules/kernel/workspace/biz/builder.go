@@ -119,3 +119,16 @@ func (s *Workspace) ChatWorkspaceContentHistory(workspaceName string) (ret []*mo
 	ret, err = stationPtr.FilterMessage(messageFilter)
 	return
 }
+
+func (s *Workspace) DebugWorkspaceFlow(workspaceName string) (ret []*models.Flow, err *cd.Error) {
+	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
+	if !ok {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
+		log.Errorf("workspace:%s not found", workspaceName)
+		return
+	}
+
+	stationPtr := curWorkspace.(*Station)
+	ret = stationPtr.GetFlows()
+	return
+}

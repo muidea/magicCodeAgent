@@ -25,7 +25,11 @@ type Flow struct {
 }
 
 func (s *Flow) String() string {
-	return fmt.Sprintf("Flow:{%s}, level:%s, status:%d", s.Title, s.Level, s.Status)
+	if s.Parent == nil {
+		return fmt.Sprintf("Flow %s\ntitle:%s, level:%s, status:%d\nparent is null", s.Id, s.Title, s.Level, s.Status)
+	}
+
+	return fmt.Sprintf("Flow %s\ntitle:%s, level:%s, status:%d\nparent:%s", s.Id, s.Title, s.Level, s.Status, s.Parent.Id)
 }
 
 func (s *Flow) AppendMessage(m *MessageItem) {
@@ -48,19 +52,26 @@ func (s *Flow) IsFinish() bool {
 }
 
 func (s *Flow) GetFlowPath() []*Flow {
-	nodes := make([]*Flow, 0)
-	if s.Parent != nil {
-		nodes = append(nodes, s.Parent.GetFlowPath()...)
-	}
-	nodes = append(nodes, s)
+	/*
+	   nodes := make([]*Flow, 0)
 
-	// 反转slice使父节点在前
-	flowPath := make([]*Flow, len(nodes))
-	for i, j := 0, len(nodes)-1; j >= 0; i, j = i+1, j-1 {
-		flowPath[i] = nodes[j]
-	}
+	   	if s.Parent != nil {
+	   		nodes = append(nodes, s.Parent.GetFlowPath()...)
+	   	}
 
-	return flowPath
+	   nodes = append(nodes, s)
+
+	   // 反转slice使父节点在前
+	   flowPath := make([]*Flow, len(nodes))
+
+	   	for i, j := 0, len(nodes)-1; j >= 0; i, j = i+1, j-1 {
+	   		flowPath[i] = nodes[j]
+	   	}
+
+	   return flowPath
+	*/
+
+	return []*Flow{s}
 }
 
 func (s *Flow) AddFile(filePath string) {

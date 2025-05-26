@@ -16,7 +16,6 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/biz"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
-	tc "github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 type Workspace struct {
@@ -36,7 +35,7 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Workspace) *Workspace {
 }
 
 func (s *Workspace) RegisterRoute() {
-	s.routeRegistry.SetApiVersion(tc.ApiVersion)
+	s.routeRegistry.SetApiVersion(common.ApiVersion)
 	s.routeRegistry.AddHandler(imkwc.QueryWorkspace, engine.GET, s.queryWorkspace)
 	s.routeRegistry.AddHandler(imkwc.CreateWorkspace, engine.POST, s.createWorkspace)
 	s.routeRegistry.AddHandler(imkwc.DestroyWorkspace, engine.DELETE, s.destroyWorkspace)
@@ -55,6 +54,7 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentMessage, engine.POST, s.chatWorkspaceContentMessage)
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentTerminate, engine.POST, s.chatWorkspaceContentTerminate)
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentHistory, engine.GET, s.chatWorkspaceContentHistory)
+	s.routeRegistry.AddHandler(imkwc.DebugWorkspaceFlow, engine.GET, s.debugWorkspaceFlow)
 }
 
 func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -347,4 +347,12 @@ func (s *Workspace) chatWorkspaceContentHistory(ctx context.Context, res http.Re
 
 	workspaceName := req.URL.Query().Get("workspace")
 	result.Values, result.Error = s.bizPtr.ChatWorkspaceContentHistory(workspaceName)
+}
+
+func (s *Workspace) debugWorkspaceFlow(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkwc.DebugFlowResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	workspaceName := req.URL.Query().Get("workspace")
+	result.Values, result.Error = s.bizPtr.DebugWorkspaceFlow(workspaceName)
 }

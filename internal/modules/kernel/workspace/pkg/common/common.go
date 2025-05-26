@@ -34,7 +34,7 @@ const (
 	ChatWorkspaceContentMessage   = "/workspace/content/chat/message"
 	ChatWorkspaceContentTerminate = "/workspace/content/chat/terminate"
 	ChatWorkspaceContentHistory   = "/workspace/content/chat/history"
-	ChatWorkspaceContentDebug     = "/workspace/content/chat/debug"
+	DebugWorkspaceFlow            = "/workspace/content/flow/debug"
 )
 
 type WorkspaceResult struct {
@@ -141,4 +141,9 @@ type ChatMessageResult struct {
 type ChatHistoryResult struct {
 	cd.Result
 	Values []*models.MessageInfo `json:"values"`
+}
+
+type DebugFlowResult struct {
+	cd.Result
+	Values []*models.Flow `json:"values"`
 }

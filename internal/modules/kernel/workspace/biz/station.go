@@ -490,22 +490,25 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 				return
 			}
 
+			msgItem := &workResult.Result
+			msgItem.Role = common.User
 			//workResult.Result.Role = common.User
 			switch workResult.Name {
 			case "thinking":
 				// noting todo
+				continue
 			case "ask_followup_question":
-				curFlow = s.tryToContinue(curFlow, workParam, workResult)
+				curFlow = s.tryToContinue(curFlow, workParam, msgItem)
 			case "attempt_completion":
-				curFlow = s.tryToFinish(curFlow, workParam, workResult)
+				curFlow = s.tryToFinish(curFlow, workParam, msgItem)
 			case "decompose_design_subtask":
-				curFlow = s.tryToSwitch(curFlow, workParam, workResult)
+				curFlow = s.tryToSwitch(curFlow, workParam, msgItem)
 			default:
-				curFlow = s.continueRun(curFlow, workParam, workResult)
+				curFlow = s.continueRun(curFlow, workParam, msgItem)
 			}
 
 			if curFlow != nil {
-				s.DisposeMessage(&workResult.Result)
+				s.DisposeMessage(msgItem)
 				err := s.internalChat(context.Background(), curFlow)
 				if err != nil {
 					s.chatRunningStatus = Terminate
@@ -523,56 +526,57 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	})
 }
 
-func (s *Station) tryToContinue(_ *models.Flow, _ imbtc.ToolParam, _ *imbtc.ToolResult) (ret *models.Flow) {
+func (s *Station) tryToContinue(_ *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// ask_followup_question
 	// 当前阶段是需要等待用户的输入的，不用做任何事情
 	return
 }
 
-func (s *Station) tryToFinish(curFlow *models.Flow, _ imbtc.ToolParam, _ *imbtc.ToolResult) (ret *models.Flow) {
+func (s *Station) tryToFinish(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// attempt_completion
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
 	ret = s.localFlowManger.FinishFlow(curFlow)
 	return
 }
 
-func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, result *imbtc.ToolResult) (ret *models.Flow) {
+func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
 	// decompose_design_subtask
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
 	level := param["level"].(string)
-	msgItem := result.Result
-	msgItem.Role = common.User
-	switch common.CompareLevel(curFlow.GetLevel(), level) {
+	compareVal := common.LevelGreater
+	if curFlow != nil {
+		compareVal = common.CompareLevel(curFlow.GetLevel(), level)
+	}
+	switch compareVal {
 	case common.LevelGreater:
-		s.localFlowManger.NewFlow(&msgItem, curFlow)
+		ret = s.localFlowManger.NewFlow(msgItem, curFlow)
 		// 子级任务
 		//s.localFlowManger.NewFlow(chatMsg, curFlow)
 	case common.LevelEqual:
 		// 同级任务
-		s.localFlowManger.NewFlow(&msgItem, curFlow.GetParent())
+		ret = s.localFlowManger.NewFlow(msgItem, curFlow.GetParent())
 	case common.LevelLess:
 		// 父级任务
 		parent := curFlow.GetParent()
 		if parent != nil {
-			s.localFlowManger.NewFlow(&msgItem, parent.GetParent())
+			ret = s.localFlowManger.NewFlow(msgItem, parent.GetParent())
 		} else {
 			// 到这里属于异常了，先记录日志看看情况
 			log.Warnf("curFlow.GetParent() is nil, %+v", curFlow.GetFlowPath())
-			s.localFlowManger.NewFlow(&msgItem, nil)
+			ret = s.localFlowManger.NewFlow(msgItem, nil)
 		}
 	}
-
-	ret = s.localFlowManger.GetCurrentFlow()
 	return
 }
 
-func (s *Station) continueRun(curFlow *models.Flow, _ imbtc.ToolParam, result *imbtc.ToolResult) (ret *models.Flow) {
-	msgItem := result.Result
-	msgItem.Role = common.User
-
-	curFlow.AppendMessage(&msgItem)
+func (s *Station) continueRun(curFlow *models.Flow, _ imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
+	curFlow.AppendMessage(msgItem)
 
 	ret = curFlow
 	return
+}
+
+func (s *Station) GetFlows() []*models.Flow {
+	return s.localFlowManger.GetLocalFlows()
 }

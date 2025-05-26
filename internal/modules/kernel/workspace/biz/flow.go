@@ -3,6 +3,8 @@ package biz
 import (
 	"fmt"
 
+	"github.com/muidea/magicCommon/foundation/log"
+
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
@@ -30,8 +32,7 @@ func (s *FlowManager) newRootFlow(msgPtr *models.MessageItem) *models.Flow {
 		Level:     common.Project,
 	}
 
-	s.AppendFlow(flowPtr, nil)
-	return flowPtr
+	return s.appendFlow(flowPtr, nil)
 }
 
 func (s *FlowManager) NewFlow(msgPtr *models.MessageItem, parentPtr *models.Flow) *models.Flow {
@@ -51,8 +52,7 @@ func (s *FlowManager) NewFlow(msgPtr *models.MessageItem, parentPtr *models.Flow
 		Parent:  parentPtr,
 	}
 
-	s.AppendFlow(flowPtr, parentPtr)
-	return flowPtr
+	return s.appendFlow(flowPtr, parentPtr)
 }
 
 func (s *FlowManager) GetCurrentFlow() *models.Flow {
@@ -73,9 +73,11 @@ func (s *FlowManager) GetFlow(flowID string) *models.Flow {
 	return nil
 }
 
-func (s *FlowManager) AppendFlow(flowPtr *models.Flow, parentPtr *models.Flow) {
+func (s *FlowManager) appendFlow(flowPtr *models.Flow, parentPtr *models.Flow) (ret *models.Flow) {
 	defer func() {
 		s.currentFlowPtr = flowPtr
+		ret = s.currentFlowPtr
+		log.Infof("appendFlow: %s", flowPtr)
 	}()
 
 	if parentPtr != nil {
@@ -91,6 +93,7 @@ func (s *FlowManager) AppendFlow(flowPtr *models.Flow, parentPtr *models.Flow) {
 	}
 
 	s.localFlows = append(s.localFlows, flowPtr)
+	return
 }
 
 func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
