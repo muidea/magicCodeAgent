@@ -13,6 +13,44 @@ const (
 	UserBalance    = "/user/balance"
 )
 
+type Usage struct {
+	CompletionTokens    int `json:"completion_tokens"`
+	PromptTokens        int `json:"prompt_tokens"`
+	PromptCacheHitToken int `json:"prompt_cache_hit_tokens"`
+	PromptMissHitToken  int `json:"prompt_cache_miss_tokens"`
+	TotalTokens         int `json:"total_tokens"`
+}
+
+func (s *Usage) Update(ptr *Usage) {
+	if ptr == nil {
+		return
+	}
+
+	s.CompletionTokens += ptr.CompletionTokens
+	s.PromptTokens += ptr.PromptTokens
+	s.PromptCacheHitToken += ptr.PromptCacheHitToken
+	s.PromptMissHitToken += ptr.PromptMissHitToken
+	s.TotalTokens += ptr.TotalTokens
+}
+
+func (s *Usage) Reset() {
+	s.CompletionTokens = 0
+	s.PromptTokens = 0
+	s.PromptCacheHitToken = 0
+	s.PromptMissHitToken = 0
+	s.TotalTokens = 0
+}
+
+func (s *Usage) Copy() *Usage {
+	return &Usage{
+		CompletionTokens:    s.CompletionTokens,
+		PromptTokens:        s.PromptTokens,
+		PromptCacheHitToken: s.PromptCacheHitToken,
+		PromptMissHitToken:  s.PromptMissHitToken,
+		TotalTokens:         s.TotalTokens,
+	}
+}
+
 // ChatCompletionStreamRequest 兼容OpenAI的聊天完成请求结构
 type ChatCompletionStreamRequest struct {
 	openai.ChatCompletionRequest
@@ -24,6 +62,7 @@ func (s *ChatCompletionStreamRequest) IsStream() bool {
 
 type ChatCompletionStreamResponse struct {
 	openai.ChatCompletionStreamResponse
+	Usage *Usage `json:"usage,omitempty"`
 }
 
 // BetaCompletionRequest 测试版完成请求

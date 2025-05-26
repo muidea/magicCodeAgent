@@ -208,7 +208,20 @@ func (s *LLM) OnTerminate(msgPtr *models.MessageInfo) {
 	s.PostEvent(debugEvent)
 }
 
-func (s *LLM) OnMessage(msgPtr *models.MessageInfo) {
+func (s *LLM) OnSendMessage(msgPtr *models.MessageInfo) {
+	appendEvent := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
+	appendResult := s.SendEvent(appendEvent)
+	appendVal, appendErr := appendResult.Get()
+	if appendErr != nil {
+		log.Errorf("append message failed: %v", appendVal)
+		return
+	}
+
+	debugEvent := event.NewEvent(imbrc.RecordRealtimeMessage, s.ID(), imbrc.RecorderModule, nil, appendVal)
+	s.PostEvent(debugEvent)
+}
+
+func (s *LLM) OnRecvMessage(msgPtr *models.MessageInfo, usePtr *imklc.Usage) {
 	appendEvent := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
 	appendResult := s.SendEvent(appendEvent)
 	appendVal, appendErr := appendResult.Get()

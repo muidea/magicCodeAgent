@@ -1,10 +1,12 @@
 package biz
 
 import (
+	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
 
+	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
 
@@ -81,4 +83,14 @@ func ConvertPathsToTree(basePath string, paths []string) []*common.DataNode {
 	}
 
 	return root.Children
+}
+
+func formatUsage(ptr *imklc.Usage, loopCount int64) string {
+	strBuff := &strings.Builder{}
+	strBuff.WriteString("对话次数: " + fmt.Sprintf("%d", loopCount) + "\n")
+	strBuff.WriteString("Token用量: \n")
+	strBuff.WriteString("  - 总消耗: " + fmt.Sprintf("%d", ptr.TotalTokens) + "\n")
+	strBuff.WriteString("  - 输入: " + fmt.Sprintf("%d", ptr.PromptTokens) + "(Hit-" + fmt.Sprintf("%d", ptr.PromptCacheHitToken) + "/Miss-" + fmt.Sprintf("%d", ptr.PromptMissHitToken) + ")\n")
+	strBuff.WriteString("  - 输出: " + fmt.Sprintf("%d", ptr.CompletionTokens) + "\n")
+	return strBuff.String()
 }

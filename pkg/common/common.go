@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
+	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -22,7 +23,7 @@ func (s *ContentSink) String() string {
 
 type ContentSinker interface {
 	OnClose()
-	OnRecv(event, content string)
+	OnRecv(event, content string, usagePtr *imklc.Usage)
 }
 
 type CreateParam struct {
@@ -36,7 +37,8 @@ type CreateParam struct {
 
 type MessageSink interface {
 	OnTerminate(msgPtr *models.MessageInfo)
-	OnMessage(msgPtr *models.MessageInfo)
+	OnSendMessage(msgPtr *models.MessageInfo)
+	OnRecvMessage(msgPtr *models.MessageInfo, usagePtr *imklc.Usage)
 }
 
 type MessageFilter struct {

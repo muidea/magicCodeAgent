@@ -24,6 +24,8 @@ const (
 	Function  = openai.ChatMessageRoleFunction
 	Tool      = openai.ChatMessageRoleTool
 	Developer = openai.ChatMessageRoleDeveloper
+	// 以下的自定义角色只是为了 前端展示使用，实际不会用到
+	Notifier = "notifier"
 )
 
 const (

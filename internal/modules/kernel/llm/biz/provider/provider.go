@@ -31,6 +31,7 @@ type StreamTunnel struct {
 
 	localContentSinker common.ContentSinker
 	packedContent      string
+	contentUsage       *imklc.Usage
 }
 
 // sse.StreamSinker.OnClose
@@ -70,14 +71,19 @@ func (s *StreamTunnel) OnRecv(event string, data []byte) {
 		if len(respPtr.Choices) > 0 {
 			s.packedContent += respPtr.Choices[0].Delta.Content
 		}
+		if s.contentUsage == nil {
+			s.contentUsage = &imklc.Usage{}
+		}
+		s.contentUsage.Update(respPtr.Usage)
 		if respPtr.Choices[0].FinishReason != "" {
 			if s.contextContentSinker != nil {
-				s.contextContentSinker.OnRecv(event, s.packedContent)
+				s.contextContentSinker.OnRecv(event, s.packedContent, s.contentUsage.Copy())
 			}
 			if s.localContentSinker != nil {
-				s.localContentSinker.OnRecv(event, s.packedContent)
+				s.localContentSinker.OnRecv(event, s.packedContent, s.contentUsage.Copy())
 			}
 			s.packedContent = ""
+			s.contentUsage.Reset()
 		}
 	}
 }
@@ -169,7 +175,7 @@ func (s *Provider) OnClose() {
 
 // common.ContentSinker.OnRecv
 // 接收到大模型返回数据
-func (s *Provider) OnRecv(event string, content string) {
+func (s *Provider) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	recvMsg := &models.MessageInfo{
 		Item: models.MessageItem{
 			Role:    common.Assistant,
@@ -178,7 +184,7 @@ func (s *Provider) OnRecv(event string, content string) {
 		Workspace:  s.workspaceName,
 	}
 	if s.messageSink != nil {
-		s.messageSink.OnMessage(recvMsg)
+		s.messageSink.OnRecvMessage(recvMsg, usagePtr)
 	}
 }
 
@@ -241,7 +247,7 @@ func (s *Provider) ChatCompletionStream(
 
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
-		s.messageSink.OnMessage(&models.MessageInfo{
+		s.messageSink.OnSendMessage(&models.MessageInfo{
 			Item: models.MessageItem{
 				Role:    common.User,
 				Content: []string{string(byteVal)}},
@@ -321,7 +327,7 @@ func (s *Provider) BetaCompletionStream(
 
 	byteVal, byteErr := json.Marshal(paramPtr)
 	if byteErr == nil && s.messageSink != nil {
-		s.messageSink.OnMessage(&models.MessageInfo{
+		s.messageSink.OnSendMessage(&models.MessageInfo{
 			Item: models.MessageItem{
 				Role:    common.User,
 				Content: []string{string(byteVal)}},

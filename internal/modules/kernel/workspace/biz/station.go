@@ -48,6 +48,9 @@ type Station struct {
 
 	chatRunningStatus string
 
+	chatLoopCount int64
+	chatUsagePtr  *imklc.Usage
+
 	stationMutex sync.RWMutex
 	observerList []Observer
 
@@ -68,6 +71,8 @@ func NewStation(
 	ret := &Station{
 		bizBasePtr:        bizBasePtr,
 		configPtr:         workspacePtr,
+		chatLoopCount:     0,
+		chatUsagePtr:      &imklc.Usage{},
 		localMessageCache: cache.NewMessageSequenceCache(500),
 		localFlowManger:   NewFlowManager(),
 		localWorker:       worker,
@@ -382,6 +387,8 @@ func (s *Station) ChatTerminate(ctx context.Context, stage string) (err *cd.Erro
 }
 
 func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flow) (err *cd.Error) {
+	s.chatLoopCount++
+
 	stationSystemPrompt := s.systemPrompt()
 	stationEnvPrompt := s.envPrompt(chatFlow)
 	contentContext := context.WithValue(chatContext, common.ContentSink{}, s)
@@ -433,11 +440,26 @@ func (s *Station) OnClose() {
 	s.DisposeMessage(msgPtr)
 }
 
-func (s *Station) OnRecv(event string, content string) {
+func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
+	defer func() {
+		if s.chatRunningStatus == Terminate || s.chatRunningStatus == Finished {
+			// 发送本次消耗的Token数据
+			notifyMsg := &models.MessageItem{
+				Role: common.Notifier,
+				Content: []string{
+					formatUsage(s.chatUsagePtr, s.chatLoopCount),
+				},
+			}
+			s.DisposeMessage(notifyMsg)
+		}
+	}()
+
 	msgPtr := &models.MessageItem{
 		Role:    common.Assistant,
 		Content: []string{content},
 	}
+
+	s.chatUsagePtr.Update(usagePtr)
 
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	if curFlow != nil {
@@ -491,6 +513,12 @@ func (s *Station) OnRecv(event string, content string) {
 					return
 				}
 			}
+		}
+
+		// 如果所有的Flow都执行完毕，则将状态置为Finish
+		curFlow = s.localFlowManger.GetCurrentFlow()
+		if curFlow == nil {
+			s.chatRunningStatus = Finished
 		}
 	})
 }
