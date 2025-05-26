@@ -368,10 +368,9 @@ func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr
 		curFlow = s.localFlowManger.GetCurrentFlow()
 	}
 	if curFlow == nil {
-		curFlow = s.localFlowManger.NewFlow(itemPtr, nil)
-	} else {
-		curFlow.AppendMessage(itemPtr)
+		curFlow = s.localFlowManger.NewFlow(itemPtr.String(), nil)
 	}
+	curFlow.AppendMessage(itemPtr)
 
 	s.currentWorkStage = stage
 	s.chatRunningStatus = Chatting
@@ -510,6 +509,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 			}
 
 			if curFlow != nil {
+				curFlow.AppendMessage(msgItem)
 				s.DisposeMessage(msgItem)
 				err := s.internalChat(context.Background(), curFlow)
 				if err != nil {
@@ -552,21 +552,21 @@ func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgIt
 	}
 	switch compareVal {
 	case common.LevelGreater:
-		ret = s.localFlowManger.NewFlow(msgItem, curFlow)
+		ret = s.localFlowManger.NewFlow(msgItem.String(), curFlow)
 		// 子级任务
 		//s.localFlowManger.NewFlow(chatMsg, curFlow)
 	case common.LevelEqual:
 		// 同级任务
-		ret = s.localFlowManger.NewFlow(msgItem, curFlow.GetParent())
+		ret = s.localFlowManger.NewFlow(msgItem.String(), curFlow.GetParent())
 	case common.LevelLess:
 		// 父级任务
 		parent := curFlow.GetParent()
 		if parent != nil {
-			ret = s.localFlowManger.NewFlow(msgItem, parent.GetParent())
+			ret = s.localFlowManger.NewFlow(msgItem.String(), parent.GetParent())
 		} else {
 			// 到这里属于异常了，先记录日志看看情况
 			log.Warnf("curFlow.GetParent() is nil, %+v", curFlow.GetFlowPath())
-			ret = s.localFlowManger.NewFlow(msgItem, nil)
+			ret = s.localFlowManger.NewFlow(msgItem.String(), nil)
 		}
 	}
 	return
@@ -595,7 +595,17 @@ func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error
 		return
 	}
 
-	debugFlow := &models.Flow{}
+	var debugFlow *models.Flow
+	flowIDVal := ctx.Value(common.FlowID{})
+	if flowIDVal != nil {
+		debugFlow = s.localFlowManger.GetFlow(flowIDVal.(string))
+	} else {
+		debugFlow = s.localFlowManger.GetCurrentFlow()
+	}
+	if debugFlow == nil {
+		debugFlow = s.localFlowManger.NewFlow("debug", nil)
+	}
+
 	systemPromptFile := fileList[0]
 	systemByte, systemErr := os.ReadFile(systemPromptFile)
 	if systemErr != nil {
@@ -629,9 +639,12 @@ func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error
 	s.currentWorkStage = stage
 	s.chatRunningStatus = Chatting
 
+	s.chatLoopCount++
 	systemPrompt := string(systemByte)
 	envPrompt := string(envByte)
-	msgErr := s.localAssistant.Chat(ctx, s.configPtr, systemPrompt, envPrompt, debugFlow.GetFlowPath())
+	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
+	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
+	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, systemPrompt, envPrompt, debugFlow.GetFlowPath())
 	if msgErr != nil {
 		log.Errorf("chat error:%v", msgErr)
 		return

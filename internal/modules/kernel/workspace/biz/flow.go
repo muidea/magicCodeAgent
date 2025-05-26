@@ -21,11 +21,11 @@ func NewFlowManager() *FlowManager {
 	}
 }
 
-func (s *FlowManager) newRootFlow(msgPtr *models.MessageItem) *models.Flow {
+func (s *FlowManager) newRootFlow(title string) *models.Flow {
 	flowPtr := &models.Flow{
 		Id:        fmt.Sprintf("flow_%d", len(s.localFlows)),
-		Title:     msgPtr.String(),
-		Message:   []*models.MessageItem{msgPtr},
+		Title:     title,
+		Message:   []*models.MessageItem{},
 		Status:    models.FLOW_STATUS_WAIT,
 		Parent:    nil,
 		Childrens: make([]*models.Flow, 0),
@@ -35,19 +35,19 @@ func (s *FlowManager) newRootFlow(msgPtr *models.MessageItem) *models.Flow {
 	return s.appendFlow(flowPtr, nil)
 }
 
-func (s *FlowManager) NewFlow(msgPtr *models.MessageItem, parentPtr *models.Flow) *models.Flow {
+func (s *FlowManager) NewFlow(title string, parentPtr *models.Flow) *models.Flow {
 	if parentPtr == nil {
 		parentPtr = s.currentFlowPtr
 	}
 
 	if parentPtr == nil {
-		return s.newRootFlow(msgPtr)
+		return s.newRootFlow(title)
 	}
 
 	flowPtr := &models.Flow{
 		Id:      fmt.Sprintf("%s_%d", parentPtr.Id, len(parentPtr.Childrens)),
-		Title:   msgPtr.String(),
-		Message: []*models.MessageItem{msgPtr},
+		Title:   title,
+		Message: []*models.MessageItem{},
 		Status:  models.FLOW_STATUS_WAIT,
 		Parent:  parentPtr,
 	}
