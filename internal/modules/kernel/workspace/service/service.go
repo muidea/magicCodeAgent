@@ -378,8 +378,8 @@ func (s *Workspace) debugWorkspaceContent(ctx context.Context, res http.Response
 	taskFunc := func() error {
 		errVal := s.bizPtr.DebugWorkspaceContent(ctx, param)
 		if errVal != nil {
-			log.Errorf("chat workspace content terminate error: %s", errVal.Error())
-			return errors.New("chat workspace content terminate error")
+			log.Errorf("chat workspace content debug error: %s", errVal.Error())
+			return errors.New("chat workspace content debug error")
 		}
 
 		return nil

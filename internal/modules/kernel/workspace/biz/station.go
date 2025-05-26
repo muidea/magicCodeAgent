@@ -626,10 +626,12 @@ func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error
 	}
 	log.Infof("debug env prompt: %v", envPromptFile)
 
+	s.currentWorkStage = stage
+	s.chatRunningStatus = Chatting
+
 	systemPrompt := string(systemByte)
 	envPrompt := string(envByte)
-	chatContext := context.Background()
-	msgErr := s.localAssistant.Chat(chatContext, s.configPtr, systemPrompt, envPrompt, debugFlow.GetFlowPath())
+	msgErr := s.localAssistant.Chat(ctx, s.configPtr, systemPrompt, envPrompt, debugFlow.GetFlowPath())
 	if msgErr != nil {
 		log.Errorf("chat error:%v", msgErr)
 		return
