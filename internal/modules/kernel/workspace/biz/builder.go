@@ -120,7 +120,7 @@ func (s *Workspace) ChatWorkspaceContentHistory(workspaceName string) (ret []*mo
 	return
 }
 
-func (s *Workspace) DebugWorkspaceFlow(workspaceName string) (ret []*models.Flow, err *cd.Error) {
+func (s *Workspace) FilterWorkspaceFlow(workspaceName string) (ret []*models.Flow, err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
@@ -130,5 +130,17 @@ func (s *Workspace) DebugWorkspaceFlow(workspaceName string) (ret []*models.Flow
 
 	stationPtr := curWorkspace.(*Station)
 	ret = stationPtr.GetFlows()
+	return
+}
+
+func (s *Workspace) DebugWorkspaceContent(ctx context.Context, paramPtr *imkwc.ChatMessage) (err *cd.Error) {
+	curWorkspace, ok := s.workspaceStationCache.Load(paramPtr.Workspace)
+	if !ok {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", paramPtr.Workspace))
+		log.Errorf("workspace:%s not found", paramPtr.Workspace)
+		return
+	}
+	stationPtr := curWorkspace.(*Station)
+	err = stationPtr.DebugContent(ctx, paramPtr.Stage)
 	return
 }

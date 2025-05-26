@@ -54,7 +54,8 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentMessage, engine.POST, s.chatWorkspaceContentMessage)
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentTerminate, engine.POST, s.chatWorkspaceContentTerminate)
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentHistory, engine.GET, s.chatWorkspaceContentHistory)
-	s.routeRegistry.AddHandler(imkwc.DebugWorkspaceFlow, engine.GET, s.debugWorkspaceFlow)
+	s.routeRegistry.AddHandler(imkwc.FilterWorkspaceFlow, engine.GET, s.filterWorkspaceFlow)
+	s.routeRegistry.AddHandler(imkwc.DebugWorkspaceContent, engine.POST, s.debugWorkspaceContent)
 }
 
 func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -349,10 +350,45 @@ func (s *Workspace) chatWorkspaceContentHistory(ctx context.Context, res http.Re
 	result.Values, result.Error = s.bizPtr.ChatWorkspaceContentHistory(workspaceName)
 }
 
-func (s *Workspace) debugWorkspaceFlow(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkwc.DebugFlowResult{}
+func (s *Workspace) filterWorkspaceFlow(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkwc.FilterFlowResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspaceName := req.URL.Query().Get("workspace")
-	result.Values, result.Error = s.bizPtr.DebugWorkspaceFlow(workspaceName)
+	result.Values, result.Error = s.bizPtr.FilterWorkspaceFlow(workspaceName)
+}
+
+func (s *Workspace) debugWorkspaceContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	param := &imkwc.ChatMessage{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		log.Errorf("parse body error: %s", err.Error())
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	result := &imkwc.DebugWorkspaceResult{}
+	defer fn.PackageHTTPResponse(res, result)
+	holder := s.sseHolderRegistry.GetHolder(res, req)
+	if holder == nil {
+		log.Errorf("invalid sse request")
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	taskFunc := func() error {
+		errVal := s.bizPtr.DebugWorkspaceContent(ctx, param)
+		if errVal != nil {
+			log.Errorf("chat workspace content terminate error: %s", errVal.Error())
+			return errors.New("chat workspace content terminate error")
+		}
+
+		return nil
+	}
+	err = holder.Run(taskFunc)
+	if err != nil {
+		result.Error = cd.NewError(cd.Unexpected, err.Error())
+		return
+	}
+
+	result.Error = nil
 }

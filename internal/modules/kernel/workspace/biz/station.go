@@ -137,43 +137,45 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 
 	stagePath := s.configPtr.GetCurrentStagePath()
-	// 当前任务执行状态
-	// 新增，删除，修改的文件清单
-	stringBuilder.WriteString("### 当前任务执行状态\n")
-	if ptr.AddFiles.Len() > 0 {
-		stringBuilder.WriteString("#### 新增文件清单\n")
-		ptr.AddFiles.Range(func(filePath string) bool {
-			if strings.HasPrefix(filePath, stagePath) {
-				relativePath := filePath[len(stagePath)+1:]
-				stringBuilder.WriteString("- " + relativePath + "\n")
-			}
-			return true
-		})
-		stringBuilder.WriteString("\n")
+	if ptr != nil {
+		// 当前任务执行状态
+		// 新增，删除，修改的文件清单
+		stringBuilder.WriteString("### 当前任务执行状态\n")
+		if ptr.AddFiles.Len() > 0 {
+			stringBuilder.WriteString("#### 新增文件清单\n")
+			ptr.AddFiles.Range(func(filePath string) bool {
+				if strings.HasPrefix(filePath, stagePath) {
+					relativePath := filePath[len(stagePath)+1:]
+					stringBuilder.WriteString("- " + relativePath + "\n")
+				}
+				return true
+			})
+			stringBuilder.WriteString("\n")
+		}
+		if ptr.DelFiles.Len() > 0 {
+			stringBuilder.WriteString("#### 删除文件清单\n")
+			ptr.DelFiles.Range(func(filePath string) bool {
+				if strings.HasPrefix(filePath, stagePath) {
+					relativePath := filePath[len(stagePath)+1:]
+					stringBuilder.WriteString("- " + relativePath + "\n")
+				}
+				return true
+			})
+			stringBuilder.WriteString("\n")
+		}
+		if ptr.ModFiles.Len() > 0 {
+			stringBuilder.WriteString("#### 修改文件清单\n")
+			ptr.ModFiles.Range(func(filePath string) bool {
+				if strings.HasPrefix(filePath, stagePath) {
+					relativePath := filePath[len(stagePath)+1:]
+					stringBuilder.WriteString("- " + relativePath + "\n")
+				}
+				return true
+			})
+			stringBuilder.WriteString("\n")
+		}
+		stringBuilder.WriteString("\n\n")
 	}
-	if ptr.DelFiles.Len() > 0 {
-		stringBuilder.WriteString("#### 删除文件清单\n")
-		ptr.DelFiles.Range(func(filePath string) bool {
-			if strings.HasPrefix(filePath, stagePath) {
-				relativePath := filePath[len(stagePath)+1:]
-				stringBuilder.WriteString("- " + relativePath + "\n")
-			}
-			return true
-		})
-		stringBuilder.WriteString("\n")
-	}
-	if ptr.ModFiles.Len() > 0 {
-		stringBuilder.WriteString("#### 修改文件清单\n")
-		ptr.ModFiles.Range(func(filePath string) bool {
-			if strings.HasPrefix(filePath, stagePath) {
-				relativePath := filePath[len(stagePath)+1:]
-				stringBuilder.WriteString("- " + relativePath + "\n")
-			}
-			return true
-		})
-		stringBuilder.WriteString("\n")
-	}
-	stringBuilder.WriteString("\n\n")
 
 	stringBuilder.WriteString("### 当前文件清单\n")
 	s.fileInfo.Range(func(filePath string) bool {
@@ -469,7 +471,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	s.DisposeMessage(msgPtr)
 
 	// 如果处于终止状态，则不处理
-	if s.chatRunningStatus == Terminate {
+	if s.chatRunningStatus != Chatting {
 		return
 	}
 
@@ -579,4 +581,59 @@ func (s *Station) continueRun(curFlow *models.Flow, _ imbtc.ToolParam, msgItem *
 
 func (s *Station) GetFlows() []*models.Flow {
 	return s.localFlowManger.GetLocalFlows()
+}
+
+func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error) {
+	debugPath := filepath.Join(config.CurrentWorkPath(), "debug")
+	fileList, fileErr := fp.ListPath(debugPath, "*.md", false)
+	if fileErr != nil {
+		log.Errorf("debug file error:%v", fileErr)
+		return
+	}
+	if len(fileList) < 3 {
+		log.Infof("not enough debug file")
+		return
+	}
+
+	debugFlow := &models.Flow{}
+	systemPromptFile := fileList[0]
+	systemByte, systemErr := os.ReadFile(systemPromptFile)
+	if systemErr != nil {
+		log.Errorf("read system prompt file error:%v", systemErr)
+		return
+	}
+	userPromptFiles := fileList[1 : len(fileList)-1]
+	envPromptFile := fileList[len(fileList)-1]
+	envByte, envErr := os.ReadFile(envPromptFile)
+	if envErr != nil {
+		log.Errorf("read env prompt file error:%v", envErr)
+		return
+	}
+	log.Infof("debug system prompt: %v", systemPromptFile)
+	for _, val := range userPromptFiles {
+		userByte, userErr := os.ReadFile(val)
+		if userErr != nil {
+			log.Errorf("read user prompt file error:%v", userErr)
+			return
+		}
+		debugFlow.AppendMessage(&models.MessageItem{
+			Role: common.User,
+			Content: []string{
+				string(userByte),
+			},
+		})
+		log.Infof("debug user file: %s", val)
+	}
+	log.Infof("debug env prompt: %v", envPromptFile)
+
+	systemPrompt := string(systemByte)
+	envPrompt := string(envByte)
+	chatContext := context.Background()
+	msgErr := s.localAssistant.Chat(chatContext, s.configPtr, systemPrompt, envPrompt, debugFlow.GetFlowPath())
+	if msgErr != nil {
+		log.Errorf("chat error:%v", msgErr)
+		return
+	}
+
+	return
 }
