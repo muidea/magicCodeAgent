@@ -4,11 +4,11 @@ import "fmt"
 
 type MessageItem struct {
 	Role    string   `json:"role"`
-	Content []string `json:"content"`
+	Content []string `json:"content,omitempty"`
 }
 
 func (s *MessageItem) String() string {
-	return fmt.Sprintf("Role:%s,Content:%v", s.Role, s.Content)
+	return fmt.Sprintf("Role:%s,Content size:%d", s.Role, len(s.Content))
 }
 
 type MessageItemList []MessageItem

@@ -2,7 +2,6 @@ package biz
 
 import (
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,8 +73,6 @@ func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, stage str
 
 	siblingsList, childList, workPath := s.getSiblingsAndChilds(workspaceDir, stage, name, level)
 
-	planFileName := fmt.Sprintf("decompose-design-plan-%s", level)
-	planContent := s.promptsRegistry.ReadSectionPromptContent(planFileName)
 	planParam := map[string]string{
 		"Name":             name,
 		"Description":      description,
@@ -83,21 +80,8 @@ func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, stage str
 		"Childrens":        childList,
 		"WorkingDirectory": workPath,
 	}
-
-	tmpl, err := template.New(planFileName).Parse(planContent)
-	if err != nil {
-		log.Errorf("parse decompose-design-plan template failed:%s", err.Error())
-		return
-	}
-
-	var builder strings.Builder
-	err = tmpl.Execute(&builder, planParam)
-	if err != nil {
-		log.Errorf("execute decompose-design-plan template failed:%s", err.Error())
-		return
-	}
-
-	result = builder.String()
+	planFileName := fmt.Sprintf("decompose-design-plan-%s", level)
+	result = s.promptsRegistry.ReadSectionPromptContent(planFileName, planParam)
 	return
 }
 

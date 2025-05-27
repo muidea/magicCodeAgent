@@ -109,9 +109,10 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 	stringBuilder.WriteString("\n\n")
 
+	param := map[string]string{}
 	//## 项目规划目录
 	if s.configPtr.GetStage() != common.DesignStage {
-		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()))
+		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()), param)
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
 			stringBuilder.WriteString("\n\n")
@@ -119,7 +120,10 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 
 	//## 项目状态
-	stageContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s", s.configPtr.GetStage()))
+	param = map[string]string{
+		"Level": ptr.GetLevel(),
+	}
+	stageContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s", s.configPtr.GetStage()), param)
 	if stageContent != "" {
 		stringBuilder.WriteString(stageContent)
 		stringBuilder.WriteString("\n\n")
@@ -538,6 +542,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 		curFlow = s.localFlowManger.GetCurrentFlow()
 		if curFlow == nil {
 			s.chatRunningStatus = Finished
+			notifyMsg = "执行完毕"
 		}
 	})
 }
@@ -583,6 +588,8 @@ func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgIt
 			ret = s.localFlowManger.NewFlow(msgItem.String(), nil)
 		}
 	}
+
+	ret.SetLevel(level)
 	return
 }
 

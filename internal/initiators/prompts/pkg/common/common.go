@@ -29,5 +29,5 @@ type PromptsRegistry interface {
 	// 添加自定section的prompts
 	AddPrompts(sectionPrompt string, prompt Prompt)
 	GetPromptsContent(stage string, filterTags fu.StringSet) string
-	ReadSectionPromptContent(sectionPrompt string) string
+	ReadSectionPromptContent(sectionPrompt string, param map[string]string) string
 }

@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"strings"
 
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
@@ -14,22 +15,33 @@ const (
 type Flow struct {
 	Id        string           `json:"id"`
 	Title     string           `json:"title"`
-	Message   []*MessageItem   `json:"message"`
+	Message   []*MessageItem   `json:"message,omitempty"`
 	Status    int              `json:"status"`
-	AddFiles  fu.StringSortSet `json:"addFiles"`
-	ModFiles  fu.StringSortSet `json:"modFiles"`
-	DelFiles  fu.StringSortSet `json:"delFiles"`
-	Parent    *Flow            `json:"parent"`
+	AddFiles  fu.StringSortSet `json:"addFiles,omitempty"`
+	ModFiles  fu.StringSortSet `json:"modFiles,omitempty"`
+	DelFiles  fu.StringSortSet `json:"delFiles,omitempty"`
+	Parent    *Flow            `json:"-"`
 	Childrens []*Flow          `json:"childrens"`
 	Level     string           `json:"level"`
 }
 
 func (s *Flow) String() string {
 	if s.Parent == nil {
-		return fmt.Sprintf("Flow %s\ntitle:%s, level:%s, status:%d\nparent is null", s.Id, s.Title, s.Level, s.Status)
+		var stringBuff strings.Builder
+		stringBuff.WriteString(fmt.Sprintf("Flow %s\ntitle:%s, level:%s, status:%d, parent is null", s.Id, s.Title, s.Level, s.Status))
+		for _, val := range s.Childrens {
+			stringBuff.WriteString(fmt.Sprintf("\n - children:%s, title:%s, level:%s, status:%d, parent:%s", val.Id, val.Title, val.Level, val.Status, val.Parent.Id))
+		}
+
+		return stringBuff.String()
 	}
 
-	return fmt.Sprintf("Flow %s\ntitle:%s, level:%s, status:%d\nparent:%s", s.Id, s.Title, s.Level, s.Status, s.Parent.Id)
+	var stringBuff strings.Builder
+	stringBuff.WriteString(fmt.Sprintf("Flow %s\ntitle:%s, level:%s, status:%d, parent is %s", s.Id, s.Title, s.Level, s.Status, s.Parent.Id))
+	for _, val := range s.Childrens {
+		stringBuff.WriteString(fmt.Sprintf("\n - children:%s, title:%s, level:%s, status:%d, parent:%s", val.Id, val.Title, val.Level, val.Status, val.Parent.Id))
+	}
+	return stringBuff.String()
 }
 
 func (s *Flow) AppendMessage(m *MessageItem) {
