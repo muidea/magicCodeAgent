@@ -12,6 +12,9 @@ import (
 	"time"
 
 	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
+	fu "github.com/muidea/magicCommon/foundation/util"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
@@ -22,9 +25,6 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
-	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
-	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 const (
@@ -33,6 +33,8 @@ const (
 	Chatting  = "chatting"
 	Finished  = "finished"
 )
+
+const maxLoopCount = 50
 
 type Observer interface {
 	ID() string
@@ -48,8 +50,9 @@ type Station struct {
 
 	chatRunningStatus string
 
-	chatLoopCount int64
-	chatUsagePtr  *imklc.Usage
+	chatMaxLoopCount int64
+	chatLoopCount    int64
+	chatUsagePtr     *imklc.Usage
 
 	stationMutex sync.RWMutex
 	observerList []Observer
@@ -187,7 +190,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	})
 	stringBuilder.WriteString("\n\n")
 
-	stringBuilder.WriteString("</environment_name>")
+	stringBuilder.WriteString("</environment_details>")
 	return stringBuilder.String()
 }
 
@@ -372,6 +375,7 @@ func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr
 	}
 	curFlow.AppendMessage(itemPtr)
 
+	s.chatMaxLoopCount = maxLoopCount
 	s.currentWorkStage = stage
 	s.chatRunningStatus = Chatting
 
@@ -442,6 +446,7 @@ func (s *Station) OnClose() {
 }
 
 func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
+	var notifyMsg string
 	defer func() {
 		if s.chatRunningStatus == Terminate || s.chatRunningStatus == Finished {
 			// 发送本次消耗的Token数据
@@ -449,6 +454,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 				Role: common.Notifier,
 				Content: []string{
 					formatUsage(s.chatUsagePtr, s.chatLoopCount),
+					notifyMsg,
 				},
 			}
 			s.DisposeMessage(notifyMsg)
@@ -469,8 +475,13 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 
 	s.DisposeMessage(msgPtr)
 
-	// 如果处于终止状态，则不处理
+	// 如果处于终止状态,或者已经超过最大循环次数，则不处理
 	if s.chatRunningStatus != Chatting {
+		return
+	}
+	if s.chatLoopCount > s.chatMaxLoopCount {
+		s.chatRunningStatus = Finished
+		notifyMsg = "循环次数超过最大限制，自动结束"
 		return
 	}
 
@@ -478,6 +489,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 		blockList, blockErr := util.SpliteBlocks(content)
 		if blockErr != nil {
 			s.chatRunningStatus = Terminate
+			notifyMsg = fmt.Sprintf("执行出错, 分解数据出错:%v", blockErr.Error())
 			log.Errorf("OnRecv, util.SpliteBlocks err:%v", blockErr)
 			return
 		}
@@ -487,6 +499,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 			workParam, workResult, workErr := s.localWorker.DoWork(s.configPtr, block)
 			if workErr != nil {
 				s.chatRunningStatus = Terminate
+				notifyMsg = fmt.Sprintf("执行出错, Tool执行出错:%v", workErr.Error())
 				log.Errorf("OnRecv, s.localWorker.DoWork err:%v", workErr)
 				return
 			}
@@ -502,7 +515,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 				curFlow = s.tryToContinue(curFlow, workParam, msgItem)
 			case "attempt_completion":
 				curFlow = s.tryToFinish(curFlow, workParam, msgItem)
-			case "decompose_design_subtask":
+			case "decompose_design_plan":
 				curFlow = s.tryToSwitch(curFlow, workParam, msgItem)
 			default:
 				curFlow = s.continueRun(curFlow, workParam, msgItem)
@@ -514,6 +527,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 				err := s.internalChat(context.Background(), curFlow)
 				if err != nil {
 					s.chatRunningStatus = Terminate
+					notifyMsg = fmt.Sprintf("执行出错, 调用大模型出错:%v", err.Error())
 					log.Errorf("internalChat error: %v", err)
 					return
 				}
@@ -542,7 +556,7 @@ func (s *Station) tryToFinish(curFlow *models.Flow, _ imbtc.ToolParam, _ *models
 }
 
 func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
-	// decompose_design_subtask
+	// decompose_design_plan
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
 	level := param["level"].(string)
@@ -636,6 +650,7 @@ func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error
 	}
 	log.Infof("debug env prompt: %v", envPromptFile)
 
+	s.chatMaxLoopCount = 2
 	s.currentWorkStage = stage
 	s.chatRunningStatus = Chatting
 

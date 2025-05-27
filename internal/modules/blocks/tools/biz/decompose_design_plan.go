@@ -17,15 +17,15 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type DecomposeDesignSubtaskTool struct {
+type DecomposeDesignPlanTool struct {
 	promptsRegistry iipc.PromptsRegistry
 }
 
-func (s *DecomposeDesignSubtaskTool) Name() string {
-	return "decompose_design_subtask"
+func (s *DecomposeDesignPlanTool) Name() string {
+	return "decompose_design_plan"
 }
 
-func (s *DecomposeDesignSubtaskTool) Prompt() string {
+func (s *DecomposeDesignPlanTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
@@ -35,9 +35,9 @@ func (s *DecomposeDesignSubtaskTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *DecomposeDesignSubtaskTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
+func (s *DecomposeDesignPlanTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *DecomposeDesignSubtaskTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -101,7 +101,7 @@ func (s *DecomposeDesignSubtaskTool) Execute(workspaceName, workspaceDir, stage 
 	return
 }
 
-func (s *DecomposeDesignSubtaskTool) getSiblingsAndChilds(workspaceDir, stage, name, level string) (siblings, childs, workPath string) {
+func (s *DecomposeDesignPlanTool) getSiblingsAndChilds(workspaceDir, stage, name, level string) (siblings, childs, workPath string) {
 	rootPath := filepath.Join(workspaceDir, stage)
 	if !fp.Exist(rootPath) {
 		os.MkdirAll(rootPath, 0755)
