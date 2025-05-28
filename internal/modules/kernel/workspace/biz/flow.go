@@ -29,7 +29,7 @@ func (s *FlowManager) newRootFlow(title string) *models.Flow {
 		Status:    models.FLOW_STATUS_WAIT,
 		Parent:    nil,
 		Childrens: make([]*models.Flow, 0),
-		Level:     common.Project,
+		Level:     common.Root,
 	}
 
 	return s.appendFlow(flowPtr, nil)
@@ -50,6 +50,7 @@ func (s *FlowManager) NewFlow(title string, parentPtr *models.Flow) *models.Flow
 		Message: []*models.MessageItem{},
 		Status:  models.FLOW_STATUS_WAIT,
 		Parent:  parentPtr,
+		Level:   common.GetChildLevel(parentPtr.Level),
 	}
 
 	return s.appendFlow(flowPtr, parentPtr)
@@ -103,7 +104,7 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 
 	// 1. 检查当前flowPtr是否可以完成
 	hasChild := len(flowPtr.Childrens) > 0
-	if flowPtr.GetLevel() != common.Point && !hasChild {
+	if flowPtr.GetLevel() != common.Block && !hasChild {
 		subFlowPtr := s.NewFlow("继续分解下一级功能", flowPtr)
 		// 子层级还未分解，不能结束
 		subFlowPtr.AppendMessage(&models.MessageItem{

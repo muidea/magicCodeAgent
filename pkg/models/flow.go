@@ -64,13 +64,16 @@ func (s *Flow) IsFinish() bool {
 }
 
 func (s *Flow) GetFlowPath() []*Flow {
-	nodes := make([]*Flow, 0)
-
-	if s.Parent != nil {
-		nodes = append(nodes, s.Parent.GetFlowPath()...)
-	}
-
+	nodes := []*Flow{}
 	nodes = append(nodes, s)
+	pPtr := s.Parent
+	for {
+		if pPtr == nil {
+			break
+		}
+		nodes = append(nodes, pPtr)
+		pPtr = pPtr.Parent
+	}
 
 	// 反转slice使父节点在前
 	flowPath := make([]*Flow, len(nodes))
@@ -99,8 +102,4 @@ func (s *Flow) DelFile(filePath string) {
 
 func (s *Flow) GetLevel() string {
 	return s.Level
-}
-
-func (s *Flow) SetLevel(level string) {
-	s.Level = level
 }

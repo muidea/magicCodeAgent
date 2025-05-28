@@ -86,9 +86,9 @@ func (s *BaseCommander) Status() (statusMsg, errorMsg string) {
 	defer s.debugger.Unlock()
 
 	if s.cancelCommanderFunc != nil {
-		statusStringBuffer.WriteString(s.currentCommand + " is  running")
+		statusStringBuffer.WriteString("'" + s.currentCommand + "' is  running")
 	} else {
-		statusStringBuffer.WriteString(s.currentCommand + " is  done")
+		statusStringBuffer.WriteString("'" + s.currentCommand + "' is  done")
 	}
 
 	if !s.stdOutBuffer.IsEmpty() {

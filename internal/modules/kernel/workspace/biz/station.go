@@ -604,7 +604,6 @@ func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgIt
 	}
 
 	ret.AppendMessage(msgItem)
-	ret.SetLevel(level)
 	return
 }
 

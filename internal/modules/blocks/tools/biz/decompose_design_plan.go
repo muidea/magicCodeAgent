@@ -102,14 +102,12 @@ func (s *DecomposeDesignPlanTool) getSiblingsAndChilds(workspaceDir, stage, name
 
 	offset := -1
 	switch level {
-	case "project":
+	case common.Project:
 		offset = 0
-	case "module":
+	case common.Module:
 		offset = 1
-	case "block":
+	case common.Block:
 		offset = 2
-	case "point":
-		offset = 3
 	}
 
 	for _, val := range fileList {
@@ -149,6 +147,6 @@ func (s *DecomposeDesignPlanTool) getSiblingsAndChilds(workspaceDir, stage, name
 
 	workPath = currentPath
 
-	log.Infof("slibling:\n%s \nchild:\n%s\nworkPath:%s\n", siblings, childs, workPath)
+	//log.Infof("slibling:\n%s \nchild:\n%s\nworkPath:%s\n", siblings, childs, workPath)
 	return
 }

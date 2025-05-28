@@ -54,7 +54,7 @@ func (s *ToolRegistry) Register(tool imbtc.Tool) {
 }
 
 func (s *ToolRegistry) Execute(workspaceName, workspaceDir, stage, toolName string, param imbtc.ToolParam) (*imbtc.ToolResult, error) {
-	log.Infof("execute tool, workspaceName:%s, workspaceDir:%s, stage:%s, toolName:%s, param:%v", workspaceName, workspaceDir, stage, toolName, param)
+	//log.Infof("execute tool, workspaceName:%s, workspaceDir:%s, stage:%s, toolName:%s, param:%v", workspaceName, workspaceDir, stage, toolName, param)
 	tool, ok := s.name2Tools[toolName]
 	if !ok {
 		// 获取所有可用工具名称列表

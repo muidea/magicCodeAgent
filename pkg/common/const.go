@@ -58,10 +58,10 @@ const (
 )
 
 const (
+	Root    = "root"
 	Project = "project"
 	Module  = "module"
 	Block   = "block"
-	Point   = "point"
 )
 
 const (
@@ -77,10 +77,10 @@ const (
 // Project > Module > Block > Point
 func CompareLevel(l1, l2 string) int {
 	levelMap := map[string]int{
+		Root:    5,
 		Project: 4,
 		Module:  3,
 		Block:   2,
-		Point:   1,
 	}
 
 	l1Level := levelMap[l1]
@@ -93,5 +93,18 @@ func CompareLevel(l1, l2 string) int {
 		return -1
 	default:
 		return 0
+	}
+}
+
+func GetChildLevel(level string) string {
+	switch level {
+	case Root:
+		return Project
+	case Project:
+		return Module
+	case Module:
+		return Block
+	default:
+		return ""
 	}
 }
