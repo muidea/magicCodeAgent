@@ -68,6 +68,11 @@ func (s *Workspace) ChatWorkspaceContentSSE(ctx context.Context, workspaceName s
 	stationPtr := curWorkspace.(*Station)
 	stationPtr.BindObserver(sseStream)
 	defer stationPtr.UnbindObserver(sseStream)
+
+	s.Base.AsyncTask(func() {
+		stationPtr.BroadcastReady()
+	})
+
 	err = sseStream.Wait()
 	return
 }

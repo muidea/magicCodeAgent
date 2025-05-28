@@ -77,10 +77,10 @@ const (
 // Project > Module > Block > Point
 func CompareLevel(l1, l2 string) int {
 	levelMap := map[string]int{
-		"Project": 4,
-		"Module":  3,
-		"Block":   2,
-		"Point":   1,
+		Project: 4,
+		Module:  3,
+		Block:   2,
+		Point:   1,
 	}
 
 	l1Level := levelMap[l1]

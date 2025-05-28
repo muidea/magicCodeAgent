@@ -28,7 +28,7 @@ type Flow struct {
 func (s *Flow) String() string {
 	if s.Parent == nil {
 		var stringBuff strings.Builder
-		stringBuff.WriteString(fmt.Sprintf("Flow %s\ntitle:%s, level:%s, status:%d, parent is null", s.Id, s.Title, s.Level, s.Status))
+		stringBuff.WriteString(fmt.Sprintf("Flow %s, title:%s, level:%s, status:%d, parent is null", s.Id, s.Title, s.Level, s.Status))
 		for _, val := range s.Childrens {
 			stringBuff.WriteString(fmt.Sprintf("\n - children:%s, title:%s, level:%s, status:%d, parent:%s", val.Id, val.Title, val.Level, val.Status, val.Parent.Id))
 		}
@@ -37,7 +37,7 @@ func (s *Flow) String() string {
 	}
 
 	var stringBuff strings.Builder
-	stringBuff.WriteString(fmt.Sprintf("Flow %s\ntitle:%s, level:%s, status:%d, parent is %s", s.Id, s.Title, s.Level, s.Status, s.Parent.Id))
+	stringBuff.WriteString(fmt.Sprintf("Flow %s, title:%s, level:%s, status:%d, parent is %s", s.Id, s.Title, s.Level, s.Status, s.Parent.Id))
 	for _, val := range s.Childrens {
 		stringBuff.WriteString(fmt.Sprintf("\n - children:%s, title:%s, level:%s, status:%d, parent:%s", val.Id, val.Title, val.Level, val.Status, val.Parent.Id))
 	}

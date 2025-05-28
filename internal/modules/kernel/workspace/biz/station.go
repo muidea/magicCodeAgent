@@ -366,6 +366,21 @@ func (s *Station) UnbindObserver(observer Observer) {
 	}
 }
 
+func (s *Station) BroadcastReady() {
+	if s.localMessageCache.Size() > 0 {
+		return
+	}
+
+	notifyMsg := &models.MessageItem{
+		Role: common.Notifier,
+		Content: []string{
+			"会话准备完成！",
+		},
+	}
+
+	s.DisposeMessage(notifyMsg)
+}
+
 func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr *models.MessageItem) (err *cd.Error) {
 	var curFlow *models.Flow
 	flowIDVal := chatContext.Value(common.FlowID{})
@@ -525,16 +540,15 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 				curFlow = s.continueRun(curFlow, workParam, msgItem)
 			}
 
-			if curFlow != nil {
-				curFlow.AppendMessage(msgItem)
-				s.DisposeMessage(msgItem)
-				err := s.internalChat(context.Background(), curFlow)
-				if err != nil {
-					s.chatRunningStatus = Terminate
-					notifyMsg = fmt.Sprintf("执行出错, 调用大模型出错:%v", err.Error())
-					log.Errorf("internalChat error: %v", err)
-					return
-				}
+			s.DisposeMessage(msgItem)
+		}
+		if curFlow != nil {
+			err := s.internalChat(context.Background(), curFlow)
+			if err != nil {
+				s.chatRunningStatus = Terminate
+				notifyMsg = fmt.Sprintf("执行出错, 调用大模型出错:%v", err.Error())
+				log.Errorf("internalChat error: %v", err)
+				return
 			}
 		}
 
@@ -589,6 +603,7 @@ func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgIt
 		}
 	}
 
+	ret.AppendMessage(msgItem)
 	ret.SetLevel(level)
 	return
 }
