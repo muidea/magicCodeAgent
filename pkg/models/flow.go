@@ -64,26 +64,23 @@ func (s *Flow) IsFinish() bool {
 }
 
 func (s *Flow) GetFlowPath() []*Flow {
-	/*
-	   nodes := make([]*Flow, 0)
+	nodes := make([]*Flow, 0)
 
-	   	if s.Parent != nil {
-	   		nodes = append(nodes, s.Parent.GetFlowPath()...)
-	   	}
+	if s.Parent != nil {
+		nodes = append(nodes, s.Parent.GetFlowPath()...)
+	}
 
-	   nodes = append(nodes, s)
+	nodes = append(nodes, s)
 
-	   // 反转slice使父节点在前
-	   flowPath := make([]*Flow, len(nodes))
+	// 反转slice使父节点在前
+	flowPath := make([]*Flow, len(nodes))
 
-	   	for i, j := 0, len(nodes)-1; j >= 0; i, j = i+1, j-1 {
-	   		flowPath[i] = nodes[j]
-	   	}
+	for i, j := 0, len(nodes)-1; j >= 0; i, j = i+1, j-1 {
+		flowPath[i] = nodes[j]
+	}
 
-	   return flowPath
-	*/
-
-	return []*Flow{s}
+	return flowPath
+	//return []*Flow{s}
 }
 
 func (s *Flow) AddFile(filePath string) {

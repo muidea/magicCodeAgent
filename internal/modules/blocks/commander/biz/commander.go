@@ -61,7 +61,7 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 	s.debugger.Lock()
 	defer s.debugger.Unlock()
 	s.cancelCommanderFunc = nil
-	s.currentCommand = ""
+	//s.currentCommand = ""
 	return
 }
 
@@ -86,15 +86,15 @@ func (s *BaseCommander) Status() (statusMsg, errorMsg string) {
 	defer s.debugger.Unlock()
 
 	if s.cancelCommanderFunc != nil {
-		statusStringBuffer.WriteString("running: " + s.currentCommand + "\n")
+		statusStringBuffer.WriteString(s.currentCommand + " is  running")
 	} else {
-		statusStringBuffer.WriteString("stopped: " + s.currentCommand + "\n")
+		statusStringBuffer.WriteString(s.currentCommand + " is  done")
 	}
 
 	if !s.stdOutBuffer.IsEmpty() {
-		statusStringBuffer.WriteString("latest logs: \n")
+		statusStringBuffer.WriteString("\nlatest logs:")
 		for _, val := range s.stdOutBuffer.GetLatestRecords(defaultMaxBufferLinesSize) {
-			statusStringBuffer.WriteString(val + "\n")
+			statusStringBuffer.WriteString("  " + val)
 		}
 	}
 	statusMsg = statusStringBuffer.String()
