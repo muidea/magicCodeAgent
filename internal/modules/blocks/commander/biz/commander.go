@@ -42,7 +42,7 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 			s.cancelCommanderFunc()
 		}
 
-		log.Infof("run command: %s", currentCmd)
+		log.Infof("run command: '%s'", currentCmd)
 		s.stdErrBuffer.Reset()
 		s.stdOutBuffer.Reset()
 		s.currentCommand = currentCmd

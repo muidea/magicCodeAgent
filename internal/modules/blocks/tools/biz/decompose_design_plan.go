@@ -3,6 +3,7 @@ package biz
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -65,6 +66,11 @@ func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, stage str
 		err = fmt.Errorf("level is empty")
 		return
 	}
+	pathVal := ""
+	path, ok := param["path"].(string)
+	if ok {
+		pathVal = path
+	}
 	description, ok := param["description"].(string)
 	if !ok || description == "" {
 		err = fmt.Errorf("description is empty")
@@ -76,6 +82,7 @@ func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, stage str
 	planParam := map[string]string{
 		"Name":             name,
 		"Description":      description,
+		"Path":             pathVal,
 		"Siblings":         siblingsList,
 		"Childrens":        childList,
 		"WorkingDirectory": workPath,
@@ -127,22 +134,21 @@ func (s *DecomposeDesignPlanTool) getSiblingsAndChilds(workspaceDir, stage, name
 		childList = childList.Add(filePath)
 	}
 	if childPath != "." {
-		currentPath = filepath.Dir(childPath)
+		currentPath = path.Join(rootPath, filepath.Dir(childPath))
 		siblingList, _ = fp.ListPath(currentPath, "*.md", false)
 	}
 
 	siblingBuffer := strings.Builder{}
 	for _, item := range siblingList {
+		item := item[len(rootPath)+1:]
 		siblingBuffer.WriteString("- " + item + "\n")
 	}
-	siblingBuffer.WriteString("\n")
 	siblings = siblingBuffer.String()
 
 	childBuffer := strings.Builder{}
 	for _, item := range childList {
 		childBuffer.WriteString("- " + item + "\n")
 	}
-	childBuffer.WriteString("\n")
 	childs = childBuffer.String()
 
 	workPath = currentPath
