@@ -105,12 +105,12 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 	// 1. 检查当前flowPtr是否可以完成
 	hasChild := len(flowPtr.Childrens) > 0
 	if flowPtr.GetLevel() != common.Block && !hasChild {
-		subFlowPtr := s.NewFlow("继续分解下一级功能", flowPtr)
+		subFlowPtr := s.NewFlow("继续处理下一级功能", flowPtr)
 		// 子层级还未分解，不能结束
 		subFlowPtr.AppendMessage(&models.MessageItem{
 			Role: common.User,
 			Content: []string{
-				"继续分解下一级功能",
+				"继续处理下一级功能",
 			},
 		})
 

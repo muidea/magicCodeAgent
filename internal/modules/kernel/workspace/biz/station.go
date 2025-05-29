@@ -107,7 +107,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	for _, val := range s.configPtr.TechStack {
 		stringBuilder.WriteString("- " + val + "\n")
 	}
-	stringBuilder.WriteString("\n\n")
+	stringBuilder.WriteString("\n")
 
 	param := map[string]string{}
 	//## 项目规划目录
@@ -115,7 +115,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()), param)
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
-			stringBuilder.WriteString("\n\n")
+			stringBuilder.WriteString("\n")
 		}
 	}
 
@@ -126,7 +126,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	stageContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s", s.configPtr.GetStage()), param)
 	if stageContent != "" {
 		stringBuilder.WriteString(stageContent)
-		stringBuilder.WriteString("\n\n")
+		stringBuilder.WriteString("\n")
 	}
 
 	// 前一阶段输出物清单
@@ -140,7 +140,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 			}
 			return true
 		})
-		stringBuilder.WriteString("\n\n")
+		stringBuilder.WriteString("\n")
 	}
 
 	stagePath := s.configPtr.GetCurrentStagePath()
@@ -181,7 +181,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 			})
 			stringBuilder.WriteString("\n")
 		}
-		stringBuilder.WriteString("\n\n")
+		stringBuilder.WriteString("\n")
 	}
 
 	stringBuilder.WriteString("### 当前文件清单\n")
@@ -531,7 +531,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 				// noting todo
 				continue
 			case "ask_followup_question":
-				curFlow = s.tryToContinue(curFlow, workParam, msgItem)
+				curFlow = s.waitToContinue(curFlow, workParam, msgItem)
 			case "attempt_completion":
 				curFlow = s.tryToFinish(curFlow, workParam, msgItem)
 			case "decompose_design_plan":
@@ -562,7 +562,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	})
 }
 
-func (s *Station) tryToContinue(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
+func (s *Station) waitToContinue(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// ask_followup_question
 	// 当前阶段是需要等待用户的输入的，不用做任何事情
 	log.Infof("try to continue flow %s", curFlow)
