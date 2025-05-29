@@ -11,7 +11,7 @@
   <path>internal/modules/kernel</path>
   <name>mcp</name>
 </create_service_module>
-````
+```
 
 说明:
 在项目根目录 `/home/test/demo` 下的 `internal/modules/kernel` 目录中创建一个名为 `mcp` 的服务模块。

@@ -534,7 +534,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 				curFlow = s.waitToContinue(curFlow, workParam, msgItem)
 			case "attempt_completion":
 				curFlow = s.tryToFinish(curFlow, workParam, msgItem)
-			case "decompose_design_plan":
+			case "decompose_design_plan","decompose_code_plan":
 				curFlow = s.tryToSwitch(curFlow, workParam, msgItem)
 			default:
 				curFlow = s.continueRun(curFlow, workParam, msgItem)

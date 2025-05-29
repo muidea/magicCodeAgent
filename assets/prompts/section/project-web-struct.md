@@ -31,7 +31,7 @@
 ├── package.json        // 项目配置文件
 ├── tsconfig.json       // TypeScript 配置文件
 └── typings.d.ts        // TypeScript 类型定义文件
-````
+```
 
 ---
 

@@ -11,7 +11,7 @@
   <path>internal/initiators</path>
   <name>routeRegistry</name>
 </create_service_initiator>
-````
+```
 
 说明:
 在项目根目录 `/home/test/demo` 下的 `internal/initiators` 目录中创建一个名为 `routeRegistry` 的服务模块。

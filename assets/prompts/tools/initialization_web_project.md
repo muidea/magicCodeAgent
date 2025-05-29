@@ -12,7 +12,7 @@
 <name>项目名称</name>
 <description>项目描述（可选）</description>
 </initialization_web_project>
-````
+```
 
 示例：初始化一个名为 "Demo" 的前端项目
 

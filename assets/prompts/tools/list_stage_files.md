@@ -14,7 +14,7 @@
 <path>目录路径</path>
 <recursive>true 或 false（可选）</recursive>
 </list_stage_files>
-````
+```
 
 示例：请求列出 `code` 阶段当前目录下的所有文件，不要求递归
 
