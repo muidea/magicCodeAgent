@@ -555,21 +555,24 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 		// 如果所有的Flow都执行完毕，则将状态置为Finish
 		curFlow = s.localFlowManger.GetCurrentFlow()
 		if curFlow == nil {
+			log.Infof("all flow finished")
 			s.chatRunningStatus = Finished
 			notifyMsg = "执行完毕"
 		}
 	})
 }
 
-func (s *Station) tryToContinue(_ *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
+func (s *Station) tryToContinue(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// ask_followup_question
 	// 当前阶段是需要等待用户的输入的，不用做任何事情
+	log.Infof("try to continue flow %s", curFlow)
 	return
 }
 
 func (s *Station) tryToFinish(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// attempt_completion
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
+	log.Infof("try to finish flow %s", curFlow)
 	ret = s.localFlowManger.FinishFlow(curFlow)
 	return
 }
@@ -578,6 +581,7 @@ func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgIt
 	// decompose_design_plan
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
+	log.Infof("try to switch flow %s", curFlow)
 	level := param["level"].(string)
 	compareVal := common.LevelGreater
 	if curFlow != nil {

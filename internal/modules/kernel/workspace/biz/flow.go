@@ -133,38 +133,68 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 		if curPtr == nil {
 			parent.Status = models.FLOW_STATUS_FINISH
 		} else {
+			// 到这里说明当前Flow仍未完成，需要继续运行
+			log.Infof("continue run flow: %s", curPtr)
 			s.currentFlowPtr = curPtr
 			return
 		}
 
+		// 到这里说明当前level的Flow已经处理完毕，需要继续处理父级Flow
 		parent = parent.GetParent()
 		for {
 			if parent == nil {
 				// 表示所有的Flow都处理完毕
+				log.Infof("all flow finished")
 				s.currentFlowPtr = nil
 				return
 			}
 
+			// 如果当前的父级Flow已经处理完毕，则需要继续处理父级Flow
 			if parent.IsFinish() {
 				parent = parent.GetParent()
 				continue
 			}
 
+			// 到这里说明parent未完成，这里需要继续检查下面各个子Flow是否已经完成
 			children := parent.GetChildrens()
-			if len(children) == 0 {
-				// 如果当前Flow没有完成，并且无子Flow,把则将当前Flow设置为当前Flow
-				s.currentFlowPtr = parent
-				return
-			}
-
 			for _, child := range children {
 				if child.IsFinish() {
 					continue
 				}
-				parent = child
-				break
+
+				subChilds := child.GetChildrens()
+				for {
+					if len(subChilds) == 0 {
+						s.currentFlowPtr = child
+						return
+					}
+
+					allFinished := true
+					for _, sc := range subChilds {
+						if sc.IsFinish() {
+							continue
+						}
+
+						allFinished = false
+						if len(sc.GetChildrens()) > 0 {
+							child = sc
+							subChilds = child.GetChildrens()
+							break
+						}
+					}
+
+					// 如果所有的子节点都完成，这里也要主动更新当前节点的状态
+					// 继续判断下一个兄弟节点
+					if allFinished {
+						child.Status = models.FLOW_STATUS_FINISH
+						break
+					}
+				}
 			}
+			parent.Status = models.FLOW_STATUS_FINISH
+			parent = parent.GetParent()
 		}
 	}
+
 	return
 }
