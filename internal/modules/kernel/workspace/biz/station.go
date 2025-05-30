@@ -467,8 +467,8 @@ func (s *Station) OnClose() {
 func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	var notifyMsg string = "会话被中断！"
 	defer func() {
-		log.Infof("chat running status: %s, notifyMsg: %s", s.chatRunningStatus, notifyMsg)
 		if s.chatRunningStatus == Terminate || s.chatRunningStatus == Finished {
+			log.Infof("chat running status: %s, notifyMsg: %s", s.chatRunningStatus, notifyMsg)
 			// 发送本次消耗的Token数据
 			notifyMsg := &models.MessageItem{
 				Role: common.Notifier,

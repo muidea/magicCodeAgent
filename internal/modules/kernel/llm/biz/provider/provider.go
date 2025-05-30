@@ -76,11 +76,11 @@ func (s *StreamTunnel) OnRecv(event string, data []byte) {
 		}
 		s.contentUsage.Update(respPtr.Usage)
 		if respPtr.Choices[0].FinishReason != "" {
-			if s.contextContentSinker != nil {
-				s.contextContentSinker.OnRecv(event, s.packedContent, s.contentUsage.Copy())
-			}
 			if s.localContentSinker != nil {
 				s.localContentSinker.OnRecv(event, s.packedContent, s.contentUsage.Copy())
+			}
+			if s.contextContentSinker != nil {
+				s.contextContentSinker.OnRecv(event, s.packedContent, s.contentUsage.Copy())
 			}
 			s.packedContent = ""
 			s.contentUsage.Reset()

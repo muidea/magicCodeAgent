@@ -205,7 +205,7 @@ func (s *LLM) OnTerminate(msgPtr *models.MessageInfo) {
 	}
 
 	debugEvent := event.NewEvent(imbrc.RecordRealtimeMessage, s.ID(), imbrc.RecorderModule, nil, appendVal)
-	s.PostEvent(debugEvent)
+	_ = s.SendEvent(debugEvent)
 }
 
 func (s *LLM) OnSendMessage(msgPtr *models.MessageInfo) {
@@ -218,7 +218,7 @@ func (s *LLM) OnSendMessage(msgPtr *models.MessageInfo) {
 	}
 
 	debugEvent := event.NewEvent(imbrc.RecordRealtimeMessage, s.ID(), imbrc.RecorderModule, nil, appendVal)
-	s.PostEvent(debugEvent)
+	_ = s.SendEvent(debugEvent)
 }
 
 func (s *LLM) OnRecvMessage(msgPtr *models.MessageInfo, usePtr *imklc.Usage) {
@@ -231,5 +231,5 @@ func (s *LLM) OnRecvMessage(msgPtr *models.MessageInfo, usePtr *imklc.Usage) {
 	}
 
 	debugEvent := event.NewEvent(imbrc.RecordRealtimeMessage, s.ID(), imbrc.RecorderModule, nil, appendVal)
-	s.PostEvent(debugEvent)
+	_ = s.SendEvent(debugEvent)
 }
