@@ -109,11 +109,11 @@ func (s *DecomposeDesignPlanTool) getSiblingsAndChilds(workspaceDir, stage, name
 
 	offset := -1
 	switch level {
-	case common.Project:
+	case models.ProjectLevel:
 		offset = 0
-	case common.Module:
+	case models.ModuleLevel:
 		offset = 1
-	case common.Block:
+	case models.BlockLevel:
 		offset = 2
 	}
 

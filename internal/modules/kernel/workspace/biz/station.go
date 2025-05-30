@@ -465,7 +465,7 @@ func (s *Station) OnClose() {
 }
 
 func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
-	var notifyMsg string
+	var notifyMsg string = "会话被中断！"
 	defer func() {
 		if s.chatRunningStatus == Terminate || s.chatRunningStatus == Finished {
 			// 发送本次消耗的Token数据
@@ -533,9 +533,9 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 			case "ask_followup_question":
 				curFlow = s.waitToContinue(curFlow, workParam, msgItem)
 			case "attempt_completion":
-				curFlow = s.tryToFinish(curFlow, workParam, msgItem)
-			case "decompose_design_plan","decompose_code_plan":
-				curFlow = s.tryToSwitch(curFlow, workParam, msgItem)
+				curFlow = s.tryToFinishFlow(curFlow, workParam, msgItem)
+			case "decompose_design_plan", "decompose_code_plan":
+				curFlow = s.tryToSwitchFlow(curFlow, workParam, msgItem)
 			default:
 				curFlow = s.continueRun(curFlow, workParam, msgItem)
 			}
@@ -565,11 +565,11 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 func (s *Station) waitToContinue(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// ask_followup_question
 	// 当前阶段是需要等待用户的输入的，不用做任何事情
-	log.Infof("try to continue flow %s", curFlow)
+	log.Infof("waitting to continue flow %s", curFlow)
 	return
 }
 
-func (s *Station) tryToFinish(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
+func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// attempt_completion
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
 	log.Infof("try to finish flow %s", curFlow)
@@ -577,25 +577,25 @@ func (s *Station) tryToFinish(curFlow *models.Flow, _ imbtc.ToolParam, _ *models
 	return
 }
 
-func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
+func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
 	// decompose_design_plan
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
 	log.Infof("try to switch flow %s", curFlow)
 	level := param["level"].(string)
-	compareVal := common.LevelGreater
+	compareVal := models.LevelGreater
 	if curFlow != nil {
-		compareVal = common.CompareLevel(curFlow.GetLevel(), level)
+		compareVal = models.CompareLevel(curFlow.GetLevel(), level)
 	}
 	switch compareVal {
-	case common.LevelGreater:
+	case models.LevelGreater:
 		ret = s.localFlowManger.NewFlow(msgItem.String(), curFlow)
 		// 子级任务
 		//s.localFlowManger.NewFlow(chatMsg, curFlow)
-	case common.LevelEqual:
+	case models.LevelEqual:
 		// 同级任务
 		ret = s.localFlowManger.NewFlow(msgItem.String(), curFlow.GetParent())
-	case common.LevelLess:
+	case models.LevelLess:
 		// 父级任务
 		parent := curFlow.GetParent()
 		if parent != nil {
@@ -612,6 +612,7 @@ func (s *Station) tryToSwitch(curFlow *models.Flow, param imbtc.ToolParam, msgIt
 }
 
 func (s *Station) continueRun(curFlow *models.Flow, _ imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
+	log.Infof("continue run flow %s", curFlow)
 	curFlow.AppendMessage(msgItem)
 
 	ret = curFlow

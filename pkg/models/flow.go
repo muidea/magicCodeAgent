@@ -12,6 +12,58 @@ const (
 	FLOW_STATUS_FINISH
 )
 
+const (
+	RootLevel    = "root"
+	ProjectLevel = "project"
+	ModuleLevel  = "module"
+	BlockLevel   = "block"
+)
+
+const (
+	LevelGreater = 1
+	LevelEqual   = 0
+	LevelLess    = -1
+)
+
+// 比较l1, l3的层级关系
+// 如果l1 > l2, 返回1，表示l1比l2高一个层级
+// 如果l1 < l2, 返回-1，表示l1比l2低一个层级
+// 如果l1 == l2, 返回0，表示l1和l2在同一层级
+// Project > Module > Block > Point
+func CompareLevel(l1, l2 string) int {
+	levelMap := map[string]int{
+		RootLevel:    5,
+		ProjectLevel: 4,
+		ModuleLevel:  3,
+		BlockLevel:   2,
+	}
+
+	l1Level := levelMap[l1]
+	l2Level := levelMap[l2]
+
+	switch {
+	case l1Level > l2Level:
+		return 1
+	case l1Level < l2Level:
+		return -1
+	default:
+		return 0
+	}
+}
+
+func GetChildLevel(level string) string {
+	switch level {
+	case RootLevel:
+		return ProjectLevel
+	case ProjectLevel:
+		return ModuleLevel
+	case ModuleLevel:
+		return BlockLevel
+	default:
+		return ""
+	}
+}
+
 type Flow struct {
 	Id        string           `json:"id"`
 	Title     string           `json:"title"`
@@ -61,6 +113,24 @@ func (s *Flow) GetParent() *Flow {
 
 func (s *Flow) IsFinish() bool {
 	return s.Status == FLOW_STATUS_FINISH
+}
+
+func (s *Flow) CanFinish() bool {
+	// 如果Flow没有子节点，并且是最终level，直接认为是可以结束的
+	if len(s.Childrens) == 0 {
+		return s.Level == BlockLevel
+	}
+
+	// 这里要检查其子节点是否可以结束
+	// 任意一个子节点不能结束，则认为该Flow不能结束
+	for _, val := range s.Childrens {
+		if !val.CanFinish() {
+			return false
+		}
+	}
+
+	// 所有的子节点都能结束，则认为该Flow可以结束
+	return true
 }
 
 func (s *Flow) GetFlowPath() []*Flow {
