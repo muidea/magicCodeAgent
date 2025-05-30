@@ -34,7 +34,7 @@ const (
 	Finished  = "finished"
 )
 
-const maxLoopCount = 50
+const maxLoopCount = 60
 
 type Observer interface {
 	ID() string
@@ -467,6 +467,7 @@ func (s *Station) OnClose() {
 func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	var notifyMsg string = "会话被中断！"
 	defer func() {
+		log.Infof("chat running status: %s, notifyMsg: %s", s.chatRunningStatus, notifyMsg)
 		if s.chatRunningStatus == Terminate || s.chatRunningStatus == Finished {
 			// 发送本次消耗的Token数据
 			notifyMsg := &models.MessageItem{
@@ -504,7 +505,8 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 		return
 	}
 
-	s.bizBasePtr.AsyncTask(func() {
+	// 这里必须用同步Task来执行
+	s.bizBasePtr.SyncTask(func() {
 		blockList, blockErr := util.SpliteBlocks(content)
 		if blockErr != nil {
 			s.chatRunningStatus = Terminate

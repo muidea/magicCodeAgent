@@ -122,46 +122,11 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 		return
 	}
 
-	// 已经有分解，则要校验所属ParentFlow是否有未完成
-	for {
-		if flowPtr == nil {
-			// 所有的Flow都处理完成，返回nil
-			s.currentFlowPtr = nil
-			return
-		}
-
-		// 先将当前Flow状态至为FINISH
-		// 再检查其Parent是否可以完成，如果不能完成，则从中挑选要给未完成的继续
-		if flowPtr.CanFinish() {
-			flowPtr.Status = models.FLOW_STATUS_FINISH
-			flowPtr = flowPtr.GetParent()
-			log.Infof("get parent flow：%s", flowPtr)
-			continue
-		}
-		break
+	// 这里只直接返回上一层，而不是继续根据Flow状态进行判断的原因是由于大模型并不能按照预期一次性完成所有的分解
+	// 直接返回上一次可以让他根据当前的情况，重新验算一遍，以便有遗漏，但是带来的坏处是多执行了一些步骤，会额外占用Token开销
+	if flowPtr.CanFinish() {
+		flowPtr.Status = models.FLOW_STATUS_FINISH
 	}
-
-	// 到这里说明flowPtr不能完成，要其中找挑选一个未完成的继续
-	allFinished := true
-	for {
-		childs := flowPtr.GetChildrens()
-		for _, childPtr := range childs {
-			if childPtr.CanFinish() {
-				childPtr.Status = models.FLOW_STATUS_FINISH
-				continue
-			}
-
-			flowPtr = childPtr
-			log.Infof("get child flow：%s", flowPtr)
-			allFinished = false
-			break
-		}
-
-		if allFinished {
-			break
-		}
-	}
-
-	s.currentFlowPtr = flowPtr
+	s.currentFlowPtr = flowPtr.GetParent()
 	return
 }
