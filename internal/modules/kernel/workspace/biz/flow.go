@@ -127,6 +127,23 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 	if flowPtr.CanFinish() {
 		flowPtr.Status = models.FLOW_STATUS_FINISH
 	}
-	s.currentFlowPtr = flowPtr.GetParent()
+	parent := flowPtr.GetParent()
+	// 这里优先处理尚未完成的子Flow
+	s.currentFlowPtr = parent
+	if parent != nil {
+		for _, child := range parent.GetChildrens() {
+			if !child.CanFinish() {
+				s.currentFlowPtr = child
+				break
+			}
+		}
+		s.currentFlowPtr.AppendMessage(&models.MessageItem{
+			Role: common.User,
+			Content: []string{
+				"继续检查并处理剩余功能",
+			},
+		})
+	}
+
 	return
 }

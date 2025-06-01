@@ -8,7 +8,7 @@ type MessageItem struct {
 }
 
 func (s *MessageItem) String() string {
-	return fmt.Sprintf("Role:%s,Content size:%d", s.Role, len(s.Content))
+	return fmt.Sprintf("Role:%s, Content item len:%d", s.Role, len(s.Content))
 }
 
 type MessageItemList []MessageItem
