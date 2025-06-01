@@ -117,12 +117,18 @@ type ModelInfo struct {
 	Model    string `json:"model"`
 }
 
+type AuthorConfigInfo struct {
+	Author string `json:"author"`
+	EMail  string `json:"email"`
+}
+
 // Config 定义系统配置结构
 type Config struct {
-	BindPort  string       `json:"bindPort"`  // 绑定端口
-	Workspace []*Workspace `json:"workspace"` // 工作区列表
-	Models    []*ModelInfo `json:"models"`    // AI模型列表
-	DebugFlag bool         `json:"debugFlag"`
+	BindPort     string            `json:"bindPort"`  // 绑定端口
+	Workspace    []*Workspace      `json:"workspace"` // 工作区列表
+	Models       []*ModelInfo      `json:"models"`    // AI模型列表
+	AuthorConfig *AuthorConfigInfo `json:"authorConfig"`
+	DebugFlag    bool              `json:"debugFlag"`
 }
 
 // init 初始化当前工作目录路径
@@ -349,6 +355,31 @@ func Models() []*ModelInfo {
 	}
 
 	return []*ModelInfo{}
+}
+
+func AuthorConfig() *AuthorConfigInfo {
+	if sysConfig != nil {
+		return sysConfig.AuthorConfig
+	}
+
+	return nil
+}
+
+func UpdateConfig(authConfigPtr *AuthorConfigInfo, models []*ModelInfo) {
+	if sysConfig == nil {
+		return
+	}
+	if authConfigPtr != nil {
+		sysConfig.AuthorConfig = authConfigPtr
+	}
+	if models != nil {
+		sysConfig.Models = models
+	}
+
+	err := fu.SaveConfig(currentConfigPath, sysConfig)
+	if err != nil {
+		log.Errorf("save config failed, err:%s", err.Error())
+	}
 }
 
 // SetEmbedTemplateFS 设置嵌入模板文件系统

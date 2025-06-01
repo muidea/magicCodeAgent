@@ -11,4 +11,8 @@ func (s *DeepseekProvider) String() string {
 	return "DeepseekProvider"
 }
 
+const DefaultModel = "deepseek-chat"
+const DefaultBaseUrl = "https://api.deepseek.com"
+const DefaultProvider = "deepseek"
+
 const Deepseek = "deepseek"

@@ -16,6 +16,8 @@ import (
 const WorkspaceModule = "/internal/modules/kernel/workspace"
 
 const (
+	QuerySystemConfig             = "/system/config/query"
+	UpdateSystemConfig            = "/system/config/update"
 	QueryWorkspace                = "/workspace/query"
 	CreateWorkspace               = "/workspace/create"
 	DestroyWorkspace              = "/workspace/destroy"
@@ -37,6 +39,31 @@ const (
 	FilterWorkspaceFlow           = "/workspace/flow/query"
 	DebugWorkspaceContent         = "/workspace/content/debug"
 )
+
+type AuthorInfo struct {
+	Author string `json:"author"`
+	EMail  string `json:"email"`
+}
+
+type ModelInfo struct {
+	BaseUrl  string `json:"baseUrl"`  // 模型基础URL
+	APIKey   string `json:"apiKey"`   // 模型API密钥
+	Provider string `json:"provider"` // 模型提供商
+	Model    string `json:"model"`
+}
+
+type SystemConfigParam struct {
+	AuthorInfo  *AuthorInfo `json:"authorInfo"`
+	LocalModel  *ModelInfo  `json:"localModel"`
+	RemoteModel *ModelInfo  `json:"remoteModel"`
+}
+
+type SystemConfigResult struct {
+	cd.Result
+	AuthorInfo  *AuthorInfo `json:"authorInfo"`
+	LocalModel  *ModelInfo  `json:"localModel"`
+	RemoteModel *ModelInfo  `json:"remoteModel"`
+}
 
 type WorkspaceResult struct {
 	cd.Result

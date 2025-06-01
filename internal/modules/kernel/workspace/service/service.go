@@ -56,6 +56,8 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(imkwc.ChatWorkspaceContentHistory, engine.GET, s.chatWorkspaceContentHistory)
 	s.routeRegistry.AddHandler(imkwc.FilterWorkspaceFlow, engine.GET, s.filterWorkspaceFlow)
 	s.routeRegistry.AddHandler(imkwc.DebugWorkspaceContent, engine.POST, s.debugWorkspaceContent)
+	s.routeRegistry.AddHandler(imkwc.QuerySystemConfig, engine.GET, s.querySystemConfig)
+	s.routeRegistry.AddHandler(imkwc.UpdateSystemConfig, engine.POST, s.updateSystemConfig)
 }
 
 func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -391,4 +393,28 @@ func (s *Workspace) debugWorkspaceContent(ctx context.Context, res http.Response
 	}
 
 	result.Error = nil
+}
+
+func (s *Workspace) querySystemConfig(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkwc.SystemConfigResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	authorConfig, localModel, remoteModel := s.bizPtr.GetSystemConfig()
+	result.AuthorInfo = authorConfig
+	result.LocalModel = localModel
+	result.RemoteModel = remoteModel
+}
+
+func (s Workspace) updateSystemConfig(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &cd.Result{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	param := &imkwc.SystemConfigParam{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		log.Errorf("parse body error: %s", err.Error())
+		result.Error = cd.NewError(cd.IllegalParam, err.Error())
+		return
+	}
+	result.Error = s.bizPtr.SetSystemConfig(param)
 }
