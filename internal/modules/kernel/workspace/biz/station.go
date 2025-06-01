@@ -465,22 +465,6 @@ func (s *Station) OnClose() {
 }
 
 func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
-	var notifyMsg string = "会话被中断！"
-	defer func() {
-		if s.chatRunningStatus == Terminate || s.chatRunningStatus == Finished {
-			log.Infof("chat running status: %s, notifyMsg: %s", s.chatRunningStatus, notifyMsg)
-			// 发送本次消耗的Token数据
-			notifyMsg := &models.MessageItem{
-				Role: common.Notifier,
-				Content: []string{
-					formatUsage(s.chatUsagePtr, s.chatLoopCount),
-					notifyMsg,
-				},
-			}
-			s.DisposeMessage(notifyMsg)
-		}
-	}()
-
 	msgPtr := &models.MessageItem{
 		Role:    common.Assistant,
 		Content: []string{content},
@@ -499,69 +483,93 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	if s.chatRunningStatus != Chatting {
 		return
 	}
-	if s.chatLoopCount > s.chatMaxLoopCount {
-		s.chatRunningStatus = Finished
+
+	s.bizBasePtr.AsyncTask(func() {
+		s.DisposeContent(curFlow, content)
+	})
+}
+
+func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
+	curTime := time.Now()
+	var finalStatus = s.chatRunningStatus
+	var chatLoopCount = s.chatLoopCount
+	var notifyMsg = "会话被中断！"
+	log.Infof("DisposeContent, workspace:%s, chatLoopCount:%d", s.configPtr.Name, chatLoopCount)
+	defer func() {
+		log.Infof("DisposeContent done, workspace:%s, chatLoopCount:%d, finalStatus:%s, elapseTime:%v", s.configPtr.Name, chatLoopCount, finalStatus, time.Since(curTime))
+		if finalStatus == Terminate || finalStatus == Finished {
+			// 发送本次消耗的Token数据
+			notifyMsg := &models.MessageItem{
+				Role: common.Notifier,
+				Content: []string{
+					formatUsage(s.chatUsagePtr, chatLoopCount),
+					notifyMsg,
+				},
+			}
+			s.DisposeMessage(notifyMsg)
+
+			s.chatRunningStatus = finalStatus
+		}
+	}()
+
+	if chatLoopCount > s.chatMaxLoopCount {
+		finalStatus = Finished
 		notifyMsg = "循环次数超过最大限制，自动结束"
 		return
 	}
 
-	// 这里必须用同步Task来执行
-	s.bizBasePtr.SyncTask(func() {
-		blockList, blockErr := util.SpliteBlocks(content)
-		if blockErr != nil {
-			s.chatRunningStatus = Terminate
-			notifyMsg = fmt.Sprintf("执行出错, 分解数据出错:%v", blockErr.Error())
-			log.Errorf("OnRecv, util.SpliteBlocks err:%v", blockErr)
+	blockList, blockErr := util.SpliteBlocks(content)
+	if blockErr != nil {
+		finalStatus = Terminate
+		notifyMsg = fmt.Sprintf("执行出错, 分解数据出错:%v", blockErr.Error())
+		log.Errorf("DisposeContent, util.SpliteBlocks err:%v", blockErr)
+		return
+	}
+
+	for _, block := range blockList {
+		workParam, workResult, workErr := s.localWorker.DoWork(s.configPtr, block)
+		if workErr != nil {
+			finalStatus = Terminate
+			notifyMsg = fmt.Sprintf("执行出错, Tool执行出错:%v", workErr.Error())
+			log.Errorf("DisposeContent, s.localWorker.DoWork err:%v", workErr)
 			return
 		}
 
-		curFlow := s.localFlowManger.GetCurrentFlow()
-		for _, block := range blockList {
-			workParam, workResult, workErr := s.localWorker.DoWork(s.configPtr, block)
-			if workErr != nil {
-				s.chatRunningStatus = Terminate
-				notifyMsg = fmt.Sprintf("执行出错, Tool执行出错:%v", workErr.Error())
-				log.Errorf("OnRecv, s.localWorker.DoWork err:%v", workErr)
-				return
-			}
-
-			msgItem := &workResult.Result
-			msgItem.Role = common.User
-			//workResult.Result.Role = common.User
-			switch workResult.Name {
-			case "thinking":
-				// noting todo
-				continue
-			case "ask_followup_question":
-				curFlow = s.waitToContinue(curFlow, workParam, msgItem)
-			case "attempt_completion":
-				curFlow = s.tryToFinishFlow(curFlow, workParam, msgItem)
-			case "decompose_design_plan", "decompose_code_plan":
-				curFlow = s.tryToSwitchFlow(curFlow, workParam, msgItem)
-			default:
-				curFlow = s.continueRun(curFlow, workParam, msgItem)
-			}
-
-			s.DisposeMessage(msgItem)
-		}
-		if curFlow != nil {
-			err := s.internalChat(context.Background(), curFlow)
-			if err != nil {
-				s.chatRunningStatus = Terminate
-				notifyMsg = fmt.Sprintf("执行出错, 调用大模型出错:%v", err.Error())
-				log.Errorf("internalChat error: %v", err)
-				return
-			}
+		msgItem := &workResult.Result
+		msgItem.Role = common.User
+		//workResult.Result.Role = common.User
+		switch workResult.Name {
+		case "thinking":
+			// noting todo
+			continue
+		case "ask_followup_question":
+			curFlow = s.waitToContinue(curFlow, workParam, msgItem)
+		case "attempt_completion":
+			curFlow = s.tryToFinishFlow(curFlow, workParam, msgItem)
+		case "decompose_design_plan", "decompose_code_plan":
+			curFlow = s.tryToSwitchFlow(curFlow, workParam, msgItem)
+		default:
+			curFlow = s.continueRun(curFlow, workParam, msgItem)
 		}
 
-		// 如果所有的Flow都执行完毕，则将状态置为Finish
-		curFlow = s.localFlowManger.GetCurrentFlow()
-		if curFlow == nil {
-			log.Infof("all flow finished")
-			s.chatRunningStatus = Finished
-			notifyMsg = "执行完毕"
+		s.DisposeMessage(msgItem)
+	}
+	if curFlow != nil {
+		err := s.internalChat(context.Background(), curFlow)
+		if err != nil {
+			finalStatus = Terminate
+			notifyMsg = fmt.Sprintf("执行出错, 调用大模型出错:%v", err.Error())
+			log.Errorf("DisposeContent, internalChat error: %v", err)
+			return
 		}
-	})
+	}
+
+	// 如果所有的Flow都执行完毕，则将状态置为Finish
+	if curFlow == nil {
+		log.Infof("all flow finished")
+		finalStatus = Finished
+		notifyMsg = "执行完毕"
+	}
 }
 
 func (s *Station) waitToContinue(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
