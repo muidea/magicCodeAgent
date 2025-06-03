@@ -1,6 +1,6 @@
 module github.com/muidea/magicCodeAgent
 
-go 1.23.0
+go 1.24
 
 replace (
 	github.com/muidea/magicCommon => ../magicCommon

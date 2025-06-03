@@ -36,7 +36,7 @@ github.com/leodido/go-urn/scim/schema
 github.com/mark3labs/mcp-go/mcp
 github.com/mark3labs/mcp-go/server
 # github.com/muidea/magicCommon v1.3.122 => ../magicCommon
-## explicit; go 1.23
+## explicit; go 1.24
 github.com/muidea/magicCommon/def
 github.com/muidea/magicCommon/event
 github.com/muidea/magicCommon/execute
@@ -53,7 +53,7 @@ github.com/muidea/magicCommon/framework/service
 github.com/muidea/magicCommon/session
 github.com/muidea/magicCommon/task
 # github.com/muidea/magicEngine v1.4.0 => ../magicEngine
-## explicit; go 1.23
+## explicit; go 1.24
 github.com/muidea/magicEngine/http
 github.com/muidea/magicEngine/sse
 # github.com/muidea/seelog v1.0.0
