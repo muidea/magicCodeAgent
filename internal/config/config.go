@@ -25,8 +25,11 @@ var (
 	currentConfigPath = ""               // 当前配置文件路径
 	currentWorkPath   = ""               // 当前工作目录路径
 	currentEndpoint   = "magicCodeAgent" // 默认端点名称
-	listenPort        = "8080"           // 默认监听端口
-	sysConfig         *Config            // 系统配置实例
+	currentBuildTime  = ""
+	currentGitCommit  = ""
+	currentVersion    = "0.0.1"
+	listenPort        = "8080" // 默认监听端口
+	sysConfig         *Config  // 系统配置实例
 	debugWorkspace    = true
 )
 
@@ -154,6 +157,13 @@ func LoadConfig(cfgFile string) (err error) {
 	currentConfigPath = cfgFile
 	sysConfig = cfg
 	return
+}
+
+func SetApplicationInfo(endpointName, buildTime, gitCommit, version string) {
+	currentEndpoint = endpointName
+	currentBuildTime = buildTime
+	currentGitCommit = gitCommit
+	currentVersion = version
 }
 
 // SetEndpoint 设置当前端点名称
@@ -398,6 +408,18 @@ func GetTemplateFS() embed.FS {
 // 返回: 端点名称字符串
 func EndpointName() string {
 	return currentEndpoint
+}
+
+func BuildTime() string {
+	return currentBuildTime
+}
+
+func GitCommit() string {
+	return currentGitCommit
+}
+
+func Version() string {
+	return currentVersion
 }
 
 // CurrentWorkPath 获取当前工作目录路径

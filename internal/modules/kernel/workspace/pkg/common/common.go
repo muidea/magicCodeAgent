@@ -52,6 +52,13 @@ type ModelInfo struct {
 	Model    string `json:"model"`
 }
 
+type VersionInfo struct {
+	EndpointName string `json:"endpointName"`
+	BuildTime    string `json:"buildTime"`
+	GitCommit    string `json:"gitCommit"`
+	Version      string `json:"version"`
+}
+
 type SystemConfigParam struct {
 	AuthorInfo  *AuthorInfo `json:"authorInfo"`
 	LocalModel  *ModelInfo  `json:"localModel"`
@@ -60,9 +67,10 @@ type SystemConfigParam struct {
 
 type SystemConfigResult struct {
 	cd.Result
-	AuthorInfo  *AuthorInfo `json:"authorInfo"`
-	LocalModel  *ModelInfo  `json:"localModel"`
-	RemoteModel *ModelInfo  `json:"remoteModel"`
+	AuthorInfo  *AuthorInfo  `json:"authorInfo"`
+	LocalModel  *ModelInfo   `json:"localModel"`
+	RemoteModel *ModelInfo   `json:"remoteModel"`
+	VersionInfo *VersionInfo `json:"versionInfo"`
 }
 
 type WorkspaceResult struct {

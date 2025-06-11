@@ -18,6 +18,7 @@ import (
 var (
 	buildTime string
 	gitCommit string
+	version   string
 )
 
 var configFile = "/etc/magicCodeAgent/config.json"
@@ -26,9 +27,9 @@ func main() {
 	flag.StringVar(&configFile, "config", configFile, "config file path")
 	flag.Parse()
 
-	fmt.Printf("magicCodeDebug V1.0\n")
+	fmt.Printf("magicCodeDebug %s\n", version)
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
-	config.SetEndpoint("magicCodeDebug")
+	config.SetApplicationInfo("magicCodeDebug", buildTime, gitCommit, version)
 	config.EnableDebug()
 
 	if configFile != "" {

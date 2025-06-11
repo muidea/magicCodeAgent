@@ -11,6 +11,15 @@ import (
 
 var apiKeyMask = "sk-***"
 
+func (s *Workspace) GetVersionInfo() *imkwc.VersionInfo {
+	return &imkwc.VersionInfo{
+		BuildTime:    config.BuildTime(),
+		EndpointName: config.EndpointName(),
+		GitCommit:    config.GitCommit(),
+		Version:      config.Version(),
+	}
+}
+
 func (s *Workspace) GetSystemConfig() (authPtr *imkwc.AuthorInfo, localModel *imkwc.ModelInfo, remoteModel *imkwc.ModelInfo) {
 	authorConfig := config.AuthorConfig()
 	if authorConfig != nil {

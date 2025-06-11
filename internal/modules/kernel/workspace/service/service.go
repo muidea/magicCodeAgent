@@ -403,6 +403,7 @@ func (s *Workspace) querySystemConfig(ctx context.Context, res http.ResponseWrit
 	result.AuthorInfo = authorConfig
 	result.LocalModel = localModel
 	result.RemoteModel = remoteModel
+	result.VersionInfo = s.bizPtr.GetVersionInfo()
 }
 
 func (s Workspace) updateSystemConfig(ctx context.Context, res http.ResponseWriter, req *http.Request) {

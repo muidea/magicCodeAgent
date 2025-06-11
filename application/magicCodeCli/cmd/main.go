@@ -21,14 +21,15 @@ import (
 var (
 	buildTime string
 	gitCommit string
+	version   string
 )
 
 func main() {
 	flag.Parse()
 
-	fmt.Printf("magicCodeCli V1.0\n")
+	fmt.Printf("magicCodeCli %s\n", version)
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
-	config.SetEndpoint("magicCodeCli")
+	config.SetApplicationInfo("magicCodeCli", buildTime, gitCommit, version)
 	err := application.Startup(service.DefaultService(config.EndpointName()))
 	if err != nil {
 		log.Errorf("application.Startup err:%s", err.Error())
