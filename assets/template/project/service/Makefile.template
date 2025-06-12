@@ -1,6 +1,6 @@
 export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
-LDFLAGS := -X 'main.buildTime=$(shell date -u --rfc-3339=seconds)' -X 'main.gitCommit=$(shell git log --pretty=format:"%h" -1)'
+LDFLAGS := -X 'main.buildTime=$(shell date -u +"%Y-%m-%d %H:%M:%S UTC")' -X 'main.gitCommit=$(shell git log --pretty=format:"%h" -1)' -X 'main.version=$(shell git describe --tags --exact-match 2>/dev/null || echo "v0.0.0")'
 PROJECT={{.ProjectName}}
 
 all: fmt build
