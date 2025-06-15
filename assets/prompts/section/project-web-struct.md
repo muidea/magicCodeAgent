@@ -107,44 +107,6 @@ routes: [
 
 ---
 
-### Model 的使用说明
-
-#### 创建 Model
-
-数据流管理采用约定式目录结构，可在以下位置定义 Model 文件：
-
-* `src/models`
-* `src/pages/xxxx/models/`
-* `src/pages/xxxx/model.{ts,tsx}`
-
-**命名空间规则**：
-
-| 路径                                      | 命名空间                | 说明                            |
-| :-------------------------------------- | :------------------ | :---------------------------- |
-| `src/models/count.ts`                   | `count`             | `src/models` 下不支持嵌套目录定义 Model |
-| `src/pages/pageA/model.ts`              | `pageA.model`       |                               |
-| `src/pages/pageB/models/product.ts`     | `pageB.product`     |                               |
-| `src/pages/pageB/models/fruit/apple.ts` | `pageB.fruit.apple` | 支持嵌套目录定义 Model                |
-
-#### 使用 Model
-
-示例代码：
-
-```tsx
-// src/components/Username/index.tsx
-import { useModel } from '@umijs/max';
-
-export default function Page() {
-  const { user, loading } = useModel('userModel');
-
-  return loading ? <></> : <div>{user.username}</div>;
-}
-```
-
-`useModel()` 的参数为 Model 的命名空间。
-
----
-
 ### 项目辅助工具和命令
 
 1. **代码格式化**：
@@ -170,10 +132,3 @@ export default function Page() {
    ```bash
    rm -rf ./dist src/.umi src/.umi-production
    ```
-
----
-
-### 特别提示
-
-1. **项目初始化**：请先使用 `initialization_web_project` 工具完成项目初始化，确保目录结构和配置文件正确生成。
-2. **包管理器**：本项目使用 `yarn` 作为包管理工具。

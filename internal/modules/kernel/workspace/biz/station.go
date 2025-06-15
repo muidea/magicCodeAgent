@@ -397,6 +397,7 @@ func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr
 	s.chatMaxLoopCount = maxLoopCount
 	s.currentWorkStage = stage
 	s.chatRunningStatus = Chatting
+	s.chatLoopCount = 0
 
 	s.DisposeMessage(itemPtr)
 
@@ -514,7 +515,7 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 
 	if chatLoopCount > s.chatMaxLoopCount {
 		finalStatus = Finished
-		notifyMsg = "循环次数超过最大限制，自动结束"
+		notifyMsg = "循环次数超过最大限制，自动结束\n 如果要继续执行，可以输入'继续执行'"
 		return
 	}
 
