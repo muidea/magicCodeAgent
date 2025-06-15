@@ -87,9 +87,10 @@ func (s *WriteToFileTool) Execute(workspaceName, workspaceDir, stage string, par
 			return
 		}
 	}
-	err = WriteToFile(fullPath, path, content, lineCount)
+	wErr := WriteToFile(fullPath, path, content, lineCount)
 	if err != nil {
-		log.Errorf("WriteToFile failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
+		log.Errorf("WriteToFile failed, fullPath:%s, path:%s err: %v", fullPath, path, wErr)
+		result = "write to file failed!\n" + wErr.Error()
 		return
 	}
 
@@ -148,5 +149,10 @@ func WriteToFile(workspaceDir, path, content string, lineCount int) error {
 	}
 
 	// 写入文件
-	return os.WriteFile(fullPath, []byte(content), 0644)
+	wErr := os.WriteFile(fullPath, []byte(content), 0644)
+	if wErr != nil {
+		log.Errorf("WriteToFile:%s failed, error:%v", fullPath, wErr)
+		return fmt.Errorf("WriteToFile:%s failed, error:%v", path, wErr)
+	}
+	return nil
 }

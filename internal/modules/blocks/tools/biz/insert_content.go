@@ -87,14 +87,18 @@ func (s *InsertContentTool) Execute(workspaceName, workspaceDir, stage string, p
 
 	var insertBlocks []*InsertBlock
 	for _, op := range ops {
+		if op.StartLine == 0 {
+			op.StartLine = 1
+		}
 		insertBlocks = append(insertBlocks, &InsertBlock{
 			StartLine: op.StartLine,
 			Content:   op.Content,
 		})
 	}
 
-	if err = InsertContent(fullPath, path, insertBlocks); err != nil {
-		log.Errorf("InsertContent failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
+	if insertErr := InsertContent(fullPath, path, insertBlocks); insertErr != nil {
+		log.Errorf("InsertContent failed, fullPath:%s, path:%s err: %v", fullPath, path, insertErr)
+		result = "insert content failed!\n" + insertErr.Error()
 		return
 	}
 
@@ -161,6 +165,8 @@ func InsertContent(workspaceDir, path string, operations []*InsertBlock) error {
 	// 读取原始文件内容
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
+		log.Errorf("read file:%s failed, err:%v", path, err)
+		err := fmt.Errorf("read file:%s failed, err:%v", path, err)
 		return err
 	}
 
@@ -185,5 +191,11 @@ func InsertContent(workspaceDir, path string, operations []*InsertBlock) error {
 	}
 
 	// 写入文件
-	return os.WriteFile(fullPath, []byte(strings.Join(lines, "\n")), 0644)
+	err = os.WriteFile(fullPath, []byte(strings.Join(lines, "\n")), 0644)
+	if err != nil {
+		log.Errorf("write file:%s failed, error: %v", path, err)
+		err = fmt.Errorf("write file:%s failed, error: %v", path, err)
+		return err
+	}
+	return nil
 }

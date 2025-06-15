@@ -73,10 +73,10 @@ func (s *ApplyDiffTool) Execute(workspaceName, workspaceDir, stage string, param
 			return
 		}
 	}
-	err = ApplyDiff(fullPath, path, diff)
-	if err != nil {
-		err = fmt.Errorf("failed to apply diff: %v", err)
-		log.Errorf("ApplyDiff failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
+	applyErr := ApplyDiff(fullPath, path, diff)
+	if applyErr != nil {
+		log.Errorf("ApplyDiff failed, fullPath:%s, path:%s err: %v", fullPath, path, applyErr)
+		result = "apply diff failed!\n" + applyErr.Error()
 		return
 	}
 
@@ -267,12 +267,12 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 	fullPath := filepath.Join(workspaceDir, path)
 	fullPath = filepath.Clean(fullPath)
 	if !fp.Exist(fullPath) {
-		return fmt.Errorf("file not found: %s", fullPath)
+		return fmt.Errorf("file not found: %s", path)
 	}
 
 	diffBlocks, err := splitDiffBlock(diff)
 	if err != nil {
-		return fmt.Errorf("failed to parse diff: %v", err)
+		return fmt.Errorf("diff块格式非法: %v", err)
 	}
 	if len(diffBlocks) == 0 {
 		return nil
@@ -281,18 +281,19 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 	// 读取文件内容，用于在未指定行号时查找匹配内容
 	fileContent, err := os.ReadFile(fullPath)
 	if err != nil {
-		return fmt.Errorf("failed to read file: %v", err)
+		log.Errorf("read raw file failed, error:%v", err)
+		return fmt.Errorf("failed to read file:%s, err:%v", path, err)
 	}
 	fileLines := strings.Split(string(fileContent), "\n")
 
 	// 处理未指定行号的情况，通过内容匹配确定行号
-	for i, block := range diffBlocks {
+	for _, block := range diffBlocks {
 		// 如果起始行号未指定，通过内容匹配确定
 		if block.StartLine == 0 {
 			// 在文件中查找匹配的内容
 			lineNum := findContentInFile(fileLines, block.OriginContent)
 			if lineNum == -1 {
-				return fmt.Errorf("could not find matching content in file for block %d, content: %s", i+1, block.OriginContent)
+				return fmt.Errorf("未在文件中找到diff块替换内容: \n%s", block.OriginContent)
 			}
 			block.StartLine = lineNum
 			// 如果结束行号也未指定，根据原始内容的行数计算
@@ -306,8 +307,8 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 
 		// 验证行号的有效性
 		if block.StartLine <= 0 || block.EndLine <= 0 || block.StartLine > block.EndLine {
-			return fmt.Errorf("invalid line numbers after resolution: startLine=%d, endLine=%d for block %d",
-				block.StartLine, block.EndLine, i+1)
+			return fmt.Errorf("diff块行号无效: startLine=%d, endLine=%d，diff块%s",
+				block.StartLine, block.EndLine, block.OriginContent)
 		}
 	}
 
@@ -320,14 +321,16 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 	tmpPath := fullPath + ".tmp"
 	tmpFile, err := os.Create(tmpPath)
 	if err != nil {
-		return fmt.Errorf("failed to create temp file: %v", err)
+		log.Errorf("create temp file failed, error:%v", err)
+		return fmt.Errorf("写入文件失败, error:%v", err)
 	}
 	defer tmpFile.Close()
 
 	// 打开原文件
 	origFile, err := os.Open(fullPath)
 	if err != nil {
-		return fmt.Errorf("failed to open original file: %v", err)
+		log.Errorf("open file failed, error:%v", err)
+		return fmt.Errorf("写入文件失败, error:%v", err)
 	}
 	defer origFile.Close()
 
@@ -351,12 +354,14 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 					// 写入换行符
 					if !firstLine {
 						if _, err := writer.WriteString("\n"); err != nil {
-							return fmt.Errorf("failed to write newline: %v", err)
+							log.Errorf("write file failed, error:%v", err)
+							return fmt.Errorf("写入文件失败, error:%v", err)
 						}
 					}
 					firstLine = false
 					if _, err := writer.WriteString(block.ReplaceContent); err != nil {
-						return fmt.Errorf("failed to write replacement content: %v", err)
+						log.Errorf("write file failed, error:%v", err)
+						return fmt.Errorf("写入文件失败, error:%v", err)
 					}
 				}
 
@@ -373,24 +378,28 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 		// 写入换行符
 		if !firstLine {
 			if _, err := writer.WriteString("\n"); err != nil {
-				return fmt.Errorf("failed to write newline: %v", err)
+				log.Errorf("write string failed, error:%v", err)
+				return fmt.Errorf("写入文件失败, error:%v", err)
 			}
 		}
 		firstLine = false
 		// 不在替换范围内，写入原始行
 		if _, err := writer.WriteString(line); err != nil {
-			return fmt.Errorf("failed to write original content: %v", err)
+			log.Errorf("write file failed, error:%v")
+			return fmt.Errorf("写入文件失败, error:%v", err)
 		}
 		lineNum++
 	}
 
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("failed to read file: %v", err)
+		log.Errorf("scanner.Err() error:%v", err)
+		return fmt.Errorf("写入文件失败, error:%v", err)
 	}
 
 	// 刷新缓冲区
 	if err := writer.Flush(); err != nil {
-		return fmt.Errorf("failed to flush write buffer: %v", err)
+		log.Errorf("flush buffer failed, error:%v", err)
+		return fmt.Errorf("写入文件失败, error:%v", err)
 	}
 
 	// 关闭文件
@@ -399,7 +408,8 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 
 	// 重命名临时文件
 	if err := os.Rename(tmpPath, fullPath); err != nil {
-		return fmt.Errorf("failed to rename temp file: %v", err)
+		log.Errorf("os.rename failed, error:%v", err)
+		return fmt.Errorf("写入文件失败, error:%v", err)
 	}
 
 	return nil

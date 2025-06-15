@@ -90,8 +90,10 @@ func (s *SearchAndReplaceTool) Execute(workspaceName, workspaceDir, stage string
 			return
 		}
 	}
-	err = SearchAndReplace(fullPath, path, ops)
-	if err != nil {
+	srErr := SearchAndReplace(fullPath, path, ops)
+	if srErr != nil {
+		log.Errorf("SearchAndReplace failed, fullPath:%s, path:%s err: %v", fullPath, path, srErr)
+		result = "search and replace failed!\n" + srErr.Error()
 		return
 	}
 
@@ -167,6 +169,8 @@ func SearchAndReplace(workspaceDir, path string, operations []struct {
 	// 读取原始文件内容
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
+		log.Errorf("read file error: %v", err)
+		err = fmt.Errorf("read file:%s failed, error:%s", path, err)
 		return err
 	}
 
@@ -195,5 +199,11 @@ func SearchAndReplace(workspaceDir, path string, operations []struct {
 	}
 
 	// 写入文件
-	return os.WriteFile(fullPath, []byte(strings.Join(lines, "\n")), 0644)
+	wErr := os.WriteFile(fullPath, []byte(strings.Join(lines, "\n")), 0644)
+	if wErr != nil {
+		log.Errorf("write file:%s failed, error: %v", fullPath, wErr)
+		return fmt.Errorf("write file:%s failed, error: %v", path, wErr)
+	}
+
+	return nil
 }
