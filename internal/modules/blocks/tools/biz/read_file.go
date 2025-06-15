@@ -112,13 +112,18 @@ func (s *ReadFileTool) Execute(workspaceName, workspaceDir, stage string, param 
 			return
 		}
 	}
-	result, err = ReadFile(fullPath, path, startLine, endLine)
-	if err != nil {
-		log.Errorf("ReadFile failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
+	readVal, readErr := ReadFile(fullPath, path, startLine, endLine)
+	if readErr != nil {
+		log.Errorf("ReadFile failed, fullPath:%s, path:%s err: %v", fullPath, path, readErr)
+		result = "error: 读取文件内容失败! " + readErr.Error()
+		return
 	}
-	if result == "" {
+	if readVal == "" {
 		result = "warning: 当前文件内容为空"
+		return
 	}
+
+	result = readVal
 	return
 }
 
@@ -175,7 +180,7 @@ func ReadFile(workspaceDir, path string, startLine, endLine int) (string, error)
 	fullPath := filepath.Join(workspaceDir, path)
 	file, err := os.Open(fullPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to open file: %v", err)
+		return "", fmt.Errorf("failed to open file:%s failed, error:%v", path, err)
 	}
 	defer file.Close()
 
@@ -196,7 +201,7 @@ func ReadFile(workspaceDir, path string, startLine, endLine int) (string, error)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("error reading file: %v", err)
+		return "", fmt.Errorf("error reading file:%s, error:%v", path, err)
 	}
 
 	return result.String(), nil

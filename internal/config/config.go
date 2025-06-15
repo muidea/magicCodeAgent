@@ -85,7 +85,7 @@ func (s *Workspace) GetPreviousStagePath() (string, string) {
 	switch s.Stage {
 	case common.CodeStage:
 		previousStage = common.DesignStage
-		previousLabel = "子功能列表"
+		previousLabel = "设计功能列表"
 	case common.TestStage:
 		previousLabel = "代码列表"
 		previousStage = common.CodeStage

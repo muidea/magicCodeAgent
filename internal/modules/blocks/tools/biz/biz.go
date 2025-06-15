@@ -2,7 +2,6 @@ package biz
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -152,9 +151,9 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 			Name: toolName,
 			Result: models.MessageItem{
 				Role:    common.Tool,
-				Content: []string{fmt.Sprintf("failed to parse param content: %s", toolErr.Error())},
+				Content: []string{fmt.Sprintf("parse tool param failed, param:\n%s\nerror:%s", dataContent, toolErr.Error())},
 			},
-		}, toolErr
+		}, nil
 	}
 	if toolName == "" {
 		log.Errorf("tool name cannot be empty")
@@ -162,9 +161,9 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 			Name: toolName,
 			Result: models.MessageItem{
 				Role:    common.Tool,
-				Content: []string{"tool name cannot be empty"},
+				Content: []string{"illegal tool param, tool name cannot be empty. param:\n%s", dataContent},
 			},
-		}, errors.New("tool name cannot be empty")
+		}, nil
 	}
 
 	if toolName == "thinking" {

@@ -7,7 +7,7 @@
 **注意：**  
 
 - `decompose_code_plan`不允许批量执行，只能单次执行。
-- 任何时候开始设计，都必须先使用`decompose_code_plan`来制定代码开发目标。
+- 任何时候开始代码开发，都必须先使用`decompose_code_plan`来制定代码开发目标。
 
 **功能层级 (level) 定义：**  
 
@@ -23,9 +23,9 @@
 
 **参数说明：**
 
-- `level` 为 `project` 时，`name` 当前项目名。
-- `level` 为 `module` 时，`name` 当前业务模块名。
-- `level` 为 `block` 时，`name` 当前功能模块名。
+- `level` 为 `project` 时，`name` 当前项目名, `description` 为项目功能描述。
+- `level` 为 `module` 时，`name` 当前业务模块名, `description` 为业务模块功能描述。
+- `level` 为 `block` 时，`name` 当前功能模块名, `description` 为功能模块功能描述。
 
 - `level` 为 `project` 时，`path`值为`./{项目名}-项目功能.md`
 - `level` 为 `module` 时，`path`值为`./{项目名}/{业务模块名}-业务模块.md`

@@ -116,12 +116,17 @@ func (s *ReadStageFileTool) Execute(workspaceName, workspaceDir, stage string, p
 			return
 		}
 	}
-	result, err = ReadFile(fullPath, path, startLine, endLine)
-	if err != nil {
-		log.Errorf("ReadFile failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
+	readVal, readErr := ReadFile(fullPath, path, startLine, endLine)
+	if readErr != nil {
+		log.Errorf("ReadFile failed, fullPath:%s, path:%s err: %v", fullPath, path, readErr)
+		result = "error: 读取文件内容失败! " + readErr.Error()
+		return
 	}
-	if result == "" {
+	if readVal == "" {
 		result = "warning: 当前文件内容为空"
+		return
 	}
+
+	result = readVal
 	return
 }
