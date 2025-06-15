@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
@@ -54,17 +55,17 @@ func (s *CreateServiceModuleTool) Execute(workspaceName, workspaceDir, stage str
 		}
 	}()
 
-	path, ok := param["path"].(string)
-	if !ok || path == "" {
+	pathVal, pathOK := param["path"].(string)
+	if !pathOK || pathVal == "" {
 		err = fmt.Errorf("missing or invalid path parameter")
 		return
 	}
-	name, ok := param["name"].(string)
-	if !ok || name == "" {
+	name, pathOK := param["name"].(string)
+	if !pathOK || name == "" {
 		err = fmt.Errorf("missing or invalid name parameter")
 		return
 	}
-	fullPath := filepath.Join(workspaceDir, stage)
+	fullPath := filepath.Join(workspaceDir, stage, pathVal)
 	if !fp.Exist(fullPath) {
 		err = os.MkdirAll(fullPath, 0755)
 		if err != nil {
@@ -76,7 +77,7 @@ func (s *CreateServiceModuleTool) Execute(workspaceName, workspaceDir, stage str
 	var args = []string{
 		"-actionType", "module",
 		"-executeAction", "create",
-		"-moduleName", name,
+		"-moduleName", path.Join("service", name),
 	}
 	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
 	if runErr != nil {

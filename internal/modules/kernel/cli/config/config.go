@@ -65,8 +65,7 @@ func GetEnableDao() bool {
 	return enableDao
 }
 
-var modulePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*)$`)
-var projectPattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*|(service|web)\/[a-zA-Z][a-zA-Z0-9]*)$`)
+var namePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*|(service|web)\/[a-zA-Z][a-zA-Z0-9]*)$`)
 
 // 校验输入参数
 // 1. moduleType只能是module,initiator,project其中一种，必选参数，如果参数为空则失败，返回参数错误
@@ -102,12 +101,12 @@ func VerifyVar() (err *cd.Error) {
 
 	switch actionType {
 	case "module", "initiator":
-		if !modulePattern.MatchString(moduleName) {
-			err = cd.NewError(cd.IllegalParam, "moduleName必须以字母开头且只能包含字母数字")
+		if !namePattern.MatchString(moduleName) {
+			err = cd.NewError(cd.IllegalParam, "moduleName必须是类似service/demo,web/demo这类格式")
 			return
 		}
 	case "project":
-		if !projectPattern.MatchString(projectName) {
+		if !namePattern.MatchString(projectName) {
 			err = cd.NewError(cd.IllegalParam, "projectName必须是类似service/demo,web/demo这类格式")
 			return
 		}
