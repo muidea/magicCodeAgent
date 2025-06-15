@@ -1,4 +1,4 @@
-## 项目规划目录结构
+## 代码规划目录结构
 
 ```plaintext
 .
@@ -14,8 +14,18 @@
 │   │   ├── global.ts   // 全局 Model 文件
 │   │   └── index.ts    // Model 索引文件
 │   ├── pages           // 页面目录（约定式路由）
-│   │   ├── index.less  // 首页样式文件
-│   │   └── index.tsx   // 首页组件
+│   │   ├── index       // 首页目录
+│   │   │   ├── index.tsx   // 首页组件
+│   │   │   ├── index.less  // 首页样式文件
+│   │   │   ├── model.ts    // 模型文件
+│   │   │   └── service.ts  // 服务文件
+│   │   └── xxx             // 其他页面
+│   │       ├── xxx         // 其他页面
+│   │       │   ├── index.tsx   // 页面文件
+│   │       │   ├── index.less  // 样式文件
+│   │       │   ├── model.ts    // 模型文件
+│   │       │   └── service.ts  // 服务文件
+│   │       └── xxx         // 其他页面
 │   ├── utils           // 工具函数目录（推荐使用）
 │   │   └── index.ts
 │   ├── services        // 服务请求目录（推荐使用）
