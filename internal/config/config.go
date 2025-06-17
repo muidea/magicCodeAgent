@@ -148,10 +148,19 @@ func LoadConfig(cfgFile string) (err error) {
 	}
 
 	cfg := &Config{}
-	err = fu.LoadConfig(cfgFile, cfg)
-	if err != nil {
-		log.Errorf("load config failed, err:%s", err.Error())
-		return
+	if !fp.Exist(cfgFile) {
+		cfg.BindPort = listenPort
+		err = fu.SaveConfig(cfgFile, cfg)
+		if err != nil {
+			log.Errorf("save config failed, err:%s", err.Error())
+			return
+		}
+	} else {
+		err = fu.LoadConfig(cfgFile, cfg)
+		if err != nil {
+			log.Errorf("load config failed, err:%s", err.Error())
+			return
+		}
 	}
 
 	currentConfigPath = cfgFile
