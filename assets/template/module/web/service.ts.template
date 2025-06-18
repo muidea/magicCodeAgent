@@ -1,0 +1,17 @@
+import { genApi } from '@/utils';
+
+const index: { [index: string]: string } = {
+  filter{{.ModuleName}}: 'GET /{{toLower .ModuleName}}/filter/',
+  query{{.ModuleName}}: 'GET /{{toLower .ModuleName}}/query/:id',
+  insert{{.ModuleName}}: 'POST /{{toLower .ModuleName}}/insert/',
+  update{{.ModuleName}}: 'PUT /{{toLower .ModuleName}}/update/:id',
+  delete{{.ModuleName}}: 'DELETE /{{toLower .ModuleName}}/delete/:id',
+  count{{.ModuleName}}: 'GET /{{toLower .ModuleName}}/count/',
+};
+
+const APIFunction: { [index: string]: any } = {};
+Object.keys(index).forEach((key) => {
+  APIFunction[key] = genApi(index[key]);
+});
+
+export default APIFunction;

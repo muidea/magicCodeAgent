@@ -69,6 +69,9 @@ func New(
 	ptr.toolRegistry.Register(&CreateServiceModuleTool{
 		commander: ptr,
 	})
+	ptr.toolRegistry.Register(&CreateWebModuleTool{
+		commander: ptr,
+	})
 	ptr.toolRegistry.Register(&CreateServiceInitiatorTool{
 		commander: ptr,
 	})

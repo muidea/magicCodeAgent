@@ -1,0 +1,10 @@
+import { {{.ModuleName}} } from './types';
+
+const {{toLower .ModuleName}}Formatter = (val: {{.ModuleName}}, label: boolean = true): any => {
+  return '-'
+}
+
+export {
+  {{.ModuleName}},
+  {{toLower .ModuleName}}Formatter,
+}

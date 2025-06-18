@@ -1,0 +1,58 @@
+import { useCallback, useState } from 'react';
+import api from './service';
+import { {{.ModuleName}} } from './types';
+import { ApiFilter, handleApiCall } from '@/utils/api';
+
+const use{{.ModuleName}}Model = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [currentErrorMessage, setCurrentErrorMessage] = useState<string | null>(null);
+  const [current{{.ModuleName}}, setCurrent{{.ModuleName}}] = useState<{{.ModuleName}} | null>(null);
+  const [{{toLower .ModuleName}}List, set{{.ModuleName}}List] = useState<{{.ModuleName}}[]>([]);
+
+  const filter{{.ModuleName}} = useCallback(async (filter: ApiFilter) => {
+    handleApiCall(api.filter{{.ModuleName}}(filter), (values) => {
+      set{{.ModuleName}}List(values);
+    }, setCurrentErrorMessage, setLoading)
+  }, [loading, currentErrorMessage, {{toLower .ModuleName}}List]);
+
+  const query{{.ModuleName}} = useCallback(async (id: string): Promise<{{.ModuleName}}> => {
+    return handleApiCall(api.query{{.ModuleName}}(id), (value) => {
+      setCurrent{{.ModuleName}}(value);
+    }, setCurrentErrorMessage, setLoading)
+  }, [loading, currentErrorMessage, current{{.ModuleName}}]);
+
+  const insert{{.ModuleName}} = useCallback(async (val: {{.ModuleName}}): Promise<{{.ModuleName}}> => {
+    return await handleApiCall(api.insert{{.ModuleName}}(val), (value) => {
+      setCurrent{{.ModuleName}}(value);
+      set{{.ModuleName}}List( {{toLower .ModuleName}}List ? [...{{toLower .ModuleName}}List, value] : [value]);
+    }, setCurrentErrorMessage, setLoading);
+  }, [loading, currentErrorMessage, current{{.ModuleName}}, {{toLower .ModuleName}}List]);
+
+  const update{{.ModuleName}} = useCallback(async (val: {{.ModuleName}}): Promise<{{.ModuleName}}> => {
+    return handleApiCall(api.update{{.ModuleName}}(val), (value) => {
+      setCurrent{{.ModuleName}}(value);
+      set{{.ModuleName}}List({{toLower .ModuleName}}List.map((val) => (val.id === value.id ? value : val)));
+    }, setCurrentErrorMessage, setLoading)
+  }, [loading, currentErrorMessage, current{{.ModuleName}}, {{toLower .ModuleName}}List]);
+
+  const delete{{.ModuleName}} = useCallback(async (val: {{.ModuleName}}, drop{{.ModuleName}}: boolean = false): Promise<{{.ModuleName}}> => {
+    return handleApiCall(api.delete{{.ModuleName}}({ id: val.id }, drop{{.ModuleName}}), (value) => {
+      setCurrent{{.ModuleName}}(null);
+      set{{.ModuleName}}List({{toLower .ModuleName}}List.filter((val) => (val.id !== value.id)));
+    }, setCurrentErrorMessage, setLoading)
+  }, [loading, currentErrorMessage, current{{.ModuleName}}, {{toLower .ModuleName}}List]);
+
+  return {
+    loading,
+    currentErrorMessage,
+    current{{.ModuleName}},
+    {{toLower .ModuleName}}List,
+    filter{{.ModuleName}},
+    query{{.ModuleName}},
+    insert{{.ModuleName}},
+    update{{.ModuleName}},
+    delete{{.ModuleName}},
+  };
+};
+
+export default use{{.ModuleName}}Model;
