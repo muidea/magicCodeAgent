@@ -13,7 +13,7 @@ const (
 )
 
 const (
-	RootLevel    = "root"
+	RootLevel    = ""
 	ProjectLevel = "project"
 	ModuleLevel  = "module"
 	BlockLevel   = "block"

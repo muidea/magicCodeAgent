@@ -32,6 +32,9 @@
 └── vendor/              # 项目依赖(Go vendor目录)
 ```
 
+* 如果项目尚未完成初始化，在指定开发目标前，先使用 `initialization_service_project` 工具完成项目初始化，确保目录结构和配置文件正确生成。
+
+
 ---
 
 ### Initiator与Module的目录结构
