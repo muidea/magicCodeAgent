@@ -133,20 +133,18 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 
 	// 前一阶段输出物清单
-	/*
-		previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
-		if previousPath != "" {
-			stringBuilder.WriteString(fmt.Sprintf("### %s\n", previousLabel))
-			s.fileInfo.Range(func(filePath string) bool {
-				if strings.HasPrefix(filePath, previousPath) {
-					relativePath := filePath[len(previousPath)+1:]
-					stringBuilder.WriteString("- " + relativePath + "\n")
-				}
-				return true
-			})
-			stringBuilder.WriteString("\n")
-		}
-	*/
+	previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
+	if previousPath != "" {
+		stringBuilder.WriteString(fmt.Sprintf("### %s\n", previousLabel))
+		s.fileInfo.Range(func(filePath string) bool {
+			if strings.HasPrefix(filePath, previousPath) {
+				relativePath := filePath[len(previousPath)+1:]
+				stringBuilder.WriteString("- " + relativePath + "\n")
+			}
+			return true
+		})
+		stringBuilder.WriteString("\n")
+	}
 
 	stagePath := s.configPtr.GetCurrentStagePath()
 	if ptr != nil {
