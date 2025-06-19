@@ -28,6 +28,7 @@ type ContentSinker interface {
 
 type CreateParam struct {
 	ProjectName        string `json:"projectName omitempty"`
+	ProjectType        string `json:"projectType"`
 	ProjectDescription string `json:"projectDescription"`
 	ModuleName         string `json:"moduleName"`
 	WorkingPath        string `json:"workingPath"`

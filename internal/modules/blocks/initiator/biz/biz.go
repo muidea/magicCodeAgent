@@ -2,6 +2,7 @@ package biz
 
 import (
 	"os"
+	"path"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -11,8 +12,8 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/pkg/common"
-	tc "github.com/muidea/magicCodeAgent/pkg/common"
+	imbic "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 type Initiator struct {
@@ -24,18 +25,18 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Initiator {
 	ptr := &Initiator{
-		Base: biz.New(common.InitiatorModule, eventHub, backgroundRoutine),
+		Base: biz.New(imbic.InitiatorModule, eventHub, backgroundRoutine),
 	}
 
-	ptr.SubscribeFunc(common.CreateNewInitiator, ptr.create)
-	ptr.SubscribeFunc(common.RefreshInitiator, ptr.refresh)
-	ptr.SubscribeFunc(common.DestroyInitiator, ptr.destroy)
+	ptr.SubscribeFunc(imbic.CreateNewInitiator, ptr.create)
+	ptr.SubscribeFunc(imbic.RefreshInitiator, ptr.refresh)
+	ptr.SubscribeFunc(imbic.DestroyInitiator, ptr.destroy)
 
 	return ptr
 }
 
 func (s *Initiator) create(ev event.Event, re event.Result) {
-	paramPtr, paramOK := ev.Data().(*tc.CreateParam)
+	paramPtr, paramOK := ev.Data().(*common.CreateParam)
 	if !paramOK {
 		log.Errorf("create initiator failed, illegal create initiator param")
 		if re != nil {
@@ -53,7 +54,7 @@ func (s *Initiator) create(ev event.Event, re event.Result) {
 		}
 	}
 
-	projectName, prefixPath, err := config.VerifyInitiatorWorkPath(paramPtr.WorkingPath)
+	prefixPath, err := config.VerifyInitiatorWorkPath(paramPtr.WorkingPath)
 	if err != nil {
 		log.Errorf("create initiator failed, verify initiator working path failed, err: %v", err)
 		if re != nil {
@@ -62,8 +63,8 @@ func (s *Initiator) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	paramPtr.ProjectName = projectName
-	helper := biz.NewHelper(common.InitiatorTemplateBasePath)
+	//paramPtr.ProjectName = projectName
+	helper := biz.NewHelper(path.Join(imbic.InitiatorTemplateBasePath, common.Service))
 	err = helper.Create(prefixPath, paramPtr)
 	if err != nil {
 		log.Errorf("create initiator failed, create initiator failed, err: %v", err)

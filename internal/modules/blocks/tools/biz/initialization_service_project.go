@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
@@ -77,7 +76,8 @@ func (s *InitializationServiceProjectTool) Execute(workspaceName, workspaceDir, 
 	var args = []string{
 		"-actionType", "project",
 		"-executeAction", "create",
-		"-projectName", path.Join("service", name),
+		"-projectName", name,
+		"-projectType", common.Service,
 		"-projectDescription", description,
 	}
 	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)

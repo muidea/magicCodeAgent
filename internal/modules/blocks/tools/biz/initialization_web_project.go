@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
@@ -78,7 +77,8 @@ func (s *InitializationWebProjectTool) Execute(workspaceName, workspaceDir, stag
 	var args = []string{
 		"-actionType", "project",
 		"-executeAction", "create",
-		"-projectName", path.Join("web", name),
+		"-projectName", name,
+		"-projectType", common.Web,
 		"-projectDescription", description,
 	}
 	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)

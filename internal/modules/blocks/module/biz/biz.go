@@ -2,6 +2,7 @@ package biz
 
 import (
 	"os"
+	"path"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -53,9 +54,9 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		}
 	}
 
-	projectName, prefixPath, err := config.VerifyModuleWorkPath(paramPtr.WorkingPath)
+	prefixPath, err := config.VerifyModuleWorkPath(paramPtr.ProjectType, paramPtr.WorkingPath)
 	if err != nil {
-		log.Errorf("verify module work path failed, workingPath:%s, err:%s", paramPtr.WorkingPath, err.Error())
+		log.Errorf("verify module work path failed, projectType:%s, workingPath:%s, err:%s", paramPtr.ProjectType, paramPtr.WorkingPath, err.Error())
 
 		if re != nil {
 			re.Set(nil, err)
@@ -63,11 +64,11 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	paramPtr.ProjectName = projectName
-	helper := biz.NewHelper(common.ModuleTemplateBasePath)
+	//paramPtr.ProjectName = paramPtr.ProjectName
+	helper := biz.NewHelper(path.Join(common.ModuleTemplateBasePath, paramPtr.ProjectType))
 	err = helper.Create(prefixPath, paramPtr)
 	if err != nil {
-		log.Errorf("create module failed, projectName:%s, prefixPath:%s, err:%s", projectName, prefixPath, err.Error())
+		log.Errorf("create module failed, projectName:%s, prefixPath:%s, err:%s", paramPtr.ProjectName, prefixPath, err.Error())
 		if re != nil {
 			re.Set(nil, err)
 		}

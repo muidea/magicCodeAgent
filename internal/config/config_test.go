@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	cd "github.com/muidea/magicCommon/def"
+
+	"github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 func TestVerifyModuleWorkPath(t *testing.T) {
@@ -65,12 +67,12 @@ func TestVerifyModuleWorkPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotProjectName, getPrefix, gotErr := VerifyModuleWorkPath(tt.input)
+			getPrefix, gotErr := VerifyModuleWorkPath(common.Service, tt.input)
 
 			// 验证返回路径
 			if tt.wantError == nil {
-				if gotProjectName != tt.wantProjectName || getPrefix != tt.wantPrefixPath {
-					t.Errorf("unexpected result: gotProjectName=%v, getPrefix=%v, gotErr=%v", gotProjectName, getPrefix, gotErr)
+				if getPrefix != tt.wantPrefixPath {
+					t.Errorf("unexpected result: getPrefix=%v, gotErr=%v", getPrefix, gotErr)
 				}
 				if gotErr != nil {
 					t.Errorf("unexpected error: %v", gotErr)

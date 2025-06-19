@@ -445,11 +445,14 @@ func DebugFlag() bool {
 	return debugWorkspace
 }
 
-var sep = string(filepath.Separator)
-var validModuleParentPaths = []string{
+var validServiceModuleParentPaths = []string{
 	filepath.Join("internal", "modules"),
 	filepath.Join("internal", "modules", "blocks"),
 	filepath.Join("internal", "modules", "kernel"),
+}
+
+var validWebModuleParentPaths = []string{
+	filepath.Join("src", "pages"),
 }
 
 // VerifyModuleWorkPath 校验工作路径是否合法，并返回路径中ProjectName
@@ -458,8 +461,12 @@ var validModuleParentPaths = []string{
 // 3. 工作路径不能是空
 // 4. 工作路径不能是相对路径
 // 5. 非法路径举例： /home/xxx/internal/modules/xxx/
-func VerifyModuleWorkPath(pathVal string) (projectName, prefixPath string, err *cd.Error) {
-	projectName, prefixPath, err = verifyWorkPath(pathVal, validModuleParentPaths)
+func VerifyModuleWorkPath(projectType, pathVal string) (prefixPath string, err *cd.Error) {
+	if projectType == common.Web {
+		prefixPath, err = verifyWorkPath(pathVal, validWebModuleParentPaths)
+		return
+	}
+	prefixPath, err = verifyWorkPath(pathVal, validServiceModuleParentPaths)
 	return
 }
 
@@ -473,19 +480,19 @@ var validInitiatorParentPaths = []string{
 // 3. 工作路径不能是空
 // 4. 工作路径不能是相对路径
 // 5. 非法路径举例： /home/xxx/internal/modules/xxx/
-func VerifyInitiatorWorkPath(pathVal string) (projectName, prefixPath string, err *cd.Error) {
-	projectName, prefixPath, err = verifyWorkPath(pathVal, validInitiatorParentPaths)
+func VerifyInitiatorWorkPath(pathVal string) (prefixPath string, err *cd.Error) {
+	prefixPath, err = verifyWorkPath(pathVal, validInitiatorParentPaths)
 	return
 }
 
-func verifyWorkPath(pathVal string, validParentPath []string) (projectName, prefixPath string, err *cd.Error) {
+func verifyWorkPath(pathVal string, validParentPath []string) (prefixPath string, err *cd.Error) {
 	if pathVal == "" {
-		return "", "", cd.NewError(cd.IllegalParam, "work path cannot be empty")
+		return "", cd.NewError(cd.IllegalParam, "work path cannot be empty")
 	}
 
 	// 检查相对路径
 	if !filepath.IsAbs(pathVal) {
-		return "", "", cd.NewError(cd.IllegalParam, "work path must be absolute path")
+		return "", cd.NewError(cd.IllegalParam, "work path must be absolute path")
 	}
 
 	// 标准化路径
@@ -493,15 +500,13 @@ func verifyWorkPath(pathVal string, validParentPath []string) (projectName, pref
 	for _, validPath := range validParentPath {
 		// 检查路径是否以validPath结尾
 		if strings.HasSuffix(normalizedPath, validPath) {
-			prefix := normalizedPath[:len(normalizedPath)-len(validPath)-1]
-			projectName = prefix[strings.LastIndex(prefix, sep)+1:]
 			prefixPath = validPath
 			return
 		}
 	}
 
-	return "", "", cd.NewError(cd.IllegalParam,
-		fmt.Sprintf("invalid work path %s, parent path must be one of: %v", normalizedPath, validParentPath))
+	return "", cd.NewError(cd.IllegalParam,
+		fmt.Sprintf("invalid work path: %s, parent path must be one of: %v", normalizedPath, validParentPath))
 }
 
 // VerifyProjectWorkPath 校验项目工作目录

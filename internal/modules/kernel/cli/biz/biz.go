@@ -55,6 +55,7 @@ func (s *Cli) runModuleAction() {
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
 		ModuleName:    config.GetModuleName(),
+		ProjectType:   config.GetProjectType(),
 		WorkingPath:   icfg.CurrentWorkPath(),
 	}
 	var ev event.Event
@@ -77,6 +78,7 @@ func (s *Cli) runInitiatorAction() {
 		EnableDao:     config.GetEnableDao(),
 		EnableService: config.GetEnableService(),
 		ModuleName:    config.GetModuleName(),
+		ProjectType:   config.GetProjectType(),
 		WorkingPath:   icfg.CurrentWorkPath(),
 	}
 	var ev event.Event
@@ -97,6 +99,7 @@ func (s *Cli) runInitiatorAction() {
 func (s *Cli) runProjectAction() {
 	param := &tc.CreateParam{
 		ProjectName:        config.GetProjectName(),
+		ProjectType:        config.GetProjectType(),
 		ProjectDescription: config.GetProjectDescription(),
 		EnableDao:          config.GetEnableDao(),
 		EnableService:      config.GetEnableService(),

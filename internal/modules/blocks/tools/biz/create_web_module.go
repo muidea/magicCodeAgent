@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
@@ -77,7 +76,8 @@ func (s *CreateWebModuleTool) Execute(workspaceName, workspaceDir, stage string,
 	var args = []string{
 		"-actionType", "module",
 		"-executeAction", "create",
-		"-moduleName", path.Join("web", name),
+		"-projectType", common.Web,
+		"-moduleName", name,
 	}
 	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
 	if runErr != nil {

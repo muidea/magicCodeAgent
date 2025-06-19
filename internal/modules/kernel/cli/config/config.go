@@ -2,8 +2,10 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"regexp"
 
+	"github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	cd "github.com/muidea/magicCommon/def"
 )
 
@@ -21,6 +23,7 @@ var actionType string
 
 // executeAction: create,destroy,refresh
 var executeAction string
+var projectType string
 var projectName string
 var projectDescription string
 var moduleName string
@@ -31,6 +34,7 @@ func init() {
 	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initiator/project)")
 	flag.StringVar(&executeAction, "executeAction", "", "execute action (required, options: create/destroy/refresh)")
 	flag.StringVar(&projectName, "projectName", "", "project name (required, must start with letter and contain only alphanumeric chars)")
+	flag.StringVar(&projectType, "projectType", "", "project type (required, options: web/service)")
 	flag.StringVar(&projectDescription, "projectDescription", "", "project description")
 	flag.StringVar(&moduleName, "moduleName", "", "module name (required, must start with letter and contain only alphanumeric chars)")
 	flag.BoolVar(&enableService, "enableService", false, "enable service (optional, default: false)")
@@ -53,6 +57,10 @@ func GetProjectName() string {
 	return projectName
 }
 
+func GetProjectType() string {
+	return projectType
+}
+
 func GetProjectDescription() string {
 	return projectDescription
 }
@@ -65,7 +73,7 @@ func GetEnableDao() bool {
 	return enableDao
 }
 
-var namePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*|(service|web)\/[a-zA-Z][a-zA-Z0-9]*)$`)
+var namePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*)$`)
 
 // 校验输入参数
 // 1. moduleType只能是module,initiator,project其中一种，必选参数，如果参数为空则失败，返回参数错误
@@ -85,7 +93,7 @@ func VerifyVar() (err *cd.Error) {
 		return
 	}
 	if actionType != "module" && actionType != "initiator" && actionType != "project" {
-		err = cd.NewError(cd.IllegalParam, "actionType必须是module/initiator/project之一")
+		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("actionType:%s, 必须是module/initiator/project之一", actionType))
 		return
 	}
 
@@ -95,19 +103,24 @@ func VerifyVar() (err *cd.Error) {
 		return
 	}
 	if executeAction != "create" && executeAction != "destroy" && executeAction != "refresh" {
-		err = cd.NewError(cd.IllegalParam, "executeAction必须是create/destroy/refresh之一")
+		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("executeAction:%s, 必须是create/destroy/refresh之一", executeAction))
+		return
+	}
+
+	if projectType != common.Service && projectType != common.Web {
+		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("projectType:%s, 必须是service/web之一", projectType))
 		return
 	}
 
 	switch actionType {
 	case "module", "initiator":
 		if !namePattern.MatchString(moduleName) {
-			err = cd.NewError(cd.IllegalParam, "moduleName必须是类似service/demo,web/demo这类格式")
+			err = cd.NewError(cd.IllegalParam, fmt.Sprintf("moduleName:%s, 只能是字母开头的普通单词", moduleName))
 			return
 		}
 	case "project":
 		if !namePattern.MatchString(projectName) {
-			err = cd.NewError(cd.IllegalParam, "projectName必须是类似service/demo,web/demo这类格式")
+			err = cd.NewError(cd.IllegalParam, fmt.Sprintf("projectName:%s, 只能是字母开头的普通单词", projectName))
 			return
 		}
 	}

@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -48,9 +47,7 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	items := strings.Split(paramPtr.ProjectName, "/")
-	projectType := items[0]
-	err := config.VerifyProjectWorkPath(projectType, paramPtr.WorkingPath)
+	err := config.VerifyProjectWorkPath(paramPtr.ProjectType, paramPtr.WorkingPath)
 	if err != nil {
 		log.Errorf("verify project work path failed, workingPath:%s, err:%s", paramPtr.WorkingPath, err.Error())
 
@@ -59,7 +56,7 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		}
 		return
 	}
-	if len(items) != 2 || (projectType != "service" && projectType != "web") {
+	if paramPtr.ProjectType != common.Service && paramPtr.ProjectType != common.Web {
 		log.Errorf("invalid project name, projectName:%s", paramPtr.ProjectName)
 		if re != nil {
 			re.Set(nil, cd.NewError(cd.InvalidParameter, "invalid project name"))
@@ -67,22 +64,21 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	projectName := items[1]
-	helper := biz.NewHelper(path.Join(imbpc.ProjectTemplateBasePath, projectType))
+	helper := biz.NewHelper(path.Join(imbpc.ProjectTemplateBasePath, paramPtr.ProjectType))
 
 	// 这里主动修正一下ProjectName，因为在传入参数时的ProprojectName里指定了类型，所以这里需要修正一下
-	paramPtr.ProjectName = projectName
+	//paramPtr.ProjectName = projectName
 	err = helper.Create("", paramPtr)
 	if err != nil {
-		log.Errorf("create project failed, projectName:%s, err:%s", projectName, err.Error())
+		log.Errorf("create project failed, projectName:%s, err:%s", paramPtr.ProjectName, err.Error())
 		if re != nil {
 			re.Set(nil, err)
 		}
 		return
 	}
 
-	if projectType == common.Service {
-		if err := s.initializeService(projectName, paramPtr.WorkingPath); err != nil {
+	if paramPtr.ProjectType == common.Service {
+		if err := s.initializeService(paramPtr.ProjectName, paramPtr.WorkingPath); err != nil {
 			log.Errorf("initialize service failed, err:%s", err.Error())
 			if re != nil {
 				re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
@@ -91,8 +87,8 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		}
 	}
 
-	if projectType == common.Web {
-		if err := s.initializeWeb(projectName, paramPtr.WorkingPath); err != nil {
+	if paramPtr.ProjectType == common.Web {
+		if err := s.initializeWeb(paramPtr.ProjectName, paramPtr.WorkingPath); err != nil {
 			log.Errorf("initialize web failed, err:%s", err.Error())
 			if re != nil {
 				re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
