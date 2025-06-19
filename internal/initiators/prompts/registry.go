@@ -54,6 +54,9 @@ func (s *promptsRegistry) AddPrompts(sectionName string, prompt iipc.Prompt) {
 }
 
 func (s *promptsRegistry) GetPromptsContent(stage string, filterTags fu.StringSet) string {
+
+	log.Infof("get prompts content, stage:%s, filterTags:%s", stage, filterTags)
+
 	var builder strings.Builder
 	builder.WriteString(s.getRolePrompts(stage))
 	builder.WriteString("\n\n")

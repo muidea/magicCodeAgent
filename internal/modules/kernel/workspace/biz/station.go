@@ -92,7 +92,10 @@ func (s *Station) getWorkspaceType() string {
 }
 
 func (s *Station) systemPrompt() string {
-	return s.promptsRegistry.GetPromptsContent(s.configPtr.GetStage(), s.configPtr.TechStack)
+	filterTags := s.configPtr.TechStack
+	filterTags = filterTags.Add(s.configPtr.GetWorkspaceType())
+
+	return s.promptsRegistry.GetPromptsContent(s.configPtr.GetStage(), filterTags)
 }
 
 func (s *Station) envPrompt(ptr *models.Flow) string {
