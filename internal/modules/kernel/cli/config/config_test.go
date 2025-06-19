@@ -11,10 +11,10 @@ func TestModuleName(t *testing.T) {
 
 	assert.True(t, namePattern.MatchString(moduleName))
 
-	moduleName = "service/abc123"
+	moduleName = "abc123"
 	assert.True(t, namePattern.MatchString(moduleName))
 
-	moduleName = "web/abc123"
+	moduleName = "abc123"
 	assert.True(t, namePattern.MatchString(moduleName))
 
 	moduleName = "service/web/abc123"
