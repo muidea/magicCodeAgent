@@ -1,7 +1,7 @@
 import { genApi } from '@/utils';
 
 const index: { [index: string]: string } = {
-  filter{{.ModuleName}}: 'GET /{{toLower .ModuleName}}/filter/',
+  filter{{.ModuleName}}List: 'GET /{{toLower .ModuleName}}/filter/',
   query{{.ModuleName}}: 'GET /{{toLower .ModuleName}}/query/:id',
   insert{{.ModuleName}}: 'POST /{{toLower .ModuleName}}/insert/',
   update{{.ModuleName}}: 'PUT /{{toLower .ModuleName}}/update/:id',

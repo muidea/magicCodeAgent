@@ -135,7 +135,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	// 前一阶段输出物清单
 	previousStage, previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
 	if previousPath != "" {
-		stringBuilder.WriteString(fmt.Sprintf("### %s\n", previousLabel))
+		stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", previousLabel))
 		s.fileInfo.Range(func(filePath string) bool {
 			if strings.HasPrefix(filePath, previousPath) {
 				relativePath := filePath[len(previousPath)+1:]

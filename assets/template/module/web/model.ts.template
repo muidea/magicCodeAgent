@@ -10,7 +10,7 @@ const use{{.ModuleName}}Model = () => {
   const [{{toLower .ModuleName}}List, set{{.ModuleName}}List] = useState<{{.ModuleName}}[]>([]);
 
   const filter{{.ModuleName}} = useCallback(async (filter: ApiFilter) => {
-    handleApiCall(api.filter{{.ModuleName}}(filter), (values) => {
+    handleApiCall(api.filter{{.ModuleName}}List(filter), (values) => {
       set{{.ModuleName}}List(values);
     }, setCurrentErrorMessage, setLoading)
   }, [loading, currentErrorMessage, {{toLower .ModuleName}}List]);
