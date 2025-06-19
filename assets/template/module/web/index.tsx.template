@@ -20,9 +20,9 @@ const {{.ModuleName}}Page: React.FC = () => {
 
   return (
     <PageContainer
-      header={{
+      header={ {
         extra: []
-      }}
+      } }
     >
       // TODO 待补充显示内容
     </PageContainer>
