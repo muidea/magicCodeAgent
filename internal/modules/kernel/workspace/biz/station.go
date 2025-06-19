@@ -133,7 +133,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 
 	// 前一阶段输出物清单
-	previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
+	previousStage, previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
 	if previousPath != "" {
 		stringBuilder.WriteString(fmt.Sprintf("### %s\n", previousLabel))
 		s.fileInfo.Range(func(filePath string) bool {
@@ -143,6 +143,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 			}
 			return true
 		})
+		stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", previousStage))
 		stringBuilder.WriteString("\n")
 	}
 

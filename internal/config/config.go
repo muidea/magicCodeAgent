@@ -79,7 +79,7 @@ func (s *Workspace) GetWorkspaceType() string {
 	return common.Service
 }
 
-func (s *Workspace) GetPreviousStagePath() (string, string) {
+func (s *Workspace) GetPreviousStagePath() (string, string, string) {
 	previousLabel := ""
 	previousStage := ""
 	switch s.Stage {
@@ -93,10 +93,10 @@ func (s *Workspace) GetPreviousStagePath() (string, string) {
 		previousLabel = "测试代码列表"
 		previousStage = common.TestStage
 	default:
-		return "", ""
+		return "", "", ""
 	}
 
-	return previousLabel, filepath.Join(s.Path, previousStage)
+	return previousStage, previousLabel, filepath.Join(s.Path, previousStage)
 }
 
 func (s *Workspace) GetCurrentStagePath() string {
