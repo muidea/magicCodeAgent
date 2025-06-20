@@ -34,7 +34,7 @@ const (
 	Finished  = "finished"
 )
 
-const maxLoopCount = 60
+const maxLoopCount = 100
 
 type Observer interface {
 	ID() string
@@ -412,6 +412,7 @@ func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr
 func (s *Station) ChatTerminate(ctx context.Context, stage string) (err *cd.Error) {
 	s.chatRunningStatus = Terminate
 
+	s.localFlowManger.Reset()
 	return
 }
 
@@ -477,17 +478,17 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 
 	s.chatUsagePtr.Update(usagePtr)
 
+	// 如果处于终止状态,或者已经超过最大循环次数，则不处理
+	if s.chatRunningStatus != Chatting {
+		return
+	}
+
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	if curFlow != nil {
 		curFlow.AppendMessage(msgPtr)
 	}
 
 	s.DisposeMessage(msgPtr)
-
-	// 如果处于终止状态,或者已经超过最大循环次数，则不处理
-	if s.chatRunningStatus != Chatting {
-		return
-	}
 
 	s.bizBasePtr.AsyncTask(func() {
 		s.DisposeContent(curFlow, content)

@@ -21,6 +21,11 @@ func NewFlowManager() *FlowManager {
 	}
 }
 
+func (s *FlowManager) Reset() {
+	s.localFlows = make([]*models.Flow, 0)
+	s.currentFlowPtr = nil
+}
+
 func (s *FlowManager) newRootFlow(title string) *models.Flow {
 	flowPtr := &models.Flow{
 		Id:        fmt.Sprintf("flow_%d", len(s.localFlows)),
