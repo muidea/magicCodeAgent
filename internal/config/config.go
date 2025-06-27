@@ -28,7 +28,7 @@ var (
 	currentBuildTime  = ""
 	currentGitCommit  = ""
 	currentVersion    = "0.0.1"
-	listenPort        = "8080" // 默认监听端口
+	listenPort        = "8090" // 默认监听端口
 	sysConfig         *Config  // 系统配置实例
 	debugWorkspace    = true
 )
