@@ -1,0 +1,10 @@
+# 忽略目录
+node_modules/
+dist/
+build/
+
+src/.umi/
+src/.umi-production/
+
+# 忽略文件
+*.log

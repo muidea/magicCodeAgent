@@ -81,6 +81,15 @@ func New(
 	ptr.toolRegistry.Register(&InitializationWebProjectTool{
 		commander: ptr,
 	})
+	ptr.toolRegistry.Register(&LintWebProjectTool{
+		commander: ptr,
+	})
+	ptr.toolRegistry.Register(&FormatWebProjectTool{
+		commander: ptr,
+	})
+	ptr.toolRegistry.Register(&RunWebProjectTool{
+		commander: ptr,
+	})
 	ptr.toolRegistry.Register(&DecomposeDesignPlanTool{
 		promptsRegistry: promptsRegistry,
 	})

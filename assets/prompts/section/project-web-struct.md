@@ -114,31 +114,3 @@ routes: [
   { path: '/*', component: '@/pages/404.tsx' },
 ];
 ```
-
----
-
-### 项目辅助工具和命令
-
-1. **代码格式化**：
-
-   ```bash
-   yarn run format --quiet --write --ignore-path .prettierignore
-   ```
-
-2. **静态检查**：
-
-   ```bash
-   yarn lint --quiet --max-warnings 0
-   ```
-
-3. **安装依赖**：
-
-   ```bash
-   yarn install --silent --no-progress
-   ```
-
-4. **清理临时文件**：
-
-   ```bash
-   rm -rf ./dist src/.umi src/.umi-production
-   ```
