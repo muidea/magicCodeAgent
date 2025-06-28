@@ -1,6 +1,6 @@
 import { {{.ModuleName}} } from './types';
 
-const {{toLower .ModuleName}}Formatter = (val: {{.ModuleName}}, label: boolean = true): any => {
+const {{toLower .ModuleName}}Formatter = (val: {{.ModuleName}}, label: boolean = true): string => {
   return '-'
 }
 
