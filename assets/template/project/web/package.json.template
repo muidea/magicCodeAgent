@@ -10,7 +10,6 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "postinstall": "max setup",
-    "prepare": "husky install",
     "setup": "max setup"
   },
   "dependencies": {
@@ -28,7 +27,6 @@
     "eslint": "^9.27.0",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.1.0",
-    "husky": "^8.0.3",
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.7",
     "prettier-plugin-organize-imports": "^3.2.2",

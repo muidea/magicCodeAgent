@@ -33,6 +33,5 @@ export default defineConfig({
   ],
   alias: {
     '@/utils': require('path').resolve(__dirname, 'src/utils'),
-    '@/types': require('path').resolve(__dirname, 'src/types'),
   },
 });
