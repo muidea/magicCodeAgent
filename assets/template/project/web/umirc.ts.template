@@ -1,4 +1,5 @@
 import { defineConfig } from '@umijs/max';
+import path from 'path';
 
 export default defineConfig({
   links: [
@@ -32,6 +33,6 @@ export default defineConfig({
     }
   ],
   alias: {
-    '@/utils': require('path').resolve(__dirname, 'src/utils'),
+    '@/utils': path.resolve(__dirname, 'src/utils'),
   },
 });

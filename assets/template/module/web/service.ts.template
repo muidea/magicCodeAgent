@@ -1,4 +1,5 @@
 import { genApi } from '@/utils';
+import { RequestConfig } from '@umijs/max';
 
 const index: { [index: string]: string } = {
   filter{{.ModuleName}}List: 'GET /{{toLower .ModuleName}}/filter/',
@@ -9,7 +10,11 @@ const index: { [index: string]: string } = {
   count{{.ModuleName}}: 'GET /{{toLower .ModuleName}}/count/',
 };
 
-const APIFunction: { [index: string]: any } = {};
+type APIFunctionType = {
+  [key: string]: (val: unknown, headers?: Record<string, string>, config?: RequestConfig) => Promise<unknown>;
+};
+
+const APIFunction: APIFunctionType = {};
 Object.keys(index).forEach((key) => {
   APIFunction[key] = genApi(index[key]);
 });

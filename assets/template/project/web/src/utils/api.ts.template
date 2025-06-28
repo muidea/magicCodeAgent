@@ -7,20 +7,20 @@ const { apiPrefix } = config;
 export interface ApiError {
   code: number;
   message?: string;
-  details?: any;
+  details?: unknown;
 }
 
 // ================ 类型增强 ================
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   error?: ApiError
   value?: T;
 }
 
 export class DefaultError extends Error {
   code: number;
-  details?: any;
+  details?: unknown;
 
-  constructor(code: number, message: string, details?: any) {
+  constructor(code: number, message: string, details?: unknown) {
     super(message);
     this.code = code;
     this.details = details;
@@ -79,12 +79,12 @@ const parseApiConfig = (params: string) => {
   };
 };
 
-const processRequestParams = (url: string, val?: any) => {
+const processRequestParams = (url: string, val?: Record<string, unknown>) => {
   let processedUrl = url;
   const data = val ? { ...val } : {};
 
   if (data?.id) {
-    processedUrl = processedUrl.replace(':id', data.id);
+    processedUrl = processedUrl.replace(':id', String(data.id));
     delete data.id;
   }
 
@@ -92,11 +92,11 @@ const processRequestParams = (url: string, val?: any) => {
 };
 
 // ================ 主API生成函数 ================
-export const genApi = <T = any>(urlPath: string) => {
-  return async (val: any = null, headers: Record<string, string> = {}, config?: RequestConfig): Promise<T> => {
+export const genApi = <T = unknown>(urlPath: string) => {
+  return async (val: unknown, headers: Record<string, string> = {}, config?: RequestConfig): Promise<T> => {
     try {
       const { method, path } = parseApiConfig(urlPath);
-      const { url, data } = processRequestParams(path, val);
+      const { url, data } = processRequestParams(path, val as Record<string, unknown>);
       const isBodyMethod = ['POST', 'PUT', 'PATCH'].includes(method);
 
       const response = await request<ApiResponse<T>>(url, {
@@ -139,19 +139,19 @@ export const genApi = <T = any>(urlPath: string) => {
 };
 
 export interface ApiFilter {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-export const handleApiCall = async (apiCall: Promise<any>, onSuccess: (result: any, others: any) => void, onError?: (result: any) => void, setLoading?: (val: boolean) => void): Promise<any> => {
+export const handleApiCall = async (apiCall: Promise<unknown>, onSuccess: (result: unknown, others: unknown) => void, onError?: (result: unknown) => void, setLoading?: (val: boolean) => void): Promise<unknown> => {
   if (setLoading) {
     setLoading(true);
   }
   try {
-    const result = await apiCall;
+    const result = await apiCall as { error?: ApiError; value?: unknown; values?: unknown; [key: string]: unknown };
     const { error, value, values, ...others } = result;
+    
     if (error) {
-      const { error } = result
-      console.error(error.errorMessage);
+      console.error(error.message);
       return;
     }
 
@@ -161,7 +161,7 @@ export const handleApiCall = async (apiCall: Promise<any>, onSuccess: (result: a
   } catch (err) {
     console.error(err);
     if (onError) {
-      onError(err);
+      onError(err as ApiError);
     }
     return null;
   } finally {
