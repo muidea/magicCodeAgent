@@ -1,38 +1,36 @@
-import { defineConfig } from '@umijs/max';
-import path from 'path';
+import { defineConfig } from "@umijs/max";
+import path from "path";
 
 export default defineConfig({
-  links: [
-    { rel: 'icon', href: '/favicon.png', type: 'image/png' },
-  ],
+  links: [{ rel: "icon", href: "/favicon.png", type: "image/png" }],
   antd: {},
   access: {},
   model: {},
   initialState: {},
   request: {},
   layout: {
-    title: '{{.ProjectName}}',
+    title: "demo",
   },
-  base: '/',
-  publicPath: '/',
+  base: "/",
+  publicPath: "/",
   routes: [
     {
-      name: 'index',
-      path: '/',
-      component: './index',
+      name: "index",
+      path: "/",
+      component: "./index",
     },
   ],
   exportStatic: {},
   esbuildMinifyIIFE: true,
-  npmClient: 'yarn',
+  npmClient: "yarn",
   proxy: [
     {
-      context: ['/api/v1/'],
-      target: 'http://127.0.0.1:8090',
+      context: ["/api/v1/"],
+      target: "http://127.0.0.1:8090",
       changeOrigin: true,
-    }
+    },
   ],
   alias: {
-    '@/utils': path.resolve(__dirname, 'src/utils'),
+    "@/utils": path.resolve(__dirname, "src/utils"),
   },
 });

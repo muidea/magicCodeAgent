@@ -1,3 +1,4 @@
 export declare interface {{.ModuleName}} {
-  id: string
+  id: string;
+  // TODO其他属性
 }

@@ -7,9 +7,9 @@
     "build": "max build",
     "dev": "max dev",
     "format": "prettier --cache --write .",
+    "postinstall": "max setup",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "postinstall": "max setup",
     "setup": "max setup"
   },
   "dependencies": {

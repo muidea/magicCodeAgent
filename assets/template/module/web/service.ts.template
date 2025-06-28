@@ -1,17 +1,21 @@
-import { genApi } from '@/utils';
-import { RequestConfig } from '@umijs/max';
+import { genApi } from "@/utils";
+import { RequestConfig } from "@umijs/max";
 
 const index: { [index: string]: string } = {
-  filter{{.ModuleName}}List: 'GET /{{toLower .ModuleName}}/filter/',
-  query{{.ModuleName}}: 'GET /{{toLower .ModuleName}}/query/:id',
-  insert{{.ModuleName}}: 'POST /{{toLower .ModuleName}}/insert/',
-  update{{.ModuleName}}: 'PUT /{{toLower .ModuleName}}/update/:id',
-  delete{{.ModuleName}}: 'DELETE /{{toLower .ModuleName}}/delete/:id',
-  count{{.ModuleName}}: 'GET /{{toLower .ModuleName}}/count/',
+  filter{{.ModuleName}}List: "GET /{{toLower .ModuleName}}/filter/",
+  query{{.ModuleName}}: "GET /{{toLower .ModuleName}}/query/:id",
+  insert{{.ModuleName}}: "POST /{{toLower .ModuleName}}/insert/",
+  update{{.ModuleName}}: "PUT /{{toLower .ModuleName}}/update/:id",
+  delete{{.ModuleName}}: "DELETE /{{toLower .ModuleName}}/delete/:id",
+  count{{.ModuleName}}: "GET /{{toLower .ModuleName}}/count/",
 };
 
 type APIFunctionType = {
-  [key: string]: (val: unknown, headers?: Record<string, string>, config?: RequestConfig) => Promise<unknown>;
+  [key: string]: (
+    val: unknown,
+    headers?: Record<string, string>,
+    config?: RequestConfig
+  ) => Promise<unknown>;
 };
 
 const APIFunction: APIFunctionType = {};

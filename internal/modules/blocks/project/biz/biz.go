@@ -158,6 +158,14 @@ func (s *Project) initializeWeb(projectName, projectPath string) (err error) {
 		return
 	}
 
+	mvPrettierCmd := exec.Command("mv", "prettierignore", ".prettierignore")
+	mvPrettierCmd.Dir = projectPath
+	mvPrettierCmd.Stderr = &byteBuffer
+	if err = mvPrettierCmd.Run(); err != nil {
+		log.Errorf("mv umirc.ts failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
+		return
+	}
+
 	yarnInstallCmd := exec.Command("yarn", "install")
 	yarnInstallCmd.Dir = projectPath
 	yarnInstallCmd.Stderr = &byteBuffer

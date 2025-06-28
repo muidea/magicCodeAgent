@@ -1,6 +1,6 @@
 const config = {
-    apiPrefix: '/api/v1',
-    systemName: '{{.ProjectName}}',
-}
+  apiPrefix: "/api/v1",
+  systemName: "{{.ProjectName}}",
+};
 
 export default config;

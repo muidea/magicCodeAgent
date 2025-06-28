@@ -1,8 +1,3 @@
-import config from './config';
-import { addWhitelistPaths, handleApiCall, genApi } from './api';
-export {
-    addWhitelistPaths,
-    handleApiCall,
-    genApi,
-    config,
-}
+import { addWhitelistPaths, genApi, handleApiCall } from "./api";
+import config from "./config";
+export { addWhitelistPaths, config, genApi, handleApiCall };

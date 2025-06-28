@@ -1,10 +1,8 @@
-import { {{.ModuleName}} } from './types';
+import { {{.ModuleName}} } from "./types";
 
 const {{toLower .ModuleName}}Formatter = (val: {{.ModuleName}}, label: boolean = true): string => {
+  // TODO 待补充
   return '-'
-}
+};
 
-export {
-  {{.ModuleName}},
-  {{toLower .ModuleName}}Formatter,
-}
+export { {{.ModuleName}}, {{toLower .ModuleName}}Formatter };

@@ -1,6 +1,6 @@
-import { request, RequestConfig, history } from '@umijs/max';
-import { notification } from 'antd';
-import config from './config';
+import { history, request, RequestConfig } from "@umijs/max";
+import { notification } from "antd";
+import config from "./config";
 
 const { apiPrefix } = config;
 
@@ -12,7 +12,7 @@ export interface ApiError {
 
 // ================ 类型增强 ================
 export interface ApiResponse<T = unknown> {
-  error?: ApiError
+  error?: ApiError;
   value?: T;
 }
 
@@ -45,7 +45,7 @@ class ErrorNotifier {
   }
 
   addWhitelistPaths(paths: string[]): void {
-    paths.forEach(path => this.whitelistPaths.add(path));
+    paths.forEach((path) => this.whitelistPaths.add(path));
   }
 
   notify(error: Error, code?: number) {
@@ -54,11 +54,14 @@ class ErrorNotifier {
     const currentPath = history.location.pathname;
     const isWhitelisted = this.whitelistPaths.has(currentPath);
 
-    if ((isCritical || now - this.lastErrorTime > this.debounceTime) && !isWhitelisted) {
+    if (
+      (isCritical || now - this.lastErrorTime > this.debounceTime) &&
+      !isWhitelisted
+    ) {
       this.lastErrorTime = now;
       notification.error({
         message: `请求错误`,
-        description: error.message || '未知错误',
+        description: error.message || "未知错误",
       });
     }
   }
@@ -75,7 +78,7 @@ const parseApiConfig = (params: string) => {
 
   return {
     method: match[1],
-    path: `${apiPrefix}${match[2]}`
+    path: `${apiPrefix}${match[2]}`,
   };
 };
 
@@ -84,7 +87,7 @@ const processRequestParams = (url: string, val?: Record<string, unknown>) => {
   const data = val ? { ...val } : {};
 
   if (data?.id) {
-    processedUrl = processedUrl.replace(':id', String(data.id));
+    processedUrl = processedUrl.replace(":id", String(data.id));
     delete data.id;
   }
 
@@ -93,36 +96,41 @@ const processRequestParams = (url: string, val?: Record<string, unknown>) => {
 
 // ================ 主API生成函数 ================
 export const genApi = <T = unknown>(urlPath: string) => {
-  return async (val: unknown, headers: Record<string, string> = {}, config?: RequestConfig): Promise<T> => {
+  return async (
+    val: unknown,
+    headers: Record<string, string> = {},
+    config?: RequestConfig
+  ): Promise<T> => {
     try {
       const { method, path } = parseApiConfig(urlPath);
-      const { url, data } = processRequestParams(path, val as Record<string, unknown>);
-      const isBodyMethod = ['POST', 'PUT', 'PATCH'].includes(method);
+      const { url, data } = processRequestParams(
+        path,
+        val as Record<string, unknown>
+      );
+      const isBodyMethod = ["POST", "PUT", "PATCH"].includes(method);
 
       const response = await request<ApiResponse<T>>(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...config?.headers,
           ...headers,
         },
-        [isBodyMethod ? 'data' : 'params']: data,
+        [isBodyMethod ? "data" : "params"]: data,
         timeout: 30000,
-        ...config
+        ...config,
       });
 
       if (response.error) {
-        const { error } = response
-        errorNotifier.notify(
-          new Error(error.message),
-          error.code,
-        );
+        const { error } = response;
+        errorNotifier.notify(new Error(error.message), error.code);
       }
 
       return response as T;
     } catch (error) {
       const errorCode = error instanceof DefaultError ? error.code : 500;
-      const errorMessage = error instanceof DefaultError ? error.message : '未知错误';
+      const errorMessage =
+        error instanceof DefaultError ? error.message : "未知错误";
 
       errorNotifier.notify(
         new Error(errorMessage, { cause: error }),
@@ -132,7 +140,7 @@ export const genApi = <T = unknown>(urlPath: string) => {
       return {
         code: errorCode,
         message: errorMessage,
-        ...(error instanceof DefaultError && { details: error.details })
+        ...(error instanceof DefaultError && { details: error.details }),
       } as T;
     }
   };
@@ -142,14 +150,24 @@ export interface ApiFilter {
   [key: string]: unknown;
 }
 
-export const handleApiCall = async (apiCall: Promise<unknown>, onSuccess: (result: unknown, others: unknown) => void, onError?: (result: unknown) => void, setLoading?: (val: boolean) => void): Promise<unknown> => {
+export const handleApiCall = async (
+  apiCall: Promise<unknown>,
+  onSuccess: (result: unknown, others: unknown) => void,
+  onError?: (result: unknown) => void,
+  setLoading?: (val: boolean) => void
+): Promise<unknown> => {
   if (setLoading) {
     setLoading(true);
   }
   try {
-    const result = await apiCall as { error?: ApiError; value?: unknown; values?: unknown; [key: string]: unknown };
+    const result = (await apiCall) as {
+      error?: ApiError;
+      value?: unknown;
+      values?: unknown;
+      [key: string]: unknown;
+    };
     const { error, value, values, ...others } = result;
-    
+
     if (error) {
       console.error(error.message);
       return;
@@ -173,4 +191,4 @@ export const handleApiCall = async (apiCall: Promise<unknown>, onSuccess: (resul
 
 export const addWhitelistPaths = (paths: string[]) => {
   errorNotifier.addWhitelistPaths(paths);
-}
+};

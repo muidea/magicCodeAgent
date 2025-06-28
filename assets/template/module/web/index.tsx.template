@@ -1,30 +1,47 @@
-import React, { useEffect } from 'react';
-import { useLocation } from '@umijs/max';
-import qs from 'qs';
-import { PageContainer } from '@ant-design/pro-components';
-import use{{.ModuleName}}Model from './model';
+import { PageContainer } from "@ant-design/pro-components";
+import { useLocation } from "@umijs/max";
+import qs from "qs";
+import React, { useEffect } from "react";
+import use{{.ModuleName}}Model from "./model";
 
 const {{.ModuleName}}Page: React.FC = () => {
   const location = useLocation();
-  const { loading, {{toLower .ModuleName}}List, filter{{.ModuleName}}, query{{.ModuleName}}, insert{{.ModuleName}}, update{{.ModuleName}}, delete{{.ModuleName}} } = use{{.ModuleName}}Model();
-  const [pagination, setPagination] = React.useState<{ pageIndex: number, pageSize: number }>({ pageIndex: 1, pageSize: 10 });
+  const {
+    loading,
+    {{toLower .ModuleName}}List,
+    filter{{.ModuleName}},
+    query{{.ModuleName}},
+    insert{{.ModuleName}},
+    update{{.ModuleName}},
+    delete{{.ModuleName}},
+  } = use{{.ModuleName}}Model();
+  const [pagination, setPagination] = React.useState<{
+    pageIndex: number;
+    pageSize: number;
+  }>({ pageIndex: 1, pageSize: 10 });
 
   useEffect(() => {
-    const { pageIndex, pageSize, ...filter } = qs.parse(location.search, { ignoreQueryPrefix: true });
-    setPagination({ pageIndex: Number(pageIndex) || 1, pageSize: Number(pageSize) || 10 })
+    const { pageIndex, pageSize, ...filter } = qs.parse(location.search, {
+      ignoreQueryPrefix: true,
+    });
+    setPagination({
+      pageIndex: Number(pageIndex) || 1,
+      pageSize: Number(pageSize) || 10,
+    });
     filter{{.ModuleName}}({
       ...filter,
-      pageIndex: Number(pageIndex) || 1, pageSize: Number(pageSize) || 10,
+      pageIndex: Number(pageIndex) || 1,
+      pageSize: Number(pageSize) || 10,
     });
   }, [location.pathname]);
 
   return (
     <PageContainer
       header={ {
-        extra: []
+        extra: [],
       } }
     >
-      // TODO 待补充显示内容
+      <div>TODO 待替换显示内容</div>
     </PageContainer>
   );
 };
