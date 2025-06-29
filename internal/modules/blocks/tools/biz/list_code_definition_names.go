@@ -67,8 +67,9 @@ func (s *ListCodeDefinitionNamesTool) Execute(workspaceName, workspaceDir, stage
 	}
 	listResult, listErr := ListCodeDefinitionNames(fullPath, path)
 	if listErr != nil {
-		err = listErr
+		//err = listErr
 		log.Errorf("failed to list code definitions: %v", err)
+		result = "list code definitions failed!\n" + listErr.Error()
 		return
 	}
 	byteVal, byteErr := json.MarshalIndent(listResult, "", "  ")

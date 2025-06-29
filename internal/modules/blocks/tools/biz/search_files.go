@@ -77,8 +77,9 @@ func (s *SearchFilesTool) Execute(workspaceName, workspaceDir, stage string, par
 	}
 	searchResult, searchErr := SearchFiles(fullPath, path, regex, filePattern)
 	if searchErr != nil {
-		err = searchErr
+		//err = searchErr
 		log.Errorf("SearchFiles failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
+		result = "search files failed!\n" + searchErr.Error()
 		return
 	}
 

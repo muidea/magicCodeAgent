@@ -71,9 +71,8 @@ func (s *ListStageFilesTool) Execute(workspaceName, workspaceDir, stage string, 
 	recursive, _ := param["recursive"].(bool)
 	listResult, listErr := ListFiles(fullPath, path, recursive)
 	if listErr != nil {
-		err = listErr
 		log.Errorf("ListFiles failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
-		log.Errorf("failed to list files: %v", err)
+		result = "list stage files failed!\n" + listErr.Error()
 		return
 	}
 	byteVal, byteErr := json.MarshalIndent(listResult, "", "  ")
