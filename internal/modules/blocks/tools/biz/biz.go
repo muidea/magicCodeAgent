@@ -25,7 +25,7 @@ import (
 )
 
 type Commander interface {
-	RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (result string, err *cd.Error)
+	RunCommand(workspace, workspaceDir, command string, restart bool, timeout int, args []string) (result string, err *cd.Error)
 }
 
 type Tools struct {
@@ -424,7 +424,7 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool, args []string) (result string, err *cd.Error) {
+func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool, timeout int, args []string) (result string, err *cd.Error) {
 	defer func() {
 		if err != nil {
 			log.Errorf("run command failed, err:%v", err)
@@ -436,6 +436,7 @@ func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool
 		Command:      command,
 		Restart:      restart,
 		WorkspaceDir: workspaceDir,
+		TimeOut:      timeout,
 	}
 	commandEvent.SetData("command", paramPtr)
 

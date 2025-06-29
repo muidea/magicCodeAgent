@@ -69,7 +69,7 @@ func (s *FormatWebProjectTool) Execute(workspaceName, workspaceDir, stage string
 		"--write",
 		"--ignore-path", ".prettierignore",
 	}
-	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return

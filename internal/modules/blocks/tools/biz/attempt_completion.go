@@ -73,7 +73,7 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, stage strin
 		if len(items) > 0 {
 			command = items[0]
 			args = items[1:]
-			runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+			runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 			if runErr != nil {
 				err = errors.New(runErr.Error())
 				return

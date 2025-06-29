@@ -13,6 +13,7 @@ type CommanderParam struct {
 	Command      string   `json:"command"`
 	Args         []string `json:"args"`
 	Restart      bool     `json:"restart"`
+	TimeOut      int      `json:"timeOut"`
 }
 
 type CommanderResult struct {

@@ -66,7 +66,7 @@ func (s *RunWebProjectTool) Execute(workspaceName, workspaceDir, stage string, p
 	var args = []string{
 		"run", "dev",
 	}
-	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 1, args)
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return

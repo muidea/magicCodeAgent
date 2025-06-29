@@ -79,7 +79,7 @@ func (s *CreateServiceModuleTool) Execute(workspaceName, workspaceDir, stage str
 		"-projectType", common.Service,
 		"-moduleName", name,
 	}
-	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return

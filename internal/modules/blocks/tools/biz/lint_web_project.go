@@ -66,7 +66,7 @@ func (s *LintWebProjectTool) Execute(workspaceName, workspaceDir, stage string, 
 	var args = []string{
 		"run", "lint",
 	}
-	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return

@@ -76,7 +76,7 @@ func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, stage string, 
 			}
 		}
 	}
-	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, args)
+	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 	if runErr != nil {
 		err = errors.New(runErr.Error())
 		return
