@@ -151,9 +151,9 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	if ptr != nil {
 		// 当前任务执行状态
 		// 新增，删除，修改的文件清单
-		stringBuilder.WriteString("### 当前任务执行状态\n")
+		stringBuilder.WriteString("### 当前任务执行状态\n\n")
 		if ptr.AddFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 新增文件清单\n")
+			stringBuilder.WriteString("#### 新增文件清单\n\n")
 			ptr.AddFiles.Range(func(filePath string) bool {
 				if strings.HasPrefix(filePath, stagePath) {
 					relativePath := filePath[len(stagePath)+1:]
@@ -164,7 +164,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 			stringBuilder.WriteString("\n")
 		}
 		if ptr.DelFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 删除文件清单\n")
+			stringBuilder.WriteString("#### 删除文件清单\n\n")
 			ptr.DelFiles.Range(func(filePath string) bool {
 				if strings.HasPrefix(filePath, stagePath) {
 					relativePath := filePath[len(stagePath)+1:]
@@ -175,7 +175,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 			stringBuilder.WriteString("\n")
 		}
 		if ptr.ModFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 修改文件清单\n")
+			stringBuilder.WriteString("#### 修改文件清单\n\n")
 			ptr.ModFiles.Range(func(filePath string) bool {
 				if strings.HasPrefix(filePath, stagePath) {
 					relativePath := filePath[len(stagePath)+1:]
@@ -188,7 +188,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		stringBuilder.WriteString("\n")
 	}
 
-	stringBuilder.WriteString("### 当前文件清单\n")
+	stringBuilder.WriteString("### 当前文件清单\n\n")
 	s.fileInfo.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, stagePath) {
 			relativePath := filePath[len(stagePath)+1:]
@@ -197,6 +197,15 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		return true
 	})
 	stringBuilder.WriteString("\n\n")
+
+	if s.configPtr.GetStage() == common.CodeStage {
+		param = map[string]string{}
+		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.getWorkspaceType()), param)
+		if structContent != "" {
+			stringBuilder.WriteString(structContent)
+			stringBuilder.WriteString("\n\n")
+		}
+	}
 
 	stringBuilder.WriteString("</environment_details>")
 	return stringBuilder.String()
