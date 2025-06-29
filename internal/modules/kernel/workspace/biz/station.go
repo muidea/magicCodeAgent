@@ -200,7 +200,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 
 	if s.configPtr.GetStage() == common.CodeStage {
 		param = map[string]string{}
-		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.getWorkspaceType()), param)
+		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.configPtr.GetStage()), param)
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
 			stringBuilder.WriteString("\n\n")
