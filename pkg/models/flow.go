@@ -67,7 +67,7 @@ func GetChildLevel(level string) string {
 type Flow struct {
 	Id        string           `json:"id"`
 	Title     string           `json:"title"`
-	Message   []*MessageItem   `json:"message,omitempty"`
+	Message   []*MessageItem   `json:"-"`
 	Status    int              `json:"status"`
 	AddFiles  fu.StringSortSet `json:"addFiles,omitempty"`
 	ModFiles  fu.StringSortSet `json:"modFiles,omitempty"`
