@@ -41,7 +41,7 @@ const {{.ModuleName}}Page: React.FC = () => {
         extra: [],
       } }
     >
-      <div>TODO 待替换显示内容</div>
+      TODO 待替换显示内容
     </PageContainer>
   );
 };

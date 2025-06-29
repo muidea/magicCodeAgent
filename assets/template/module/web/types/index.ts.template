@@ -1,7 +1,7 @@
 import { {{.ModuleName}} } from "./types";
 
 const {{toLower .ModuleName}}Formatter = (val: {{.ModuleName}}, label: boolean = true): string => {
-  // TODO 待补充
+  TODO 待补充
   return '-'
 };
 

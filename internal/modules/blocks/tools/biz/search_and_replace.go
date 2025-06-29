@@ -74,13 +74,15 @@ func (s *SearchAndReplaceTool) Execute(workspaceName, workspaceDir, stage string
 		RegexFlags string `json:"regex_flags"`
 	}
 
-	if err = json.Unmarshal([]byte(operations), &ops); err != nil {
-		err = fmt.Errorf("no valid operations provided")
+	if oprErr := json.Unmarshal([]byte(operations), &ops); oprErr != nil {
+		log.Errorf("failed to parse operations: %v", oprErr)
+		oprErr = fmt.Errorf("no valid operations provided")
+		result = "search and replace failed!\n" + oprErr.Error()
 		return
 	}
 
 	if len(ops) == 0 {
-		err = fmt.Errorf("no valid operations provided")
+		result = "search and replace failed!\n" + "no valid operations provided"
 		return
 	}
 	fullPath := filepath.Join(workspaceDir, stage)
