@@ -11,6 +11,7 @@ const use{{.ModuleName}}Model = () => {
   const [current{{.ModuleName}}, setCurrent{{.ModuleName}}] = useState<{{.ModuleName}} | null>(null);
   const [{{toLower .ModuleName}}List, set{{.ModuleName}}List] = useState<{{.ModuleName}}[]>([]);
 
+  // 过滤{{.ModuleName}}列表
   const filter{{.ModuleName}} = useCallback(
     async (filter: ApiFilter) => {
       handleApiCall(
@@ -25,6 +26,7 @@ const use{{.ModuleName}}Model = () => {
     [loading, currentErrorMessage, {{toLower .ModuleName}}List]
   );
 
+  // 查询{{.ModuleName}}
   const query{{.ModuleName}} = useCallback(
     async (id: string): Promise<{{.ModuleName}}> => {
       return handleApiCall(
@@ -39,6 +41,7 @@ const use{{.ModuleName}}Model = () => {
     [loading, currentErrorMessage, current{{.ModuleName}}]
   );
 
+  // 新增{{.ModuleName}}
   const insert{{.ModuleName}} = useCallback(
     async (val: {{.ModuleName}}): Promise<{{.ModuleName}}> => {
       return await handleApiCall(
@@ -54,6 +57,7 @@ const use{{.ModuleName}}Model = () => {
     [loading, currentErrorMessage, current{{.ModuleName}}, {{toLower .ModuleName}}List]
   );
 
+  // 更新{{.ModuleName}}
   const update{{.ModuleName}} = useCallback(
     async (val: {{.ModuleName}}): Promise<{{.ModuleName}}> => {
       return handleApiCall(
@@ -71,6 +75,7 @@ const use{{.ModuleName}}Model = () => {
     [loading, currentErrorMessage, current{{.ModuleName}}, {{toLower .ModuleName}}List]
   );
 
+  // 删除{{.ModuleName}}
   const delete{{.ModuleName}} = useCallback(
     async (val: {{.ModuleName}}, drop{{.ModuleName}}: boolean = false): Promise<{{.ModuleName}}> => {
       return handleApiCall(
