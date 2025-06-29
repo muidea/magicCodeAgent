@@ -53,72 +53,64 @@
 
 ### 路由定义说明
 
-#### Pages 目录
+所有页面的路由都按照约定规则自动生成路由表。
 
-* **约定式路由**：`pages/*` 文件夹的文件层级结构将自动生成路由表。
-* **配置式路由**：若 `component` 写为相对路径，文件会从 `pages` 文件夹开始寻找。
+如何页面需要显示在导航菜单中，则需要在 `.umirc.ts`里defineConfig-routes中添加路由信息。
 
-示例配置：
+单个页面路由定义如下,以product页面为例:
 
-```ts
-routes: [
-  // `./index` === `@/pages/index`
-  { path: '/', component: './index' },
-];
+```typescript
+    {
+      path: '/products',
+      component: './product',
+      name: '产品管理',
+      icon: 'appstore',
+    },
 ```
 
-##### 基础路由
+path: 路由地址
+component: 页面在pages文件夹下的相对路径
+name: 页面在导航菜单中的名称
+icon: 菜单项的图标
 
-目录结构：
+定义完成后, `.umirc.ts`的routes配置如下:
 
-```plaintext
-+ pages/
-  + users/
-    - index.tsx
-  - index.tsx
 ```
-
-生成的路由配置：
-
-```ts
-[
-  { path: '/', component: '@/pages/index.tsx' },
-  { path: '/users/', component: '@/pages/users/index.tsx' },
-];
-```
-
-##### 动态路由
-
-带 `$` 前缀的目录或文件为动态路由，例如：
-
-```plaintext
-+ pages/
-  + foo/
-    - $slug.tsx
-  + $bar/
-    - $.tsx
-  - index.tsx
-```
-
-生成的路由配置：
-
-```ts
-[
-  { path: '/', component: '@/pages/index.tsx' },
-  { path: '/foo/:slug', component: '@/pages/foo/$slug.tsx' },
-  { path: '/:bar/*', component: '@/pages/$bar/$.tsx' },
-];
-```
-
-##### 404 页面
-
-在约定式路由中，`pages/404.tsx` 会自动注册为全局 404 页面。若使用配置式路由，需要手动在最后一项添加兜底路由：
-
-```ts
-routes: [
-  // other routes...
-  { path: '/*', component: '@/pages/404.tsx' },
-];
+export default defineConfig({
+  links: [{ rel: "icon", href: "/favicon.png", type: "image/png" }],
+  antd: {},
+  access: {},
+  model: {},
+  initialState: {},
+  request: {},
+  layout: {
+    title: "demo",
+  },
+  base: "/",
+  publicPath: "/",
+  routes: [
+    ...其他页面
+    {
+      path: '/products',
+      component: './product',
+      name: '产品管理',
+      icon: 'appstore',
+    },
+  ],
+  exportStatic: {},
+  esbuildMinifyIIFE: true,
+  npmClient: "yarn",
+  proxy: [
+    {
+      context: ["/api/v1/"],
+      target: "http://127.0.0.1:8090",
+      changeOrigin: true,
+    },
+  ],
+  alias: {
+    "@/utils": path.resolve(__dirname, "src/utils"),
+  },
+});
 ```
 
 ### 服务定义说明
