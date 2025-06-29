@@ -293,7 +293,7 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 			// 在文件中查找匹配的内容
 			lineNum := findContentInFile(fileLines, block.OriginContent)
 			if lineNum == -1 {
-				return fmt.Errorf("未在文件中找到diff块替换内容: \n%s", block.OriginContent)
+				return fmt.Errorf("未在文件中找到diff块替换内容: \n%s", block.OriginContent+"\n\n 需要重新全量刷新该文件！\n\n")
 			}
 			block.StartLine = lineNum
 			// 如果结束行号也未指定，根据原始内容的行数计算

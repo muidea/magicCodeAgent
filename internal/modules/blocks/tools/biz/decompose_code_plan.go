@@ -94,7 +94,7 @@ func (s *DecomposeCodePlanTool) getChildFiles(workspaceDir, stage, pathVal strin
 	rootPath := filepath.Join(workspaceDir, stage)
 	finalPath := filepath.Join(rootPath, pathVal)
 	if !fp.Exist(finalPath) {
-		err = fmt.Errorf("设计文档对应目录:%s不存在", pathVal)
+		err = fmt.Errorf("设计文档对应目录:%s不存在, 需要重新核对路径", pathVal)
 		return
 	}
 	fileList, fileErr := fp.ListPath(finalPath, "*.md", false)
