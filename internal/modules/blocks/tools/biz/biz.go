@@ -462,6 +462,9 @@ func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool
 	if commandResultPtr.ErrorMessage != "" {
 		stringBuff.WriteString(commandResultPtr.ErrorMessage + "\n\n")
 	}
+	if commandResultPtr.ConsoleMessage != "" {
+		stringBuff.WriteString(commandResultPtr.ConsoleMessage + "\n\n")
+	}
 	result = stringBuff.String()
 	return
 }
