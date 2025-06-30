@@ -96,6 +96,9 @@ func New(
 	ptr.toolRegistry.Register(&DecomposeCodePlanTool{
 		promptsRegistry: promptsRegistry,
 	})
+	ptr.toolRegistry.Register(&DecomposeTestPlanTool{
+		promptsRegistry: promptsRegistry,
+	})
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
 	return ptr
 }

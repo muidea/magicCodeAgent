@@ -78,7 +78,7 @@ func (s *DecomposeCodePlanTool) Execute(workspaceName, workspaceDir, stage strin
 
 	childList, childErr := s.getChildFiles(workspaceDir, "design", pathVal)
 	if childErr != nil {
-		result = "error: 制定开发计划失败!\n" + childErr.Error()
+		result = "error: 制定开发目标失败!\n" + childErr.Error()
 		return
 	}
 

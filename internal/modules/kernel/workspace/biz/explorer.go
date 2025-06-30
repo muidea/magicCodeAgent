@@ -13,7 +13,8 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 func (s *Workspace) filterWorkspaceFile(ev event.Event, re event.Result) {
@@ -60,7 +61,7 @@ func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filt
 	return
 }
 
-func (s *Workspace) FilterWorkspaceFileTree(workspaceName, stage, basePath string) (ret []*common.DataNode, err *cd.Error) {
+func (s *Workspace) FilterWorkspaceFileTree(workspaceName, stage, basePath string) (ret []*imkwc.DataNode, err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
@@ -78,13 +79,17 @@ func (s *Workspace) FilterWorkspaceFileTree(workspaceName, stage, basePath strin
 		return
 	}
 
+	if stage == common.TestStage {
+		stage = common.CodeStage
+	}
+
 	basePath = path.Join(stage, basePath)
 	filter := NewBasePathFilter(curWorkspace.(*Station).configPtr.Path, basePath)
 	fileList := curWorkspace.(*Station).Filter(filter)
 	return ConvertPathsToTree(curWorkspace.(*Station).configPtr.Path, fileList), nil
 }
 
-func (s *Workspace) QueryFileContent(workspaceName string, filePath string) (ret *common.FileContent, err *cd.Error) {
+func (s *Workspace) QueryFileContent(workspaceName string, filePath string) (ret *imkwc.FileContent, err *cd.Error) {
 	workspacePtr := config.GetWorkspace(workspaceName)
 	if workspacePtr == nil {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
@@ -116,7 +121,7 @@ func (s *Workspace) QueryFileContent(workspaceName string, filePath string) (ret
 		fileExt = fileExt[1:]
 	}
 
-	ret = &common.FileContent{
+	ret = &imkwc.FileContent{
 		Type:    fileExt,
 		Content: string(content),
 	}

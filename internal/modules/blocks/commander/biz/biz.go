@@ -74,6 +74,8 @@ func (s *Commander) RunCommand(workspace string, paramPtr *imbcc.CommanderParam)
 		timeoutVal = defaultCommandTimeOut
 	}
 
+	s.consoleBuffer.Reset()
+
 	s.Base.SyncTaskWithTimeOut(func() {
 		_ = commanderPtr.Run(paramPtr.WorkspaceDir, paramPtr.Command, paramPtr.Args)
 	}, time.Minute*time.Duration(timeoutVal))
@@ -86,9 +88,6 @@ func (s *Commander) RunCommand(workspace string, paramPtr *imbcc.CommanderParam)
 		records := s.consoleBuffer.GetAllRecords()
 		if len(records) > 0 {
 			ret.ConsoleMessage = strings.Join(records, "\n")
-
-			s.consoleBuffer.Reset()
-
 			log.Infof("console message: %s", ret.ConsoleMessage)
 		}
 	}
