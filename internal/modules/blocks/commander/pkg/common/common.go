@@ -3,9 +3,10 @@ package common
 const CommanderModule = "/internal/modules/blocks/commander"
 
 const (
-	CommandRun       = "/command/run"
-	CommandTerminate = "/command/terminate"
-	CommandStatus    = "/command/status"
+	CommandRun        = "/command/run"
+	CommandTerminate  = "/command/terminate"
+	CommandStatus     = "/command/status"
+	ConsoleLogsAppend = "/console/logs"
 )
 
 type CommanderParam struct {
@@ -17,7 +18,8 @@ type CommanderParam struct {
 }
 
 type CommanderResult struct {
-	Workspace     string `json:"workspace"`
-	StatusMessage string `json:"statusMessage"`
-	ErrorMessage  string `json:"errorMessage"`
+	Workspace      string `json:"workspace"`
+	StatusMessage  string `json:"statusMessage"`
+	ErrorMessage   string `json:"errorMessage"`
+	ConsoleMessage string `json:"consoleMessage"`
 }

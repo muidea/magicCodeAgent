@@ -1,8 +1,10 @@
 package service
 
 import (
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/biz"
 	engine "github.com/muidea/magicEngine/http"
+
+	"github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/biz"
+	imbcc "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
 )
 
 type Commander struct {
@@ -19,4 +21,5 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Commander) *Commander {
 }
 
 func (s *Commander) RegisterRoute() {
+	s.routeRegistry.AddHandler(imbcc.ConsoleLogsAppend, engine.POST, s.ConsoleLogs)
 }

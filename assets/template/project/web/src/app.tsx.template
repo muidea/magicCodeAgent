@@ -1,6 +1,7 @@
 import { history, RunTimeLayoutConfig } from "@umijs/max";
 import { message } from "antd";
 import { config } from "./utils/index";
+import "./utils/logger";
 
 // 运行时配置
 export const layout: RunTimeLayoutConfig = () => {

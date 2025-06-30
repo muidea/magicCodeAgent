@@ -17,15 +17,15 @@ type BaseCommander struct {
 	cancelCommanderFunc context.CancelFunc
 
 	// 调试缓冲区
-	stdErrBuffer *CommandBuffer
-	stdOutBuffer *CommandBuffer
+	stdErrBuffer *LogBuffer
+	stdOutBuffer *LogBuffer
 }
 
 // NewBaseCommander 创建一个新的基础调试器
 func NewBaseCommander(maxLineSize int) *BaseCommander {
 	return &BaseCommander{
-		stdErrBuffer: NewCommandBuffer(maxLineSize),
-		stdOutBuffer: NewCommandBuffer(maxLineSize),
+		stdErrBuffer: NewLogBuffer(maxLineSize),
+		stdOutBuffer: NewLogBuffer(maxLineSize),
 	}
 }
 

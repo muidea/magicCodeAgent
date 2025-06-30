@@ -2,11 +2,13 @@ package biz
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
@@ -14,11 +16,15 @@ import (
 )
 
 var defaultCommandTimeOut = 5
+var defaultConsoleLinesSize = 100
 
 type Commander struct {
 	biz.Base
 
 	workspace2Commander sync.Map
+
+	// TODO 这里以后需要考虑多个workspace的情况
+	consoleBuffer *LogBuffer
 }
 
 func New(
@@ -26,7 +32,8 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Commander {
 	ptr := &Commander{
-		Base: biz.New(imbcc.CommanderModule, eventHub, backgroundRoutine),
+		Base:          biz.New(imbcc.CommanderModule, eventHub, backgroundRoutine),
+		consoleBuffer: NewLogBuffer(defaultConsoleLinesSize),
 	}
 
 	ptr.SubscribeFunc(imbcc.CommandRun, ptr.runCommand)
@@ -75,6 +82,16 @@ func (s *Commander) RunCommand(workspace string, paramPtr *imbcc.CommanderParam)
 		Workspace: workspace,
 	}
 	ret.StatusMessage, ret.ErrorMessage = commanderPtr.Status()
+	if s.consoleBuffer != nil {
+		records := s.consoleBuffer.GetAllRecords()
+		if len(records) > 0 {
+			ret.ConsoleMessage = strings.Join(records, "\n")
+
+			s.consoleBuffer.Reset()
+
+			log.Infof("console message: %s", ret.ConsoleMessage)
+		}
+	}
 	//log.Infof("run command result: \n%s, \n%s", ret.StatusMessage, ret.ErrorMessage)
 
 	return
@@ -128,4 +145,12 @@ func (s *Commander) StatusCommand(workspace string) (ret *imbcc.CommanderResult,
 		ErrorMessage:  errorMessage,
 	}
 	return
+}
+
+func (s *Commander) AppendConsoleLogs(workspace string, consoleLog string) {
+	if s.consoleBuffer == nil {
+		s.consoleBuffer = NewLogBuffer(defaultConsoleLinesSize)
+	}
+
+	s.consoleBuffer.Write([]byte(consoleLog))
 }

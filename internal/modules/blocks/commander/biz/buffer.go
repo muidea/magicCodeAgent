@@ -8,25 +8,25 @@ import (
 
 const defaultMaxBufferLinesSize = 20
 
-// CommandBuffer 封装调试缓冲区功能
-type CommandBuffer struct {
+// LogBuffer 封装调试缓冲区功能
+type LogBuffer struct {
 	bufferMutex        sync.Mutex
 	bufferLines        []string
 	maxBufferLinesSize int
 	partialLine        string // 用于存储不完整的行
 }
 
-// NewCommandBuffer 创建一个新的调试缓冲区
-func NewCommandBuffer(maxLineSize int) *CommandBuffer {
+// NewLogBuffer 创建一个新的调试缓冲区
+func NewLogBuffer(maxLineSize int) *LogBuffer {
 	if maxLineSize <= 0 {
 		maxLineSize = defaultMaxBufferLinesSize // 默认缓冲20行记录
 	}
-	return &CommandBuffer{
+	return &LogBuffer{
 		maxBufferLinesSize: maxLineSize,
 	}
 }
 
-func (s *CommandBuffer) Reset() {
+func (s *LogBuffer) Reset() {
 	s.bufferMutex.Lock()
 	defer s.bufferMutex.Unlock()
 
@@ -35,7 +35,7 @@ func (s *CommandBuffer) Reset() {
 }
 
 // Write 实现io.Writer接口，将数据按行写入缓冲区
-func (s *CommandBuffer) Write(p []byte) (n int, err error) {
+func (s *LogBuffer) Write(p []byte) (n int, err error) {
 	s.bufferMutex.Lock()
 	defer s.bufferMutex.Unlock()
 
@@ -63,7 +63,7 @@ func (s *CommandBuffer) Write(p []byte) (n int, err error) {
 }
 
 // SetBufferSize 设置缓冲区大小
-func (s *CommandBuffer) SetBufferSize(size int) {
+func (s *LogBuffer) SetBufferSize(size int) {
 	if size <= 0 {
 		return
 	}
@@ -80,7 +80,7 @@ func (s *CommandBuffer) SetBufferSize(size int) {
 }
 
 // GetFunctionRecords 查询包含指定函数名的记录
-func (s *CommandBuffer) GetFunctionRecords(functionName string) []string {
+func (s *LogBuffer) GetFunctionRecords(functionName string) []string {
 	s.bufferMutex.Lock()
 	defer s.bufferMutex.Unlock()
 
@@ -96,7 +96,7 @@ func (s *CommandBuffer) GetFunctionRecords(functionName string) []string {
 }
 
 // GetAllRecords 获取所有缓冲的记录
-func (s *CommandBuffer) GetAllRecords() []string {
+func (s *LogBuffer) GetAllRecords() []string {
 	s.bufferMutex.Lock()
 	defer s.bufferMutex.Unlock()
 
@@ -108,7 +108,7 @@ func (s *CommandBuffer) GetAllRecords() []string {
 }
 
 // GetLatestRecords 获取最新的N行记录
-func (s *CommandBuffer) GetLatestRecords(count int) []string {
+func (s *LogBuffer) GetLatestRecords(count int) []string {
 	s.bufferMutex.Lock()
 	defer s.bufferMutex.Unlock()
 
@@ -140,7 +140,7 @@ func (s *CommandBuffer) GetLatestRecords(count int) []string {
 	return result
 }
 
-func (s *CommandBuffer) IsEmpty() bool {
+func (s *LogBuffer) IsEmpty() bool {
 	s.bufferMutex.Lock()
 	defer s.bufferMutex.Unlock()
 	return len(s.bufferLines) == 0 && s.partialLine == ""
