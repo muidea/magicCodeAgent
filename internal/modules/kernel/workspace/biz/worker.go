@@ -18,16 +18,16 @@ type Worker interface {
 }
 
 func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (param imbtc.ToolParam, result *imbtc.ToolResult, err *cd.Error) {
-	workspaceDir := workspaceConfig.GetWorkspaceDir()
-	if !fp.Exist(workspaceConfig.GetWorkspaceDir()) {
+	workspaceDir := workspaceConfig.GetStageWorkPath()
+	if !fp.Exist(workspaceDir) {
 		if osErr := os.MkdirAll(workspaceDir, 0755); osErr != nil {
-			err = cd.NewError(cd.Unexpected, fmt.Sprintf("create work dir failed, error%s", osErr.Error()))
+			err = cd.NewError(cd.Unexpected, fmt.Sprintf("create workspace dir failed, error%s", osErr.Error()))
 			return
 		}
 	}
 	executeEvent := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
 	executeEvent.SetData("workspaceName", workspaceConfig.GetName())
-	executeEvent.SetData("workspaceDir", workspaceConfig.GetStageWorkPath())
+	executeEvent.SetData("workspaceDir", workspaceDir)
 	executeEvent.SetData("workspaceType", workspaceConfig.GetWorkspaceType())
 	executeEvent.SetData("stage", workspaceConfig.GetStage())
 	executeResult := s.SendEvent(executeEvent)

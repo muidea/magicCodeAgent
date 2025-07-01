@@ -99,12 +99,12 @@ func (s *Station) systemPrompt() string {
 func (s *Station) envPrompt(ptr *models.Flow) string {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
-	stringBuilder.WriteString("# 项目名称：" + s.configPtr.Name + "\n\n\n")
+	stringBuilder.WriteString("# 项目名称\n\n" + s.configPtr.Name + "\n\n")
 
-	stringBuilder.WriteString("## 项目描述\n")
-	stringBuilder.WriteString(s.configPtr.Description + "\n\n\n")
+	stringBuilder.WriteString("## 项目描述\n\n")
+	stringBuilder.WriteString(s.configPtr.Description + "\n\n")
 
-	stringBuilder.WriteString("## 技术栈\n")
+	stringBuilder.WriteString("## 技术栈\n\n")
 	for _, val := range s.configPtr.TechStack {
 		stringBuilder.WriteString("- " + val + "\n")
 	}
