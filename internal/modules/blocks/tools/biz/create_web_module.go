@@ -35,7 +35,7 @@ func (s *CreateWebModuleTool) Prompt() string {
 
 func (s *CreateWebModuleTool) Tags() fu.StringSet { return fu.StringSet{iipc.Web} }
 
-func (s *CreateWebModuleTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *CreateWebModuleTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{

@@ -60,7 +60,7 @@ func New(
 	})
 	//ptr.toolRegistry.Register(&UseMcpToolTool{})
 	//ptr.toolRegistry.Register(&AccessMcpResourceTool{})
-	ptr.toolRegistry.Register(&AskFollowupQuestionTool{})
+	//ptr.toolRegistry.Register(&AskFollowupQuestionTool{})
 	ptr.toolRegistry.Register(&AttemptCompletionTool{
 		commander: ptr,
 	})
@@ -96,9 +96,6 @@ func New(
 	ptr.toolRegistry.Register(&DecomposeCodePlanTool{
 		promptsRegistry: promptsRegistry,
 	})
-	ptr.toolRegistry.Register(&DecomposeTestPlanTool{
-		promptsRegistry: promptsRegistry,
-	})
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
 	return ptr
 }
@@ -120,7 +117,7 @@ func (s *Tools) Run() (err *cd.Error) {
 
 	dataContent := localConfig.GetDataContent()
 	if dataContent != "" {
-		_, resultVal, executeErr := s.execDataContent("anonymous", currentWorkDir, "", dataContent)
+		_, resultVal, executeErr := s.execDataContent("anonymous", currentWorkDir, "", "", dataContent)
 		if resultVal != nil {
 			log.Infof("exec data content result.\n%v, error:%v", resultVal.Result.String(), executeErr)
 		}
@@ -150,7 +147,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 
 	byteBuilder := strings.Builder{}
 	for idx, block := range blocksList {
-		_, toolResult, _ := s.execDataContent("anonymous", workspaceDir, "", block)
+		_, toolResult, _ := s.execDataContent("anonymous", workspaceDir, "", "", block)
 		if toolResult != nil {
 			if idx > 0 {
 				byteBuilder.WriteString("=======\n")
@@ -161,7 +158,7 @@ func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
 	return byteBuilder.String(), nil
 }
 
-func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent string) (imbtc.ToolParam, *imbtc.ToolResult, error) {
+func (s *Tools) execDataContent(workspaceName, workspaceDir, workspaceType, stage, dataContent string) (imbtc.ToolParam, *imbtc.ToolResult, error) {
 	toolName, toolParam, toolErr := parseParamContent(dataContent)
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
@@ -194,7 +191,7 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, stage, dataContent 
 		}, nil
 	}
 
-	executeResult, executeErr := s.toolRegistry.Execute(workspaceName, workspaceDir, stage, toolName, toolParam)
+	executeResult, executeErr := s.toolRegistry.Execute(workspaceName, workspaceDir, workspaceType, stage, toolName, toolParam)
 	return toolParam, executeResult, executeErr
 }
 
@@ -413,13 +410,20 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		log.Warnf("workspaceDir is not string, dataVal:%v", workspaceDirVal)
 		return
 	}
+	workspaceTypeVal := ev.GetData("workspaceType")
+	workspaceType, workspaceTypeOK := workspaceTypeVal.(string)
+	if !workspaceTypeOK {
+		err = cd.NewError(cd.IllegalParam, "execute tool failed, workspaceType is not string")
+		log.Warnf("workspaceType is not string, dataVal:%v", workspaceTypeVal)
+		return
+	}
 	stageVal := ev.GetData("stage").(string)
 	if !common.ValidStage(stageVal) {
 		err = cd.NewError(cd.IllegalParam, "execute tool failed, invalid stage")
 		log.Warnf("stage is not valid, stage:%v", stageVal)
 		return
 	}
-	executeParam, executeResult, executeErr = s.execDataContent(workspaceName, workspaceDir, stageVal, contentVal)
+	executeParam, executeResult, executeErr = s.execDataContent(workspaceName, workspaceDir, workspaceType, stageVal, contentVal)
 	if executeErr != nil {
 		err = cd.NewError(cd.Unexpected, fmt.Sprintf("execute tool failed, executeErr:%v", executeErr.Error()))
 		log.Errorf("execute tool failed, executeErr:%v", executeErr)

@@ -53,7 +53,7 @@ func (s *ToolRegistry) Register(tool imbtc.Tool) {
 	s.name2Tools[tool.Name()] = tool
 }
 
-func (s *ToolRegistry) Execute(workspaceName, workspaceDir, stage, toolName string, param imbtc.ToolParam) (*imbtc.ToolResult, error) {
+func (s *ToolRegistry) Execute(workspaceName, workspaceDir, workspaceType, stage, toolName string, param imbtc.ToolParam) (*imbtc.ToolResult, error) {
 	//log.Infof("execute tool, workspaceName:%s, workspaceDir:%s, stage:%s, toolName:%s, param:%v", workspaceName, workspaceDir, stage, toolName, param)
 	tool, ok := s.name2Tools[toolName]
 	if !ok {
@@ -73,5 +73,5 @@ func (s *ToolRegistry) Execute(workspaceName, workspaceDir, stage, toolName stri
 		}, fmt.Errorf("tool '%s' does not exist", toolName)
 	}
 
-	return tool.Execute(workspaceName, workspaceDir, stage, param)
+	return tool.Execute(workspaceName, workspaceDir, workspaceType, stage, param)
 }

@@ -31,7 +31,7 @@ func (s *ListFilesTool) Prompt() string {
 
 func (s *ListFilesTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ListFilesTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *ListFilesTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{

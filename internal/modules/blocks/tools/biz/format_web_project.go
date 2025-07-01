@@ -33,7 +33,7 @@ func (s *FormatWebProjectTool) Prompt() string {
 
 func (s *FormatWebProjectTool) Tags() fu.StringSet { return fu.StringSet{iipc.Web} }
 
-func (s *FormatWebProjectTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *FormatWebProjectTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{

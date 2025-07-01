@@ -37,7 +37,7 @@ func (s *DecomposeDesignPlanTool) Prompt() string {
 
 func (s *DecomposeDesignPlanTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -88,7 +88,7 @@ func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, stage str
 		"Childrens":        childList,
 		"WorkingDirectory": workPath,
 	}
-	planFileName := fmt.Sprintf("decompose-design-plan-%s", level)
+	planFileName := fmt.Sprintf("decompose-design-plan-%s-%s", level, workspaceType)
 	result = s.promptsRegistry.ReadSectionPromptContent(planFileName, planParam)
 	return
 }

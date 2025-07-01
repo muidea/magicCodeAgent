@@ -113,7 +113,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	param := map[string]string{}
 	//## 项目规划目录
 	if s.configPtr.GetStage() != common.DesignStage {
-		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()), param)
+		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-struct-%s", s.getWorkspaceType()), param)
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
 			stringBuilder.WriteString("\n\n")
@@ -124,7 +124,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	param = map[string]string{
 		"Level": ptr.GetLevel(),
 	}
-	statusContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s-status", s.configPtr.GetStage()), param)
+	statusContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s-status-%s", s.configPtr.GetStage(), s.getWorkspaceType()), param)
 	if statusContent != "" {
 		stringBuilder.WriteString(statusContent)
 		stringBuilder.WriteString("\n\n")

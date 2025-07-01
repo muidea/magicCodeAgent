@@ -27,7 +27,7 @@ func (s *NewTaskTool) Prompt() string {
 
 func (s *NewTaskTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *NewTaskTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *NewTaskTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{

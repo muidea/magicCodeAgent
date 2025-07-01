@@ -30,7 +30,7 @@ func (s *WriteToFileTool) Prompt() string {
 
 func (s *WriteToFileTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *WriteToFileTool) Execute(workspaceName, workspaceDir, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *WriteToFileTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
