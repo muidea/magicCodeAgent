@@ -56,7 +56,8 @@ func (s *DecomposeTestPlanTool) Execute(workspaceName, workspaceDir, stage strin
 	}()
 
 	pathVal := ""
-	childList, childErr := s.getChildFiles(workspaceDir, "design", pathVal)
+	parentPath := filepath.Dir(workspaceDir)
+	childList, childErr := s.getChildFiles(parentPath, "design", pathVal)
 	if childErr != nil {
 		result = "error: 制定开发目标失败!\n" + childErr.Error()
 		return

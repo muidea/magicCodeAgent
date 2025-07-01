@@ -3,8 +3,6 @@ package biz
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -53,7 +51,11 @@ func (s *InitializationWebProjectTool) Execute(workspaceName, workspaceDir, stag
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
-
+	fullPath := workspaceDir
+	if !fp.Exist(fullPath) {
+		err = fmt.Errorf("workspace not exist: %s", fullPath)
+		return
+	}
 	name, ok := param["name"].(string)
 	if !ok || name == "" {
 		err = fmt.Errorf("missing or invalid name parameter")
@@ -64,13 +66,6 @@ func (s *InitializationWebProjectTool) Execute(workspaceName, workspaceDir, stag
 	descriptionVal, descriptionOK := param["description"]
 	if descriptionOK {
 		description = descriptionVal.(string)
-	}
-	fullPath := filepath.Join(workspaceDir, stage)
-	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
 	}
 
 	command := "magicCodeCli"

@@ -1,10 +1,27 @@
 package biz
 
 import (
+	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestParentPath(t *testing.T) {
+	// 测试用例1：正常路径
+	path1 := "/home/user/file.txt"
+	parentPath1 := filepath.Dir(path1)
+	assert.Equal(t, "/home/user", parentPath1, "父路径应该是/home/user")
+
+	path2 := "/home/user/file"
+	parentPath2 := filepath.Dir(path2)
+	assert.Equal(t, "/home/user", parentPath2, "父路径应该是/home/user")
+
+	path3 := path.Join("/home/user", "abc")
+	parentPath3 := filepath.Dir(path3)
+	assert.Equal(t, "/home/user", parentPath3, "父路径应该是/home/user")
+}
 
 func TestParseParamContent(t *testing.T) {
 	// 测试用例1：readFile工具 - 正常XML格式，包含多个参数

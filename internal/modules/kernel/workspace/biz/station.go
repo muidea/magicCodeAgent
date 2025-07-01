@@ -46,8 +46,6 @@ type Station struct {
 	configPtr  *config.Workspace
 	fileInfo   util.FileManager
 
-	currentWorkStage string
-
 	chatRunningStatus string
 
 	chatMaxLoopCount int64
@@ -110,7 +108,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	for _, val := range s.configPtr.TechStack {
 		stringBuilder.WriteString("- " + val + "\n")
 	}
-	stringBuilder.WriteString("\n")
+	stringBuilder.WriteString("\n\n")
 
 	param := map[string]string{}
 	//## 项目规划目录
@@ -118,7 +116,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-%s-struct", s.getWorkspaceType()), param)
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
-			stringBuilder.WriteString("\n")
+			stringBuilder.WriteString("\n\n")
 		}
 	}
 
@@ -126,28 +124,33 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	param = map[string]string{
 		"Level": ptr.GetLevel(),
 	}
-	stageContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s", s.configPtr.GetStage()), param)
-	if stageContent != "" {
-		stringBuilder.WriteString(stageContent)
-		stringBuilder.WriteString("\n")
+	statusContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s-status", s.configPtr.GetStage()), param)
+	if statusContent != "" {
+		stringBuilder.WriteString(statusContent)
+		stringBuilder.WriteString("\n\n")
 	}
 
-	// 前一阶段输出物清单
-	previousStage, previousLabel, previousPath := s.configPtr.GetPreviousStagePath()
-	if previousPath != "" {
-		stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", previousLabel))
+	// 参考内容清单
+	referenceStageVal := ""
+	switch s.configPtr.GetStage() {
+	case common.CodeStage, common.TestStage:
+		referenceStageVal = common.DesignStage
+	}
+	referenceStage, referenceLabel, referencePath := s.configPtr.GetReferenceStagePath(referenceStageVal)
+	if referencePath != "" {
+		stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", referenceLabel))
 		s.fileInfo.Range(func(filePath string) bool {
-			if strings.HasPrefix(filePath, previousPath) {
-				relativePath := filePath[len(previousPath)+1:]
+			if strings.HasPrefix(filePath, referencePath) {
+				relativePath := filePath[len(referencePath)+1:]
 				stringBuilder.WriteString("- " + relativePath + "\n")
 			}
 			return true
 		})
-		stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", previousStage))
-		stringBuilder.WriteString("\n")
+		stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", referenceStage))
+		stringBuilder.WriteString("\n\n")
 	}
 
-	stagePath := s.configPtr.GetCurrentStagePath()
+	stagePath := s.configPtr.GetStageWorkPath()
 	if ptr != nil {
 		// 当前任务执行状态
 		// 新增，删除，修改的文件清单
@@ -185,9 +188,15 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 			})
 			stringBuilder.WriteString("\n")
 		}
-		stringBuilder.WriteString("\n")
+		stringBuilder.WriteString("\n\n")
 	}
 
+	stageStuffix := ""
+	if s.configPtr.GetStage() == common.DesignStage {
+		stageStuffix = common.DesignStage
+	} else {
+		stageStuffix = common.CodeStage
+	}
 	stringBuilder.WriteString("### 当前文件清单\n\n")
 	s.fileInfo.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, stagePath) {
@@ -198,13 +207,11 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	})
 	stringBuilder.WriteString("\n\n")
 
-	if s.configPtr.GetStage() == common.CodeStage {
-		param = map[string]string{}
-		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.configPtr.GetStage()), param)
-		if structContent != "" {
-			stringBuilder.WriteString(structContent)
-			stringBuilder.WriteString("\n\n")
-		}
+	param = map[string]string{}
+	instructContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", stageStuffix), param)
+	if instructContent != "" {
+		stringBuilder.WriteString(instructContent)
+		stringBuilder.WriteString("\n\n")
 	}
 
 	stringBuilder.WriteString("</environment_details>")
@@ -220,7 +227,7 @@ func (s *Station) checkIgnore(fileFullPath string) bool {
 		return true
 	}
 
-	stagePath := s.configPtr.GetCurrentStagePath()
+	stagePath := s.configPtr.GetStageWorkPath()
 	filePath, fileName := path.Split(fileFullPath)
 	for _, ignore := range s.configPtr.Ignores {
 		// 只需要匹配code目录下的文件
@@ -408,7 +415,6 @@ func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr
 	curFlow.AppendMessage(itemPtr)
 
 	s.chatMaxLoopCount = maxLoopCount
-	s.currentWorkStage = stage
 	s.chatRunningStatus = Chatting
 	s.chatLoopCount = 0
 
@@ -702,7 +708,6 @@ func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error
 	log.Infof("debug env prompt: %v", envPromptFile)
 
 	s.chatMaxLoopCount = 2
-	s.currentWorkStage = stage
 	s.chatRunningStatus = Chatting
 
 	s.chatLoopCount++

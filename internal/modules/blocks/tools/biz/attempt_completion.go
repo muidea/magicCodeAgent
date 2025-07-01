@@ -3,8 +3,6 @@ package biz
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -53,17 +51,16 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, stage strin
 		}
 	}()
 
+	fullPath := workspaceDir
+	if !fp.Exist(fullPath) {
+		err = fmt.Errorf("workspace not exist: %s", fullPath)
+		return
+	}
+
 	resultVal, resultOK := param["result"].(string)
 	if !resultOK || resultVal == "" {
 		err = fmt.Errorf("missing or invalid result parameter")
 		return
-	}
-	fullPath := filepath.Join(workspaceDir, stage)
-	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
 	}
 	command, _ := param["command"].(string)
 	log.Infof("command: [%s]", command)

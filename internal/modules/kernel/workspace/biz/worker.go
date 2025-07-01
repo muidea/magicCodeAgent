@@ -27,7 +27,7 @@ func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (p
 	}
 	executeEvent := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
 	executeEvent.SetData("workspaceName", workspaceConfig.GetName())
-	executeEvent.SetData("workspaceDir", workspaceDir)
+	executeEvent.SetData("workspaceDir", workspaceConfig.GetStageWorkPath())
 	executeEvent.SetData("stage", workspaceConfig.GetStage())
 	executeResult := s.SendEvent(executeEvent)
 	resultVal, resultErr := executeResult.Get()

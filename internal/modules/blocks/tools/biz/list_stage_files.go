@@ -61,7 +61,9 @@ func (s *ListStageFilesTool) Execute(workspaceName, workspaceDir, stage string, 
 		err = fmt.Errorf("missing or invalid path parameter")
 		return
 	}
-	fullPath := filepath.Join(workspaceDir, stageVal)
+
+	parentPath := filepath.Dir(workspaceDir)
+	fullPath := filepath.Join(parentPath, stageVal)
 	if !fp.Exist(fullPath) {
 		err = os.MkdirAll(fullPath, 0755)
 		if err != nil {

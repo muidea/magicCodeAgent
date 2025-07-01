@@ -7,7 +7,7 @@
 **注意：**  
 
 - `decompose_test_plan`不允许批量执行，只能单次执行。
-- 任何时候开始代码开发，都必须先使用`decompose_test_plan`来制定代码开发目标。
+- 任何时候开始测试验证，都必须先使用`decompose_test_plan`来制定代码开发目标。
 
 **用法示例：**  
 

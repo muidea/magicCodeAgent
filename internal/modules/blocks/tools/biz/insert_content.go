@@ -50,6 +50,11 @@ func (s *InsertContentTool) Execute(workspaceName, workspaceDir, stage string, p
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
+	fullPath := workspaceDir
+	if !fp.Exist(fullPath) {
+		err = fmt.Errorf("workspace not exist: %s", fullPath)
+		return
+	}
 
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
@@ -76,13 +81,6 @@ func (s *InsertContentTool) Execute(workspaceName, workspaceDir, stage string, p
 	if len(ops) == 0 {
 		err = fmt.Errorf("operations cannot be empty")
 		return
-	}
-	fullPath := filepath.Join(workspaceDir, stage)
-	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
 	}
 
 	var insertBlocks []*InsertBlock

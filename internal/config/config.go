@@ -79,19 +79,16 @@ func (s *Workspace) GetWorkspaceType() string {
 	return common.Service
 }
 
-func (s *Workspace) GetPreviousStagePath() (string, string, string) {
+func (s *Workspace) GetReferenceStagePath(stageVal string) (string, string, string) {
 	previousLabel := ""
 	previousStage := ""
-	switch s.Stage {
-	case common.CodeStage:
+	switch stageVal {
+	case common.DesignStage:
 		previousStage = common.DesignStage
 		previousLabel = "设计文件列表"
-	case common.TestStage:
+	case common.CodeStage:
 		previousLabel = "代码列表"
 		previousStage = common.CodeStage
-	case common.PublishStage:
-		previousLabel = "测试代码列表"
-		previousStage = common.TestStage
 	default:
 		return "", "", ""
 	}
@@ -99,7 +96,11 @@ func (s *Workspace) GetPreviousStagePath() (string, string, string) {
 	return previousStage, previousLabel, filepath.Join(s.Path, previousStage)
 }
 
-func (s *Workspace) GetCurrentStagePath() string {
+func (s *Workspace) GetStageWorkPath() string {
+	switch s.Stage {
+	case common.CodeStage, common.TestStage:
+		return filepath.Join(s.Path, common.CodeStage)
+	}
 	return filepath.Join(s.Path, s.Stage)
 }
 

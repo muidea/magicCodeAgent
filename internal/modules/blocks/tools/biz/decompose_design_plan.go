@@ -77,7 +77,8 @@ func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, stage str
 		return
 	}
 
-	siblingsList, childList, workPath := s.getSiblingsAndChilds(workspaceDir, stage, name, level)
+	parentPath := filepath.Dir(workspaceDir)
+	siblingsList, childList, workPath := s.getSiblingsAndChilds(parentPath, stage, name, level)
 
 	planParam := map[string]string{
 		"Name":             name,

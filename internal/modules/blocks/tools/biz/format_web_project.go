@@ -3,8 +3,6 @@ package biz
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
@@ -53,13 +51,10 @@ func (s *FormatWebProjectTool) Execute(workspaceName, workspaceDir, stage string
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
-
-	fullPath := filepath.Join(workspaceDir, stage)
+	fullPath := workspaceDir
 	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
+		err = fmt.Errorf("workspace not exist: %s", fullPath)
+		return
 	}
 
 	// yarn run format  --write --ignore-path .prettierignore

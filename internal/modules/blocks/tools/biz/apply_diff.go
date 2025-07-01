@@ -54,6 +54,12 @@ func (s *ApplyDiffTool) Execute(workspaceName, workspaceDir, stage string, param
 		}
 	}()
 
+	fullPath := workspaceDir
+	if !fp.Exist(fullPath) {
+		err = fmt.Errorf("workspace not exist: %s", fullPath)
+		return
+	}
+
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
 		err = fmt.Errorf("missing or invalid path parameter")
@@ -66,13 +72,6 @@ func (s *ApplyDiffTool) Execute(workspaceName, workspaceDir, stage string, param
 		return
 	}
 
-	fullPath := filepath.Join(workspaceDir, stage)
-	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
-	}
 	applyErr := ApplyDiff(fullPath, path, diff)
 	if applyErr != nil {
 		log.Errorf("ApplyDiff failed, fullPath:%s, path:%s err: %v", fullPath, path, applyErr)

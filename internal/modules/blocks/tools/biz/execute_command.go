@@ -3,7 +3,6 @@ package biz
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -51,6 +50,11 @@ func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, stage string, 
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
+	fullPath := workspaceDir
+	if !fp.Exist(fullPath) {
+		err = fmt.Errorf("workspace not exist: %s", fullPath)
+		return
+	}
 
 	command, ok := param["command"].(string)
 	if !ok || command == "" {
@@ -59,15 +63,7 @@ func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, stage string, 
 	}
 	cwd, _ := param["cwd"].(string)
 
-	fullPath := filepath.Join(workspaceDir, stage)
-	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
-	}
 	fullPath = filepath.Join(fullPath, cwd)
-
 	var args []string
 	if argsParam, ok := param["args"].([]interface{}); ok {
 		for _, arg := range argsParam {

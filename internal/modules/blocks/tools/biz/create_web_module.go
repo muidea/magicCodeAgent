@@ -53,6 +53,11 @@ func (s *CreateWebModuleTool) Execute(workspaceName, workspaceDir, stage string,
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
+	fullPath := workspaceDir
+	if !fp.Exist(fullPath) {
+		err = fmt.Errorf("workspace not exist: %s", fullPath)
+		return
+	}
 
 	pathVal, pathOK := param["path"].(string)
 	if !pathOK || pathVal == "" {
@@ -64,7 +69,7 @@ func (s *CreateWebModuleTool) Execute(workspaceName, workspaceDir, stage string,
 		err = fmt.Errorf("missing or invalid name parameter")
 		return
 	}
-	fullPath := filepath.Join(workspaceDir, stage, pathVal)
+	fullPath = filepath.Join(fullPath, pathVal)
 	if !fp.Exist(fullPath) {
 		err = os.MkdirAll(fullPath, 0755)
 		if err != nil {

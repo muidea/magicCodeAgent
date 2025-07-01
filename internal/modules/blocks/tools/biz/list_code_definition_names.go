@@ -52,18 +52,16 @@ func (s *ListCodeDefinitionNamesTool) Execute(workspaceName, workspaceDir, stage
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
+	fullPath := workspaceDir
+	if !fp.Exist(fullPath) {
+		err = fmt.Errorf("workspace not exist: %s", fullPath)
+		return
+	}
 
 	path, ok := param["path"].(string)
 	if !ok || path == "" {
 		err = fmt.Errorf("missing or invalid path parameter")
 		return
-	}
-	fullPath := filepath.Join(workspaceDir, stage)
-	if !fp.Exist(fullPath) {
-		err = os.MkdirAll(fullPath, 0755)
-		if err != nil {
-			return
-		}
 	}
 	listResult, listErr := ListCodeDefinitionNames(fullPath, path)
 	if listErr != nil {
