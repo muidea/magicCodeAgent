@@ -30,9 +30,14 @@ func (s *Workspace) Chat(
 		Content: []string{systemPrompt},
 	}
 
+	const maxCount = 30
 	userMessageList := models.MessageItemList{}
 	for _, curPtr := range flowPathList {
-		for _, message := range curPtr.Message {
+		msgList := curPtr.Message
+		if len(msgList) >= maxCount {
+			msgList = msgList[len(msgList)-maxCount:]
+		}
+		for _, message := range msgList {
 			userMessageList = append(userMessageList, *message)
 		}
 	}
