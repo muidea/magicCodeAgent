@@ -9,6 +9,7 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
 )
 
 type Assistant interface {
@@ -30,11 +31,14 @@ func (s *Workspace) Chat(
 		Content: []string{systemPrompt},
 	}
 
-	const maxCount = 30
+	log.Warnf("flowPathList size:%d", len(flowPathList))
+
+	const maxCount = 15
 	userMessageList := models.MessageItemList{}
 	for _, curPtr := range flowPathList {
 		msgList := curPtr.Message
 		if len(msgList) >= maxCount {
+			log.Warnf("curPtr message count:%d", len(msgList))
 			msgList = msgList[len(msgList)-maxCount:]
 		}
 		for _, message := range msgList {
