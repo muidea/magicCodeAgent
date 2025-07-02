@@ -14,7 +14,7 @@
 
 * 清理无用代码和引用
 
-* 确保所有代码通过`lint-web-project`静态检查。
+* 确保所有代码通过`lint_web_project`静态检查。
 
 * 确保项目使用`run-web-project`工具运行正常，并且功能正常。
 
