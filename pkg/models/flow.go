@@ -115,7 +115,15 @@ func (s *Flow) IsFinish() bool {
 	return s.Status == FLOW_STATUS_FINISH
 }
 
+func (s *Flow) isIdle() bool {
+	return s.AddFiles.Len() == 0 && s.ModFiles.Len() == 0 && s.DelFiles.Len() == 0
+}
+
 func (s *Flow) CanFinish() bool {
+	if s.isIdle() {
+		return true
+	}
+
 	// 如果Flow没有子节点，并且是最终level，直接认为是可以结束的
 	if len(s.Childrens) == 0 {
 		return s.Level == BlockLevel
