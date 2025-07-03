@@ -533,12 +533,6 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 		}
 	}()
 
-	if chatLoopCount > s.chatMaxLoopCount {
-		finalStatus = Finished
-		notifyMsg = "循环次数超过最大限制，自动结束\n 如果要继续执行，可以输入'继续执行'"
-		return
-	}
-
 	blockList, blockErr := util.SpliteBlocks(content)
 	if blockErr != nil {
 		finalStatus = Terminate
@@ -575,6 +569,13 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 
 		s.DisposeMessage(msgItem)
 	}
+
+	if chatLoopCount > s.chatMaxLoopCount {
+		finalStatus = Finished
+		notifyMsg = "循环次数超过最大限制，自动结束\n 如果要继续执行，可以输入'继续执行'"
+		return
+	}
+
 	if curFlow != nil {
 		err := s.internalChat(context.Background(), curFlow)
 		if err != nil {
