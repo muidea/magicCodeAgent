@@ -625,6 +625,9 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 		//s.localFlowManger.NewFlow(chatMsg, curFlow)
 	case models.LevelEqual:
 		// 同级任务
+		if curFlow.CanFinish() {
+			curFlow.Status = models.FLOW_STATUS_FINISH
+		}
 		ret = s.localFlowManger.NewFlow(msgItem.String(), curFlow.GetParent())
 	case models.LevelLess:
 		// 父级任务

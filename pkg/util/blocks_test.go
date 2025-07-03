@@ -91,7 +91,27 @@ var multipleTags = `
 </tag3>
 `
 
+var t001 = `<thinking>
+1. 所有三个业务模块(Category/Image/Product)都已成功创建
+2. 根据开发目标，现在需要检查项目初始化是否完整
+3. 查看环境详情中的文件清单，确认项目结构完整，包含所有必要的配置文件(src/app.tsx, .umirc.ts等)和模块文件
+4. 接下来需要进行代码静态检查(lint)和项目运行测试
+5. 按照开发流程，先执行lint_web_project进行静态检查
+</thinking>
+
+<lint_web_project></lint_web_project>
+
+<ab>afd fdsf </ab>
+
+<lint_web_project></lint_web_projectAf>
+`
+
 func TestBlocks(t *testing.T) {
+
+	blocksList, blocksErr := SpliteBlocks(t001)
+	assert.Nil(t, blocksErr)
+	assert.Equal(t, 3, len(blocksList))
+
 	// 测试正常输入
 	t.Run("正常输入", func(t *testing.T) {
 		blocksList, blocksErr := SpliteBlocks(testVal)

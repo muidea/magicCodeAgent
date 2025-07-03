@@ -29,7 +29,7 @@
 
 - `level` 为 `project` 时，`path`值为`./{项目名}-项目功能.md`
 - `level` 为 `module` 时，`path`值为`./{项目名}/{业务模块名}-业务模块.md`
-- `level` 为 `block` 时，`path`值为`./{项目名}/{业务模块名}-业务模块.md`
+- `level` 为 `block` 时，`path`值为`./{项目名}/{业务模块名}/{功能模块名}-功能模块.md`
 
 **用法示例：**  
 
@@ -37,10 +37,10 @@
 
 ```xml
 <decompose_code_plan>
-    <name>产品管理</name>
+    <name>产品编辑</name>
     <level>block</level>
-    <path>./demo/Product-业务模块.md</path>
-    <description>处理产品信息的增删改查操作，包括产品基本信息、状态管理和发布操作</description>
+    <path>./demo/Product/product_edit-功能模块.md</path>
+    <description>提供产品信息修改功能，包括基本信息、分类和图片的更新</description>
 </decompose_code_plan>
 ```
 

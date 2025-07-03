@@ -32,6 +32,8 @@ func SpliteBlocks(content string) (ret []string, err error) {
 	// 用于匹配结束标签的正则表达式
 	endTagRegex := regexp.MustCompile(`^\s*</([a-zA-Z0-9_]+)>\s*$`)
 
+	singleLineRegex := regexp.MustCompile(`(?s)<([A-Za-z_][A-Za-z0-9_-]*)[^>]*?>.*?</([A-Za-z_][A-Za-z0-9_-]*)>`)
+
 	for _, line := range lines {
 		// 检查是否是开始标签
 		if !inBlock {
@@ -71,6 +73,21 @@ func SpliteBlocks(content string) (ret []string, err error) {
 				foundStartTag = false
 			}
 			currentBlock.WriteString(line + "\n")
+
+			continue
+		}
+
+		// 匹配类似<lint_web_project></lint_web_project>，<lint_web_project>犯得上发射点</lint_web_project> 这种单行的
+		matches := singleLineRegex.FindAllStringSubmatch(line, -1)
+		for _, m := range matches {
+			full := m[0]
+			startTag := m[1]
+			endTag := m[2]
+
+			// 代码判断是否开闭标签一致
+			if startTag == endTag {
+				ret = append(ret, full)
+			}
 		}
 	}
 
