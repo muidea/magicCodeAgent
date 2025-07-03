@@ -3,6 +3,7 @@ package biz
 import (
 	"errors"
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -93,26 +94,39 @@ func (s *DecomposeCodePlanTool) Execute(workspaceName, workspaceDir, workspaceTy
 
 func (s *DecomposeCodePlanTool) getChildFiles(workspaceDir, stage, pathVal string) (childsFiles string, err error) {
 	rootPath := filepath.Join(workspaceDir, stage)
-	finalPath := filepath.Join(rootPath, pathVal)
-	if !fp.Exist(finalPath) {
-		err = fmt.Errorf("设计文档对应目录:%s不存在, 需要重新核对路径", pathVal)
+	finalParentFile := filepath.Join(rootPath, pathVal)
+	if !fp.Exist(finalParentFile) {
+		log.Errorf("finalParentFile:%s not exist", finalParentFile)
+		err = fmt.Errorf("设计文档:%s不存在, 需要重新核对路径", pathVal)
 		return
 	}
-	fileList, fileErr := fp.ListPath(finalPath, "*.md", false)
-	if fileErr != nil {
-		err = fmt.Errorf("list file path:%s error:%s", pathVal, fileErr.Error())
+
+	parentFilePath, parentFileName := path.Split(finalParentFile)
+	subItems := strings.Split(parentFileName, "-")
+	if len(subItems) != 2 {
+		err = fmt.Errorf("设计文档:%s不存在, 需要重新核对路径", pathVal)
+		return
+	}
+
+	finalChildPath := filepath.Join(parentFilePath, subItems[0])
+	childFileList, childFileErr := fp.ListPath(finalChildPath, "*.md", false)
+	if childFileErr != nil {
+		log.Errorf("list path:%s error:%s", finalChildPath, childFileErr)
+		err = fmt.Errorf("访问设计文档: %s 对应的子目录出错: %s", pathVal, childFileErr.Error())
 		return
 	}
 
 	childList := fu.StringSet{}
-	for _, val := range fileList {
-		filePath := val[len(rootPath)+1:]
+	filePath := finalParentFile[len(rootPath)+1:]
+	childList = childList.Add(filePath)
+	for _, val := range childFileList {
+		filePath = val[len(rootPath)+1:]
 		childList = childList.Add(filePath)
 	}
 
 	// 路径错误，找不不到设计文档
 	if len(childList) == 0 {
-		err = errors.New("not found design document in path:" + pathVal)
+		err = errors.New("not found design file: " + pathVal)
 		return
 	}
 

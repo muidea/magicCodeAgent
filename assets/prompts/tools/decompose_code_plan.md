@@ -27,17 +27,30 @@
 - `level` 为 `module` 时，`name` 当前业务模块名, `description` 为业务模块功能描述。
 - `level` 为 `block` 时，`name` 当前业务模块名, `description` 为业务模块功能描述。
 
-- `level` 为 `project` 时，`path`值为`./{项目名}`
-- `level` 为 `module` 时，`path`值为`./{项目名}/{业务模块目录}`
-- `level` 为 `block` 时，`path`值为`./{项目名}/{业务模块目录}`
+- `level` 为 `project` 时，`path`值为`./{项目名}-项目功能.md`
+- `level` 为 `module` 时，`path`值为`./{项目名}/{业务模块名}-业务模块.md`
+- `level` 为 `block` 时，`path`值为`./{项目名}/{业务模块名}-业务模块.md`
 
 **用法示例：**  
+
+1. 制定产品管理对应的功能模块级开发目标
 
 ```xml
 <decompose_code_plan>
     <name>产品管理</name>
     <level>block</level>
-    <path>./demo/产品管理</path>
-    <description>提供产品信息管理</description>
+    <path>./demo/Product-业务模块.md</path>
+    <description>处理产品信息的增删改查操作，包括产品基本信息、状态管理和发布操作</description>
+</decompose_code_plan>
+```
+
+2. 制定产品展示系统对应的项目功能级开发目标
+
+```xml
+<decompose_code_plan>
+    <name>产品展示系统</name>
+    <level>project</level>
+    <path>./product-项目功能.md</path>
+    <description>产品展示系统，主要实现产品信息、分类信息和图片的管理功能，支持用户对产品的登记和发布操作</description>
 </decompose_code_plan>
 ```
