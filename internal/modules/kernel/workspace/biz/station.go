@@ -604,7 +604,7 @@ func (s *Station) waitToContinue(curFlow *models.Flow, _ imbtc.ToolParam, _ *mod
 func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// attempt_completion
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
-	log.Infof("try to finish flow %s", curFlow)
+	log.Infof("try to finish flow %v", curFlow)
 	ret = s.localFlowManger.FinishFlow(curFlow)
 	return
 }
@@ -613,7 +613,7 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 	// decompose_design_plan
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
-	log.Infof("try to switch flow %s", curFlow)
+	log.Infof("try to switch flow %v", curFlow)
 	level := param["level"].(string)
 	compareVal := models.LevelGreater
 	if curFlow != nil {
@@ -647,8 +647,10 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 }
 
 func (s *Station) continueRun(curFlow *models.Flow, _ imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
-	log.Infof("continue run flow %s", curFlow)
-	curFlow.AppendMessage(msgItem)
+	log.Infof("continue run flow %v", curFlow)
+	if curFlow != nil {
+		curFlow.AppendMessage(msgItem)
+	}
 
 	ret = curFlow
 	return
