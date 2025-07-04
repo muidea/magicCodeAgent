@@ -6,7 +6,6 @@ import "./utils/logger";
 // 运行时配置
 export const layout: RunTimeLayoutConfig = () => {
   return {
-    logo: "/favicon.png",
     menu: {
       locale: false,
     },
