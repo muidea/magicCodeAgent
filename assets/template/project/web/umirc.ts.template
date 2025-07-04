@@ -14,11 +14,7 @@ export default defineConfig({
   base: "/",
   publicPath: "/",
   routes: [
-    {
-      name: "index",
-      path: "/",
-      component: "./index",
-    },
+    TODO 页面菜单注册信息
   ],
   exportStatic: {},
   esbuildMinifyIIFE: true,
