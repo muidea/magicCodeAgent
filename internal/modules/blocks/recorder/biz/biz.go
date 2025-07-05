@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -130,7 +129,8 @@ func (s *Recorder) traceAllHistoryContent(dataDir string) (err *cd.Error) {
 
 func (s *Recorder) traceContent(dataDir string, message *models.MessageInfo) {
 	// 按sn创建子目录
-	snStr := strconv.FormatInt(message.SN, 10)
+	//snStr := strconv.FormatInt(message.SN, 10)
+	snStr := fmt.Sprintf("%04d", message.SN)
 	snDir := filepath.Join(dataDir, snStr)
 	if err := os.MkdirAll(snDir, 0755); err != nil {
 		log.Errorf("create sn dir failed, sn:%s, err:%s", snStr, err)
