@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -44,7 +45,8 @@ const (
 type Workspace struct {
 	Name        string       `json:"name"`        // 工作区名称
 	Description string       `json:"description"` // 工作区描述
-	Status      string       `json:"status"`      // 工作区状态(enable/disable/offline)
+	Type        string       `json:"type"`
+	Status      string       `json:"status"` // 工作区状态(enable/disable/offline)
 	Stage       string       `json:"stage"`
 	Path        string       `json:"path"`      // 工作区路径
 	TechStack   fu.StringSet `json:"techStack"` // 技术栈列表
@@ -138,6 +140,13 @@ type Config struct {
 // init 初始化当前工作目录路径
 func init() {
 	currentWorkPath, _ = os.Getwd()
+
+	defaultConfigPath := path.Join(fu.GetHomeDir(), ".magicCodeAgent")
+	if !fp.Exist(defaultConfigPath) {
+		os.MkdirAll(defaultConfigPath, 0755)
+	}
+	configPath := path.Join(defaultConfigPath, "config.json")
+	_ = LoadConfig(configPath)
 }
 
 // LoadConfig 加载配置文件

@@ -58,6 +58,7 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(imkwc.DebugWorkspaceContent, engine.POST, s.debugWorkspaceContent)
 	s.routeRegistry.AddHandler(imkwc.QuerySystemConfig, engine.GET, s.querySystemConfig)
 	s.routeRegistry.AddHandler(imkwc.UpdateSystemConfig, engine.POST, s.updateSystemConfig)
+	s.routeRegistry.AddHandler(imkwc.QueryWorkspaceTemplate, engine.GET, s.queryWorkspaceTemplate)
 }
 
 func (s *Workspace) filterWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {

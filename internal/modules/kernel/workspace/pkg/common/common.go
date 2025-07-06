@@ -38,6 +38,7 @@ const (
 	ChatWorkspaceContentHistory   = "/workspace/content/chat/history"
 	FilterWorkspaceFlow           = "/workspace/flow/query"
 	DebugWorkspaceContent         = "/workspace/content/debug"
+	QueryWorkspaceTemplate        = "/workspace/template/query"
 )
 
 type AuthorInfo struct {
