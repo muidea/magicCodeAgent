@@ -69,6 +69,7 @@ func (s *BaseCommander) Terminate() (err error) {
 	s.debugger.Lock()
 	defer s.debugger.Unlock()
 
+	log.Warnf("terminate command: '%s'", s.currentCommand)
 	if s.cancelCommanderFunc != nil {
 		s.cancelCommanderFunc()
 		s.stdErrBuffer.Reset()

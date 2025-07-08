@@ -106,7 +106,6 @@ func (s *Workspace) workspaceTask() {
 
 func (s *Workspace) disposeCreate(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
-		s.fsWatcher.Add(event.Name)
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
 			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
@@ -134,7 +133,6 @@ func (s *Workspace) disposeCreate(event fsnotify.Event) {
 
 func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
-		s.fsWatcher.Remove(event.Name)
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
 			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
@@ -162,7 +160,6 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 
 func (s *Workspace) disposeRename(event fsnotify.Event) {
 	if fp.IsDir(event.Name) {
-		s.fsWatcher.Remove(event.Name)
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
 			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
@@ -463,13 +460,16 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err
 		workspacePtr, s, s, s.promptsRegistry)
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
+	if aErr := s.fsWatcher.Add(workspacePtr.Path); aErr != nil {
+		log.Errorf("enable workspace failed, add workspace watcher:%s failed, error:%v", workspacePtr.Path, aErr)
+	}
+
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {
 		if isIgnored(path) {
 			return nil
 		}
 
 		if info.IsDir() {
-			s.fsWatcher.Add(path)
 			return nil
 		}
 
@@ -509,6 +509,9 @@ func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (er
 		return
 	}
 
+	if rErr := s.fsWatcher.Remove(workspacePtr.Path); rErr != nil {
+		log.Errorf("disable workspace failed, remove workspace watcher:%s failed, error:%v", workspacePtr.Path, rErr)
+	}
 	curWorkspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
 	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {
 		if isIgnored(path) {
@@ -516,7 +519,6 @@ func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (er
 		}
 
 		if info.IsDir() {
-			s.fsWatcher.Remove(path)
 			return nil
 		}
 		if ok {

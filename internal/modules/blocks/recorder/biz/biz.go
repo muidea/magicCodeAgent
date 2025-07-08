@@ -150,7 +150,7 @@ func (s *Recorder) traceContent(dataDir string, message *models.MessageInfo) {
 	case common.User:
 		if len(item.Content) > 1 {
 			for idx, item := range item.Content {
-				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d.md", message.Item.Role, idx))
+				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%03d.md", message.Item.Role, idx))
 				if err := os.WriteFile(fileName, []byte(item), 0644); err != nil {
 					log.Errorf("save user content failed, role:%s, err:%s", message.Item.Role, err)
 				}
@@ -167,7 +167,7 @@ func (s *Recorder) traceContent(dataDir string, message *models.MessageInfo) {
 		for i, msg := range chatReq.Messages {
 			if msg.Content != "" {
 				content := []byte(msg.Content)
-				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s.md", message.Item.Role, i, msg.Role))
+				fileName := filepath.Join(snDir, fmt.Sprintf("%s_%03d_%s.md", message.Item.Role, i, msg.Role))
 				if err := os.WriteFile(fileName, content, 0644); err != nil {
 					log.Errorf("save user message failed, role:%s, index:%d, err:%s",
 						message.Item.Role, i, err)
@@ -177,7 +177,7 @@ func (s *Recorder) traceContent(dataDir string, message *models.MessageInfo) {
 
 			for j, textItem := range msg.MultiContent {
 				if textItem.Type == "text" && textItem.Text != "" {
-					fileName := filepath.Join(snDir, fmt.Sprintf("%s_%d_%s_%d.md", message.Item.Role, i, msg.Role, j))
+					fileName := filepath.Join(snDir, fmt.Sprintf("%s_%03d_%s_%03d.md", message.Item.Role, i, msg.Role, j))
 					if err := os.WriteFile(fileName, []byte(textItem.Text), 0644); err != nil {
 						log.Errorf("save user text content failed, role:%s, index:%d, textIndex:%d, err:%s",
 							message.Item.Role, i, j, err)
