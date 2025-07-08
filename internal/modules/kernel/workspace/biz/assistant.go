@@ -33,7 +33,7 @@ func (s *Workspace) Chat(
 
 	log.Warnf("flowPathList size:%d", len(flowPathList))
 
-	const maxCount = 15
+	const maxCount = 30
 	userMessageList := models.MessageItemList{}
 	for _, curPtr := range flowPathList {
 		msgList := curPtr.Message

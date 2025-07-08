@@ -68,10 +68,11 @@ type SystemConfigParam struct {
 
 type SystemConfigResult struct {
 	cd.Result
-	AuthorInfo  *AuthorInfo  `json:"authorInfo"`
-	LocalModel  *ModelInfo   `json:"localModel"`
-	RemoteModel *ModelInfo   `json:"remoteModel"`
-	VersionInfo *VersionInfo `json:"versionInfo"`
+	AuthorInfo   *AuthorInfo  `json:"authorInfo"`
+	WorkspaceDir string       `json:"workspaceDir"`
+	LocalModel   *ModelInfo   `json:"localModel"`
+	RemoteModel  *ModelInfo   `json:"remoteModel"`
+	VersionInfo  *VersionInfo `json:"versionInfo"`
 }
 
 type WorkspaceResult struct {
