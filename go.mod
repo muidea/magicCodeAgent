@@ -8,7 +8,6 @@ replace (
 )
 
 require (
-	github.com/fsnotify/fsnotify v1.9.0
 	github.com/mark3labs/mcp-go v0.17.0
 	github.com/muidea/magicCommon v1.4.1
 	github.com/muidea/magicEngine v1.4.0
@@ -16,6 +15,7 @@ require (
 )
 
 require (
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

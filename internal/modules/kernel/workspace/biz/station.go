@@ -199,7 +199,6 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 	stringBuilder.WriteString("### 当前文件清单\n\n")
 	s.fileInfo.Range(func(filePath string) bool {
-		log.Infof("filePath:%s, stagePath:%s", filePath, stagePath)
 		if strings.HasPrefix(filePath, stagePath) {
 			relativePath := filePath[len(stagePath)+1:]
 			stringBuilder.WriteString("- " + relativePath + "\n")

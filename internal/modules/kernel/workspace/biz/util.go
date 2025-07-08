@@ -15,11 +15,11 @@ import (
 func isIgnored(path string) bool {
 	base := filepath.Base(path)
 	return strings.Contains(path, ".git") ||
-		strings.HasSuffix(path, ".tmp") ||
-		strings.HasSuffix(path, ".umi") ||
-		strings.HasSuffix(path, ".umi-production") ||
-		strings.HasSuffix(path, "node_modules") ||
-		strings.HasSuffix(path, "vendor") ||
+		strings.Contains(path, ".tmp") ||
+		strings.Contains(path, ".umi") ||
+		strings.Contains(path, ".umi-production") ||
+		strings.Contains(path, "node_modules") ||
+		strings.Contains(path, "vendor") ||
 		strings.EqualFold(base, ".") ||
 		strings.EqualFold(base, "..")
 }

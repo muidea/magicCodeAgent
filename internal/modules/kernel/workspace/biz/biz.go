@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
-
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -26,7 +24,7 @@ import (
 type Workspace struct {
 	biz.Base
 
-	fsWatcher             *fsnotify.Watcher
+	fileMonitor           *fp.Monitor
 	workspaceStationCache sync.Map
 
 	promptsRegistry iipc.PromptsRegistry
@@ -37,15 +35,15 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 	promptsRegistry iipc.PromptsRegistry,
 ) *Workspace {
-	workspacePtr, workspaceErr := fsnotify.NewWatcher()
-	if workspaceErr != nil {
-		log.Errorf("new workspace failed, err:%s", workspaceErr.Error())
+	monitorPtr, monitorErr := fp.NewMonitor([]string{".git", ".idea", ".vscode"})
+	if monitorErr != nil {
+		log.Errorf("new workspace failed, err:%s", monitorErr.Error())
 		return nil
 	}
 
 	ptr := &Workspace{
 		Base:            biz.New(imkwc.WorkspaceModule, eventHub, backgroundRoutine),
-		fsWatcher:       workspacePtr,
+		fileMonitor:     monitorPtr,
 		promptsRegistry: promptsRegistry,
 	}
 
@@ -63,7 +61,8 @@ func New(
 }
 
 func (s *Workspace) Run() (err *cd.Error) {
-	s.Base.AsyncTask(s.workspaceTask)
+	s.fileMonitor.AddObserver(s)
+	s.fileMonitor.Start()
 
 	workspace := config.Workspaces()
 	for _, v := range workspace {
@@ -73,45 +72,25 @@ func (s *Workspace) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Workspace) workspaceTask() {
-	for {
-		select {
-		case event, ok := <-s.fsWatcher.Events:
-			if !ok {
-				return
-			}
-
-			if isIgnored(event.Name) {
-				continue
-			}
-
-			// 去抖动处理（500ms窗口）
-			//time.AfterFunc(500*time.Millisecond, func() {
-			switch event.Op {
-			case fsnotify.Create:
-				s.disposeCreate(event)
-			case fsnotify.Remove:
-				s.disposeRemove(event)
-			case fsnotify.Rename:
-				s.disposeRename(event)
-			case fsnotify.Write:
-				s.disposeWrite(event)
-			}
-			//})
-		case err := <-s.fsWatcher.Errors:
-			log.Errorf("Workspace error: %v", err)
-		}
+func (s *Workspace) OnEvent(event fp.Event) {
+	switch event.Op {
+	case fp.Create:
+		s.disposeCreate(event)
+	case fp.Modify:
+		s.disposeWrite(event)
+	case fp.Remove:
+		s.disposeRemove(event)
 	}
 }
 
-func (s *Workspace) disposeCreate(event fsnotify.Event) {
-	if fp.IsDir(event.Name) {
+func (s *Workspace) disposeCreate(event fp.Event) {
+	if fp.IsDir(event.Path) {
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
 			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
 				return true
 			}
-			if workspaceVal.AddDir(event.Name) {
+			if workspaceVal.AddDir(event.Path) {
 				return false
 			}
 			return true
@@ -122,7 +101,7 @@ func (s *Workspace) disposeCreate(event fsnotify.Event) {
 			if !workspaceOK {
 				return true
 			}
-			if workspaceVal.AddFile(event.Name) {
+			if workspaceVal.AddFile(event.Path) {
 				return false
 			}
 
@@ -131,15 +110,15 @@ func (s *Workspace) disposeCreate(event fsnotify.Event) {
 	}
 }
 
-func (s *Workspace) disposeRemove(event fsnotify.Event) {
-	if fp.IsDir(event.Name) {
+func (s *Workspace) disposeRemove(event fp.Event) {
+	if fp.IsDir(event.Path) {
 		s.workspaceStationCache.Range(func(key, value interface{}) bool {
 			workspaceVal, workspaceOK := value.(*Station)
 			if !workspaceOK {
 				return true
 			}
 
-			if workspaceVal.ClearDir(event.Name) {
+			if workspaceVal.ClearDir(event.Path) {
 				return false
 			}
 			return true
@@ -150,7 +129,7 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 			if !workspaceOK {
 				return true
 			}
-			if workspaceVal.RemoveFile(event.Name) {
+			if workspaceVal.RemoveFile(event.Path) {
 				return false
 			}
 			return true
@@ -158,40 +137,13 @@ func (s *Workspace) disposeRemove(event fsnotify.Event) {
 	}
 }
 
-func (s *Workspace) disposeRename(event fsnotify.Event) {
-	if fp.IsDir(event.Name) {
-		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Station)
-			if !workspaceOK {
-				return true
-			}
-
-			if workspaceVal.ClearDir(event.Name) {
-				return false
-			}
-			return true
-		})
-	} else {
-		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Station)
-			if !workspaceOK {
-				return true
-			}
-			if workspaceVal.RemoveFile(event.Name) {
-				return false
-			}
-			return true
-		})
-	}
-}
-
-func (s *Workspace) disposeWrite(event fsnotify.Event) {
+func (s *Workspace) disposeWrite(event fp.Event) {
 	s.workspaceStationCache.Range(func(key, value interface{}) bool {
 		workspaceVal, workspaceOK := value.(*Station)
 		if !workspaceOK {
 			return true
 		}
-		if workspaceVal.WriteFile(event.Name) {
+		if workspaceVal.WriteFile(event.Path) {
 			return false
 		}
 		return true
@@ -455,16 +407,12 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err
 		return
 	}
 
-	workspace := NewStation(
-		&s.Base,
-		workspacePtr, s, s, s.promptsRegistry)
+	workspace := NewStation(&s.Base, workspacePtr, s, s, s.promptsRegistry)
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
-	if aErr := s.fsWatcher.Add(workspacePtr.Path); aErr != nil {
-		log.Errorf("enable workspace failed, add workspace watcher:%s failed, error:%v", workspacePtr.Path, aErr)
-	}
-
-	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {
+	s.fileMonitor.AddPath(workspacePtr.Path)
+	s.fileMonitor.AddIgnore(workspacePtr.Ignores)
+	filepath.WalkDir(workspacePtr.Path, func(path string, info os.DirEntry, err error) error {
 		if isIgnored(path) {
 			return nil
 		}
@@ -472,7 +420,6 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err
 		if info.IsDir() {
 			return nil
 		}
-
 		workspace.AddFile(path)
 		return nil
 	})
@@ -509,18 +456,13 @@ func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (er
 		return
 	}
 
-	if rErr := s.fsWatcher.Remove(workspacePtr.Path); rErr != nil {
-		log.Errorf("disable workspace failed, remove workspace watcher:%s failed, error:%v", workspacePtr.Path, rErr)
-	}
+	s.fileMonitor.RemovePath(workspacePtr.Path)
 	curWorkspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
-	filepath.Walk(workspacePtr.Path, func(path string, info os.FileInfo, err error) error {
+	filepath.WalkDir(workspacePtr.Path, func(path string, info os.DirEntry, err error) error {
 		if isIgnored(path) {
 			return nil
 		}
 
-		if info.IsDir() {
-			return nil
-		}
 		if ok {
 			curWorkspace.(*Station).RemoveFile(path)
 		}
