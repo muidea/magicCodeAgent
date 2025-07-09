@@ -223,14 +223,9 @@ func (s *Station) Available() bool {
 }
 
 func (s *Station) checkIgnore(fileFullPath string) bool {
-	if isIgnored(fileFullPath) {
-		return true
-	}
-
 	stagePath := s.configPtr.GetStageWorkPath()
 	filePath, fileName := path.Split(fileFullPath)
 	for _, ignore := range s.configPtr.Ignores {
-		// 只需要匹配code目录下的文件
 		ignorePath := filepath.Join(stagePath, ignore)
 		if fp.IsDir(ignorePath) {
 			if strings.HasPrefix(filePath, ignorePath) {
@@ -256,42 +251,14 @@ func (s *Station) AddFile(filePath string) bool {
 		return true
 	}
 
+	log.Infof("AddFile, filePath:%s", filePath)
+
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.AddFile(filePath)
 	}
 
 	s.fileInfo.Store(filePath)
-	return true
-}
-
-func (s *Station) AddDir(dirPath string) bool {
-	if !strings.HasPrefix(dirPath, s.configPtr.Path) {
-		return false
-	}
-
-	if s.checkIgnore(dirPath) {
-		return true
-	}
-
-	filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-
-		if s.checkIgnore(path) {
-			return nil
-		}
-
-		curFlowPtr := s.localFlowManger.GetCurrentFlow()
-		if curFlowPtr != nil {
-			curFlowPtr.AddFile(path)
-		}
-
-		s.fileInfo.Store(path)
-		return nil
-	})
-
 	return true
 }
 
@@ -303,6 +270,8 @@ func (s *Station) RemoveFile(filePath string) bool {
 	if s.checkIgnore(filePath) {
 		return true
 	}
+
+	log.Infof("RemoveFile, filePath:%s", filePath)
 
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
@@ -326,31 +295,6 @@ func (s *Station) WriteFile(filePath string) bool {
 	if curFlowPtr != nil {
 		curFlowPtr.ModFile(filePath)
 	}
-	return true
-}
-
-func (s *Station) ClearDir(dirPath string) bool {
-	if !strings.HasPrefix(dirPath, s.configPtr.Path) {
-		return false
-	}
-
-	if s.checkIgnore(dirPath) {
-		return true
-	}
-
-	s.fileInfo.Range(func(filePath string) bool {
-		if strings.HasPrefix(filePath, dirPath) {
-
-			curFlowPtr := s.localFlowManger.GetCurrentFlow()
-			if curFlowPtr != nil {
-				curFlowPtr.AddFile(filePath)
-			}
-
-			s.fileInfo.Delete(filePath)
-		}
-		return true
-	})
-
 	return true
 }
 

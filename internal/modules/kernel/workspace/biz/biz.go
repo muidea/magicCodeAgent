@@ -84,57 +84,30 @@ func (s *Workspace) OnEvent(event fp.Event) {
 }
 
 func (s *Workspace) disposeCreate(event fp.Event) {
-	if fp.IsDir(event.Path) {
-		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Station)
-			if !workspaceOK {
-				return true
-			}
-			if workspaceVal.AddDir(event.Path) {
-				return false
-			}
+	s.workspaceStationCache.Range(func(key, value interface{}) bool {
+		workspaceVal, workspaceOK := value.(*Station)
+		if !workspaceOK {
 			return true
-		})
-	} else {
-		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Station)
-			if !workspaceOK {
-				return true
-			}
-			if workspaceVal.AddFile(event.Path) {
-				return false
-			}
+		}
+		if workspaceVal.AddFile(event.Path) {
+			return false
+		}
 
-			return true
-		})
-	}
+		return true
+	})
 }
 
 func (s *Workspace) disposeRemove(event fp.Event) {
-	if fp.IsDir(event.Path) {
-		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Station)
-			if !workspaceOK {
-				return true
-			}
-
-			if workspaceVal.ClearDir(event.Path) {
-				return false
-			}
+	s.workspaceStationCache.Range(func(key, value interface{}) bool {
+		workspaceVal, workspaceOK := value.(*Station)
+		if !workspaceOK {
 			return true
-		})
-	} else {
-		s.workspaceStationCache.Range(func(key, value interface{}) bool {
-			workspaceVal, workspaceOK := value.(*Station)
-			if !workspaceOK {
-				return true
-			}
-			if workspaceVal.RemoveFile(event.Path) {
-				return false
-			}
-			return true
-		})
-	}
+		}
+		if workspaceVal.RemoveFile(event.Path) {
+			return false
+		}
+		return true
+	})
 }
 
 func (s *Workspace) disposeWrite(event fp.Event) {
@@ -411,12 +384,7 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
 	s.fileMonitor.AddPath(workspacePtr.Path)
-	s.fileMonitor.AddIgnore(workspacePtr.Ignores)
 	filepath.WalkDir(workspacePtr.Path, func(path string, info os.DirEntry, err error) error {
-		if isIgnored(path) {
-			return nil
-		}
-
 		if info.IsDir() {
 			return nil
 		}
@@ -459,10 +427,6 @@ func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (er
 	s.fileMonitor.RemovePath(workspacePtr.Path)
 	curWorkspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
 	filepath.WalkDir(workspacePtr.Path, func(path string, info os.DirEntry, err error) error {
-		if isIgnored(path) {
-			return nil
-		}
-
 		if ok {
 			curWorkspace.(*Station).RemoveFile(path)
 		}

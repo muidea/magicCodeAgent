@@ -120,7 +120,7 @@ func (s *Flow) isIdle() bool {
 }
 
 func (s *Flow) CanFinish() bool {
-	if s.isIdle() {
+	if s.isIdle() || s.IsFinish() {
 		return true
 	}
 

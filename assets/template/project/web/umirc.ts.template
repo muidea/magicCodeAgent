@@ -20,13 +20,6 @@ export default defineConfig({
   esbuildMinifyIIFE: true,
   mfsu: false,
   npmClient: "yarn",
-  proxy: [
-    {
-      context: ["/api/v1/"],
-      target: "http://127.0.0.1:8090",
-      changeOrigin: true,
-    },
-  ],
   alias: {
     "@/utils": path.resolve(__dirname, "src/utils"),
   },
