@@ -3,7 +3,6 @@ package biz
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -384,14 +383,6 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
 	s.fileMonitor.AddPath(workspacePtr.Path)
-	filepath.WalkDir(workspacePtr.Path, func(path string, info os.DirEntry, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-		workspace.AddFile(path)
-		return nil
-	})
-
 	return
 }
 
@@ -425,17 +416,7 @@ func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (er
 	}
 
 	s.fileMonitor.RemovePath(workspacePtr.Path)
-	curWorkspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
-	filepath.WalkDir(workspacePtr.Path, func(path string, info os.DirEntry, err error) error {
-		if ok {
-			curWorkspace.(*Station).RemoveFile(path)
-		}
-		return nil
-	})
-
-	if ok {
-		s.workspaceStationCache.Delete(workspacePtr.Name)
-	}
+	s.workspaceStationCache.Delete(workspacePtr.Name)
 	return
 }
 
