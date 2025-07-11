@@ -119,26 +119,36 @@ func (s *Flow) isIdle() bool {
 	return s.AddFiles.Len() == 0 && s.ModFiles.Len() == 0 && s.DelFiles.Len() == 0
 }
 
-func (s *Flow) CanFinish() bool {
+func (s *Flow) CanFinish() (ret bool) {
+	defer func() {
+		if ret {
+			s.Status = FLOW_STATUS_FINISH
+		}
+	}()
+
 	if s.isIdle() || s.IsFinish() {
-		return true
+		ret = true
+		return
 	}
 
 	// 如果Flow没有子节点，并且是最终level，直接认为是可以结束的
 	if len(s.Childrens) == 0 {
-		return s.Level == BlockLevel
+		ret = s.Level == BlockLevel
+		return
 	}
 
 	// 这里要检查其子节点是否可以结束
 	// 任意一个子节点不能结束，则认为该Flow不能结束
 	for _, val := range s.Childrens {
 		if !val.CanFinish() {
-			return false
+			ret = false
+			return
 		}
 	}
 
 	// 所有的子节点都能结束，则认为该Flow可以结束
-	return true
+	ret = true
+	return
 }
 
 func (s *Flow) GetFlowPath() []*Flow {

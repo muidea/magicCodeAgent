@@ -272,8 +272,6 @@ func (s *Station) RemoveFile(filePath string) bool {
 		return true
 	}
 
-	log.Infof("RemoveFile, filePath:%s", filePath)
-
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.AddFile(filePath)
