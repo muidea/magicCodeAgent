@@ -168,3 +168,8 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 
 	return
 }
+
+func (s *FlowManager) CompleteFlow(flowPtr *models.Flow) (ret *models.Flow) {
+	s.Reset()
+	return
+}

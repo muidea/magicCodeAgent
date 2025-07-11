@@ -64,6 +64,9 @@ func New(
 	ptr.toolRegistry.Register(&AttemptCompletionTool{
 		commander: ptr,
 	})
+	ptr.toolRegistry.Register(&AttemptFinishTool{
+		commander: ptr,
+	})
 	//ptr.toolRegistry.Register(&SwitchModeTool{})
 	//ptr.toolRegistry.Register(&NewTaskTool{})
 	ptr.toolRegistry.Register(&CreateServiceModuleTool{

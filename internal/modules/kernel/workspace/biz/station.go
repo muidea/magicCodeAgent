@@ -42,9 +42,9 @@ type Observer interface {
 }
 
 type Station struct {
-	bizBasePtr *biz.Base
-	configPtr  *config.Workspace
-	fileInfo   util.FileManager
+	bizBasePtr      *biz.Base
+	workspaceConfig config.Workspace
+	fileInfo        util.FileManager
 
 	chatRunningStatus string
 
@@ -71,7 +71,7 @@ func NewStation(
 ) *Station {
 	ret := &Station{
 		bizBasePtr:        bizBasePtr,
-		configPtr:         workspacePtr,
+		workspaceConfig:   *workspacePtr,
 		chatLoopCount:     0,
 		chatUsagePtr:      &imklc.Usage{},
 		localMessageCache: cache.NewMessageSequenceCache(500),
@@ -85,34 +85,34 @@ func NewStation(
 }
 
 func (s *Station) getWorkspaceType() string {
-	return s.configPtr.GetWorkspaceType()
+	return s.workspaceConfig.GetWorkspaceType()
 
 }
 
 func (s *Station) systemPrompt() string {
-	filterTags := s.configPtr.TechStack
-	filterTags = filterTags.Add(s.configPtr.GetWorkspaceType())
+	filterTags := s.workspaceConfig.TechStack
+	filterTags = filterTags.Add(s.workspaceConfig.GetWorkspaceType())
 
-	return s.promptsRegistry.GetPromptsContent(s.configPtr.GetStage(), filterTags)
+	return s.promptsRegistry.GetPromptsContent(s.workspaceConfig.GetStage(), filterTags)
 }
 
 func (s *Station) envPrompt(ptr *models.Flow) string {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
-	stringBuilder.WriteString("# 项目名称\n\n" + s.configPtr.Name + "\n\n")
+	stringBuilder.WriteString("# 项目名称\n\n" + s.workspaceConfig.Name + "\n\n")
 
 	stringBuilder.WriteString("## 项目描述\n\n")
-	stringBuilder.WriteString(s.configPtr.Description + "\n\n")
+	stringBuilder.WriteString(s.workspaceConfig.Description + "\n\n")
 
 	stringBuilder.WriteString("## 技术栈\n\n")
-	for _, val := range s.configPtr.TechStack {
+	for _, val := range s.workspaceConfig.TechStack {
 		stringBuilder.WriteString("- " + val + "\n")
 	}
 	stringBuilder.WriteString("\n\n")
 
 	param := map[string]string{}
 	//## 项目规划目录
-	if s.configPtr.GetStage() != common.DesignStage {
+	if s.workspaceConfig.GetStage() != common.DesignStage {
 		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-struct-%s", s.getWorkspaceType()), param)
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
@@ -124,7 +124,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	param = map[string]string{
 		"Level": ptr.GetLevel(),
 	}
-	statusContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s-status-%s", s.configPtr.GetStage(), s.getWorkspaceType()), param)
+	statusContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s-status-%s", s.workspaceConfig.GetStage(), s.getWorkspaceType()), param)
 	if statusContent != "" {
 		stringBuilder.WriteString(statusContent)
 		stringBuilder.WriteString("\n\n")
@@ -132,25 +132,29 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 
 	// 参考内容清单
 	referenceStageVal := ""
-	switch s.configPtr.GetStage() {
+	switch s.workspaceConfig.GetStage() {
 	case common.CodeStage, common.TestStage:
 		referenceStageVal = common.DesignStage
 	}
-	referenceStage, referenceLabel, referencePath := s.configPtr.GetReferenceStagePath(referenceStageVal)
+	referenceStage, referenceLabel, referencePath := s.workspaceConfig.GetReferenceStagePath(referenceStageVal)
 	if referencePath != "" {
+		hasReference := false
 		stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", referenceLabel))
 		s.fileInfo.Range(func(filePath string) bool {
 			if strings.HasPrefix(filePath, referencePath) {
 				relativePath := filePath[len(referencePath)+1:]
 				stringBuilder.WriteString("- " + relativePath + "\n")
+				hasReference = true
 			}
 			return true
 		})
-		stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", referenceStage))
-		stringBuilder.WriteString("\n\n")
+		if hasReference {
+			stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", referenceStage))
+			stringBuilder.WriteString("\n\n")
+		}
 	}
 
-	stagePath := s.configPtr.GetStageWorkPath()
+	stagePath := s.workspaceConfig.GetStageWorkPath()
 	if ptr != nil {
 		// 当前任务执行状态
 		// 新增，删除，修改的文件清单
@@ -192,7 +196,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 
 	stageStuffix := ""
-	if s.configPtr.GetStage() == common.DesignStage {
+	if s.workspaceConfig.GetStage() == common.DesignStage {
 		stageStuffix = common.DesignStage
 	} else {
 		stageStuffix = common.CodeStage
@@ -219,13 +223,13 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 }
 
 func (s *Station) Available() bool {
-	return s.configPtr.Available()
+	return s.workspaceConfig.Available()
 }
 
 func (s *Station) checkIgnore(fileFullPath string) bool {
-	stagePath := s.configPtr.GetStageWorkPath()
+	stagePath := s.workspaceConfig.GetStageWorkPath()
 	filePath, fileName := path.Split(fileFullPath)
-	for _, ignore := range s.configPtr.Ignores {
+	for _, ignore := range s.workspaceConfig.Ignores {
 		ignorePath := filepath.Join(stagePath, ignore)
 		if fp.IsDir(ignorePath) {
 			if strings.HasPrefix(filePath, ignorePath) {
@@ -243,16 +247,13 @@ func (s *Station) checkIgnore(fileFullPath string) bool {
 }
 
 func (s *Station) AddFile(filePath string) bool {
-	if !strings.HasPrefix(filePath, s.configPtr.Path) {
+	if !isSubPath(s.workspaceConfig.Path, filePath) {
 		return false
 	}
 
 	if s.checkIgnore(filePath) {
 		return true
 	}
-
-	log.Infof("AddFile, filePath:%s", filePath)
-
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.AddFile(filePath)
@@ -263,7 +264,7 @@ func (s *Station) AddFile(filePath string) bool {
 }
 
 func (s *Station) RemoveFile(filePath string) bool {
-	if !strings.HasPrefix(filePath, s.configPtr.Path) {
+	if !isSubPath(s.workspaceConfig.Path, filePath) {
 		return false
 	}
 
@@ -283,7 +284,7 @@ func (s *Station) RemoveFile(filePath string) bool {
 }
 
 func (s *Station) WriteFile(filePath string) bool {
-	if !strings.HasPrefix(filePath, s.configPtr.Path) {
+	if !strings.HasPrefix(filePath, s.workspaceConfig.Path) {
 		return false
 	}
 
@@ -382,7 +383,7 @@ func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flo
 	stationEnvPrompt := s.envPrompt(chatFlow)
 	contentContext := context.WithValue(chatContext, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, stationSystemPrompt, stationEnvPrompt, chatFlow.GetFlowPath())
+	msgErr := s.localAssistant.Chat(providerContext, &s.workspaceConfig, stationSystemPrompt, stationEnvPrompt, chatFlow.GetFlowPath())
 	if msgErr != nil {
 		err = msgErr
 		log.Errorf("internalChat, s.localAssistant.Chat error:%v", msgErr)
@@ -396,7 +397,7 @@ func (s *Station) DisposeMessage(itemPtr *models.MessageItem) {
 	messageInfoPtr := &models.MessageInfo{
 		Item:       *itemPtr,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		Workspace:  s.configPtr.Name,
+		Workspace:  s.workspaceConfig.Name,
 	}
 
 	msgPtr := s.localMessageCache.Add(messageInfoPtr)
@@ -459,9 +460,9 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 	var finalStatus = s.chatRunningStatus
 	var chatLoopCount = s.chatLoopCount
 	var notifyMsg = "会话被中断！"
-	log.Infof("DisposeContent, workspace:%s, chatLoopCount:%d", s.configPtr.Name, chatLoopCount)
+	log.Infof("DisposeContent, workspace:%s, chatLoopCount:%d", s.workspaceConfig.Name, chatLoopCount)
 	defer func() {
-		log.Infof("DisposeContent done, workspace:%s, chatLoopCount:%d, finalStatus:%s, elapseTime:%v", s.configPtr.Name, chatLoopCount, finalStatus, time.Since(curTime))
+		log.Infof("DisposeContent done, workspace:%s, chatLoopCount:%d, finalStatus:%s, elapseTime:%v", s.workspaceConfig.Name, chatLoopCount, finalStatus, time.Since(curTime))
 		if finalStatus == Terminate || finalStatus == Finished {
 			// 发送本次消耗的Token数据
 			notifyMsg := &models.MessageItem{
@@ -486,7 +487,7 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 	}
 
 	for _, block := range blockList {
-		workParam, workResult, workErr := s.localWorker.DoWork(s.configPtr, block)
+		workParam, workResult, workErr := s.localWorker.DoWork(&s.workspaceConfig, block)
 		if workErr != nil {
 			finalStatus = Terminate
 			notifyMsg = fmt.Sprintf("执行出错, Tool执行出错:%v", workErr.Error())
@@ -503,10 +504,12 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 			continue
 		case "ask_followup_question":
 			curFlow = s.waitToContinue(curFlow, workParam, msgItem)
-		case "attempt_completion":
+		case "attempt_finish":
 			curFlow = s.tryToFinishFlow(curFlow, workParam, msgItem)
 		case "decompose_design_plan", "decompose_code_plan":
 			curFlow = s.tryToSwitchFlow(curFlow, workParam, msgItem)
+		case "attempt_completion":
+			curFlow = s.tryToCompleteFlow(curFlow, workParam, msgItem)
 		default:
 			curFlow = s.continueRun(curFlow, workParam, msgItem)
 		}
@@ -546,7 +549,7 @@ func (s *Station) waitToContinue(curFlow *models.Flow, _ imbtc.ToolParam, _ *mod
 }
 
 func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
-	// attempt_completion
+	// attempt_finish
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
 	log.Infof("try to finish flow %v", curFlow)
 	ret = s.localFlowManger.FinishFlow(curFlow)
@@ -587,6 +590,14 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 	}
 
 	ret.AppendMessage(msgItem)
+	return
+}
+
+func (s *Station) tryToCompleteFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
+	// attempt_completion
+	// 到这里说明当前的Flow已经完成了，直接结束当前的Flow
+	log.Infof("try to complete flow %v", curFlow)
+	ret = s.localFlowManger.CompleteFlow(curFlow)
 	return
 }
 
@@ -665,7 +676,7 @@ func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error
 	envPrompt := string(envByte)
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	msgErr := s.localAssistant.Chat(providerContext, s.configPtr, systemPrompt, envPrompt, debugFlow.GetFlowPath())
+	msgErr := s.localAssistant.Chat(providerContext, &s.workspaceConfig, systemPrompt, envPrompt, debugFlow.GetFlowPath())
 	if msgErr != nil {
 		log.Errorf("chat error:%v", msgErr)
 		return

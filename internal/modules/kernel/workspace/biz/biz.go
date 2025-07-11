@@ -234,7 +234,7 @@ func (s *Workspace) addWorkspace(ev event.Event, re event.Result) {
 func (s *Workspace) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
 	workspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
 	if ok {
-		ret = workspace.(*Station).configPtr
+		ret = &workspace.(*Station).workspaceConfig
 		return
 	}
 
@@ -302,8 +302,8 @@ func (s *Workspace) removeWorkspace(ev event.Event, re event.Result) {
 func (s *Workspace) RemoveWorkspace(workspaceName string) (err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if ok {
-		workspacePtr := curWorkspace.(*Station).configPtr
-		err = s.disableWorkspaceInternal(workspacePtr)
+		workspacePtr := curWorkspace.(*Station).workspaceConfig
+		err = s.disableWorkspaceInternal(&workspacePtr)
 		if err != nil {
 			return
 		}
