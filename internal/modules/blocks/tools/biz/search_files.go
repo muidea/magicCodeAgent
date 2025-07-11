@@ -75,19 +75,19 @@ func (s *SearchFilesTool) Execute(workspaceName, workspaceDir, workspaceType, st
 	}
 	searchResult, searchErr := SearchFiles(fullPath, path, regex, filePattern)
 	if searchErr != nil {
-		//err = searchErr
-		log.Errorf("SearchFiles failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
-		result = "search files failed!\n" + searchErr.Error()
+		log.Errorf("SearchFiles failed, fullPath:%s, path:%s, error:%v", fullPath, path, err)
+		result = fmt.Sprintf("search files failed! path:%s, error:%s", path, searchErr.Error())
 		return
 	}
 
 	byteVal, byteErr := json.MarshalIndent(searchResult, "", "  ")
 	if byteErr != nil {
-		err = byteErr
+		log.Errorf("json marshal failed, error:%v", byteErr)
+		result = fmt.Sprintf("search files failed, path:%s, error:%s", path, byteErr.Error())
 		return
 	}
 
-	result = string(byteVal)
+	result = fmt.Sprintf("search files successed, path:%s\n---\n%s", path, string(byteVal))
 	return
 }
 

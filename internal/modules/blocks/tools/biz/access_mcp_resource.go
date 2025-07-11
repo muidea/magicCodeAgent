@@ -60,7 +60,8 @@ func (s *AccessMcpResourceTool) Execute(workspaceName, workspaceDir, workspaceTy
 
 	resourceVal, resourceErr := AccessMcpResource(serverName, uri)
 	if resourceErr != nil {
-		err = resourceErr
+		log.Errorf("AccessMcpResource failed, serverName:%s, uri:%s error:%v", serverName, uri, resourceErr)
+		result = fmt.Sprintf("access mcp resource failed, error: %s", resourceErr.Error())
 		return
 	}
 

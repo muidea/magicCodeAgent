@@ -72,6 +72,7 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, workspaceTy
 			args = items[1:]
 			runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 			if runErr != nil {
+				log.Errorf("run command failed, error:%s", runErr.Error())
 				err = errors.New(runErr.Error())
 				return
 			}
@@ -79,6 +80,7 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, workspaceTy
 			return
 		}
 	}
-	result = resultVal
+
+	result = "attempt completion successed."
 	return
 }

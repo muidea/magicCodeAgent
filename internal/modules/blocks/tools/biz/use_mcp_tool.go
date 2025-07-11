@@ -67,8 +67,8 @@ func (s *UseMcpToolTool) Execute(workspaceName, workspaceDir, workspaceType, sta
 
 	resourceVal, resourceErr := UseMcpTool(serverName, toolName, json.RawMessage(arguments))
 	if resourceErr != nil {
-		err = resourceErr
-		log.Errorf("UseMcpTool failed, serverName:%s, toolName:%s err: %v", serverName, toolName, err)
+		log.Errorf("UseMcpTool failed, serverName:%s, toolName:%s, error: %v", serverName, toolName, err)
+		result = fmt.Sprintf("use mcp tool failed, error: %s", resourceErr.Error())
 		return
 	}
 

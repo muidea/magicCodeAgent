@@ -92,12 +92,12 @@ func (s *SearchAndReplaceTool) Execute(workspaceName, workspaceDir, workspaceTyp
 	}
 	srErr := SearchAndReplace(fullPath, path, ops)
 	if srErr != nil {
-		log.Errorf("SearchAndReplace failed, fullPath:%s, path:%s err: %v", fullPath, path, srErr)
-		result = "search and replace failed!\n" + srErr.Error()
+		log.Errorf("SearchAndReplace failed, fullPath:%s, path:%s, error:%v", fullPath, path, srErr)
+		result = fmt.Sprintf("search and replace failed, path:%s, error:%s", path, srErr.Error())
 		return
 	}
 
-	result = "search and replace success!"
+	result = fmt.Sprintf("search and replace successed, path:%s", path)
 	return
 }
 

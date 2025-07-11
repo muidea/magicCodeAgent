@@ -97,12 +97,12 @@ func (s *InsertContentTool) Execute(workspaceName, workspaceDir, workspaceType, 
 	}
 
 	if insertErr := InsertContent(fullPath, path, insertBlocks); insertErr != nil {
-		log.Errorf("InsertContent failed, fullPath:%s, path:%s err: %v", fullPath, path, insertErr)
-		result = "insert content failed!\n" + insertErr.Error()
+		log.Errorf("InsertContent failed, fullPath:%s, path:%s, error:%v", fullPath, path, insertErr)
+		result = fmt.Sprintf("insert content failed, path:%s, error:%s", path, insertErr.Error())
 		return
 	}
 
-	result = "insert content successfully!"
+	result = fmt.Sprintf("insert content successed, path:%s", path)
 	return
 }
 

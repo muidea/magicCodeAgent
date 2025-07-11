@@ -66,17 +66,18 @@ func (s *ListCodeDefinitionNamesTool) Execute(workspaceName, workspaceDir, works
 	listResult, listErr := ListCodeDefinitionNames(fullPath, path)
 	if listErr != nil {
 		//err = listErr
-		log.Errorf("failed to list code definitions: %v", err)
-		result = "list code definitions failed!\n" + listErr.Error()
+		log.Errorf("failed to list code definitions, error:%v", listErr)
+		result = fmt.Sprintf("list code definition names failed, path:%s, error:%s", path, listErr.Error())
 		return
 	}
 	byteVal, byteErr := json.MarshalIndent(listResult, "", "  ")
 	if byteErr != nil {
-		err = byteErr
+		log.Errorf("failed to marshal result, error:%s", byteErr)
+		result = fmt.Sprintf("list code definition names failed, path:%s, error:%s", path, byteErr.Error())
 		return
 	}
 
-	result = string(byteVal)
+	result = fmt.Sprintf("list code definition names successed, path:%s\n---\n%s", path, string(byteVal))
 	return
 }
 

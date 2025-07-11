@@ -74,12 +74,12 @@ func (s *ApplyDiffTool) Execute(workspaceName, workspaceDir, workspaceType, stag
 
 	applyErr := ApplyDiff(fullPath, path, diff)
 	if applyErr != nil {
-		log.Errorf("ApplyDiff failed, fullPath:%s, path:%s err: %v", fullPath, path, applyErr)
-		result = "apply diff failed!\n" + applyErr.Error()
+		log.Errorf("ApplyDiff failed, fullPath:%s, path:%s, error:%v", fullPath, path, applyErr)
+		result = fmt.Sprintf("apply diff failed, path:%s, error:%s", path, applyErr.Error())
 		return
 	}
 
-	result = "apply diff success!"
+	result = fmt.Sprintf("apply diff successed, path:%s", path)
 	return
 }
 

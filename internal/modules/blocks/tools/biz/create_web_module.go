@@ -1,7 +1,6 @@
 package biz
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -86,12 +85,13 @@ func (s *CreateWebModuleTool) Execute(workspaceName, workspaceDir, workspaceType
 	}
 	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 	if runErr != nil {
-		err = errors.New(runErr.Error())
+		log.Errorf("run command failed, error:%s", runErr.Error())
+		result = fmt.Sprintf("create web module failed, error:%s", runErr.Error())
 		return
 	}
-	result = runResult
-	if result == "" {
-		result = "创建Module成功"
+	result = "create web module finished."
+	if runResult != "" {
+		result = fmt.Sprintf("%s\n%s", result, runResult)
 	}
 	return
 }

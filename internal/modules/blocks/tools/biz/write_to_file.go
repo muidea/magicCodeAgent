@@ -88,12 +88,12 @@ func (s *WriteToFileTool) Execute(workspaceName, workspaceDir, workspaceType, st
 
 	wErr := WriteToFile(fullPath, path, content, lineCount)
 	if err != nil {
-		log.Errorf("WriteToFile failed, fullPath:%s, path:%s err: %v", fullPath, path, wErr)
-		result = "write to file failed!\n" + wErr.Error()
+		log.Errorf("WriteToFile failed, fullPath:%s, path:%s, error: %v", fullPath, path, wErr)
+		result = fmt.Sprintf("write to file failed, path:%s, error:%s", path, wErr.Error())
 		return
 	}
 
-	result = "write to file success!"
+	result = fmt.Sprintf("write to file successed, path:%s", path)
 	return
 }
 

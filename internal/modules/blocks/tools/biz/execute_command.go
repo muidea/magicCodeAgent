@@ -1,7 +1,6 @@
 package biz
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -74,13 +73,13 @@ func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, workspaceType,
 	}
 	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 	if runErr != nil {
-		err = errors.New(runErr.Error())
+		log.Errorf("run command failed, error: %s", runErr.Error())
+		result = fmt.Sprintf("execute command failed, error:%s", runErr.Error())
 		return
 	}
-	result = runResult
-	if result == "" {
-		result = "execute command success!"
+	result = "execute command finished."
+	if runResult != "" {
+		result = fmt.Sprintf("%s\n%s", result, runResult)
 	}
-
 	return
 }

@@ -42,7 +42,21 @@ func (s *Workspace) Chat(
 			msgList = msgList[len(msgList)-maxCount:]
 		}
 		for _, message := range msgList {
-			userMessageList = append(userMessageList, *message)
+			countSize := len(message.Content)
+			if countSize > 1 {
+				item := models.MessageItem{
+					Role:    message.Role,
+					Content: []string{message.Content[countSize-1]},
+				}
+				userMessageList = append(userMessageList, item)
+				continue
+			}
+
+			item := models.MessageItem{
+				Role:    message.Role,
+				Content: message.Content,
+			}
+			userMessageList = append(userMessageList, item)
 		}
 	}
 	userMessageList = append(userMessageList, models.MessageItem{

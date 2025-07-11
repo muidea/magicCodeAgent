@@ -79,6 +79,7 @@ func (s *DecomposeCodePlanTool) Execute(workspaceName, workspaceDir, workspaceTy
 	parentPath := filepath.Dir(workspaceDir)
 	childList, childErr := s.getChildFiles(parentPath, "design", pathVal)
 	if childErr != nil {
+		log.Errorf("failed to get child files, error:%s", childErr.Error())
 		result = "error: 制定开发目标失败!\n" + childErr.Error()
 		return
 	}

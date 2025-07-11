@@ -60,6 +60,7 @@ func (s *AttemptFinishTool) Execute(workspaceName, workspaceDir, workspaceType, 
 		err = fmt.Errorf("missing or invalid result parameter")
 		return
 	}
-	result = resultVal
+
+	result = "attempt finish successed."
 	return
 }

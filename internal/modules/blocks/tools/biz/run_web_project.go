@@ -1,7 +1,6 @@
 package biz
 
 import (
-	"errors"
 	"fmt"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
@@ -63,12 +62,13 @@ func (s *RunWebProjectTool) Execute(workspaceName, workspaceDir, workspaceType, 
 	}
 	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 1, args)
 	if runErr != nil {
-		err = errors.New(runErr.Error())
+		log.Errorf("run command failed: %s", runErr.Error())
+		result = fmt.Sprintf("run web project failed, error:%s", runErr.Error())
 		return
 	}
-	result = runResult
-	if result == "" {
-		result = "运行项目结束"
+	result = "run web project finished."
+	if runResult != "" {
+		result = fmt.Sprintf("%s\n%s", result, runResult)
 	}
 	return
 }

@@ -63,18 +63,18 @@ func (s *ListFilesTool) Execute(workspaceName, workspaceDir, workspaceType, stag
 	recursive, _ := param["recursive"].(bool)
 	listResult, listErr := ListFiles(fullPath, path, recursive)
 	if listErr != nil {
-		log.Errorf("ListFiles failed, fullPath:%s, path:%s err: %v", fullPath, path, err)
-		result = "list files failed!\n" + listErr.Error()
+		log.Errorf("ListFiles failed, fullPath:%s, path:%s error: %v", fullPath, path, listErr)
+		result = fmt.Sprintf("list files failed, path:%s, error:%s", path, listErr.Error())
 		return
 	}
 
 	byteVal, byteErr := json.MarshalIndent(listResult, "", "  ")
 	if byteErr != nil {
-		err = byteErr
+		result = fmt.Sprintf("list files failed, path:%s, error:%s", path, byteErr.Error())
 		return
 	}
 
-	result = string(byteVal)
+	result = fmt.Sprintf("list files successed, path:%s\n---\n%s", path, string(byteVal))
 	return
 }
 

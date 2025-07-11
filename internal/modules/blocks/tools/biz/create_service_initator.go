@@ -1,7 +1,6 @@
 package biz
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -84,14 +83,17 @@ func (s *CreateServiceInitiatorTool) Execute(workspaceName, workspaceDir, worksp
 		"-projectType", common.Service,
 		"-moduleName", name,
 	}
+
 	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
 	if runErr != nil {
-		err = errors.New(runErr.Error())
+		log.Errorf("run command failed, error:%s", runErr.Error())
+		result = fmt.Sprintf("create service initiator failed, error:%s", runErr.Error())
 		return
 	}
-	result = runResult
-	if result == "" {
-		result = "创建initiator成功"
+
+	result = "create service initiator finished."
+	if runResult != "" {
+		result = fmt.Sprintf("%s\n%s", result, runResult)
 	}
 	return
 }
