@@ -35,7 +35,7 @@ func (s *NewTaskTool) Execute(workspaceName, workspaceDir, workspaceType, stage 
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{
-					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
+					fmt.Sprintf("execute tool: %s", s.Name()),
 				},
 			},
 		}

@@ -42,7 +42,7 @@ func (s *CreateServiceInitiatorTool) Execute(workspaceName, workspaceDir, worksp
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{
-					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
+					fmt.Sprintf("execute tool: %s", s.Name()),
 				},
 			},
 		}

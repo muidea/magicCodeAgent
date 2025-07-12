@@ -42,7 +42,7 @@ func (s *ReadStageFileTool) Execute(workspaceName, workspaceDir, workspaceType, 
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{
-					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
+					fmt.Sprintf("execute tool: %s", s.Name()),
 				},
 			},
 		}
@@ -129,7 +129,5 @@ func (s *ReadStageFileTool) Execute(workspaceName, workspaceDir, workspaceType, 
 	}
 
 	result = fmt.Sprintf("read stage file successed, path:%s\n---\n%s", path, readVal)
-
-	result = readVal
 	return
 }

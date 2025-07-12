@@ -36,7 +36,7 @@ func (s *UseMcpToolTool) Execute(workspaceName, workspaceDir, workspaceType, sta
 			Result: models.MessageItem{
 				Role: common.Tool,
 				Content: []string{
-					fmt.Sprintf("execute tool: %s, param:%v", s.Name(), param),
+					fmt.Sprintf("execute tool: %s", s.Name()),
 				},
 			},
 		}
