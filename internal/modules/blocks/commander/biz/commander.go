@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/muidea/magicCommon/foundation/log"
 )
@@ -31,6 +32,7 @@ func NewBaseCommander(maxLineSize int) *BaseCommander {
 
 func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err error) {
 	var cmdPtr *exec.Cmd
+	var cmdContext context.Context
 	currentCmd := fmt.Sprintf("%s %s", command, args)
 	func() {
 		s.debugger.Lock()
@@ -50,13 +52,28 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 		// 通过/bin/bash -c 命令执行command args
 		paramStr := command + " " + strings.Join(args, " ")
 		cmdPtr = exec.CommandContext(cancelContext, "/bin/bash", "-c", paramStr)
+		cmdContext = cancelContext
 		s.cancelCommanderFunc = cancelFunc
 		cmdPtr.Env = os.Environ()
 		cmdPtr.Dir = workspaceDir
 		cmdPtr.Stderr = s.stdErrBuffer
 		cmdPtr.Stdout = s.stdOutBuffer
+		cmdPtr.SysProcAttr = &syscall.SysProcAttr{
+			Setpgid: true,
+		}
 	}()
-
+	go func() {
+		if cmdContext == nil {
+			return
+		}
+		<-cmdContext.Done()
+		if cmdPtr.Process != nil {
+			pgid, pgErr := syscall.Getpgid(cmdPtr.Process.Pid)
+			if pgErr == nil {
+				syscall.Kill(-pgid, syscall.SIGKILL)
+			}
+		}
+	}()
 	err = cmdPtr.Run()
 	s.debugger.Lock()
 	defer s.debugger.Unlock()
