@@ -145,7 +145,7 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 		if len(childs) > 0 {
 			s.currentFlowPtr = childs[0]
 		}
-		parent.Childrens = childs
+		//parent.Childrens = childs
 
 		for {
 			if s.currentFlowPtr == nil {

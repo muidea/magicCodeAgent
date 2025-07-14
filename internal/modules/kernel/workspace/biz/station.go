@@ -292,6 +292,7 @@ func (s *Station) WriteFile(filePath string) bool {
 	if curFlowPtr != nil {
 		curFlowPtr.ModFile(filePath)
 	}
+	s.fileInfo.Store(filePath)
 	return true
 }
 
