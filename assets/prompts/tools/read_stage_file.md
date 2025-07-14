@@ -1,6 +1,6 @@
 ### read_stage_file
 
-描述：在指定阶段时，请求读取指定路径下的文件内容。当需要检查未知内容的现有文件时（例如，分析代码、审查文本文件或从配置文件中提取信息），使用此功能。输出包括每行前的行号（例如 "1 | const x = 1"），以便在创建差异或讨论代码时更容易引用特定行。通过指定 `start_line` 和 `end_line` 参数，可以高效地读取大文件的特定部分，而无需将整个文件加载到内存中。对于 PDF 和 DOCX 文件，会自动提取原始文本内容。不适合其他类型的二进制文件，因为该工具会以字符串形式返回其原始内容。
+描述：读取指定阶段，指定路径下的文件内容。在需要检查非当前阶段的指定文件的内容时（例如，在代码开发阶段读取设计阶段的设计文件，测试验证阶段读取代码开发阶段的指定代码），使用此功能。输出包括每行前的行号（例如 "1 | const x = 1"），以便在创建差异或讨论代码时更容易引用特定行。通过指定 `start_line` 和 `end_line` 参数，可以高效地读取大文件的特定部分，而无需将整个文件加载到内存中。对于 PDF 和 DOCX 文件，会自动提取原始文本内容。不适合其他类型的二进制文件，因为该工具会以字符串形式返回其原始内容。
 
 返回值格式如下：
 ```
@@ -10,7 +10,7 @@ read stage file {successed|failed|warning}, path: {file_path} {描述信息}
 ```
 
 参数：
-- stage: (必填) 当前指定的阶段名称（例如：`code`, `design`, `test`, `publish`）。
+- stage: (必填) 指定的阶段名称（例如：`code`, `design`, `test`, `publish`）。
 - path: (必选) 要读取的文件路径（相对于当前工作区目录）
 - start_line: (可选) 要读取的起始行号（以 1 为基准）。如果未提供，则从文件开头读起。
 - end_line: (optional) 要读取的结束行号（以 1 为单位，包含在内）。如果没有提供，则读到文件的末尾。
@@ -27,7 +27,7 @@ read stage file {successed|failed|warning}, path: {file_path} {描述信息}
 
 示例：
 
-1. code阶段读取整个frontend-config.json文件
+1. 读取code阶段整个frontend-config.json文件
 ```xml
 <read_stage_file>
 <stage>code</stage>
@@ -59,7 +59,7 @@ read stage file successed, path: frontend-config.json
 ```
 
 
-2. test阶段读取大型日志文件logs/application.log的前 1000 行：
+2. 读取test阶段大型日志文件logs/application.log的前 1000 行：
 ```xml
 <read_stage_file>
 <stage>test</stage>
@@ -73,7 +73,7 @@ read stage file successed, path: frontend-config.json
 read file failed, path: logs/application.log, error: File not found
 ```
 
-3. code阶段读取源文件src/app.ts中的特定函数
+3. 读取code阶段源文件src/app.ts中的特定函数
 ```xml
 <read_stage_file>
 <stage>code</stage>
