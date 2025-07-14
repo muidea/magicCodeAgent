@@ -6,7 +6,8 @@
 │   └── config.ts
 ├── dist                // 默认输出文件夹，执行 `max build` 后的构建产物。
 ├── mock                // 模拟数据文件夹，用于开发时的 Mock 数据。
-│   └── app.ts｜tsx
+│   ├── app.ts            // app mock数据
+│   └── xxx.ts           // 其他模拟数据文件
 ├── src                 // 源代码目录
 │   ├── .umi            // umi 的临时文件目录（开发环境）
 │   ├── .umi-production // umi 的临时文件目录（生产环境）

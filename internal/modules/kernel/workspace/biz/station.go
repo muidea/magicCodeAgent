@@ -248,6 +248,8 @@ func (s *Station) AddFile(filePath string) bool {
 	if s.checkIgnore(filePath) {
 		return true
 	}
+
+	log.Infof("AddFile filePath:%s", filePath)
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.AddFile(filePath)
@@ -266,6 +268,7 @@ func (s *Station) RemoveFile(filePath string) bool {
 		return true
 	}
 
+	log.Infof("RemoveFile filePath:%s", filePath)
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.AddFile(filePath)
@@ -284,6 +287,7 @@ func (s *Station) WriteFile(filePath string) bool {
 		return true
 	}
 
+	log.Infof("WriteFile filePath:%s", filePath)
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.ModFile(filePath)
