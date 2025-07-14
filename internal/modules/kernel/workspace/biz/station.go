@@ -195,12 +195,6 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		stringBuilder.WriteString("\n\n")
 	}
 
-	stageStuffix := ""
-	if s.workspaceConfig.GetStage() == common.DesignStage {
-		stageStuffix = common.DesignStage
-	} else {
-		stageStuffix = common.CodeStage
-	}
 	stringBuilder.WriteString("### 当前文件清单\n\n")
 	s.fileInfo.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, stagePath) {
@@ -212,7 +206,7 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	stringBuilder.WriteString("\n\n")
 
 	param = map[string]string{}
-	instructContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", stageStuffix), param)
+	instructContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.workspaceConfig.GetStage()), param)
 	if instructContent != "" {
 		stringBuilder.WriteString(instructContent)
 		stringBuilder.WriteString("\n\n")

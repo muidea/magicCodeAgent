@@ -144,12 +144,19 @@ func extractNumbers(input string) []string {
 // splitDiffBlock 函数的作用是将一个完整的diff字符串分解成多个DiffBlock，每个DiffBlock包含一个原始内容和一个替换内容。
 // 并且校验分解出来的DiffBlock是否有效，包括行号是否正确、原始内容是否匹配等。
 // 将分解出来的DiffBlock按照起始行号进行排序，确保后续处理的正确性。
-func splitDiffBlock(diff string) ([]*DiffBlock, error) {
+func splitDiffBlock(diff string) (ret []*DiffBlock, err error) {
 	var blocks []*DiffBlock
 	remaining := diff
 
+	defer func() {
+		if rErr := recover(); rErr != nil {
+			log.Errorf("splitDiffBlock failed, error:%v", rErr)
+			err = fmt.Errorf("splitDiffBlock failed")
+		}
+	}()
+
 	if strings.TrimSpace(diff) == "" {
-		return nil, nil
+		return
 	}
 
 	for {
@@ -165,7 +172,8 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 		replaceEndIdx := strings.Index(blockPart, ">>>>>>> REPLACE")
 
 		if sepIdx == -1 || replaceEndIdx == -1 {
-			return nil, fmt.Errorf("malformed diff block: missing separator or end marker")
+			err = fmt.Errorf("malformed diff block: missing separator or end marker")
+			return
 		}
 
 		// 提取元数据行
@@ -183,13 +191,15 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 			// 到这里说明替换位置信息区有内容，这里尝试解析出对应的信息
 			for _, line := range metaLines {
 				if strings.HasPrefix(line, ":start_line:") {
-					if _, err := fmt.Sscanf(line, ":start_line:%d", &startLine); err != nil {
-						return nil, fmt.Errorf("invalid start line: %v", err)
+					if _, sErr := fmt.Sscanf(line, ":start_line:%d", &startLine); sErr != nil {
+						err = fmt.Errorf("invalid start line: %v", sErr)
+						return
 					}
 					startLineFound = true
 				} else if strings.HasPrefix(line, ":end_line:") {
-					if _, err := fmt.Sscanf(line, ":end_line:%d", &endLine); err != nil {
-						return nil, fmt.Errorf("invalid end line: %v", err)
+					if _, sErr := fmt.Sscanf(line, ":end_line:%d", &endLine); sErr != nil {
+						err = fmt.Errorf("invalid end line: %v", sErr)
+						return
 					}
 					endLineFound = true
 				}
@@ -232,7 +242,8 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 		}
 
 		if startLine > endLine {
-			return nil, fmt.Errorf("start line cannot be greater than end line: startLine=%d, endLine=%d", startLine, endLine)
+			err = fmt.Errorf("start line cannot be greater than end line: startLine=%d, endLine=%d", startLine, endLine)
+			return
 		}
 
 		// 提取替换内容
@@ -250,7 +261,8 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 	}
 
 	if len(blocks) == 0 {
-		return nil, fmt.Errorf("no valid diff blocks found")
+		err = fmt.Errorf("no valid diff blocks found")
+		return
 	}
 
 	// 对块按起始行号排序
@@ -258,7 +270,8 @@ func splitDiffBlock(diff string) ([]*DiffBlock, error) {
 		return blocks[i].StartLine < blocks[j].StartLine
 	})
 
-	return blocks, nil
+	ret = blocks
+	return
 }
 
 // ApplyDiff 实现apply_diff工具功能
