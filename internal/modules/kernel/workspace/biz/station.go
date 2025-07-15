@@ -241,7 +241,7 @@ func (s *Station) checkIgnore(fileFullPath string) bool {
 }
 
 func (s *Station) AddFile(filePath string) bool {
-	if !isSubPath(s.workspaceConfig.Path, filePath) {
+	if !fp.IsSubPath(s.workspaceConfig.Path, filePath) {
 		return false
 	}
 
@@ -260,7 +260,7 @@ func (s *Station) AddFile(filePath string) bool {
 }
 
 func (s *Station) RemoveFile(filePath string) bool {
-	if !isSubPath(s.workspaceConfig.Path, filePath) {
+	if !fp.IsSubPath(s.workspaceConfig.Path, filePath) {
 		return false
 	}
 

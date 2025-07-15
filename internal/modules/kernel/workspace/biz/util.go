@@ -94,24 +94,3 @@ func formatUsage(ptr *imklc.Usage, loopCount int64) string {
 	strBuff.WriteString("  - 输出: " + fmt.Sprintf("%d", ptr.CompletionTokens) + "\n")
 	return strBuff.String()
 }
-
-func isSubPath(workspacePath, filePath string) bool {
-	// 转为绝对路径并清理
-	absWorkspace, err := filepath.Abs(filepath.Clean(workspacePath))
-	if err != nil {
-		return false
-	}
-	absFile, err := filepath.Abs(filepath.Clean(filePath))
-	if err != nil {
-		return false
-	}
-
-	rel, err := filepath.Rel(absWorkspace, absFile)
-	if err != nil {
-		return false
-	}
-
-	// 判断 rel 是否是以 `..` 开头，表示 filePath 不在 workspacePath 之内
-	isSub := !strings.HasPrefix(rel, "..") && rel != ".."
-	return isSub
-}

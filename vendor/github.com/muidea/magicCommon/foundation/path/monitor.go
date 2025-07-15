@@ -46,7 +46,7 @@ type Observer interface {
 type Monitor struct {
 	ignores      fu.StringSet
 	syncMutex    sync.Mutex
-	watchedPaths map[string]bool
+	watchedPaths fu.StringSet
 	fsWatcher    *fsnotify.Watcher
 	observer     []Observer
 }
@@ -59,7 +59,7 @@ func NewMonitor(ignores fu.StringSet) (*Monitor, error) {
 
 	return &Monitor{
 		ignores:      ignores,
-		watchedPaths: make(map[string]bool),
+		watchedPaths: fu.StringSet{},
 		fsWatcher:    watcher,
 	}, nil
 }
@@ -100,7 +100,7 @@ func (s *Monitor) Stop() error {
 	defer s.syncMutex.Unlock()
 
 	s.observer = []Observer{}
-	s.watchedPaths = make(map[string]bool)
+	s.watchedPaths = fu.StringSet{}
 	return s.fsWatcher.Close()
 }
 
@@ -174,7 +174,7 @@ func (s *Monitor) isDir(path string) bool {
 
 	s.syncMutex.Lock()
 	defer s.syncMutex.Unlock()
-	return s.watchedPaths[path]
+	return s.watchedPaths.Exist(path)
 }
 
 func (s *Monitor) pathEvent(event fsnotify.Event) {
@@ -245,14 +245,15 @@ func (s *Monitor) addPath(path string) error {
 		s.syncMutex.Lock()
 		defer s.syncMutex.Unlock()
 
-		if s.watchedPaths[addPath] {
+		if s.watchedPaths.Exist(addPath) {
 			return
 		}
 
+		log.Warnf("add path:%s", addPath)
 		if err := s.fsWatcher.Add(addPath); err != nil {
 			return
 		}
-		s.watchedPaths[addPath] = true
+		s.watchedPaths = s.watchedPaths.Add(addPath)
 	}
 
 	addFunc(path)
@@ -276,21 +277,18 @@ func (s *Monitor) removePath(path string) error {
 	defer s.syncMutex.Unlock()
 
 	var toDelete []string
-	for subPath := range s.watchedPaths {
-		if strings.HasPrefix(subPath, path) {
+	for _, subPath := range s.watchedPaths {
+		if IsSubPath(path, subPath) {
 			toDelete = append(toDelete, subPath)
 		}
 	}
 
 	for _, subPath := range toDelete {
-		if !s.watchedPaths[subPath] {
-			return nil
-		}
-
+		log.Warnf("remove path: %s", subPath)
+		s.watchedPaths = s.watchedPaths.Remove(subPath)
 		if err := s.fsWatcher.Remove(subPath); err != nil {
 			return err
 		}
-		delete(s.watchedPaths, subPath)
 	}
 
 	return nil
