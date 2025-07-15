@@ -33,52 +33,63 @@ func NewBaseCommander(maxLineSize int) *BaseCommander {
 func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err error) {
 	var cmdPtr *exec.Cmd
 	var cmdContext context.Context
-	currentCmd := fmt.Sprintf("%s %s", command, args)
+	currentCmd := fmt.Sprintf("%s %s", command, strings.Join(args, " "))
+
 	func() {
 		s.debugger.Lock()
 		defer s.debugger.Unlock()
+
 		if s.currentCommand == currentCmd {
 			return
 		}
+
+		// 如果已有正在运行的命令，先取消
 		if s.cancelCommanderFunc != nil {
 			s.cancelCommanderFunc()
 		}
 
-		log.Infof("run command: '%s'", currentCmd)
+		s.currentCommand = currentCmd
+		log.Infof("run command: '%s'", s.currentCommand)
+
 		s.stdErrBuffer.Reset()
 		s.stdOutBuffer.Reset()
-		s.currentCommand = currentCmd
+
 		cancelContext, cancelFunc := context.WithCancel(context.Background())
-		// 通过/bin/bash -c 命令执行command args
-		paramStr := command + " " + strings.Join(args, " ")
-		cmdPtr = exec.CommandContext(cancelContext, "/bin/bash", "-c", paramStr)
-		cmdContext = cancelContext
 		s.cancelCommanderFunc = cancelFunc
+		cmdContext = cancelContext
+
+		// 使用 setsid 创建新的进程会话
+		paramStr := command + " " + strings.Join(args, " ")
+		wrappedCmd := fmt.Sprintf("setsid %s", paramStr)
+		cmdPtr = exec.CommandContext(cmdContext, "/bin/bash", "-c", wrappedCmd)
+
 		cmdPtr.Env = os.Environ()
 		cmdPtr.Dir = workspaceDir
 		cmdPtr.Stderr = s.stdErrBuffer
 		cmdPtr.Stdout = s.stdOutBuffer
-		cmdPtr.SysProcAttr = &syscall.SysProcAttr{
-			Setpgid: true,
-		}
+
+		// 不再需要 Setpgid，因为 setsid 已完成 session 建立
+		// cmdPtr.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	}()
-	go func() {
-		if cmdContext == nil {
+
+	// 后台监听上下文取消，确保杀死整组进程
+	go func(process *os.Process, ctx context.Context) {
+		if ctx == nil || process == nil {
 			return
 		}
-		<-cmdContext.Done()
-		if cmdPtr.Process != nil {
-			pgid, pgErr := syscall.Getpgid(cmdPtr.Process.Pid)
-			if pgErr == nil {
-				syscall.Kill(-pgid, syscall.SIGKILL)
-			}
-		}
-	}()
+		<-ctx.Done()
+
+		// 使用负 PID 杀掉整个 session（setsid 创建的）
+		log.Warnf("cancel context received, killing process group for PID %d", process.Pid)
+		_ = syscall.Kill(-process.Pid, syscall.SIGKILL)
+	}(cmdPtr.Process, cmdContext)
+
+	// 阻塞直到命令完成
 	err = cmdPtr.Run()
+
 	s.debugger.Lock()
 	defer s.debugger.Unlock()
 	s.cancelCommanderFunc = nil
-	//s.currentCommand = ""
 	return
 }
 
