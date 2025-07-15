@@ -132,6 +132,15 @@ func (s *Monitor) AddIgnore(ignores fu.StringSet) {
 	}
 }
 
+func (s *Monitor) isIgnore(path string) bool {
+	for _, v := range s.ignores {
+		if strings.Contains(path, v) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Monitor) AddPath(path string) error {
 	go s.refresh(path)
 	return nil
@@ -142,12 +151,65 @@ func (s *Monitor) RemovePath(path string) error {
 }
 
 func (s *Monitor) handleEvent(event fsnotify.Event) {
-	for _, v := range s.ignores {
-		if strings.Contains(event.Name, v) {
-			return
-		}
+	if s.isIgnore(event.Name) {
+		return
 	}
 
+	log.Infof("op:%s, path:%s", event.Op, event.Name)
+
+	if s.isDir(event.Name) {
+		s.pathEvent(event)
+		return
+	}
+
+	s.fileEvent(event)
+}
+
+func (s *Monitor) isDir(path string) bool {
+	// 如果文件存在，则直接判断文件是否是目录，否则判断文件是否在目录缓存中
+	pathInfo, pathErr := os.Stat(path)
+	if pathErr == nil {
+		return pathInfo.IsDir()
+	}
+
+	s.syncMutex.Lock()
+	defer s.syncMutex.Unlock()
+	return s.watchedPaths[path]
+}
+
+func (s *Monitor) pathEvent(event fsnotify.Event) {
+	switch event.Op {
+	case fsnotify.Create:
+		s.addPath(event.Name)
+	case fsnotify.Write:
+		return
+	case fsnotify.Remove, fsnotify.Rename:
+		s.removePath(event.Name)
+		return
+	default:
+		return
+	}
+	filepath.WalkDir(event.Name, func(path string, info os.DirEntry, err error) error {
+		if err != nil || s.isIgnore(path) {
+			return nil
+		}
+		if info.IsDir() {
+			return nil
+		}
+
+		s.syncMutex.Lock()
+		defer s.syncMutex.Unlock()
+		for _, observer := range s.observer {
+			observer.OnEvent(Event{
+				Path: path,
+				Op:   Create,
+			})
+		}
+		return nil
+	})
+}
+
+func (s *Monitor) fileEvent(event fsnotify.Event) {
 	var localEvent Event
 	switch event.Op {
 	case fsnotify.Create:
@@ -155,11 +217,7 @@ func (s *Monitor) handleEvent(event fsnotify.Event) {
 			Path: event.Name,
 			Op:   Create,
 		}
-		if IsDir(event.Name) {
-			s.addPath(event.Name)
-		} else {
-			s.addPath(filepath.Dir(event.Name))
-		}
+		s.addPath(filepath.Dir(event.Name))
 	case fsnotify.Write:
 		localEvent = Event{
 			Path: event.Name,
@@ -170,18 +228,10 @@ func (s *Monitor) handleEvent(event fsnotify.Event) {
 			Path: event.Name,
 			Op:   Remove,
 		}
-		if IsDir(event.Name) {
-			s.removePath(event.Name)
-		}
 	default:
 		return
 	}
 
-	if IsDir(event.Name) {
-		return
-	}
-
-	log.Infof("op:%s, path:%s", localEvent.Op, localEvent.Path)
 	for _, observer := range s.observer {
 		observer.OnEvent(localEvent)
 	}
@@ -189,12 +239,9 @@ func (s *Monitor) handleEvent(event fsnotify.Event) {
 
 func (s *Monitor) addPath(path string) error {
 	addFunc := func(addPath string) {
-		for _, v := range s.ignores {
-			if strings.HasSuffix(addPath, v) {
-				return
-			}
+		if s.isIgnore(addPath) {
+			return
 		}
-
 		s.syncMutex.Lock()
 		defer s.syncMutex.Unlock()
 
@@ -210,8 +257,8 @@ func (s *Monitor) addPath(path string) error {
 
 	addFunc(path)
 	filepath.WalkDir(path, func(subPath string, info os.DirEntry, err error) error {
-		if err != nil {
-			return err
+		if err != nil || s.isIgnore(subPath) {
+			return nil
 		}
 		if info.IsDir() {
 			addFunc(subPath)
@@ -252,15 +299,10 @@ func (s *Monitor) removePath(path string) error {
 func (s *Monitor) refresh(path string) {
 	s.addPath(path)
 	filepath.WalkDir(path, func(path string, info os.DirEntry, err error) error {
-		for _, v := range s.ignores {
-			if strings.Contains(path, v) {
-				return nil
-			}
+		if err != nil || s.isIgnore(path) {
+			return nil
 		}
 
-		if err != nil {
-			return err
-		}
 		if info.IsDir() {
 			return nil
 		}
