@@ -85,7 +85,6 @@
 # 模型定义清单
 
 1. `Product`: 产品信息
-```
 {
    id: number;
    name: string;
@@ -93,7 +92,6 @@
    price: number;
    category: string;
 }
-```
 
 # 依赖申明
 
