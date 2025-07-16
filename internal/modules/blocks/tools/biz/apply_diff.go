@@ -1,7 +1,6 @@
 package biz
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -274,7 +273,6 @@ func splitDiffBlock(diff string) (ret []*DiffBlock, err error) {
 	return
 }
 
-// ApplyDiff 实现apply_diff工具功能
 func ApplyDiff(workspaceDir, path string, diff string) error {
 	fullPath := filepath.Join(workspaceDir, path)
 	fullPath = filepath.Clean(fullPath)
@@ -290,137 +288,64 @@ func ApplyDiff(workspaceDir, path string, diff string) error {
 		return nil
 	}
 
-	// 读取文件内容，用于在未指定行号时查找匹配内容
-	fileContent, err := os.ReadFile(fullPath)
+	// 读取原始文件内容
+	contentBytes, err := os.ReadFile(fullPath)
 	if err != nil {
 		log.Errorf("read raw file failed, error:%v", err)
 		return fmt.Errorf("failed to read file:%s, err:%v", path, err)
 	}
-	fileLines := strings.Split(string(fileContent), "\n")
+	lines := strings.Split(string(contentBytes), "\n")
 
-	// 处理未指定行号的情况，通过内容匹配确定行号
+	// 补全并验证行号
 	for _, block := range diffBlocks {
-		// 如果起始行号未指定，通过内容匹配确定
 		if block.StartLine == 0 {
-			// 在文件中查找匹配的内容
-			lineNum := findContentInFile(fileLines, block.OriginContent)
+			lineNum := findContentInFile(lines, block.OriginContent)
 			if lineNum == -1 {
-				return fmt.Errorf("未在文件中找到diff块替换内容: \n%s", block.OriginContent+"\n\n 需要重新全量刷新该文件！\n\n")
+				return fmt.Errorf("未在文件中找到diff块替换内容: \n%s\n\n需要重新全量刷新该文件！", block.OriginContent)
 			}
 			block.StartLine = lineNum
-			// 如果结束行号也未指定，根据原始内容的行数计算
 			if block.EndLine == 0 {
 				block.EndLine = lineNum + len(strings.Split(block.OriginContent, "\n")) - 1
 			}
 		} else if block.EndLine == 0 {
-			// 如果只有结束行号未指定，根据原始内容的行数计算
 			block.EndLine = block.StartLine + len(strings.Split(block.OriginContent, "\n")) - 1
 		}
 
-		// 验证行号的有效性
-		if block.StartLine <= 0 || block.EndLine <= 0 || block.StartLine > block.EndLine {
-			return fmt.Errorf("diff块行号无效: startLine=%d, endLine=%d，diff块%s",
-				block.StartLine, block.EndLine, block.OriginContent)
+		if block.StartLine <= 0 || block.EndLine < block.StartLine || block.EndLine > len(lines) {
+			return fmt.Errorf("diff块行号无效: startLine=%d, endLine=%d，diff块%s", block.StartLine, block.EndLine, block.OriginContent)
 		}
 	}
 
-	// 对块按起始行号重新排序
+	// 排序 diff block，确保按行号升序处理
 	sort.Slice(diffBlocks, func(i, j int) bool {
 		return diffBlocks[i].StartLine < diffBlocks[j].StartLine
 	})
 
-	// 创建临时文件
-	tmpPath := fullPath + ".tmp"
-	tmpFile, err := os.Create(tmpPath)
-	if err != nil {
-		log.Errorf("create temp file failed, error:%v", err)
-		return fmt.Errorf("写入文件失败, error:%v", err)
-	}
-	defer tmpFile.Close()
-
-	// 打开原文件
-	origFile, err := os.Open(fullPath)
-	if err != nil {
-		log.Errorf("open file failed, error:%v", err)
-		return fmt.Errorf("写入文件失败, error:%v", err)
-	}
-	defer origFile.Close()
-
-	// 逐行读取并处理
-	scanner := bufio.NewScanner(origFile)
-	writer := bufio.NewWriter(tmpFile)
+	// 构建新内容
+	var result []string
 	lineNum := 1
-	currentBlock := 0
+	blockIndex := 0
 
-	firstLine := true
-	for scanner.Scan() {
-		line := scanner.Text()
-		// 检查是否需要替换
-		if currentBlock < len(diffBlocks) {
-			block := diffBlocks[currentBlock]
-
-			// 如果当前行在替换范围内
-			if lineNum >= block.StartLine && lineNum <= block.EndLine {
-				// 第一行时写入替换内容
-				if lineNum == block.StartLine {
-					// 写入换行符
-					if !firstLine {
-						if _, err := writer.WriteString("\n"); err != nil {
-							log.Errorf("write file failed, error:%v", err)
-							return fmt.Errorf("写入文件失败, error:%v", err)
-						}
-					}
-					firstLine = false
-					if _, err := writer.WriteString(block.ReplaceContent); err != nil {
-						log.Errorf("write file failed, error:%v", err)
-						return fmt.Errorf("写入文件失败, error:%v", err)
-					}
-				}
-
-				// 如果到达块的结束行，移动到下一个块
-				if lineNum == block.EndLine {
-					currentBlock++
-				}
-
-				lineNum++
+	for lineNum <= len(lines) {
+		if blockIndex < len(diffBlocks) {
+			block := diffBlocks[blockIndex]
+			if lineNum == block.StartLine {
+				// 插入替换内容
+				replaceLines := strings.Split(block.ReplaceContent, "\n")
+				result = append(result, replaceLines...)
+				lineNum = block.EndLine + 1
+				blockIndex++
 				continue
 			}
 		}
-
-		// 写入换行符
-		if !firstLine {
-			if _, err := writer.WriteString("\n"); err != nil {
-				log.Errorf("write string failed, error:%v", err)
-				return fmt.Errorf("写入文件失败, error:%v", err)
-			}
-		}
-		firstLine = false
-		// 不在替换范围内，写入原始行
-		if _, err := writer.WriteString(line); err != nil {
-			log.Errorf("write file failed, error:%v")
-			return fmt.Errorf("写入文件失败, error:%v", err)
-		}
+		result = append(result, lines[lineNum-1])
 		lineNum++
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Errorf("scanner.Err() error:%v", err)
-		return fmt.Errorf("写入文件失败, error:%v", err)
-	}
-
-	// 刷新缓冲区
-	if err := writer.Flush(); err != nil {
-		log.Errorf("flush buffer failed, error:%v", err)
-		return fmt.Errorf("写入文件失败, error:%v", err)
-	}
-
-	// 关闭文件
-	tmpFile.Close()
-	origFile.Close()
-
-	// 重命名临时文件
-	if err := os.Rename(tmpPath, fullPath); err != nil {
-		log.Errorf("os.rename failed, error:%v", err)
+	// 写回原始文件（整体覆盖）
+	finalContent := strings.Join(result, "\n")
+	if err := os.WriteFile(fullPath, []byte(finalContent), 0644); err != nil {
+		log.Errorf("write file failed, error:%v", err)
 		return fmt.Errorf("写入文件失败, error:%v", err)
 	}
 

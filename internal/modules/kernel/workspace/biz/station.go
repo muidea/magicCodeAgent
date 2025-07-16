@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -222,20 +221,13 @@ func (s *Station) Available() bool {
 
 func (s *Station) checkIgnore(fileFullPath string) bool {
 	stagePath := s.workspaceConfig.GetStageWorkPath()
-	filePath, fileName := path.Split(fileFullPath)
 	for _, ignore := range s.workspaceConfig.Ignores {
 		ignorePath := filepath.Join(stagePath, ignore)
-		if fp.IsDir(ignorePath) {
-			if strings.HasPrefix(filePath, ignorePath) {
-				return true
-			}
-
-			continue
-		}
-
-		if fileName == ignore {
+		if strings.HasPrefix(fileFullPath, ignorePath) {
 			return true
 		}
+
+		continue
 	}
 	return false
 }
@@ -279,7 +271,7 @@ func (s *Station) RemoveFile(filePath string) bool {
 }
 
 func (s *Station) WriteFile(filePath string) bool {
-	if !strings.HasPrefix(filePath, s.workspaceConfig.Path) {
+	if !fp.IsSubPath(s.workspaceConfig.Path, filePath) {
 		return false
 	}
 
