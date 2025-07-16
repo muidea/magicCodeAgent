@@ -159,7 +159,7 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 			s.currentFlowPtr.AppendMessage(&models.MessageItem{
 				Role: common.User,
 				Content: []string{
-					"继续检查并处理剩余功能",
+					"继续检查并处理剩余功能, 如果确认剩余功能已处理完毕则结束任务",
 				},
 			})
 			break
