@@ -152,14 +152,16 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 				break
 			}
 			if s.currentFlowPtr.CanFinish() {
-				s.currentFlowPtr = s.currentFlowPtr.Parent
-				continue
+				if s.currentFlowPtr.Level != "" {
+					s.currentFlowPtr = s.currentFlowPtr.Parent
+					continue
+				}
 			}
 
 			s.currentFlowPtr.AppendMessage(&models.MessageItem{
 				Role: common.User,
 				Content: []string{
-					"继续检查并处理剩余功能, 如果确认剩余功能已处理完毕则结束任务",
+					"继续检查并处理剩余功能, 如果确认所有功能已处理完毕则结束任务",
 				},
 			})
 			break
