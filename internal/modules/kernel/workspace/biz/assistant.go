@@ -3,7 +3,6 @@ package biz
 import (
 	"context"
 
-	"github.com/muidea/magicCodeAgent/internal/config"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -13,12 +12,12 @@ import (
 )
 
 type Assistant interface {
-	Chat(ctx context.Context, workspaceConfig *config.Workspace, systemPrompt, workspaceEnvPromp string, flowPathList []*models.Flow) *cd.Error
+	Chat(ctx context.Context, workspaceConfig *models.Workspace, systemPrompt, workspaceEnvPromp string, flowPathList []*models.Flow) *cd.Error
 }
 
 func (s *Workspace) Chat(
 	chatContext context.Context,
-	workspaceConfig *config.Workspace,
+	workspaceConfig *models.Workspace,
 	systemPrompt string,
 	workspaceEnvPrompt string,
 	flowPathList []*models.Flow) (err *cd.Error) {

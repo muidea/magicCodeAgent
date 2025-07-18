@@ -1,7 +1,0 @@
-import React from "react";
-
-const IndexPage: React.FC = () => {
-  return <div>这是一个Demo页面</div>;
-};
-
-export default IndexPage;

@@ -17,7 +17,7 @@ type AskFollowupQuestionTool struct{}
 func (s *AskFollowupQuestionTool) Name() string { return "ask_followup_question" }
 
 func (s *AskFollowupQuestionTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, err: %s", promptsErr.Error())
 		return ""

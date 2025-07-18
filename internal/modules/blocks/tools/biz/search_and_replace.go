@@ -18,11 +18,13 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type SearchAndReplaceTool struct{}
+type SearchAndReplaceTool struct {
+	workspacePtr *models.Workspace
+}
 
 func (s *SearchAndReplaceTool) Name() string { return "search_and_replace" }
 func (s *SearchAndReplaceTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
 		return ""
@@ -33,7 +35,7 @@ func (s *SearchAndReplaceTool) Prompt() string {
 
 func (s *SearchAndReplaceTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *SearchAndReplaceTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *SearchAndReplaceTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -51,7 +53,7 @@ func (s *SearchAndReplaceTool) Execute(workspaceName, workspaceDir, workspaceTyp
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
-	fullPath := workspaceDir
+	fullPath := s.workspacePtr.GetWorkingPath()
 	if !fp.Exist(fullPath) {
 		err = fmt.Errorf("workspace not exist: %s", fullPath)
 		return

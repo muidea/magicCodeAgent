@@ -35,7 +35,7 @@ func New(
 ) *Recorder {
 	ptr := &Recorder{
 		Base:    biz.New(imkdc.RecorderModule, eventHub, backgroundRoutine),
-		dataDir: filepath.Join(config.CurrentWorkPath(), "data"),
+		dataDir: filepath.Join(config.CurrentWorkingPath(), "data"),
 	}
 
 	if config.DebugFlag() {

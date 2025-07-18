@@ -9,7 +9,6 @@ import (
 	cd "github.com/muidea/magicCommon/def"
 	fp "github.com/muidea/magicCommon/foundation/path"
 
-	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
@@ -77,12 +76,12 @@ type SystemConfigResult struct {
 
 type WorkspaceResult struct {
 	cd.Result
-	Value *config.Workspace `json:"value"`
+	Value *models.Workspace `json:"value"`
 }
 
 type WorkspaceListResult struct {
 	cd.Result
-	Values []*config.Workspace `json:"values"`
+	Values []*models.Workspace `json:"values"`
 }
 
 type FileFilter struct {

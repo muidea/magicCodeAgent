@@ -12,10 +12,10 @@ import (
 	engine "github.com/muidea/magicEngine/http"
 	"github.com/muidea/magicEngine/sse"
 
-	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/biz"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Workspace struct {
@@ -80,7 +80,7 @@ func (s *Workspace) createWorkspace(ctx context.Context, res http.ResponseWriter
 	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &config.Workspace{}
+	param := &models.Workspace{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
@@ -110,7 +110,7 @@ func (s *Workspace) addWorkspace(ctx context.Context, res http.ResponseWriter, r
 	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &config.Workspace{}
+	param := &models.Workspace{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
@@ -128,7 +128,7 @@ func (s *Workspace) updateWorkspace(ctx context.Context, res http.ResponseWriter
 	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &config.Workspace{}
+	param := &models.Workspace{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
@@ -153,7 +153,7 @@ func (s *Workspace) enableWorkspace(ctx context.Context, res http.ResponseWriter
 	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &config.Workspace{}
+	param := &models.Workspace{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
@@ -171,7 +171,7 @@ func (s *Workspace) disableWorkspace(ctx context.Context, res http.ResponseWrite
 	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &config.Workspace{}
+	param := &models.Workspace{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
@@ -188,14 +188,14 @@ func (s *Workspace) disableWorkspace(ctx context.Context, res http.ResponseWrite
 func (s *Workspace) updateWorkspaceStage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &imkwc.WorkspaceResult{}
 	defer fn.PackageHTTPResponse(res, result)
-	param := &config.Workspace{}
+	param := &models.Workspace{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
 		log.Errorf("parse body error: %s", err.Error())
 		return
 	}
-	if !common.ValidStage(param.Stage) {
+	if !models.ValidStage(param.Stage) {
 		result.Error = cd.NewError(cd.IllegalParam, "stage can not be empty")
 		return
 	}
@@ -236,8 +236,7 @@ func (s *Workspace) filterFileTree(ctx context.Context, res http.ResponseWriter,
 
 	workspace := req.URL.Query().Get("workspace")
 	basePath := req.URL.Query().Get("basePath")
-	stage := req.URL.Query().Get("stage")
-	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, stage, basePath)
+	result.Values, result.Error = s.bizPtr.FilterWorkspaceFileTree(workspace, basePath)
 }
 
 func (s *Workspace) queryFileContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {

@@ -5,22 +5,29 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/muidea/magicCommon/foundation/log"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/util"
-	"github.com/muidea/magicCommon/foundation/log"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type promptsRegistry struct {
-	sections []*Section
+	workspacePtr *models.Workspace
+	sections     []*Section
 }
 
 func NewPromptsRegistry() *promptsRegistry {
 	return &promptsRegistry{
 		sections: []*Section{},
 	}
+}
+
+func (s *promptsRegistry) Reload(workspacePtr *models.Workspace) {
+	log.Infof("promptsRegistry reload, workspace:%s", workspacePtr.GetName())
+
+	s.workspacePtr = workspacePtr
+	s.sections = []*Section{}
 }
 
 func (s *promptsRegistry) findSection(name string) (*Section, bool) {
@@ -53,9 +60,10 @@ func (s *promptsRegistry) AddPrompts(sectionName string, prompt iipc.Prompt) {
 	sectionObj.AddPrompt(prompt)
 }
 
-func (s *promptsRegistry) GetPromptsContent(stage string, filterTags fu.StringSet) string {
-
-	log.Infof("get prompts content, stage:%s, filterTags:%s", stage, filterTags)
+func (s *promptsRegistry) GetStagePromptsContent(stage string) string {
+	filterTags := s.workspacePtr.TechStack
+	filterTags = append(filterTags, s.workspacePtr.Category)
+	log.Infof("GetStagePromptsContent, stage:%s, filterTags:%s", stage, filterTags)
 
 	var builder strings.Builder
 	builder.WriteString(s.getRolePrompts(stage))
@@ -66,10 +74,8 @@ func (s *promptsRegistry) GetPromptsContent(stage string, filterTags fu.StringSe
 		builder.WriteString("\n\n")
 	}
 
-	if stage == common.DesignStage {
-		builder.WriteString(s.getMarkdownPrompts())
-		builder.WriteString("\n\n")
-	}
+	builder.WriteString(s.getMarkdownPrompts())
+	builder.WriteString("\n\n")
 
 	builder.WriteString(s.getSystemInformationPrompts())
 	builder.WriteString("\n\n")
@@ -90,8 +96,7 @@ func (s *promptsRegistry) GetPromptsContent(stage string, filterTags fu.StringSe
 }
 
 func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string, param map[string]string) string {
-	fileName := fmt.Sprintf("%s.md", sectionPrompt)
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	contentVal, contentErr := iipc.ReadInnerSystemPrompts(sectionPrompt)
 	if contentErr != nil {
 		log.Errorf("Failed to read section prompt content for %s: %v", sectionPrompt, contentErr)
 		return ""
@@ -117,8 +122,8 @@ func (s *promptsRegistry) ReadSectionPromptContent(sectionPrompt string, param m
 }
 
 func (s *promptsRegistry) getRolePrompts(stage string) string {
-	fileName := fmt.Sprintf("role-%s.md", stage)
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	stageRole := fmt.Sprintf("role-%s", stage)
+	contentVal, contentErr := iipc.ReadInnerSystemPrompts(stageRole)
 	if contentErr != nil {
 		log.Errorf("get role prompts content failed:%s", contentErr.Error())
 		return "You are magicAssistant, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices."
@@ -128,8 +133,7 @@ func (s *promptsRegistry) getRolePrompts(stage string) string {
 }
 
 func (s *promptsRegistry) getSystemInformationPrompts() string {
-	fileName := "system-info.md"
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	contentVal, contentErr := iipc.ReadInnerSystemPrompts("system-info")
 	if contentErr != nil {
 		log.Errorf("get system information prompts content failed:%s", contentErr.Error())
 		return "Operating System: Linux 5.15\nDefault Shell: /bin/bash"
@@ -157,8 +161,7 @@ func (s *promptsRegistry) getSystemInformationPrompts() string {
 }
 
 func (s *promptsRegistry) getObjecttivePrompts() string {
-	fileName := "objective.md"
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	contentVal, contentErr := iipc.ReadInnerSystemPrompts("objective")
 	if contentErr != nil {
 		log.Errorf("get objective prompts content failed:%s", contentErr.Error())
 		return ""
@@ -167,8 +170,7 @@ func (s *promptsRegistry) getObjecttivePrompts() string {
 }
 
 func (s *promptsRegistry) getCustomInstructionsPrompts() string {
-	fileName := "custom-instructions.md"
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	contentVal, contentErr := iipc.ReadInnerSystemPrompts("custom-instructions")
 	if contentErr != nil {
 		log.Errorf("get custom prompts content failed:%s", contentErr.Error())
 		return ""
@@ -177,8 +179,7 @@ func (s *promptsRegistry) getCustomInstructionsPrompts() string {
 }
 
 func (s *promptsRegistry) getMarkdownPrompts() string {
-	fileName := "markdown.md"
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	contentVal, contentErr := iipc.ReadInnerSystemPrompts("markdown")
 	if contentErr != nil {
 		log.Errorf("get markdown prompts content failed:%s", contentErr.Error())
 		return ""
@@ -187,8 +188,7 @@ func (s *promptsRegistry) getMarkdownPrompts() string {
 }
 
 func (s *promptsRegistry) getModelsPrompts() string {
-	fileName := "models.md"
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	contentVal, contentErr := iipc.ReadInnerSystemPrompts("models")
 	if contentErr != nil {
 		log.Errorf("get models prompts content failed:%s", contentErr.Error())
 		return ""
@@ -197,8 +197,7 @@ func (s *promptsRegistry) getModelsPrompts() string {
 }
 
 func (s *promptsRegistry) getRulesPrompts() string {
-	fileName := "rules.md"
-	contentVal, contentErr := util.GetTemplateContent(iipc.SectionPromptsBasePath, "", fileName)
+	contentVal, contentErr := iipc.ReadInnerSystemPrompts("rules")
 	if contentErr != nil {
 		log.Errorf("get rules prompts content failed:%s", contentErr.Error())
 		return ""

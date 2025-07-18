@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/muidea/magicCodeAgent/pkg/models"
 	openai "github.com/sashabaranov/go-openai"
 )
 
@@ -49,6 +50,17 @@ func (s *Usage) Copy() *Usage {
 		PromptMissHitToken:  s.PromptMissHitToken,
 		TotalTokens:         s.TotalTokens,
 	}
+}
+
+type ContentSinker interface {
+	OnClose()
+	OnRecv(event, content string, usagePtr *Usage)
+}
+
+type MessageSink interface {
+	OnTerminate(msgPtr *models.MessageInfo)
+	OnSendMessage(msgPtr *models.MessageInfo)
+	OnRecvMessage(msgPtr *models.MessageInfo, usagePtr *Usage)
 }
 
 // ChatCompletionStreamRequest 兼容OpenAI的聊天完成请求结构

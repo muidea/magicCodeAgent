@@ -16,7 +16,7 @@ type FetchInstructionsTool struct{}
 
 func (s *FetchInstructionsTool) Name() string { return "fetch_instructions" }
 func (s *FetchInstructionsTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("Failed to read prompts: %s", promptsErr.Error())
 		return ""
@@ -27,7 +27,7 @@ func (s *FetchInstructionsTool) Prompt() string {
 
 func (s *FetchInstructionsTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *FetchInstructionsTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *FetchInstructionsTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{

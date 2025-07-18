@@ -3,7 +3,6 @@ package biz
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	cd "github.com/muidea/magicCommon/def"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/common"
 )
 
 func (s *Workspace) filterWorkspaceFile(ev event.Event, re event.Result) {
@@ -52,8 +50,8 @@ func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filt
 		return
 	}
 
-	if !fp.Exist(curWorkspace.(*Station).workspaceConfig.Path) {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).workspaceConfig.Path))
+	if !fp.Exist(curWorkspace.(*Station).workspaceConfig.WorkspaceDir) {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).workspaceConfig.WorkspaceDir))
 		return
 	}
 
@@ -61,7 +59,7 @@ func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filt
 	return
 }
 
-func (s *Workspace) FilterWorkspaceFileTree(workspaceName, stage, basePath string) (ret []*imkwc.DataNode, err *cd.Error) {
+func (s *Workspace) FilterWorkspaceFileTree(workspaceName, basePath string) (ret []*imkwc.DataNode, err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))
@@ -73,20 +71,11 @@ func (s *Workspace) FilterWorkspaceFileTree(workspaceName, stage, basePath strin
 		return
 	}
 
-	if !fp.Exist(curWorkspace.(*Station).workspaceConfig.Path) {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).workspaceConfig.Path))
-		log.Errorf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).workspaceConfig.Path)
-		return
-	}
+	workingRootPath := curWorkspace.(*Station).workspaceConfig.GetWorkingPath()
+	filter := NewBasePathFilter(workingRootPath, basePath)
 
-	if stage == common.TestStage {
-		stage = common.CodeStage
-	}
-
-	basePath = path.Join(stage, basePath)
-	filter := NewBasePathFilter(curWorkspace.(*Station).workspaceConfig.Path, basePath)
 	fileList := curWorkspace.(*Station).Filter(filter)
-	return ConvertPathsToTree(curWorkspace.(*Station).workspaceConfig.Path, fileList), nil
+	return ConvertPathsToTree(workingRootPath, fileList), nil
 }
 
 func (s *Workspace) QueryFileContent(workspaceName string, filePath string) (ret *imkwc.FileContent, err *cd.Error) {
@@ -102,7 +91,7 @@ func (s *Workspace) QueryFileContent(workspaceName string, filePath string) (ret
 		return
 	}
 
-	fullFilePath := filepath.Join(workspacePtr.Path, filePath)
+	fullFilePath := filepath.Join(workspacePtr.WorkspaceDir, filePath)
 	if !fp.Exist(fullFilePath) {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, fullFilePath))
 		log.Errorf("QueryFileContent failed, file not exists:%s", fullFilePath)

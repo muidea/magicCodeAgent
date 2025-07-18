@@ -15,6 +15,7 @@ import (
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/module"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/templatemanager"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/cli"
 )
 

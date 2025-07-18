@@ -1,35 +1,20 @@
 package biz
 
 import (
-	"fmt"
-	"os"
-
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
 
-	"github.com/muidea/magicCodeAgent/internal/config"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Worker interface {
-	DoWork(workspaceConfig *config.Workspace, content string) (param imbtc.ToolParam, result *imbtc.ToolResult, err *cd.Error)
+	DoWork(workspaceConfig *models.Workspace, content string) (param imbtc.ToolParam, result *imbtc.ToolResult, err *cd.Error)
 }
 
-func (s *Workspace) DoWork(workspaceConfig *config.Workspace, content string) (param imbtc.ToolParam, result *imbtc.ToolResult, err *cd.Error) {
-	workspaceDir := workspaceConfig.GetStageWorkPath()
-	if !fp.Exist(workspaceDir) {
-		if osErr := os.MkdirAll(workspaceDir, 0755); osErr != nil {
-			err = cd.NewError(cd.Unexpected, fmt.Sprintf("create workspace dir failed, error%s", osErr.Error()))
-			return
-		}
-	}
+func (s *Workspace) DoWork(workspaceConfig *models.Workspace, content string) (param imbtc.ToolParam, result *imbtc.ToolResult, err *cd.Error) {
 	executeEvent := event.NewEvent(imbtc.ExecuteTool, s.ID(), imbtc.ToolsModule, nil, content)
-	executeEvent.SetData("workspaceName", workspaceConfig.GetName())
-	executeEvent.SetData("workspaceDir", workspaceDir)
-	executeEvent.SetData("workspaceType", workspaceConfig.GetWorkspaceType())
-	executeEvent.SetData("stage", workspaceConfig.GetStage())
 	executeResult := s.SendEvent(executeEvent)
 	resultVal, resultErr := executeResult.Get()
 	if resultErr != nil {

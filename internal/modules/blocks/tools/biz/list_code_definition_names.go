@@ -19,11 +19,13 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type ListCodeDefinitionNamesTool struct{}
+type ListCodeDefinitionNamesTool struct {
+	workspacePtr *models.Workspace
+}
 
 func (s *ListCodeDefinitionNamesTool) Name() string { return "list_code_definition_names" }
 func (s *ListCodeDefinitionNamesTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""
@@ -34,7 +36,7 @@ func (s *ListCodeDefinitionNamesTool) Prompt() string {
 
 func (s *ListCodeDefinitionNamesTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ListCodeDefinitionNamesTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *ListCodeDefinitionNamesTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -52,7 +54,7 @@ func (s *ListCodeDefinitionNamesTool) Execute(workspaceName, workspaceDir, works
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
-	fullPath := workspaceDir
+	fullPath := s.workspacePtr.GetWorkingPath()
 	if !fp.Exist(fullPath) {
 		err = fmt.Errorf("workspace not exist: %s", fullPath)
 		return

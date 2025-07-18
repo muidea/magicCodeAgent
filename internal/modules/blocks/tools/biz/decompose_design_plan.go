@@ -2,6 +2,7 @@ package biz
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"path"
 	"path/filepath"
@@ -18,7 +19,8 @@ import (
 )
 
 type DecomposeDesignPlanTool struct {
-	promptsRegistry iipc.PromptsRegistry
+	workspacePtr *models.Workspace
+	templatePtr  *models.Template
 }
 
 func (s *DecomposeDesignPlanTool) Name() string {
@@ -26,7 +28,7 @@ func (s *DecomposeDesignPlanTool) Name() string {
 }
 
 func (s *DecomposeDesignPlanTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""
@@ -37,7 +39,7 @@ func (s *DecomposeDesignPlanTool) Prompt() string {
 
 func (s *DecomposeDesignPlanTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *DecomposeDesignPlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -77,8 +79,9 @@ func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, workspace
 		return
 	}
 
-	parentPath := filepath.Dir(workspaceDir)
-	siblingsList, childList, workPath := s.getSiblingsAndChilds(parentPath, stage, name, level)
+	rootPath := s.workspacePtr.GetRootPath()
+	stage := "design"
+	siblingsList, childList, workPath := s.getSiblingsAndChilds(rootPath, stage, name, level)
 
 	planParam := map[string]string{
 		"Name":             name,
@@ -88,8 +91,28 @@ func (s *DecomposeDesignPlanTool) Execute(workspaceName, workspaceDir, workspace
 		"Childrens":        childList,
 		"WorkingDirectory": workPath,
 	}
-	planFileName := fmt.Sprintf("decompose-design-plan-%s-%s", level, workspaceType)
-	result = s.promptsRegistry.ReadSectionPromptContent(planFileName, planParam)
+	planFileName := fmt.Sprintf("decompose-design-plan-%s", level)
+	promptVal, promptErr := s.templatePtr.ReadPrompt(planFileName)
+	if promptErr != nil {
+		err = promptErr
+		return
+	}
+
+	tmplPtr, tmplErr := template.New(planFileName).Parse(promptVal)
+	if tmplErr != nil {
+		err = tmplErr
+		log.Errorf("parse system info template failed:%s", tmplErr.Error())
+		return
+	}
+
+	var builder strings.Builder
+	err = tmplPtr.Execute(&builder, planParam)
+	if err != nil {
+		log.Errorf("execute system info template failed:%s", err.Error())
+		return
+	}
+
+	result = builder.String()
 	return
 }
 

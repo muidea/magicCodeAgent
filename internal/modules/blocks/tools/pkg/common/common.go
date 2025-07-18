@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/muidea/magicCodeAgent/internal/config"
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 	"github.com/muidea/magicCodeAgent/pkg/util"
@@ -12,11 +13,12 @@ import (
 const ToolsModule = "/internal/modules/blocks/tools"
 
 const (
+	ReloadTools = "/tools/reload"
 	ExecuteTool = "/tools/execute"
 )
 
-// const ToolSectionPromptsBasePath = "assets/prompts/section"
-const ToolsPromptsBasePath = "assets/prompts/tools"
+const innerSystemToolsPromptsBasePath = "assets/system/tools"
+const innerSystemToolsSectionPromptsPath = "assets/system/prompts/tools.md"
 
 type ToolParam map[string]any
 
@@ -48,11 +50,16 @@ type ToolResult struct {
 
 type Tool interface {
 	iipc.Prompt
-	Execute(workspaceName, workspaceDir, workspaceType, stage string, param ToolParam) (*ToolResult, error)
+	Execute(param ToolParam) (*ToolResult, error)
 }
 
-func ReadToolsPrompts(toolName string) (ret string, err error) {
+func ReadInnerToolsPrompts(toolName string) (ret string, err error) {
 	fileName := toolName + ".md"
-	ret, err = util.GetTemplateContent(ToolsPromptsBasePath, "", fileName)
+	ret, err = util.GetTemplateContent(config.GetTemplateFS(), innerSystemToolsPromptsBasePath, "", fileName)
+	return
+}
+
+func ReadInnerToolsSectionPrompts() (ret string, err error) {
+	ret, err = util.GetTemplateContent(config.GetTemplateFS(), innerSystemToolsSectionPromptsPath, "", "")
 	return
 }

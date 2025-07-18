@@ -16,7 +16,7 @@ type NewTaskTool struct{}
 
 func (s *NewTaskTool) Name() string { return "new_task" }
 func (s *NewTaskTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""

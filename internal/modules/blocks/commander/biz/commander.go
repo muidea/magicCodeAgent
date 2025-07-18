@@ -30,16 +30,14 @@ func NewBaseCommander(maxLineSize int) *BaseCommander {
 	}
 }
 
-func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err error) {
+func (s *BaseCommander) Run(workspaceDir, command string) (err error) {
 	var cmdPtr *exec.Cmd
 	var cmdContext context.Context
-	currentCmd := fmt.Sprintf("%s %s", command, strings.Join(args, " "))
-
 	func() {
 		s.debugger.Lock()
 		defer s.debugger.Unlock()
 
-		if s.currentCommand == currentCmd {
+		if s.currentCommand == command {
 			return
 		}
 
@@ -48,7 +46,7 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 			s.cancelCommanderFunc()
 		}
 
-		s.currentCommand = currentCmd
+		s.currentCommand = command
 		log.Infof("run command: '%s'", s.currentCommand)
 
 		s.stdErrBuffer.Reset()
@@ -59,8 +57,7 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 		cmdContext = cancelContext
 
 		// 使用 setsid 创建新的进程会话
-		paramStr := command + " " + strings.Join(args, " ")
-		wrappedCmd := fmt.Sprintf("setsid %s", paramStr)
+		wrappedCmd := fmt.Sprintf("setsid %s", command)
 		cmdPtr = exec.CommandContext(cmdContext, "/bin/bash", "-c", wrappedCmd)
 
 		cmdPtr.Env = os.Environ()

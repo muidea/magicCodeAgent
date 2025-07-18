@@ -7,6 +7,7 @@ import (
 	imklcfg "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/config"
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 var apiKeyMask = "sk-***"
@@ -55,7 +56,7 @@ func (s *Workspace) GetSystemConfig() (authPtr *imkwc.AuthorInfo, localModel *im
 func (s *Workspace) SetSystemConfig(paramPtr *imkwc.SystemConfigParam) (err *cd.Error) {
 	authorConfig := config.AuthorConfig()
 	if authorConfig == nil {
-		authorConfig = &config.AuthorConfigInfo{}
+		authorConfig = &models.AuthorInfo{}
 	}
 	if paramPtr.AuthorInfo != nil {
 		if paramPtr.AuthorInfo.Author != "" {
@@ -66,11 +67,11 @@ func (s *Workspace) SetSystemConfig(paramPtr *imkwc.SystemConfigParam) (err *cd.
 		}
 	}
 
-	models := config.Models()
-	var curLocal *config.ModelInfo
-	var curRemote *config.ModelInfo
-	newList := []*config.ModelInfo{}
-	for _, val := range models {
+	modelList := config.Models()
+	var curLocal *models.ModelInfo
+	var curRemote *models.ModelInfo
+	newList := []*models.ModelInfo{}
+	for _, val := range modelList {
 		if val.Name == imklc.LocalDeepseek {
 			curLocal = val
 		}

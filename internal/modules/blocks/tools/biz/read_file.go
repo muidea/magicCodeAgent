@@ -17,14 +17,16 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type ReadFileTool struct{}
+type ReadFileTool struct {
+	workspacePtr *models.Workspace
+}
 
 func (s *ReadFileTool) Name() string {
 	return "read_file"
 }
 
 func (s *ReadFileTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
 		return ""
@@ -35,7 +37,7 @@ func (s *ReadFileTool) Prompt() string {
 
 func (s *ReadFileTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ReadFileTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *ReadFileTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -53,7 +55,7 @@ func (s *ReadFileTool) Execute(workspaceName, workspaceDir, workspaceType, stage
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
-	fullPath := workspaceDir
+	fullPath := s.workspacePtr.GetWorkingPath()
 	if !fp.Exist(fullPath) {
 		err = fmt.Errorf("workspace not exist: %s", fullPath)
 		return

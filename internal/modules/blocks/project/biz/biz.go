@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -14,8 +15,10 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	imbpcfg "github.com/muidea/magicCodeAgent/internal/modules/blocks/project/config"
 	imbpc "github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Project struct {
@@ -37,68 +40,57 @@ func New(
 	return ret
 }
 
+func (s *Project) verifyWorkingPath(workingPath string) *cd.Error {
+	if workingPath == "" {
+		return cd.NewError(cd.IllegalParam, "working path is empty")
+	}
+
+	if !filepath.IsAbs(workingPath) {
+		return cd.NewError(cd.IllegalParam, "working path must be absolute path")
+	}
+
+	normalizedPath := filepath.Clean(workingPath)
+	codeRootPath := normalizedPath
+	goModPath := filepath.Join(codeRootPath, "go.mod")
+	if _, err := os.Stat(goModPath); err != nil {
+		return cd.NewError(cd.IllegalParam, "working path must be a go module")
+	}
+	return nil
+}
+
 func (s *Project) create(ev event.Event, re event.Result) {
-	paramPtr, paramOK := ev.Data().(*common.CreateParam)
-	if !paramOK {
+	_, workspaceOK := ev.Data().(*models.Workspace)
+	if !workspaceOK {
 		log.Errorf("create project failed, illegal create project param")
 		if re != nil {
 			re.Set(nil, cd.NewError(cd.Unexpected, "illegal create project param"))
 		}
 		return
 	}
+	templatePtr := ev.GetData("template").(*models.Template)
 
-	err := config.VerifyProjectWorkPath(paramPtr.ProjectType, paramPtr.WorkingPath)
+	workingPath := config.CurrentWorkingPath()
+	err := s.verifyWorkingPath(workingPath)
 	if err != nil {
-		log.Errorf("verify project work path failed, workingPath:%s, err:%s", paramPtr.WorkingPath, err.Error())
-
-		if re != nil {
-			re.Set(nil, err)
-		}
-		return
-	}
-	if paramPtr.ProjectType != common.Service && paramPtr.ProjectType != common.Web {
-		log.Errorf("invalid project name, projectName:%s", paramPtr.ProjectName)
-		if re != nil {
-			re.Set(nil, cd.NewError(cd.InvalidParameter, "invalid project name"))
-		}
-		return
-	}
-
-	helper := biz.NewHelper(path.Join(imbpc.ProjectTemplateBasePath, paramPtr.ProjectType))
-
-	// 这里主动修正一下ProjectName，因为在传入参数时的ProprojectName里指定了类型，所以这里需要修正一下
-	//paramPtr.ProjectName = projectName
-	err = helper.Create("", paramPtr)
-	if err != nil {
-		log.Errorf("create project failed, projectName:%s, err:%s", paramPtr.ProjectName, err.Error())
+		log.Errorf("create project failed, verify project working path failed, err: %v", err)
 		if re != nil {
 			re.Set(nil, err)
 		}
 		return
 	}
 
-	if paramPtr.ProjectType == common.Service {
-		if err := s.initializeService(paramPtr.ProjectName, paramPtr.WorkingPath); err != nil {
-			log.Errorf("initialize service failed, err:%s", err.Error())
-			if re != nil {
-				re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
-			}
-			return
+	createrHelper := biz.NewHelper(templatePtr.HostRootFS, imbpc.ProjectTemplateBasePath)
+	err = createrHelper.Create(&common.CreateParam{
+		WorkingPath:        workingPath,
+		ProjectName:        imbpcfg.GetName(),
+		ProjectDescription: imbpcfg.GetDescription(),
+	})
+	if err != nil {
+		log.Errorf("create project failed, error: %v", err)
+		if re != nil {
+			re.Set(nil, err)
 		}
-	}
-
-	if paramPtr.ProjectType == common.Web {
-		if err := s.initializeWeb(paramPtr.ProjectName, paramPtr.WorkingPath); err != nil {
-			log.Errorf("initialize web failed, err:%s", err.Error())
-			if re != nil {
-				re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
-			}
-			return
-		}
-	}
-
-	if re != nil {
-		re.Set(nil, nil)
+		return
 	}
 }
 

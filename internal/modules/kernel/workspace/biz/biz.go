@@ -16,8 +16,9 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Workspace struct {
@@ -123,7 +124,7 @@ func (s *Workspace) disposeWrite(event fp.Event) {
 }
 
 func (s *Workspace) queryWorkspace(ev event.Event, re event.Result) {
-	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	workspaceVal, workspaceOK := ev.Data().(*models.Workspace)
 	if !workspaceOK {
 		log.Errorf("query workspace failed, invalid workspace:%v", ev.Data())
 		return
@@ -134,7 +135,7 @@ func (s *Workspace) queryWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Workspace) QueryWorkspace(workspaceName string) (ret *config.Workspace, err *cd.Error) {
+func (s *Workspace) QueryWorkspace(workspaceName string) (ret *models.Workspace, err *cd.Error) {
 	workspacePtr := config.GetWorkspace(workspaceName)
 	if workspacePtr == nil {
 		log.Warnf("query workspace, workspace not exists:%s", workspaceName)
@@ -147,7 +148,7 @@ func (s *Workspace) QueryWorkspace(workspaceName string) (ret *config.Workspace,
 }
 
 func (s *Workspace) createWorkspace(ev event.Event, re event.Result) {
-	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	workspaceVal, workspaceOK := ev.Data().(*models.Workspace)
 	if !workspaceOK {
 		log.Errorf("create workspace failed, invalid workspace:%v", ev.Data())
 		return
@@ -158,26 +159,26 @@ func (s *Workspace) createWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Workspace) CreateWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
+func (s *Workspace) CreateWorkspace(workspacePtr *models.Workspace) (ret *models.Workspace, err *cd.Error) {
 	// 检查路径是否为空目录
-	if fp.Exist(workspacePtr.Path) {
-		emptyVal, emptyErr := fp.IsDirEmpty(workspacePtr.Path)
+	if fp.Exist(workspacePtr.WorkspaceDir) {
+		emptyVal, emptyErr := fp.IsDirEmpty(workspacePtr.WorkspaceDir)
 		if !emptyVal || emptyErr != nil {
-			err = cd.NewError(cd.Unexpected, fmt.Sprintf("workspace path:%s is not empty", workspacePtr.Path))
+			err = cd.NewError(cd.Unexpected, fmt.Sprintf("workspace path:%s is not empty", workspacePtr.WorkspaceDir))
 			return
 		}
 	} else {
 		// 创建目录
-		if e := os.MkdirAll(workspacePtr.Path, 0755); e != nil {
+		if e := os.MkdirAll(workspacePtr.WorkspaceDir, 0755); e != nil {
 			err = cd.NewError(cd.Unexpected, e.Error())
 			return
 		}
 	}
 
-	workspacePtr.Status = config.EnableStatus
+	workspacePtr.Status = models.EnableStatus
 	workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 	if eVal := config.AddWorkspace(workspacePtr); eVal != nil {
-		log.Errorf("create workspace failed, add workspace failed:%s", workspacePtr.Path)
+		log.Errorf("create workspace failed, add workspace failed:%s", workspacePtr.WorkspaceDir)
 		err = cd.NewError(cd.Unexpected, eVal.Error())
 		return
 	}
@@ -192,7 +193,7 @@ func (s *Workspace) CreateWorkspace(workspacePtr *config.Workspace) (ret *config
 }
 
 func (s *Workspace) destroyWorkspace(ev event.Event, re event.Result) {
-	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	workspaceVal, workspaceOK := ev.Data().(*models.Workspace)
 	if !workspaceOK {
 		log.Errorf("destroy workspace failed, invalid workspace:%v", ev.Data())
 		return
@@ -214,13 +215,13 @@ func (s *Workspace) DestroyWorkspace(workspaceName string) (err *cd.Error) {
 	if err != nil {
 		return
 	}
-	os.RemoveAll(workspacePtr.Path)
+	os.RemoveAll(workspacePtr.WorkspaceDir)
 	config.DelWorkspace(workspaceName)
 	return
 }
 
 func (s *Workspace) addWorkspace(ev event.Event, re event.Result) {
-	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	workspaceVal, workspaceOK := ev.Data().(*models.Workspace)
 	if !workspaceOK {
 		log.Errorf("add workspace failed, invalid workspace:%v", ev.Data())
 		return
@@ -231,27 +232,27 @@ func (s *Workspace) addWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Workspace) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Workspace, err *cd.Error) {
+func (s *Workspace) AddWorkspace(workspacePtr *models.Workspace) (ret *models.Workspace, err *cd.Error) {
 	workspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
 	if ok {
 		ret = &workspace.(*Station).workspaceConfig
 		return
 	}
 
-	if fp.Exist(workspacePtr.Path) {
-		workspacePtr.Status = config.EnableStatus
+	if fp.Exist(workspacePtr.WorkspaceDir) {
+		workspacePtr.Status = models.EnableStatus
 	} else {
-		workspacePtr.Status = config.OfflineStatus
+		workspacePtr.Status = models.OfflineStatus
 	}
 
 	workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 	if eVal := config.AddWorkspace(workspacePtr); eVal != nil {
-		log.Errorf("add workspace failed, add workspace failed:%s", workspacePtr.Path)
+		log.Errorf("add workspace failed, add workspace failed:%s", workspacePtr.WorkspaceDir)
 		err = cd.NewError(cd.Unexpected, eVal.Error())
 		return
 	}
 
-	if workspacePtr.Status == config.EnableStatus {
+	if workspacePtr.Status == models.EnableStatus {
 		err = s.enableWorkspaceInternal(workspacePtr)
 	}
 	if err != nil {
@@ -263,7 +264,7 @@ func (s *Workspace) AddWorkspace(workspacePtr *config.Workspace) (ret *config.Wo
 }
 
 func (s *Workspace) updateWorkspace(ev event.Event, re event.Result) {
-	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	workspaceVal, workspaceOK := ev.Data().(*models.Workspace)
 	if !workspaceOK {
 		log.Errorf("update workspace failed, invalid workspace:%v", ev.Data())
 		return
@@ -275,9 +276,9 @@ func (s *Workspace) updateWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Workspace) UpdateWorkspace(workspacePtr *config.Workspace) (err *cd.Error) {
+func (s *Workspace) UpdateWorkspace(workspacePtr *models.Workspace) (err *cd.Error) {
 	if eVal := config.UpdateWorkspace(workspacePtr); eVal != nil {
-		log.Errorf("update workspace failed, update workspace failed:%s", workspacePtr.Path)
+		log.Errorf("update workspace failed, update workspace failed:%s", workspacePtr.WorkspaceDir)
 		err = cd.NewError(cd.Unexpected, eVal.Error())
 		return
 	}
@@ -317,7 +318,7 @@ func (s *Workspace) RemoveWorkspace(workspaceName string) (err *cd.Error) {
 }
 
 func (s *Workspace) refreshWorkspace(ev event.Event, re event.Result) {
-	workspaceVal, workspaceOK := ev.Data().(*config.Workspace)
+	workspaceVal, workspaceOK := ev.Data().(*models.Workspace)
 	if !workspaceOK {
 		log.Errorf("refresh workspace failed, invalid workspace:%v", ev.Data())
 		return
@@ -336,8 +337,8 @@ func (s *Workspace) RefreshWorkspace(workspaceName string) (err *cd.Error) {
 		return
 	}
 
-	if wPtr.Status != config.EnableStatus {
-		log.Warnf("refresh workspace, workspace not enable:%s", wPtr.Path)
+	if wPtr.Status != models.EnableStatus {
+		log.Warnf("refresh workspace, workspace not enable:%s", wPtr.WorkspaceDir)
 		return
 	}
 
@@ -347,6 +348,12 @@ func (s *Workspace) RefreshWorkspace(workspaceName string) (err *cd.Error) {
 	}
 
 	err = s.enableWorkspaceInternal(wPtr)
+	if err != nil {
+		return
+	}
+
+	reloadEvent := event.NewEvent(imbtc.ReloadTools, s.ID(), imbtc.ToolsModule, nil, wPtr)
+	s.SendEvent(reloadEvent)
 	return
 }
 
@@ -359,30 +366,30 @@ func (s *Workspace) EnableWorkspace(workspaceName string) (err *cd.Error) {
 
 	err = s.enableWorkspaceInternal(wPtr)
 	if err != nil {
-		log.Errorf("enable workspace failed, enable workspace failed:%s", wPtr.Path)
+		log.Errorf("enable workspace failed, enable workspace failed:%s", wPtr.WorkspaceDir)
 		return
 	}
 
-	wPtr.Status = config.EnableStatus
+	wPtr.Status = models.EnableStatus
 	wPtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 	if eVal := config.EnableWorkspace(workspaceName); eVal != nil {
-		log.Errorf("enable workspace failed, enable workspace failed:%s", wPtr.Path)
+		log.Errorf("enable workspace failed, enable workspace failed:%s", wPtr.WorkspaceDir)
 		return cd.NewError(cd.Unexpected, eVal.Error())
 	}
 
 	return
 }
 
-func (s *Workspace) enableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
-	if !fp.Exist(workspacePtr.Path) || !workspacePtr.Available() {
-		log.Warnf("enable workspace, workspace not exists:%s", workspacePtr.Path)
+func (s *Workspace) enableWorkspaceInternal(workspacePtr *models.Workspace) (err *cd.Error) {
+	if !fp.Exist(workspacePtr.WorkspaceDir) || !workspacePtr.Available() {
+		log.Warnf("enable workspace, workspace not exists:%s", workspacePtr.WorkspaceDir)
 		return
 	}
 
 	workspace := NewStation(&s.Base, workspacePtr, s, s, s.promptsRegistry)
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
-	s.fileMonitor.AddPath(workspacePtr.Path)
+	s.fileMonitor.AddPath(workspacePtr.WorkspaceDir)
 	return
 }
 
@@ -398,24 +405,24 @@ func (s *Workspace) DisableWorkspace(workspaceName string) (err *cd.Error) {
 		return
 	}
 
-	wPtr.Status = config.DisableStatus
+	wPtr.Status = models.DisableStatus
 	wPtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 	if eVal := config.DisableWorkspace(workspaceName); eVal != nil {
-		log.Errorf("disable workspace failed, disable workspace failed:%s", wPtr.Path)
+		log.Errorf("disable workspace failed, disable workspace failed:%s", wPtr.WorkspaceDir)
 		return cd.NewError(cd.Unexpected, eVal.Error())
 	}
 
 	return
 }
 
-func (s *Workspace) disableWorkspaceInternal(workspacePtr *config.Workspace) (err *cd.Error) {
-	if !fp.Exist(workspacePtr.Path) {
-		log.Warnf("remove workspace, workspace not exists:%s", workspacePtr.Path)
+func (s *Workspace) disableWorkspaceInternal(workspacePtr *models.Workspace) (err *cd.Error) {
+	if !fp.Exist(workspacePtr.WorkspaceDir) {
+		log.Warnf("remove workspace, workspace not exists:%s", workspacePtr.WorkspaceDir)
 		s.workspaceStationCache.Delete(workspacePtr.Name)
 		return
 	}
 
-	s.fileMonitor.RemovePath(workspacePtr.Path)
+	s.fileMonitor.RemovePath(workspacePtr.WorkspaceDir)
 	s.workspaceStationCache.Delete(workspacePtr.Name)
 	return
 }
@@ -433,11 +440,11 @@ func (s *Workspace) filterWorkspace(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Workspace) FilterWorkspace(filter fu.Filter) (ret []*config.Workspace, err *cd.Error) {
+func (s *Workspace) FilterWorkspace(filter fu.Filter) (ret []*models.Workspace, err *cd.Error) {
 	ret = config.Workspaces()
 	for _, val := range ret {
-		if !common.ValidStage(val.Stage) {
-			val.Stage = common.DesignStage
+		if !models.ValidStage(val.Stage) {
+			val.Stage = models.DesignStage
 		}
 	}
 	return

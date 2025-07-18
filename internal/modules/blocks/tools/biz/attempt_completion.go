@@ -16,12 +16,13 @@ import (
 )
 
 type AttemptCompletionTool struct {
-	commander Commander
+	commander    Commander
+	workspacePtr *models.Workspace
 }
 
 func (s *AttemptCompletionTool) Name() string { return "attempt_completion" }
 func (s *AttemptCompletionTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("Failed to read prompts: %s", promptsErr.Error())
 		return ""
@@ -32,7 +33,7 @@ func (s *AttemptCompletionTool) Prompt() string {
 
 func (s *AttemptCompletionTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *AttemptCompletionTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -51,7 +52,7 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, workspaceTy
 		}
 	}()
 
-	fullPath := workspaceDir
+	fullPath := s.workspacePtr.GetWorkingPath()
 	if !fp.Exist(fullPath) {
 		err = fmt.Errorf("workspace not exist: %s", fullPath)
 		return
@@ -64,21 +65,16 @@ func (s *AttemptCompletionTool) Execute(workspaceName, workspaceDir, workspaceTy
 	}
 	command, _ := param["command"].(string)
 	log.Infof("command: [%s]", command)
+	command = strings.TrimSpace(command)
 	if command != "" {
-		var args []string
-		items := strings.Split(strings.TrimSpace(command), " ")
-		if len(items) > 0 {
-			command = items[0]
-			args = items[1:]
-			runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
-			if runErr != nil {
-				log.Errorf("run command failed, error:%s", runErr.Error())
-				err = errors.New(runErr.Error())
-				return
-			}
-			result = runResult
+		runResult, runErr := s.commander.RunCommand(s.workspacePtr.Name, fullPath, command)
+		if runErr != nil {
+			log.Errorf("run command failed, error:%s", runErr.Error())
+			err = errors.New(runErr.Error())
 			return
 		}
+		result = runResult
+		return
 	}
 
 	result = "attempt completion successed."

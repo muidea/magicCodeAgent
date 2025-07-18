@@ -5,6 +5,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 // const deepseek = "deepseek"
@@ -55,8 +56,8 @@ func GetDeepSeekRetryInterval() time.Duration {
 	return retryInterval
 }
 
-func GetDefaultLocalModel() *config.ModelInfo {
-	return &config.ModelInfo{
+func GetDefaultLocalModel() *models.ModelInfo {
+	return &models.ModelInfo{
 		Name:     common.LocalDeepseek,
 		BaseUrl:  "http://127.0.0.1:11434/v1",
 		Model:    "deepseek-r1:7b",
@@ -64,8 +65,8 @@ func GetDefaultLocalModel() *config.ModelInfo {
 	}
 }
 
-func GetDefaultRemoteModel() *config.ModelInfo {
-	return &config.ModelInfo{
+func GetDefaultRemoteModel() *models.ModelInfo {
+	return &models.ModelInfo{
 		Name:     common.RemoteDeepseek,
 		BaseUrl:  common.DefaultBaseUrl,
 		Model:    common.DefaultModel,

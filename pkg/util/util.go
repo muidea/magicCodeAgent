@@ -9,8 +9,6 @@ import (
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-
-	"github.com/muidea/magicCodeAgent/internal/config"
 )
 
 const (
@@ -48,14 +46,14 @@ func CheckFileExist(templatePath, filePath, fileName string) (ret bool, err erro
 	return true, nil
 }
 
-func GetTemplateContent(templatePath, filePath, fileName string) (ret string, err error) {
+func GetTemplateContent(templateFS fs.FS, templatePath, filePath, fileName string) (ret string, err error) {
 	fullFilePath := path.Join(templatePath, filePath, fileName)
-	if _, fileErr := fs.Stat(config.GetTemplateFS(), fullFilePath); fileErr != nil {
+	if _, fileErr := fs.Stat(templateFS, fullFilePath); fileErr != nil {
 		err = fileErr
 		return
 	}
 
-	contentVal, contentErr := fs.ReadFile(config.GetTemplateFS(), fullFilePath)
+	contentVal, contentErr := fs.ReadFile(templateFS, fullFilePath)
 	if contentErr != nil {
 		err = contentErr
 		return

@@ -17,7 +17,7 @@ type UseMcpToolTool struct{}
 
 func (s *UseMcpToolTool) Name() string { return "use_mcp_tool" }
 func (s *UseMcpToolTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""

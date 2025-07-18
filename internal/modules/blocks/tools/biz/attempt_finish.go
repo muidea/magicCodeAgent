@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
@@ -13,13 +12,11 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type AttemptFinishTool struct {
-	commander Commander
-}
+type AttemptFinishTool struct{}
 
 func (s *AttemptFinishTool) Name() string { return "attempt_finish" }
 func (s *AttemptFinishTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("Failed to read prompts: %s", promptsErr.Error())
 		return ""
@@ -30,7 +27,7 @@ func (s *AttemptFinishTool) Prompt() string {
 
 func (s *AttemptFinishTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *AttemptFinishTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *AttemptFinishTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -48,12 +45,6 @@ func (s *AttemptFinishTool) Execute(workspaceName, workspaceDir, workspaceType, 
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
-
-	fullPath := workspaceDir
-	if !fp.Exist(fullPath) {
-		err = fmt.Errorf("workspace not exist: %s", fullPath)
-		return
-	}
 
 	resultVal, resultOK := param["result"].(string)
 	if !resultOK || resultVal == "" {

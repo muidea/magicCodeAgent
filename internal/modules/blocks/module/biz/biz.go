@@ -2,18 +2,20 @@ package biz
 
 import (
 	"os"
-	"path"
+	"path/filepath"
+	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
-	tc "github.com/muidea/magicCodeAgent/pkg/common"
+	imbmcfg "github.com/muidea/magicCodeAgent/internal/modules/blocks/module/config"
+	imbmc "github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type Module struct {
@@ -25,50 +27,78 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Module {
 	ptr := &Module{
-		Base: biz.New(common.ModuleModule, eventHub, backgroundRoutine),
+		Base: biz.New(imbmc.ModuleModule, eventHub, backgroundRoutine),
 	}
 
-	ptr.SubscribeFunc(common.CreateNewModule, ptr.create)
-	ptr.SubscribeFunc(common.RefreshModule, ptr.refresh)
-	ptr.SubscribeFunc(common.DestroyModule, ptr.destroy)
+	ptr.SubscribeFunc(imbmc.CreateNewModule, ptr.create)
+	ptr.SubscribeFunc(imbmc.RefreshModule, ptr.refresh)
+	ptr.SubscribeFunc(imbmc.DestroyModule, ptr.destroy)
 
 	return ptr
 }
 
+func (s *Module) verifyWorkingPath(workingPath string) *cd.Error {
+	if workingPath == "" {
+		return cd.NewError(cd.IllegalParam, "working path is empty")
+	}
+
+	if !filepath.IsAbs(workingPath) {
+		return cd.NewError(cd.IllegalParam, "working path must be absolute path")
+	}
+
+	normalizedPath := filepath.Clean(workingPath)
+	if strings.HasSuffix(normalizedPath, "/internal/modules/kernel") {
+		codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/modules/kernel")]
+		goModPath := filepath.Join(codeRootPath, "go.mod")
+		if _, err := os.Stat(goModPath); err != nil {
+			return cd.NewError(cd.IllegalParam, "working path must be a go module")
+		}
+		return nil
+	}
+
+	if strings.HasSuffix(normalizedPath, "/internal/modules/blocks") {
+		codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/modules/blocks")]
+		goModPath := filepath.Join(codeRootPath, "go.mod")
+		if _, err := os.Stat(goModPath); err != nil {
+			return cd.NewError(cd.IllegalParam, "working path must be a go module")
+		}
+		return nil
+	}
+
+	return cd.NewError(cd.IllegalParam, "working path must be /internal/modules/kernel or /internal/modules/blocks")
+}
+
 func (s *Module) create(ev event.Event, re event.Result) {
-	paramPtr, paramOK := ev.Data().(*tc.CreateParam)
-	if !paramOK {
+	workspacePtr, workspaceOK := ev.Data().(*models.Workspace)
+	if !workspaceOK {
 		log.Errorf("create module failed, illegal create module param")
 		if re != nil {
 			re.Set(nil, cd.NewError(cd.Unexpected, "illegal create module param"))
 		}
 		return
 	}
-	if !fp.Exist(paramPtr.WorkingPath) {
-		if err := os.MkdirAll(paramPtr.WorkingPath, 0755); err != nil {
-			log.Errorf("create module failed, create module working path failed, err: %v", err)
-			if re != nil {
-				re.Set(nil, cd.NewError(cd.Unexpected, "create module working path failed"))
-			}
-			return
-		}
-	}
+	templatePtr := ev.GetData("template").(*models.Template)
 
-	prefixPath, err := config.VerifyModuleWorkPath(paramPtr.ProjectType, paramPtr.WorkingPath)
+	workingPath := config.CurrentWorkingPath()
+	workingPath = filepath.Join(workingPath, imbmcfg.GetPath())
+	err := s.verifyWorkingPath(workingPath)
 	if err != nil {
-		log.Errorf("verify module work path failed, projectType:%s, workingPath:%s, err:%s", paramPtr.ProjectType, paramPtr.WorkingPath, err.Error())
-
+		log.Errorf("create module failed, verify module working path failed, err: %v", err)
 		if re != nil {
 			re.Set(nil, err)
 		}
 		return
 	}
 
-	//paramPtr.ProjectName = paramPtr.ProjectName
-	helper := biz.NewHelper(path.Join(common.ModuleTemplateBasePath, paramPtr.ProjectType))
-	err = helper.Create(prefixPath, paramPtr)
+	createrHelper := biz.NewHelper(templatePtr.HostRootFS, imbmc.ModuleTemplateBasePath)
+	err = createrHelper.Create(&common.CreateParam{
+		WorkingPath: workingPath,
+		ProjectName: workspacePtr.Name,
+		ModuleName:  imbmcfg.GetName(),
+		ModulePath:  imbmcfg.GetPath(),
+	})
 	if err != nil {
-		log.Errorf("create module failed, projectName:%s, prefixPath:%s, err:%s", paramPtr.ProjectName, prefixPath, err.Error())
+		log.Errorf("create module failed, err: %v", err)
 		if re != nil {
 			re.Set(nil, err)
 		}

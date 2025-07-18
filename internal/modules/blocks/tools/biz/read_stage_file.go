@@ -16,14 +16,16 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type ReadStageFileTool struct{}
+type ReadStageFileTool struct {
+	workspacePtr *models.Workspace
+}
 
 func (s *ReadStageFileTool) Name() string {
 	return "read_stage_file"
 }
 
 func (s *ReadStageFileTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
 		return ""
@@ -34,7 +36,7 @@ func (s *ReadStageFileTool) Prompt() string {
 
 func (s *ReadStageFileTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ReadStageFileTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *ReadStageFileTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -109,8 +111,8 @@ func (s *ReadStageFileTool) Execute(workspaceName, workspaceDir, workspaceType, 
 	if err != nil {
 		return
 	}
-	parentPath := filepath.Dir(workspaceDir)
-	fullPath := filepath.Join(parentPath, stageVal)
+	rootPath := s.workspacePtr.WorkspaceDir
+	fullPath := filepath.Join(rootPath, stageVal)
 	if !fp.Exist(fullPath) {
 		err = os.MkdirAll(fullPath, 0755)
 		if err != nil {

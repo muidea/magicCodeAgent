@@ -16,7 +16,7 @@ type AccessMcpResourceTool struct{}
 
 func (s *AccessMcpResourceTool) Name() string { return "access_mcp_resource" }
 func (s *AccessMcpResourceTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
 		return ""

@@ -1,17 +1,18 @@
 package common
 
 import (
+	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/pkg/models"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
 const PromptsInitiator = "/internal/initiators/prompts"
 
-const SectionPromptsBasePath = "assets/prompts/section"
+const innerSystemPromptsBasePath = "assets/system/prompts"
 
 const (
-	Global  = "*"
-	Service = "service"
-	Web     = "web"
+	Global = "*"
 )
 
 type PromptsRegistryHeper interface {
@@ -25,9 +26,15 @@ type Prompt interface {
 }
 
 type PromptsRegistry interface {
+	Reload(workspacePtr *models.Workspace)
 	AddSection(sectionPrompt Prompt)
-	// 添加自定section的prompts
 	AddPrompts(sectionPrompt string, prompt Prompt)
-	GetPromptsContent(stage string, filterTags fu.StringSet) string
+	GetStagePromptsContent(stage string) string
 	ReadSectionPromptContent(sectionPrompt string, param map[string]string) string
+}
+
+func ReadInnerSystemPrompts(promptName string) (ret string, err error) {
+	fileName := promptName + ".md"
+	ret, err = util.GetTemplateContent(config.GetTemplateFS(), innerSystemPromptsBasePath, "", fileName)
+	return
 }

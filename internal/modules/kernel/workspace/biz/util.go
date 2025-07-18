@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	fp "github.com/muidea/magicCommon/foundation/path"
+
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
@@ -26,12 +28,12 @@ func isIgnored(path string) bool {
 
 func NewBasePathFilter(rootPath string, basePath string) *basePathFilter {
 	return &basePathFilter{
-		fullBasePath: filepath.Clean(path.Join(rootPath, basePath)),
+		basePath: filepath.Clean(path.Join(rootPath, basePath)),
 	}
 }
 
 type basePathFilter struct {
-	fullBasePath string
+	basePath string
 }
 
 func (s *basePathFilter) Filter(val interface{}) bool {
@@ -44,7 +46,7 @@ func (s *basePathFilter) Filter(val interface{}) bool {
 		return false
 	}
 
-	return strings.HasPrefix(pathVal, s.fullBasePath)
+	return fp.IsSubPath(s.basePath, pathVal)
 }
 
 // ConvertPathsToTree 将文件路径列表转换为树形结构

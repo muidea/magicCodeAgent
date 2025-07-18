@@ -4,28 +4,27 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
-	fu "github.com/muidea/magicCommon/foundation/util"
 	"github.com/muidea/magicCommon/task"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imbcc "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
-	localConfig "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/config"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
-	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Commander interface {
-	RunCommand(workspace, workspaceDir, command string, restart bool, timeout int, args []string) (result string, err *cd.Error)
+	RunCommand(workspaceName, workspaceDir, command string) (result string, err *cd.Error)
+}
+
+type TemplateQuerier interface {
+	QueryTemplate(name string) (result *models.Template, err *cd.Error)
 }
 
 type Tools struct {
@@ -40,128 +39,20 @@ func New(
 	promptsRegistry iipc.PromptsRegistry,
 ) *Tools {
 	ptr := &Tools{
-		Base:         biz.New(imbtc.ToolsModule, eventHub, backgroundRoutine),
-		toolRegistry: NewToolRegistry(promptsRegistry),
+		Base: biz.New(imbtc.ToolsModule, eventHub, backgroundRoutine),
 	}
+	ptr.toolRegistry = NewToolRegistry(ptr, promptsRegistry)
 
-	ptr.toolRegistry.Register(&ReadFileTool{})
-	ptr.toolRegistry.Register(&ReadStageFileTool{})
-	ptr.toolRegistry.Register(&FetchInstructionsTool{})
-	ptr.toolRegistry.Register(&SearchFilesTool{})
-	ptr.toolRegistry.Register(&ListFilesTool{})
-	ptr.toolRegistry.Register(&ListStageFilesTool{})
-	ptr.toolRegistry.Register(&ListCodeDefinitionNamesTool{})
-	ptr.toolRegistry.Register(&ApplyDiffTool{})
-	ptr.toolRegistry.Register(&WriteToFileTool{})
-	ptr.toolRegistry.Register(&InsertContentTool{})
-	ptr.toolRegistry.Register(&SearchAndReplaceTool{})
-	ptr.toolRegistry.Register(&ExecuteCommandTool{
-		commander: ptr,
-	})
-	//ptr.toolRegistry.Register(&UseMcpToolTool{})
-	//ptr.toolRegistry.Register(&AccessMcpResourceTool{})
-	//ptr.toolRegistry.Register(&AskFollowupQuestionTool{})
-	ptr.toolRegistry.Register(&AttemptCompletionTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&AttemptFinishTool{
-		commander: ptr,
-	})
-	//ptr.toolRegistry.Register(&SwitchModeTool{})
-	//ptr.toolRegistry.Register(&NewTaskTool{})
-	ptr.toolRegistry.Register(&CreateServiceModuleTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&CreateWebModuleTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&CreateServiceInitiatorTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&InitializationServiceProjectTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&InitializationWebProjectTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&LintWebProjectTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&FormatWebProjectTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&RunWebProjectTool{
-		commander: ptr,
-	})
-	ptr.toolRegistry.Register(&DecomposeDesignPlanTool{
-		promptsRegistry: promptsRegistry,
-	})
-	ptr.toolRegistry.Register(&DecomposeCodePlanTool{
-		promptsRegistry: promptsRegistry,
-	})
+	ptr.SubscribeFunc(imbtc.ReloadTools, ptr.Reload)
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
 	return ptr
 }
 
 func (s *Tools) Run() (err *cd.Error) {
-	currentWorkDir := fu.GetCurrentWorkDir()
-
-	dataFile := localConfig.GetDataFile()
-	if dataFile != "" {
-		resultVal, resultErr := s.execDataFile(currentWorkDir, dataFile)
-		if resultErr != nil {
-			log.Errorf("exec data file failed!\n%v", resultErr.Error())
-			return
-		}
-
-		log.Infof("exec data file result.\n%s", resultVal)
-		return
-	}
-
-	dataContent := localConfig.GetDataContent()
-	if dataContent != "" {
-		_, resultVal, executeErr := s.execDataContent("anonymous", currentWorkDir, "", "", dataContent)
-		if resultVal != nil {
-			log.Infof("exec data content result.\n%v, error:%v", resultVal.Result.String(), executeErr)
-		}
-		return
-	}
-
 	return
 }
 
-func (s *Tools) execDataFile(workspaceDir, dataFile string) (string, error) {
-	if !fp.Exist(dataFile) {
-		log.Errorf("data file does not exist: %s", dataFile)
-		return "", fmt.Errorf("data file does not exist: %s", dataFile)
-	}
-
-	byteContent, byteErr := os.ReadFile(dataFile)
-	if byteErr != nil {
-		log.Errorf("failed to read data file: %s", byteErr.Error())
-		return "", fmt.Errorf("failed to read data file: %s", byteErr.Error())
-	}
-
-	blocksList, blockErr := util.SpliteBlocks(string(byteContent))
-	if blockErr != nil {
-		log.Errorf("failed to splite blocks: %s", blockErr.Error())
-		return "", fmt.Errorf("failed to splite blocks: %s", blockErr.Error())
-	}
-
-	byteBuilder := strings.Builder{}
-	for idx, block := range blocksList {
-		_, toolResult, _ := s.execDataContent("anonymous", workspaceDir, "", "", block)
-		if toolResult != nil {
-			if idx > 0 {
-				byteBuilder.WriteString("=======\n")
-			}
-			byteBuilder.WriteString(toolResult.Result.String() + "\n")
-		}
-	}
-	return byteBuilder.String(), nil
-}
-
-func (s *Tools) execDataContent(workspaceName, workspaceDir, workspaceType, stage, dataContent string) (imbtc.ToolParam, *imbtc.ToolResult, error) {
+func (s *Tools) execDataContent(dataContent string) (imbtc.ToolParam, *imbtc.ToolResult, error) {
 	toolName, toolParam, toolErr := parseParamContent(dataContent)
 	if toolErr != nil {
 		log.Errorf("failed to parse param content: %s", toolErr.Error())
@@ -194,7 +85,7 @@ func (s *Tools) execDataContent(workspaceName, workspaceDir, workspaceType, stag
 		}, nil
 	}
 
-	executeResult, executeErr := s.toolRegistry.Execute(workspaceName, workspaceDir, workspaceType, stage, toolName, toolParam)
+	executeResult, executeErr := s.toolRegistry.Execute(toolName, toolParam)
 	return toolParam, executeResult, executeErr
 }
 
@@ -286,16 +177,15 @@ func parseParamContent(content string) (string, imbtc.ToolParam, error) {
 			param["path"] = strings.TrimSpace(pathValue)
 		}
 
-		// 根据工具类型提取不同参数
-		if tagName == "apply_diff" {
-			// 提取diff参数
+		switch tagName {
+		case "apply_diff":
 			diffStart := strings.Index(content, "<diff>")
 			diffEnd := strings.Index(content, "</diff>")
 			if diffStart != -1 && diffEnd != -1 {
 				diffValue := content[diffStart+6 : diffEnd]
 				param["diff"] = diffValue
 			}
-		} else if tagName == "write_to_file" {
+		case "write_to_file":
 			// 提取content参数
 			contentStart := strings.Index(content, "<content>")
 			contentEnd := strings.Index(content, "</content>")
@@ -316,7 +206,6 @@ func parseParamContent(content string) (string, imbtc.ToolParam, error) {
 				param["line_count"] = strings.TrimSpace(lineCountValue)
 			}
 		}
-
 		return tagName, param, nil
 	}
 
@@ -380,6 +269,29 @@ func parseParamContent(content string) (string, imbtc.ToolParam, error) {
 	return tagName, param, nil
 }
 
+func (s *Tools) Reload(ev event.Event, re event.Result) {
+	workspaceVal := ev.Data()
+	if workspaceVal == nil {
+		log.Errorf("reload tools failed, workspace is nil ")
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.IllegalParam, "invalid workspace"))
+		}
+		return
+	}
+	workspacePtr, ok := workspaceVal.(*models.Workspace)
+	if !ok {
+		log.Errorf("reload tools failed, workspace is invalid")
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.IllegalParam, "invalid workspace"))
+		}
+		return
+	}
+	err := s.toolRegistry.Reload(workspacePtr)
+	if re != nil {
+		re.Set(nil, err)
+	}
+}
+
 func (s *Tools) Execute(ev event.Event, re event.Result) {
 	var err *cd.Error
 	var executeParam imbtc.ToolParam
@@ -399,34 +311,7 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 		log.Warnf("content is not string, dataVal:%v", dataVal)
 		return
 	}
-	workspaceNameVal := ev.GetData("workspaceName")
-	workspaceName, workspaceNameOK := workspaceNameVal.(string)
-	if !workspaceNameOK {
-		err = cd.NewError(cd.IllegalParam, "execute tool failed, invalid workspaceName")
-		log.Warnf("workspaceName is not string, workspaceNameVal:%v", workspaceNameVal)
-		return
-	}
-	workspaceDirVal := ev.GetData("workspaceDir")
-	workspaceDir, workspaceDirOK := workspaceDirVal.(string)
-	if !workspaceDirOK {
-		err = cd.NewError(cd.IllegalParam, "execute tool failed, workspaceDir is not string")
-		log.Warnf("workspaceDir is not string, dataVal:%v", workspaceDirVal)
-		return
-	}
-	workspaceTypeVal := ev.GetData("workspaceType")
-	workspaceType, workspaceTypeOK := workspaceTypeVal.(string)
-	if !workspaceTypeOK {
-		err = cd.NewError(cd.IllegalParam, "execute tool failed, workspaceType is not string")
-		log.Warnf("workspaceType is not string, dataVal:%v", workspaceTypeVal)
-		return
-	}
-	stageVal := ev.GetData("stage").(string)
-	if !common.ValidStage(stageVal) {
-		err = cd.NewError(cd.IllegalParam, "execute tool failed, invalid stage")
-		log.Warnf("stage is not valid, stage:%v", stageVal)
-		return
-	}
-	executeParam, executeResult, executeErr = s.execDataContent(workspaceName, workspaceDir, workspaceType, stageVal, contentVal)
+	executeParam, executeResult, executeErr = s.execDataContent(contentVal)
 	if executeErr != nil {
 		err = cd.NewError(cd.Unexpected, fmt.Sprintf("execute tool failed, executeErr:%v", executeErr.Error()))
 		log.Errorf("execute tool failed, executeErr:%v", executeErr)
@@ -434,19 +319,16 @@ func (s *Tools) Execute(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool, timeout int, args []string) (result string, err *cd.Error) {
+func (s *Tools) RunCommand(workspaceName, workspaceDir, command string) (result string, err *cd.Error) {
 	defer func() {
 		if err != nil {
 			log.Errorf("run command failed, err:%v", err)
 		}
 	}()
-	commandEvent := event.NewEvent(imbcc.CommandRun, s.ID(), imbcc.CommanderModule, nil, workspace)
+	commandEvent := event.NewEvent(imbcc.CommandRun, s.ID(), imbcc.CommanderModule, nil, workspaceName)
 	paramPtr := &imbcc.CommanderParam{
-		Args:         args,
 		Command:      command,
-		Restart:      restart,
 		WorkspaceDir: workspaceDir,
-		TimeOut:      timeout,
 	}
 	commandEvent.SetData("command", paramPtr)
 
@@ -461,7 +343,7 @@ func (s *Tools) RunCommand(workspace, workspaceDir, command string, restart bool
 		return
 	}
 	commandResultPtr := commandResult.(*imbcc.CommanderResult)
-	if commandResultPtr.Workspace != workspace {
+	if commandResultPtr.Workspace != workspaceName {
 		err = cd.NewError(cd.Unexpected, "run command failed, workspace not match")
 		return
 	}

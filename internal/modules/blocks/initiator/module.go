@@ -8,6 +8,8 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/pkg/common"
+
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/config"
 )
 
 func init() {

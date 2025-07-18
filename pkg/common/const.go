@@ -29,30 +29,8 @@ const (
 )
 
 const (
-	UnknownStage = ""
-	DesignStage  = "design"
-	CodeStage    = "code"
-	TestStage    = "test"
-	PublishStage = "publish"
-)
-
-func ValidStage(stage string) bool {
-	switch stage {
-	case DesignStage, CodeStage, TestStage, PublishStage:
-		return true
-	default:
-		return false
-	}
-}
-
-const (
 	WorkspaceName  = "workspace"
 	WorkspaceDir   = "workspaceDir"
 	WorkspaceStage = "workspaceStage"
 	WorkspaceType  = "workspaceType"
-)
-
-const (
-	Service = "service"
-	Web     = "web"
 )

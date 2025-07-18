@@ -13,8 +13,8 @@ import (
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
 
-	"github.com/muidea/magicCodeAgent/internal/config"
 	mc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 const mimeType = "application/json; charset=utf-8"
@@ -112,7 +112,7 @@ func (s *MCP) workspaceResourceHandler(
 		log.Errorf("FilterWorkspace failed, s.SendEvent error:%s", err.Error())
 		return
 	}
-	workspaceList := resultVal.([]*config.Workspace)
+	workspaceList := resultVal.([]*models.Workspace)
 	for _, val := range workspaceList {
 		ret = append(ret, mcp.TextResourceContents{
 			URI:      s.workspaceResourceContentURI(val.Name),

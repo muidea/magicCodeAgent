@@ -2,8 +2,8 @@ package factory
 
 import (
 	"bytes"
+	"io/fs"
 	"os"
-	"os/exec"
 	"path"
 	"text/template"
 
@@ -13,6 +13,10 @@ import (
 
 	"github.com/muidea/magicCodeAgent/pkg/util"
 )
+
+type FileFactory interface {
+	Create(workingPath, relativePath, fileName string, forceFlag bool) (err error)
+}
 
 var functionMap template.FuncMap
 
@@ -39,43 +43,51 @@ func UnRegisterFunc(name string) {
 	delete(functionMap, name)
 }
 
-type FileFactory struct {
-	templatePath string
-	relativePath string
-	templateName string
-	contentData  map[string]interface{}
+type fileFactory struct {
+	templateRootFS fs.FS
+	templatePath   string
+	relativePath   string
+	templateName   string
+	contentData    map[string]interface{}
 }
 
-func NewFileFactory(templatePath, relativePath, templateName string, contentData map[string]interface{}) *FileFactory {
-	return &FileFactory{
-		templatePath: templatePath,
-		relativePath: relativePath,
-		templateName: templateName,
-		contentData:  contentData,
+func NewFileFactory(templateRootFS fs.FS, templatePath, relativePath, templateName string, contentData map[string]interface{}) FileFactory {
+	return &fileFactory{
+		templateRootFS: templateRootFS,
+		templatePath:   templatePath,
+		relativePath:   relativePath,
+		templateName:   templateName,
+		contentData:    contentData,
 	}
 }
 
-func (s *FileFactory) getTemplateName(relativePath string) string {
+func (s *fileFactory) getTemplateName(relativePath string) string {
 	return path.Join(relativePath, s.templateName)
 }
 
-func (s *FileFactory) getTemplateContent(relativePath string) (ret string, err error) {
-	contentVal, contentErr := util.GetTemplateContent(s.templatePath, relativePath, s.templateName)
+func (s *fileFactory) getTemplateContent(relativePath string) (ret string, err error) {
+	fullFilePath := path.Join(s.templatePath, relativePath, s.templateName)
+	if _, fileErr := fs.Stat(s.templateRootFS, fullFilePath); fileErr != nil {
+		err = fileErr
+		return
+	}
+
+	contentVal, contentErr := fs.ReadFile(s.templateRootFS, fullFilePath)
 	if contentErr != nil {
 		err = contentErr
 		return
 	}
 
-	ret = contentVal
+	ret = string(contentVal)
 	return
 }
 
-func (s *FileFactory) Create(workingPath, relativePath, fileName string, forceFlag bool) (err error) {
+func (s *fileFactory) Create(workingPath, relativePath, fileName string, forceFlag bool) (err error) {
 	filePath := path.Join(workingPath, relativePath, fileName)
 	filePath, fileName = path.Split(filePath)
 	existFlag := fp.Exist(filePath)
 	if !existFlag {
-		err = os.MkdirAll(filePath, os.ModePerm)
+		err = os.MkdirAll(filePath, 0755)
 		if err != nil {
 			return
 		}
@@ -109,9 +121,6 @@ func (s *FileFactory) Create(workingPath, relativePath, fileName string, forceFl
 		if err != nil {
 			return
 		}
-
-		cmd := exec.Command("gofmt", "-w", filePath)
-		err = cmd.Run()
 	}
 
 	return
@@ -121,7 +130,7 @@ type MemoryFactory struct {
 	templateVal string
 }
 
-func NewMemoryFactor(templateVal string) *MemoryFactory {
+func NewMemoryFactory(templateVal string) *MemoryFactory {
 	return &MemoryFactory{templateVal: templateVal}
 }
 

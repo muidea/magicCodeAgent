@@ -10,11 +10,8 @@ const (
 )
 
 type CommanderParam struct {
-	WorkspaceDir string   `json:"workspaceDir"`
-	Command      string   `json:"command"`
-	Args         []string `json:"args"`
-	Restart      bool     `json:"restart"`
-	TimeOut      int      `json:"timeOut"`
+	WorkspaceDir string `json:"workspaceDir"`
+	Command      string `json:"command"`
 }
 
 type CommanderResult struct {

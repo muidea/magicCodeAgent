@@ -4,9 +4,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-
-	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
-	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 type FlowID struct{}
@@ -21,25 +18,14 @@ func (s *ContentSink) String() string {
 	return "ContentSink"
 }
 
-type ContentSinker interface {
-	OnClose()
-	OnRecv(event, content string, usagePtr *imklc.Usage)
-}
-
 type CreateParam struct {
-	ProjectName        string `json:"projectName omitempty"`
-	ProjectType        string `json:"projectType"`
+	WorkingPath        string `json:"workingPath"`
+	ProjectName        string `json:"projectName"`
 	ProjectDescription string `json:"projectDescription"`
 	ModuleName         string `json:"moduleName"`
-	WorkingPath        string `json:"workingPath"`
-	EnableService      bool   `json:"enableService"`
-	EnableDao          bool   `json:"enableDao"`
-}
-
-type MessageSink interface {
-	OnTerminate(msgPtr *models.MessageInfo)
-	OnSendMessage(msgPtr *models.MessageInfo)
-	OnRecvMessage(msgPtr *models.MessageInfo, usagePtr *imklc.Usage)
+	ModulePath         string `json:"modulePath"`
+	InitiatorName      string `json:"initiatorName"`
+	InitiatorPath      string `json:"initiatorPath"`
 }
 
 type MessageFilter struct {

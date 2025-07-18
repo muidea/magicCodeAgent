@@ -1,0 +1,254 @@
+package models
+
+import (
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/muidea/magicCommon/foundation/log"
+	fu "github.com/muidea/magicCommon/foundation/util"
+)
+
+const (
+	EnableStatus  = "enable"  // 启用状态
+	DisableStatus = "disable" // 禁用状态
+	OfflineStatus = "offline" // 离线状态
+)
+
+const (
+	UnknownStage = ""
+	DesignStage  = "design"
+	CodeStage    = "code"
+	DebugStage   = "debug"
+	PublishStage = "publish"
+)
+
+const (
+	InnerKey = "inner"
+	LocalKey = "local"
+)
+
+const TemplatePath = "assets/templates"
+
+func ValidStage(stage string) bool {
+	switch stage {
+	case DesignStage, CodeStage, DebugStage, PublishStage:
+		return true
+	default:
+		return false
+	}
+}
+
+func GetStageReferenceStage(stage string) string {
+	switch stage {
+	case DesignStage:
+		return ""
+	case CodeStage, DebugStage:
+		return DesignStage
+	default:
+		return ""
+	}
+}
+
+func GetStageReferenceLabel(stage string) string {
+	switch stage {
+	case DesignStage:
+		return "设计文件列表"
+	case CodeStage, DebugStage:
+		return "代码列表"
+	default:
+		return "参考列表"
+	}
+}
+
+type Workspace struct {
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	Category     string   `json:"category"`
+	Template     string   `json:"template"`
+	Status       string   `json:"status"`
+	Stage        string   `json:"stage"`
+	WorkspaceDir string   `json:"workspaceDir"`
+	TechStack    []string `json:"techStack"`
+	Ignores      []string `json:"ignores"`
+	UpdateTime   string   `json:"updateTime"`
+}
+
+func (s *Workspace) GetName() string {
+	return s.Name
+}
+
+func (s *Workspace) GetRootPath() string {
+	return s.WorkspaceDir
+}
+
+func (s *Workspace) GetWorkingPath() string {
+	switch s.Stage {
+	case DesignStage:
+		return filepath.Join(s.WorkspaceDir, "design")
+	default:
+		return filepath.Join(s.WorkspaceDir, "code")
+	}
+}
+
+func (s *Workspace) GetStageWorkingPath(stage string) string {
+	switch stage {
+	case DesignStage:
+		return filepath.Join(s.WorkspaceDir, "design")
+	case CodeStage, DebugStage:
+		return filepath.Join(s.WorkspaceDir, "code")
+	default:
+		return ""
+	}
+}
+
+func (s Workspace) GetStage() string {
+	return s.Stage
+}
+
+func (s *Workspace) Available() bool {
+	return s.Status == EnableStatus
+}
+
+func (s *Workspace) IsSamge(ptr *Workspace) bool {
+	if ptr == nil {
+		return false
+	}
+
+	return s.Name == ptr.Name &&
+		s.Category == ptr.Category &&
+		s.Template == ptr.Template &&
+		s.Status == ptr.Status &&
+		s.Stage == ptr.Stage &&
+		s.WorkspaceDir == ptr.WorkspaceDir &&
+		fu.StringSlicesEqual(s.TechStack, ptr.TechStack)
+}
+
+func (s *Workspace) IsInnerTemplate() bool {
+	items := strings.Split(s.Category, "/")
+	return len(items) > 1 && items[0] == InnerKey
+}
+
+type Template struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Category    string   `json:"category"`
+	TechStack   []string `json:"techStack"`
+	Ignores     []string `json:"ignores"`
+	HostRootFS  fs.FS    `json:"-"`
+}
+
+/*
+├── prompts 目录及内容必选
+│   ├── decompose-code-plan-block.md
+│   ├── decompose-code-plan-module.md
+│   ├── decompose-code-plan-project.md
+│   ├── decompose-design-plan-block.md
+│   ├── decompose-design-plan-module.md
+│   ├── decompose-design-plan-project.md
+│   ├── project-struct.md
+│   ├── stage-code-status.md
+│   └── stage-design-status.md
+├── template  目录及内容必选
+│   ├── module  目录必选
+│   └── project  目录必选
+├── template.json 文件必选
+└── tools 目录必选
+
+*/
+// 校验HostPath下的包含的内容是否符合上述要求，不符合要求返回error
+func (s *Template) Validate() error {
+	requiredDirs := []string{
+		"prompts",
+		"template/module",
+		"template/project",
+		"tools",
+	}
+
+	requiredFiles := []string{
+		"prompts/decompose-code-plan-block.md",
+		"prompts/decompose-code-plan-module.md",
+		"prompts/decompose-code-plan-project.md",
+		"prompts/decompose-design-plan-block.md",
+		"prompts/decompose-design-plan-module.md",
+		"prompts/decompose-design-plan-project.md",
+		"prompts/project-struct.md",
+		"prompts/stage-code-status.md",
+		"prompts/stage-design-status.md",
+		"template.json",
+	}
+
+	var missing []string
+
+	// 检查必选目录
+	for _, dir := range requiredDirs {
+		finalPath := filepath.Join(TemplatePath, s.Name, dir)
+		log.Infof("checking directory: %s", finalPath)
+		if _, err := fs.Stat(s.HostRootFS, finalPath); os.IsNotExist(err) {
+			missing = append(missing, dir)
+		}
+	}
+
+	// 检查必选文件
+	for _, file := range requiredFiles {
+		finalPath := filepath.Join(TemplatePath, s.Name, file)
+		log.Infof("checking file: %s", finalPath)
+		if _, err := fs.Stat(s.HostRootFS, finalPath); os.IsNotExist(err) {
+			missing = append(missing, file)
+		}
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("缺少必要的文件或目录: %v", missing)
+	}
+
+	return nil
+}
+
+func (s *Template) LoadTools() (ret []string) {
+	finalPath := filepath.Join(TemplatePath, s.Name, "tools")
+	entityList, entityErr := fs.ReadDir(s.HostRootFS, finalPath)
+	if entityErr != nil {
+		log.Errorf("load tools failed, error:%s", entityErr.Error())
+		return
+	}
+	for _, val := range entityList {
+		if val.IsDir() {
+			continue
+		}
+
+		finalPath = filepath.Join(TemplatePath, s.Name, "tools", val.Name())
+		fileContent, fileErr := fs.ReadFile(s.HostRootFS, finalPath)
+		if fileErr != nil {
+			log.Errorf("load tools failed, error:%s", fileErr.Error())
+			continue
+		}
+		ret = append(ret, string(fileContent))
+	}
+
+	return
+}
+
+func (s *Template) ReadPrompt(name string) (ret string, err error) {
+	finalPath := filepath.Join(TemplatePath, s.Name, "prompts", name+".md")
+	fileContent, fileErr := fs.ReadFile(s.HostRootFS, finalPath)
+	if fileErr != nil {
+		log.Errorf("load prompt failed, error:%s", fileErr.Error())
+		err = fileErr
+		return
+	}
+	ret = string(fileContent)
+	return
+}
+
+func (s *Template) GetModuleTemplatePath() (ret string) {
+	ret = filepath.Join(TemplatePath, s.Name, "template", "module")
+	return
+}
+
+func (s *Template) GetProjectTemplatePath() (ret string) {
+	ret = filepath.Join(TemplatePath, s.Name, "template", "project")
+	return
+}

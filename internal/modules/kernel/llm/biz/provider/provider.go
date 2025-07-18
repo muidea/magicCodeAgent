@@ -27,9 +27,9 @@ type StreamTunnel struct {
 	context              context.Context
 	header               url.Values
 	contextStreamSinker  sse.StreamSinker
-	contextContentSinker common.ContentSinker
+	contextContentSinker imklc.ContentSinker
 
-	localContentSinker common.ContentSinker
+	localContentSinker imklc.ContentSinker
 	packedContent      string
 	contentUsage       *imklc.Usage
 }
@@ -113,18 +113,18 @@ func NewStream(
 	retryWait time.Duration,
 	maxRetries int,
 	context context.Context,
-	localContentSinker common.ContentSinker,
+	localContentSinker imklc.ContentSinker,
 	header url.Values,
 ) *StreamTunnel {
 	var streamSinker sse.StreamSinker
-	var cotentSinker common.ContentSinker
+	var cotentSinker imklc.ContentSinker
 	streamVal := context.Value(sse.StreamSink{})
 	streamSinkVal, streamSinkOK := streamVal.(sse.StreamSinker)
 	if streamSinkOK {
 		streamSinker = streamSinkVal
 	}
 	contentVal := context.Value(common.ContentSink{})
-	cotentSinkVal, cotentSinkOK := contentVal.(common.ContentSinker)
+	cotentSinkVal, cotentSinkOK := contentVal.(imklc.ContentSinker)
 	if cotentSinkOK {
 		cotentSinker = cotentSinkVal
 	}
@@ -145,12 +145,12 @@ func NewStream(
 
 type Provider struct {
 	workspaceName string
-	messageSink   common.MessageSink
+	messageSink   imklc.MessageSink
 }
 
 func NewProvider(
 	workspaceName string,
-	messageSink common.MessageSink,
+	messageSink imklc.MessageSink,
 ) *Provider {
 	return &Provider{
 		workspaceName: workspaceName,

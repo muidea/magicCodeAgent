@@ -1,0 +1,17 @@
+{
+    "name": "service_v0.0.1",
+    "description": "描述项目目标，包含的功能点和实现要求",
+    "category": "inner/service",
+    "techStack": [
+        "go",
+        "docker",
+        "shell"
+    ],
+    "ignores": [
+        "vendor",
+        "*.log",
+        "*.lock",
+        ".git",
+        ".github"
+    ]
+}

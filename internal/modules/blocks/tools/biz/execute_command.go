@@ -3,6 +3,7 @@ package biz
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
@@ -15,12 +16,13 @@ import (
 )
 
 type ExecuteCommandTool struct {
-	commander Commander
+	commander    Commander
+	workspacePtr *models.Workspace
 }
 
 func (s *ExecuteCommandTool) Name() string { return "execute_command" }
 func (s *ExecuteCommandTool) Prompt() string {
-	promptsVal, promptsErr := imbtc.ReadToolsPrompts(s.Name())
+	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("read prompts failed, err: %s", promptsErr.Error())
 		return ""
@@ -31,7 +33,7 @@ func (s *ExecuteCommandTool) Prompt() string {
 
 func (s *ExecuteCommandTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, workspaceType, stage string, param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *ExecuteCommandTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -49,7 +51,7 @@ func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, workspaceType,
 			ret.Result.Content = append(ret.Result.Content, result)
 		}
 	}()
-	fullPath := workspaceDir
+	fullPath := s.workspacePtr.GetWorkingPath()
 	if !fp.Exist(fullPath) {
 		err = fmt.Errorf("workspace not exist: %s", fullPath)
 		return
@@ -71,7 +73,8 @@ func (s *ExecuteCommandTool) Execute(workspaceName, workspaceDir, workspaceType,
 			}
 		}
 	}
-	runResult, runErr := s.commander.RunCommand(workspaceName, fullPath, command, true, 0, args)
+	command = fmt.Sprintf("%s %s", command, strings.Join(args, " "))
+	runResult, runErr := s.commander.RunCommand(s.workspacePtr.Name, fullPath, command)
 	if runErr != nil {
 		log.Errorf("run command failed, error: %s", runErr.Error())
 		result = fmt.Sprintf("execute command failed, error:%s", runErr.Error())

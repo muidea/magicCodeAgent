@@ -3,19 +3,24 @@ package config
 import (
 	"flag"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 
-	"github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 	cd "github.com/muidea/magicCommon/def"
 )
 
 const (
-	ModuleVal    = "module"
-	InitiatorVal = "initiator"
-	ProjectVal   = "project"
-	CreateVal    = "create"
-	DestroyVal   = "destroy"
-	RefreshVal   = "refresh"
+	ModuleKey    = "module"
+	InitiatorKey = "initiator"
+	ProjectKey   = "project"
+	CreateKey    = "create"
+	DestroyKey   = "destroy"
+	RefreshKey   = "refresh"
+	WorkspaceKey = "workspace"
 )
 
 // actionType: module,initiator,project
@@ -23,22 +28,12 @@ var actionType string
 
 // executeAction: create,destroy,refresh
 var executeAction string
-var projectType string
-var projectName string
-var projectDescription string
-var moduleName string
-var enableService bool
-var enableDao bool
+
+var currentWorkspace *models.Workspace
 
 func init() {
 	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initiator/project)")
 	flag.StringVar(&executeAction, "executeAction", "", "execute action (required, options: create/destroy/refresh)")
-	flag.StringVar(&projectName, "projectName", "", "project name (required, must start with letter and contain only alphanumeric chars)")
-	flag.StringVar(&projectType, "projectType", "", "project type (required, options: web/service)")
-	flag.StringVar(&projectDescription, "projectDescription", "", "project description")
-	flag.StringVar(&moduleName, "moduleName", "", "module name (required, must start with letter and contain only alphanumeric chars)")
-	flag.BoolVar(&enableService, "enableService", false, "enable service (optional, default: false)")
-	flag.BoolVar(&enableDao, "enableDao", false, "enable dao (optional, default: false)")
 }
 
 func GetActionType() string {
@@ -49,28 +44,8 @@ func GetExecuteAction() string {
 	return executeAction
 }
 
-func GetModuleName() string {
-	return moduleName
-}
-
-func GetProjectName() string {
-	return projectName
-}
-
-func GetProjectType() string {
-	return projectType
-}
-
-func GetProjectDescription() string {
-	return projectDescription
-}
-
-func GetEnableService() bool {
-	return enableService
-}
-
-func GetEnableDao() bool {
-	return enableDao
+func GetCurrentWorkspace() *models.Workspace {
+	return currentWorkspace
 }
 
 var namePattern = regexp.MustCompile(`^(?:[a-zA-Z][a-zA-Z0-9]*)$`)
@@ -92,7 +67,7 @@ func VerifyVar() (err *cd.Error) {
 		err = cd.NewError(cd.IllegalParam, "actionType不能为空")
 		return
 	}
-	if actionType != "module" && actionType != "initiator" && actionType != "project" {
+	if actionType != ModuleKey && actionType != InitiatorKey && actionType != ProjectKey {
 		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("actionType:%s, 必须是module/initiator/project之一", actionType))
 		return
 	}
@@ -102,28 +77,68 @@ func VerifyVar() (err *cd.Error) {
 		err = cd.NewError(cd.IllegalParam, "executeAction不能为空")
 		return
 	}
-	if executeAction != "create" && executeAction != "destroy" && executeAction != "refresh" {
+	if executeAction != CreateKey && executeAction != DestroyKey && executeAction != RefreshKey {
 		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("executeAction:%s, 必须是create/destroy/refresh之一", executeAction))
 		return
 	}
 
-	if projectType != common.Service && projectType != common.Web {
-		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("projectType:%s, 必须是service/web之一", projectType))
+	workspaceName, workspaceOK := os.LookupEnv(WorkspaceKey)
+	if workspaceOK {
+		currentWorkspace = config.GetWorkspace(workspaceName)
+	} else {
+		// 读取inner service创建Workspace
+		// 所以这里只能默认为是基于magic框架的golang项目
+		currentWorkspace = getDefaultWorkspace()
+	}
+
+	if currentWorkspace == nil {
+		err = cd.NewError(cd.IllegalParam, "当前工作目录不是有效的项目目录")
 		return
 	}
 
-	switch actionType {
-	case "module", "initiator":
-		if !namePattern.MatchString(moduleName) {
-			err = cd.NewError(cd.IllegalParam, fmt.Sprintf("moduleName:%s, 只能是字母开头的普通单词", moduleName))
-			return
-		}
-	case "project":
-		if !namePattern.MatchString(projectName) {
-			err = cd.NewError(cd.IllegalParam, fmt.Sprintf("projectName:%s, 只能是字母开头的普通单词", projectName))
-			return
+	return
+}
+
+func getDefaultWorkspace() *models.Workspace {
+	workingPath := config.CurrentWorkingPath()
+
+	codeRootPath := workingPath
+	workingPath = filepath.ToSlash(workingPath)
+	suffixes := []string{
+		"/internal/initiator",
+		"/internal/modules/kernel",
+		"/internal/modules/blocks",
+	}
+	for _, suffix := range suffixes {
+		if strings.HasSuffix(workingPath, suffix) {
+			codeRootPath = strings.TrimSuffix(workingPath, suffix)
+			codeRootPath = strings.TrimRight(codeRootPath, "/")
+			break
 		}
 	}
 
-	return
+	goModPath := filepath.Join(codeRootPath, "go.mod")
+	if _, err := os.Stat(goModPath); err == nil {
+		content, err := os.ReadFile(goModPath)
+		if err == nil {
+			lines := strings.Split(string(content), "\n")
+			for _, line := range lines {
+				if strings.HasPrefix(line, "module ") {
+					modulePath := strings.TrimSpace(strings.TrimPrefix(line, "module"))
+					parts := strings.Split(modulePath, "/")
+					name := parts[len(parts)-1]
+
+					return &models.Workspace{
+						Name:     name,
+						Category: "inner/service",
+						Template: "service_v0.0.1",
+						Status:   "enable",
+						Stage:    "code",
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }

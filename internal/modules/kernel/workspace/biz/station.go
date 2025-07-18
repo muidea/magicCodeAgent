@@ -42,7 +42,7 @@ type Observer interface {
 
 type Station struct {
 	bizBasePtr      *biz.Base
-	workspaceConfig config.Workspace
+	workspaceConfig models.Workspace
 	fileInfo        util.FileManager
 
 	chatRunningStatus string
@@ -63,7 +63,7 @@ type Station struct {
 
 func NewStation(
 	bizBasePtr *biz.Base,
-	workspacePtr *config.Workspace,
+	workspacePtr *models.Workspace,
 	worker Worker,
 	assistant Assistant,
 	promptsRegistry iipc.PromptsRegistry,
@@ -83,16 +83,8 @@ func NewStation(
 	return ret
 }
 
-func (s *Station) getWorkspaceType() string {
-	return s.workspaceConfig.GetWorkspaceType()
-
-}
-
 func (s *Station) systemPrompt() string {
-	filterTags := s.workspaceConfig.TechStack
-	filterTags = filterTags.Add(s.workspaceConfig.GetWorkspaceType())
-
-	return s.promptsRegistry.GetPromptsContent(s.workspaceConfig.GetStage(), filterTags)
+	return s.promptsRegistry.GetStagePromptsContent(s.workspaceConfig.GetStage())
 }
 
 func (s *Station) envPrompt(ptr *models.Flow) string {
@@ -111,8 +103,9 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 
 	param := map[string]string{}
 	//## 项目规划目录
-	if s.workspaceConfig.GetStage() != common.DesignStage {
-		structContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("project-struct-%s", s.getWorkspaceType()), param)
+	// TODO 这里需要根据workspace对应的Template进行获取
+	if s.workspaceConfig.GetStage() != models.DesignStage {
+		structContent := s.promptsRegistry.ReadSectionPromptContent("project-struct", param)
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
 			stringBuilder.WriteString("\n\n")
@@ -123,19 +116,16 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	param = map[string]string{
 		"Level": ptr.GetLevel(),
 	}
-	statusContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s-status-%s", s.workspaceConfig.GetStage(), s.getWorkspaceType()), param)
+	statusContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s-status", s.workspaceConfig.GetStage()), param)
 	if statusContent != "" {
 		stringBuilder.WriteString(statusContent)
 		stringBuilder.WriteString("\n\n")
 	}
 
 	// 参考内容清单
-	referenceStageVal := ""
-	switch s.workspaceConfig.GetStage() {
-	case common.CodeStage, common.TestStage:
-		referenceStageVal = common.DesignStage
-	}
-	referenceStage, referenceLabel, referencePath := s.workspaceConfig.GetReferenceStagePath(referenceStageVal)
+	referenceStageVal := models.GetStageReferenceStage(s.workspaceConfig.GetStage())
+	referenceLabel := models.GetStageReferenceLabel(referenceStageVal)
+	referencePath := s.workspaceConfig.GetStageWorkingPath(referenceStageVal)
 	if referencePath != "" {
 		hasReference := false
 		stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", referenceLabel))
@@ -148,12 +138,12 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 			return true
 		})
 		if hasReference {
-			stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", referenceStage))
+			stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", referenceStageVal))
 			stringBuilder.WriteString("\n\n")
 		}
 	}
 
-	stagePath := s.workspaceConfig.GetStageWorkPath()
+	workingPath := s.workspaceConfig.GetWorkingPath()
 	if ptr != nil {
 		// 当前任务执行状态
 		// 新增，删除，修改的文件清单
@@ -161,8 +151,8 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		if ptr.AddFiles.Len() > 0 {
 			stringBuilder.WriteString("#### 新增文件清单\n\n")
 			ptr.AddFiles.Range(func(filePath string) bool {
-				if strings.HasPrefix(filePath, stagePath) {
-					relativePath := filePath[len(stagePath)+1:]
+				if strings.HasPrefix(filePath, workingPath) {
+					relativePath := filePath[len(workingPath)+1:]
 					stringBuilder.WriteString("- " + relativePath + "\n")
 				}
 				return true
@@ -172,8 +162,8 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		if ptr.DelFiles.Len() > 0 {
 			stringBuilder.WriteString("#### 删除文件清单\n\n")
 			ptr.DelFiles.Range(func(filePath string) bool {
-				if strings.HasPrefix(filePath, stagePath) {
-					relativePath := filePath[len(stagePath)+1:]
+				if strings.HasPrefix(filePath, workingPath) {
+					relativePath := filePath[len(workingPath)+1:]
 					stringBuilder.WriteString("- " + relativePath + "\n")
 				}
 				return true
@@ -183,8 +173,8 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 		if ptr.ModFiles.Len() > 0 {
 			stringBuilder.WriteString("#### 修改文件清单\n\n")
 			ptr.ModFiles.Range(func(filePath string) bool {
-				if strings.HasPrefix(filePath, stagePath) {
-					relativePath := filePath[len(stagePath)+1:]
+				if strings.HasPrefix(filePath, workingPath) {
+					relativePath := filePath[len(workingPath)+1:]
 					stringBuilder.WriteString("- " + relativePath + "\n")
 				}
 				return true
@@ -196,8 +186,8 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 
 	stringBuilder.WriteString("### 当前文件清单\n\n")
 	s.fileInfo.Range(func(filePath string) bool {
-		if strings.HasPrefix(filePath, stagePath) {
-			relativePath := filePath[len(stagePath)+1:]
+		if strings.HasPrefix(filePath, workingPath) {
+			relativePath := filePath[len(workingPath)+1:]
 			stringBuilder.WriteString("- " + relativePath + "\n")
 		}
 		return true
@@ -220,9 +210,9 @@ func (s *Station) Available() bool {
 }
 
 func (s *Station) checkIgnore(fileFullPath string) bool {
-	stagePath := s.workspaceConfig.GetStageWorkPath()
+	workingPath := s.workspaceConfig.GetWorkingPath()
 	for _, ignore := range s.workspaceConfig.Ignores {
-		ignorePath := filepath.Join(stagePath, ignore)
+		ignorePath := filepath.Join(workingPath, ignore)
 		if strings.HasPrefix(fileFullPath, ignorePath) {
 			return true
 		}
@@ -233,7 +223,7 @@ func (s *Station) checkIgnore(fileFullPath string) bool {
 }
 
 func (s *Station) AddFile(filePath string) bool {
-	if !fp.IsSubPath(s.workspaceConfig.Path, filePath) {
+	if !fp.IsSubPath(s.workspaceConfig.GetRootPath(), filePath) {
 		return false
 	}
 
@@ -252,7 +242,7 @@ func (s *Station) AddFile(filePath string) bool {
 }
 
 func (s *Station) RemoveFile(filePath string) bool {
-	if !fp.IsSubPath(s.workspaceConfig.Path, filePath) {
+	if !fp.IsSubPath(s.workspaceConfig.WorkspaceDir, filePath) {
 		return false
 	}
 
@@ -271,7 +261,7 @@ func (s *Station) RemoveFile(filePath string) bool {
 }
 
 func (s *Station) WriteFile(filePath string) bool {
-	if !fp.IsSubPath(s.workspaceConfig.Path, filePath) {
+	if !fp.IsSubPath(s.workspaceConfig.WorkspaceDir, filePath) {
 		return false
 	}
 
@@ -605,7 +595,7 @@ func (s *Station) GetFlows() []*models.Flow {
 }
 
 func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error) {
-	debugPath := filepath.Join(config.CurrentWorkPath(), "debug")
+	debugPath := filepath.Join(config.CurrentWorkingPath(), "debug")
 	fileList, fileErr := fp.ListPath(debugPath, "*.md", false)
 	if fileErr != nil {
 		log.Errorf("debug file error:%v", fileErr)
