@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -104,6 +105,10 @@ func (s *Workspace) GetStageWorkingPath(stage string) string {
 	}
 }
 
+func (s *Workspace) GetFinalTemplate() string {
+	return path.Join(s.Category, s.Template)
+}
+
 func (s Workspace) GetStage() string {
 	return s.Stage
 }
@@ -184,8 +189,7 @@ func (s *Template) Validate() error {
 
 	// 检查必选目录
 	for _, dir := range requiredDirs {
-		finalPath := filepath.Join(TemplatePath, s.Name, dir)
-		log.Infof("checking directory: %s", finalPath)
+		finalPath := filepath.Join(TemplatePath, s.Category, s.Name, dir)
 		if _, err := fs.Stat(s.HostRootFS, finalPath); os.IsNotExist(err) {
 			missing = append(missing, dir)
 		}
@@ -193,8 +197,7 @@ func (s *Template) Validate() error {
 
 	// 检查必选文件
 	for _, file := range requiredFiles {
-		finalPath := filepath.Join(TemplatePath, s.Name, file)
-		log.Infof("checking file: %s", finalPath)
+		finalPath := filepath.Join(TemplatePath, s.Category, s.Name, file)
 		if _, err := fs.Stat(s.HostRootFS, finalPath); os.IsNotExist(err) {
 			missing = append(missing, file)
 		}

@@ -35,7 +35,7 @@ func (s *Cli) queryTemplate(templateName string) (ret *models.Template) {
 	result := s.SendEvent(loadEvent)
 	templateVal, templateErr := result.Get()
 	if templateErr != nil {
-		log.Errorf("queryTemplate failed, error:%s", templateErr.Error())
+		log.Errorf("queryTemplate failed, name:%s, error:%s", templateName, templateErr.Error())
 		return
 	}
 	ret = templateVal.(*models.Template)
@@ -51,9 +51,9 @@ func (s *Cli) Run() {
 
 	actionType := config.GetActionType()
 	workspacePtr := config.GetCurrentWorkspace()
-	templatePtr := s.queryTemplate(workspacePtr.Template)
+	templatePtr := s.queryTemplate(workspacePtr.GetFinalTemplate())
 	if templatePtr == nil {
-		log.Errorf("query template failed, templateName:%s", workspacePtr.Template)
+		log.Errorf("query template failed, templateName:%s", workspacePtr.GetFinalTemplate())
 		return
 	}
 

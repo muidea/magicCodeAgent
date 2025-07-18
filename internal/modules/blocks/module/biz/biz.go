@@ -2,6 +2,7 @@ package biz
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -37,35 +38,47 @@ func New(
 	return ptr
 }
 
-func (s *Module) verifyWorkingPath(workingPath string) *cd.Error {
+func (s *Module) verifyWorkingPath(workingPath string) (ret string, err *cd.Error) {
 	if workingPath == "" {
-		return cd.NewError(cd.IllegalParam, "working path is empty")
+		err = cd.NewError(cd.IllegalParam, "working path is empty")
+		return
 	}
 
 	if !filepath.IsAbs(workingPath) {
-		return cd.NewError(cd.IllegalParam, "working path must be absolute path")
+		err = cd.NewError(cd.IllegalParam, "working path must be absolute path")
+		return
+	}
+
+	if vErr := imbmcfg.Validate(); vErr != nil {
+		err = cd.NewError(cd.IllegalParam, vErr.Error())
+		return
 	}
 
 	normalizedPath := filepath.Clean(workingPath)
 	if strings.HasSuffix(normalizedPath, "/internal/modules/kernel") {
 		codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/modules/kernel")]
 		goModPath := filepath.Join(codeRootPath, "go.mod")
-		if _, err := os.Stat(goModPath); err != nil {
-			return cd.NewError(cd.IllegalParam, "working path must be a go module")
+		if _, oErr := os.Stat(goModPath); oErr != nil {
+			err = cd.NewError(cd.IllegalParam, "working path must be a go module")
+			return
 		}
-		return nil
+		ret = "internal/modules/kernel"
+		return
 	}
 
 	if strings.HasSuffix(normalizedPath, "/internal/modules/blocks") {
 		codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/modules/blocks")]
 		goModPath := filepath.Join(codeRootPath, "go.mod")
-		if _, err := os.Stat(goModPath); err != nil {
-			return cd.NewError(cd.IllegalParam, "working path must be a go module")
+		if _, oErr := os.Stat(goModPath); oErr != nil {
+			err = cd.NewError(cd.IllegalParam, "working path must be a go module")
+			return
 		}
-		return nil
+		ret = "internal/modules/blocks"
+		return
 	}
 
-	return cd.NewError(cd.IllegalParam, "working path must be /internal/modules/kernel or /internal/modules/blocks")
+	err = cd.NewError(cd.IllegalParam, "working path must be /internal/modules/kernel or /internal/modules/blocks")
+	return
 }
 
 func (s *Module) create(ev event.Event, re event.Result) {
@@ -81,7 +94,7 @@ func (s *Module) create(ev event.Event, re event.Result) {
 
 	workingPath := config.CurrentWorkingPath()
 	workingPath = filepath.Join(workingPath, imbmcfg.GetPath())
-	err := s.verifyWorkingPath(workingPath)
+	modulePath, err := s.verifyWorkingPath(workingPath)
 	if err != nil {
 		log.Errorf("create module failed, verify module working path failed, err: %v", err)
 		if re != nil {
@@ -90,12 +103,22 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	createrHelper := biz.NewHelper(templatePtr.HostRootFS, imbmc.ModuleTemplateBasePath)
+	moduleWorkingPath := workingPath //filepath.Join(workingPath, imbmcfg.GetName())
+	if oErr := os.MkdirAll(moduleWorkingPath, 0755); oErr != nil {
+		log.Errorf("create module failed, create module working path failed, err: %v", oErr)
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.Unexpected, "create module working path failed"))
+		}
+		return
+	}
+	log.Infof("create module working path: %v", moduleWorkingPath)
+	moduleTemplateBasePath := path.Join(models.TemplatePath, templatePtr.Category, templatePtr.Name, "template", "module")
+	createrHelper := biz.NewHelper(templatePtr.HostRootFS, moduleTemplateBasePath)
 	err = createrHelper.Create(&common.CreateParam{
-		WorkingPath: workingPath,
+		WorkingPath: moduleWorkingPath,
 		ProjectName: workspacePtr.Name,
 		ModuleName:  imbmcfg.GetName(),
-		ModulePath:  imbmcfg.GetPath(),
+		ModulePath:  modulePath,
 	})
 	if err != nil {
 		log.Errorf("create module failed, err: %v", err)

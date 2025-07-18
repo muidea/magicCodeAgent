@@ -102,8 +102,8 @@ func (s *Templatemanager) ListTemplate() (ret []string) {
 func (s *Templatemanager) LoadTemplate(templateName string) (ret *models.Template, err *cd.Error) {
 	templateFS := s.localFS
 	items := strings.Split(templateName, "/")
-	if len(items) == 2 {
-		templateName = items[1]
+	if len(items) == 3 {
+		templateName = strings.Join(items[1:],"/")
 		if items[0] == models.InnerKey {
 			templateFS = s.innerFS
 		} else {

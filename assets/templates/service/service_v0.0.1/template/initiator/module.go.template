@@ -1,0 +1,35 @@
+package {{toLower .InitiatorName}}
+
+import (
+	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/framework/plugin/initiator"
+	"github.com/muidea/magicCommon/task"
+
+	"github.com/muidea/{{.ProjectName}}/{{.InitiatorPath}}/pkg/common"
+)
+
+func init() {
+	initiator.Register(New())
+}
+
+type {{.InitiatorName}} struct {}
+
+func New() *{{.InitiatorName}} {
+	return &{{.InitiatorName}}{}
+}
+
+func (s *{{.InitiatorName}}) ID() string {
+	return common.{{.InitiatorName}}Initiator
+}
+
+func (s *{{.InitiatorName}}) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+	return nil
+}
+
+func (s *{{.InitiatorName}}) Run() (err *cd.Error) {
+	return
+}
+
+func (s *{{.InitiatorName}}) Teardown() {
+}

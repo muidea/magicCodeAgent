@@ -14,8 +14,8 @@ func init() {
 }
 
 func Validate() error {
-	if moduleName == "" || modulePath == "" {
-		return errors.New("moduleName and modulePath must be specified")
+	if moduleName == "" {
+		return errors.New("moduleName must be specified")
 	}
 	return nil
 }

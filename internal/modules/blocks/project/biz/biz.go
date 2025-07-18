@@ -49,6 +49,10 @@ func (s *Project) verifyWorkingPath(workingPath string) *cd.Error {
 		return cd.NewError(cd.IllegalParam, "working path must be absolute path")
 	}
 
+	if vErr := imbpcfg.Validate(); vErr != nil {
+		return cd.NewError(cd.IllegalParam, vErr.Error())
+	}
+
 	normalizedPath := filepath.Clean(workingPath)
 	codeRootPath := normalizedPath
 	goModPath := filepath.Join(codeRootPath, "go.mod")
@@ -79,7 +83,8 @@ func (s *Project) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	createrHelper := biz.NewHelper(templatePtr.HostRootFS, imbpc.ProjectTemplateBasePath)
+	projectTemplateBasePath := path.Join(models.TemplatePath, templatePtr.Category, templatePtr.Name, "template", "project")
+	createrHelper := biz.NewHelper(templatePtr.HostRootFS, projectTemplateBasePath)
 	err = createrHelper.Create(&common.CreateParam{
 		WorkingPath:        workingPath,
 		ProjectName:        imbpcfg.GetName(),

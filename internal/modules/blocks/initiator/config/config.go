@@ -14,8 +14,8 @@ func init() {
 }
 
 func Validate() error {
-	if initiatorName == "" || initiatorPath == "" {
-		return errors.New("initiatorName and initiatorPath must be specified")
+	if initiatorName == "" {
+		return errors.New("initiatorName must be specified")
 	}
 	return nil
 }

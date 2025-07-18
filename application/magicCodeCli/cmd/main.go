@@ -12,6 +12,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 
+	_ "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/module"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"

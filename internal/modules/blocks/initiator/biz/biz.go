@@ -2,6 +2,7 @@ package biz
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -37,25 +38,36 @@ func New(
 	return ptr
 }
 
-func (s *Initiator) verifyWorkingPath(workingPath string) *cd.Error {
+func (s *Initiator) verifyWorkingPath(workingPath string) (ret string, err *cd.Error) {
 	if workingPath == "" {
-		return cd.NewError(cd.IllegalParam, "working path is empty")
+		err = cd.NewError(cd.IllegalParam, "working path is empty")
+		return
 	}
 
 	if !filepath.IsAbs(workingPath) {
-		return cd.NewError(cd.IllegalParam, "working path must be absolute path")
+		err = cd.NewError(cd.IllegalParam, "working path must be absolute path")
+		return
+	}
+
+	if vErr := imbicfg.Validate(); vErr != nil {
+		err = cd.NewError(cd.IllegalParam, vErr.Error())
+		return
 	}
 
 	normalizedPath := filepath.Clean(workingPath)
-	if !strings.HasSuffix(normalizedPath, "/internal/initiator") {
-		return cd.NewError(cd.IllegalParam, "working path must be internal/initiator")
+	if !strings.HasSuffix(normalizedPath, "/internal/initiators") {
+		err = cd.NewError(cd.IllegalParam, "working path must be internal/initiators")
+		return
 	}
-	codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/initiator")]
+	codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/initiators")]
 	goModPath := filepath.Join(codeRootPath, "go.mod")
-	if _, err := os.Stat(goModPath); err != nil {
-		return cd.NewError(cd.IllegalParam, "working path must be a go module")
+	if _, oErr := os.Stat(goModPath); oErr != nil {
+		err = cd.NewError(cd.IllegalParam, "working path must be a go module")
+		return
 	}
-	return nil
+
+	ret = "internal/initiators"
+	return
 }
 
 func (s *Initiator) create(ev event.Event, re event.Result) {
@@ -71,7 +83,7 @@ func (s *Initiator) create(ev event.Event, re event.Result) {
 
 	workingPath := config.CurrentWorkingPath()
 	workingPath = filepath.Join(workingPath, imbicfg.GetPath())
-	err := s.verifyWorkingPath(workingPath)
+	initiatorPath, err := s.verifyWorkingPath(workingPath)
 	if err != nil {
 		log.Errorf("create initiator failed, verify initiator working path failed, error: %v", err)
 		if re != nil {
@@ -80,12 +92,22 @@ func (s *Initiator) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	createrHelper := biz.NewHelper(templatePtr.HostRootFS, imbic.InitiatorTemplateBasePath)
+	initiatorWorkingPath := path.Join(workingPath, imbicfg.GetName())
+	if oErr := os.MkdirAll(initiatorWorkingPath, 0755); oErr != nil {
+		log.Errorf("create initiator failed, create initiator working path failed, error: %v", oErr)
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.Unexpected, "create initiator working path failed"))
+		}
+		return
+	}
+	log.Infof("create initiator working path: %v", initiatorWorkingPath)
+	initiatorTemplateBasePath := path.Join(models.TemplatePath, templatePtr.Category, templatePtr.Name, "template", "initiator")
+	createrHelper := biz.NewHelper(templatePtr.HostRootFS, initiatorTemplateBasePath)
 	err = createrHelper.Create(&common.CreateParam{
-		WorkingPath:   workingPath,
+		WorkingPath:   initiatorWorkingPath,
 		ProjectName:   workspacePtr.Name,
 		InitiatorName: imbicfg.GetName(),
-		InitiatorPath: imbicfg.GetPath(),
+		InitiatorPath: initiatorPath,
 	})
 	if err != nil {
 		log.Errorf("create initiator failed, error: %v", err)
