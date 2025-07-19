@@ -51,9 +51,9 @@ func (s *Cli) Run() {
 
 	actionType := config.GetActionType()
 	workspacePtr := config.GetCurrentWorkspace()
-	templatePtr := s.queryTemplate(workspacePtr.GetFinalTemplate())
+	templatePtr := s.queryTemplate(workspacePtr.GetTemplate())
 	if templatePtr == nil {
-		log.Errorf("query template failed, templateName:%s", workspacePtr.GetFinalTemplate())
+		log.Errorf("query template failed, templateName:%s", workspacePtr.GetTemplate())
 		return
 	}
 

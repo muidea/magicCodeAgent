@@ -103,7 +103,7 @@ func (s *Workspace) GetStageWorkingPath(stage string) string {
 	}
 }
 
-func (s *Workspace) GetFinalTemplate() string {
+func (s *Workspace) GetTemplate() string {
 	return s.Template
 }
 
