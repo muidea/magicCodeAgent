@@ -12,6 +12,7 @@ import (
 	fu "github.com/muidea/magicCommon/foundation/util"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
+	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
@@ -19,8 +20,21 @@ import (
 func (s *Workspace) OpenWorkspaceExplorer(workspaceName string) (ret *models.Workspace, err *cd.Error) {
 	workspacePtr := config.GetWorkspace(workspaceName)
 	if workspacePtr == nil {
-		log.Warnf("query workspace, workspace not exists:%s", workspaceName)
+		log.Warnf("open workspace explorer failed, workspace not exists:%s", workspaceName)
 		err = cd.NewError(cd.Unexpected, fmt.Sprintf("query workspace, workspace not exists:%s", workspaceName))
+		return
+	}
+
+	if !workspacePtr.Available() {
+		log.Warnf("open workspace explorer failed, workspace not available:%s", workspaceName)
+		err = cd.NewError(cd.Unexpected, fmt.Sprintf("open workspace explorer, workspace not available:%s", workspaceName))
+		return
+	}
+
+	reloadEvent := event.NewEvent(imbtc.ReloadTools, s.ID(), imbtc.ToolsModule, nil, workspacePtr)
+	reloadResult := s.SendEvent(reloadEvent)
+	err = reloadResult.Error()
+	if err != nil {
 		return
 	}
 

@@ -54,11 +54,12 @@ type Station struct {
 	stationMutex sync.RWMutex
 	observerList []Observer
 
-	localMessageCache *cache.MessageSequenceCache
-	localFlowManger   *FlowManager
-	localWorker       Worker
-	localAssistant    Assistant
-	promptsRegistry   iipc.PromptsRegistry
+	localMessageCache    *cache.MessageSequenceCache
+	localFlowManger      *FlowManager
+	localWorker          Worker
+	localAssistant       Assistant
+	localPromptReader    PromptReader
+	innerPromptsRegistry iipc.PromptsRegistry
 }
 
 func NewStation(
@@ -66,28 +67,47 @@ func NewStation(
 	workspacePtr *models.Workspace,
 	worker Worker,
 	assistant Assistant,
+	reader PromptReader,
 	promptsRegistry iipc.PromptsRegistry,
 ) *Station {
 	ret := &Station{
-		bizBasePtr:        bizBasePtr,
-		workspaceConfig:   *workspacePtr,
-		chatLoopCount:     0,
-		chatUsagePtr:      &imklc.Usage{},
-		localMessageCache: cache.NewMessageSequenceCache(500),
-		localFlowManger:   NewFlowManager(),
-		localWorker:       worker,
-		localAssistant:    assistant,
-		promptsRegistry:   promptsRegistry,
+		bizBasePtr:           bizBasePtr,
+		workspaceConfig:      *workspacePtr,
+		chatLoopCount:        0,
+		chatUsagePtr:         &imklc.Usage{},
+		localMessageCache:    cache.NewMessageSequenceCache(500),
+		localFlowManger:      NewFlowManager(),
+		localWorker:          worker,
+		localAssistant:       assistant,
+		localPromptReader:    reader,
+		innerPromptsRegistry: promptsRegistry,
 	}
 
 	return ret
 }
 
 func (s *Station) systemPrompt() string {
-	return s.promptsRegistry.GetStagePromptsContent(s.workspaceConfig.GetStage())
+	return s.innerPromptsRegistry.GetStagePromptsContent(s.workspaceConfig.GetStage())
 }
 
-func (s *Station) envPrompt(ptr *models.Flow) string {
+func (s *Station) getWorkspaceProjectStruct() (string, error) {
+	param := map[string]string{}
+	return s.localPromptReader.ReadPrompt(&s.workspaceConfig, "project-struct", param)
+}
+
+func (s *Station) getWorkspaceStatus(ptr *models.Flow) (string, error) {
+	param := map[string]string{
+		"Level": ptr.GetLevel(),
+	}
+	return s.localPromptReader.ReadPrompt(&s.workspaceConfig, fmt.Sprintf("stage-%s-status", s.workspaceConfig.GetStage()), param)
+}
+
+func (s *Station) getWorkspaceSpecialInstruction() string {
+	param := map[string]string{}
+	return s.innerPromptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.workspaceConfig.GetStage()), param)
+}
+
+func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
 	stringBuilder.WriteString("# 项目名称\n\n" + s.workspaceConfig.Name + "\n\n")
@@ -101,11 +121,14 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 	stringBuilder.WriteString("\n\n")
 
-	param := map[string]string{}
 	//## 项目规划目录
-	// TODO 这里需要根据workspace对应的Template进行获取
 	if s.workspaceConfig.GetStage() != models.DesignStage {
-		structContent := s.promptsRegistry.ReadSectionPromptContent("project-struct", param)
+		structContent, structErr := s.getWorkspaceProjectStruct()
+		if structErr != nil {
+			log.Errorf("get workspace project struct failed, %s", structErr)
+			return "", structErr
+		}
+
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
 			stringBuilder.WriteString("\n\n")
@@ -113,10 +136,11 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	}
 
 	//## 项目状态
-	param = map[string]string{
-		"Level": ptr.GetLevel(),
+	statusContent, statusErr := s.getWorkspaceStatus(ptr)
+	if statusErr != nil {
+		log.Errorf("get workspace status failed, %s", statusErr)
+		return "", statusErr
 	}
-	statusContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("stage-%s-status", s.workspaceConfig.GetStage()), param)
 	if statusContent != "" {
 		stringBuilder.WriteString(statusContent)
 		stringBuilder.WriteString("\n\n")
@@ -194,15 +218,14 @@ func (s *Station) envPrompt(ptr *models.Flow) string {
 	})
 	stringBuilder.WriteString("\n\n")
 
-	param = map[string]string{}
-	instructContent := s.promptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.workspaceConfig.GetStage()), param)
+	instructContent := s.getWorkspaceSpecialInstruction()
 	if instructContent != "" {
 		stringBuilder.WriteString(instructContent)
 		stringBuilder.WriteString("\n\n")
 	}
 
 	stringBuilder.WriteString("</environment_details>")
-	return stringBuilder.String()
+	return stringBuilder.String(), nil
 }
 
 func (s *Station) Available() bool {
@@ -229,7 +252,7 @@ func (s *Station) AddFile(filePath string) bool {
 		return true
 	}
 
-	log.Infof("AddFile filePath:%s", filePath)
+	//log.Infof("AddFile filePath:%s", filePath)
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.AddFile(filePath)
@@ -248,7 +271,7 @@ func (s *Station) RemoveFile(filePath string) bool {
 		return true
 	}
 
-	log.Infof("RemoveFile filePath:%s", filePath)
+	//log.Infof("RemoveFile filePath:%s", filePath)
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.AddFile(filePath)
@@ -267,7 +290,7 @@ func (s *Station) WriteFile(filePath string) bool {
 		return true
 	}
 
-	log.Infof("WriteFile filePath:%s", filePath)
+	//log.Infof("WriteFile filePath:%s", filePath)
 	curFlowPtr := s.localFlowManger.GetCurrentFlow()
 	if curFlowPtr != nil {
 		curFlowPtr.ModFile(filePath)
@@ -356,11 +379,16 @@ func (s *Station) ChatTerminate(ctx context.Context) (err *cd.Error) {
 func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flow) (err *cd.Error) {
 	s.chatLoopCount++
 
-	stationSystemPrompt := s.systemPrompt()
-	stationEnvPrompt := s.envPrompt(chatFlow)
+	sysPrompt := s.systemPrompt()
+	envPrompt, envErr := s.envPrompt(chatFlow)
+	if envErr != nil {
+		err = cd.NewError(cd.Unexpected, "get env prompt failed")
+		return
+	}
+
 	contentContext := context.WithValue(chatContext, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	msgErr := s.localAssistant.Chat(providerContext, &s.workspaceConfig, stationSystemPrompt, stationEnvPrompt, chatFlow.GetFlowPath())
+	msgErr := s.localAssistant.Chat(providerContext, &s.workspaceConfig, sysPrompt, envPrompt, chatFlow.GetFlowPath())
 	if msgErr != nil {
 		err = msgErr
 		log.Errorf("internalChat, s.localAssistant.Chat error:%v", msgErr)

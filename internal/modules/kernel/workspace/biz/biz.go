@@ -16,7 +16,6 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
@@ -351,9 +350,6 @@ func (s *Workspace) RefreshWorkspace(workspaceName string) (err *cd.Error) {
 	if err != nil {
 		return
 	}
-
-	reloadEvent := event.NewEvent(imbtc.ReloadTools, s.ID(), imbtc.ToolsModule, nil, wPtr)
-	s.SendEvent(reloadEvent)
 	return
 }
 
@@ -386,7 +382,7 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *models.Workspace) (err
 		return
 	}
 
-	workspace := NewStation(&s.Base, workspacePtr, s, s, s.promptsRegistry)
+	workspace := NewStation(&s.Base, workspacePtr, s, s, s, s.promptsRegistry)
 	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
 
 	s.fileMonitor.AddPath(workspacePtr.WorkspaceDir)

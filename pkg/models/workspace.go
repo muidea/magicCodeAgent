@@ -254,13 +254,3 @@ func (s *Template) ReadPrompt(name string) (ret string, err error) {
 	ret = string(fileContent)
 	return
 }
-
-func (s *Template) GetModuleTemplatePath() (ret string) {
-	ret = filepath.Join(TemplatePath, s.Category, s.Name, "template", "module")
-	return
-}
-
-func (s *Template) GetProjectTemplatePath() (ret string) {
-	ret = filepath.Join(TemplatePath, s.Category, s.Name, "template", "project")
-	return
-}
