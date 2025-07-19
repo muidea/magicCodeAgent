@@ -77,7 +77,7 @@ func (s *Module) verifyWorkingPath(workingPath string) (ret string, err *cd.Erro
 		return
 	}
 
-	err = cd.NewError(cd.IllegalParam, "working path must be /internal/modules/kernel or /internal/modules/blocks")
+	err = cd.NewError(cd.IllegalParam, "working path must be in /internal/modules/kernel or /internal/modules/blocks")
 	return
 }
 
