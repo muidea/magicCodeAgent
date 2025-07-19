@@ -8,16 +8,16 @@ import (
 const TemplatemanagerModule = "/internal/modules/blocks/templatemanager"
 
 const (
-	ListTemplate = "/template/list/"
-	LoadTemplate = "/template/load/"
+	ListTemplate  = "/template/list"
+	QueryTemplate = "/template/query"
 )
 
-type ListTemplateResult struct {
+type TemplateListResult struct {
 	cd.Result
 	Values []string `json:"values"`
 }
 
-type LoadTemplateResult struct {
+type TemplateResult struct {
 	cd.Result
 	Value *models.Template `json:"value"`
 }

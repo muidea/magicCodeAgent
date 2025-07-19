@@ -38,7 +38,7 @@ func New(
 	}
 
 	ptr.SubscribeFunc(imbtc.ListTemplate, ptr.listTemplate)
-	ptr.SubscribeFunc(imbtc.LoadTemplate, ptr.loadTemplate)
+	ptr.SubscribeFunc(imbtc.QueryTemplate, ptr.queryTemplate)
 
 	return ptr
 }
@@ -54,7 +54,7 @@ func (s *Templatemanager) listTemplate(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Templatemanager) loadTemplate(ev event.Event, re event.Result) {
+func (s *Templatemanager) queryTemplate(ev event.Event, re event.Result) {
 	templateVal := ev.Data()
 	if templateVal == nil {
 		if re != nil {
@@ -69,7 +69,7 @@ func (s *Templatemanager) loadTemplate(ev event.Event, re event.Result) {
 		}
 		return
 	}
-	templatePtr, templateErr := s.LoadTemplate(templateNameVal)
+	templatePtr, templateErr := s.QueryTemplate(templateNameVal)
 	if re != nil {
 		re.Set(templatePtr, templateErr)
 	}
@@ -122,7 +122,7 @@ func (s *Templatemanager) ListTemplate() (ret []string) {
 	return
 }
 
-func (s *Templatemanager) LoadTemplate(templateName string) (ret *models.Template, err *cd.Error) {
+func (s *Templatemanager) QueryTemplate(templateName string) (ret *models.Template, err *cd.Error) {
 	templateFS := s.localFS
 	items := strings.Split(templateName, "/")
 	if len(items) == 3 {

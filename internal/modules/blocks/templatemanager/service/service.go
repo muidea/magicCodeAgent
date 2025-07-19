@@ -27,20 +27,20 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.Templatemanager) *Templ
 
 func (s *Templatemanager) RegisterRoute() {
 	s.routeRegistry.AddHandler(imbtmc.ListTemplate, engine.GET, s.listTemplate)
-	s.routeRegistry.AddHandler(imbtmc.LoadTemplate, engine.GET, s.loadTemplate)
+	s.routeRegistry.AddHandler(imbtmc.QueryTemplate, engine.GET, s.queryTemplate)
 }
 
 func (s *Templatemanager) listTemplate(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imbtmc.ListTemplateResult{}
+	result := &imbtmc.TemplateListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	result.Values = s.bizPtr.ListTemplate()
 }
 
-func (s *Templatemanager) loadTemplate(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imbtmc.LoadTemplateResult{}
+func (s *Templatemanager) queryTemplate(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imbtmc.TemplateResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	templateName := req.URL.Query().Get("name")
-	result.Value, result.Error = s.bizPtr.LoadTemplate(templateName)
+	result.Value, result.Error = s.bizPtr.QueryTemplate(templateName)
 }

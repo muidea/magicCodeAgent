@@ -31,7 +31,7 @@ func New(
 }
 
 func (s *Cli) queryTemplate(templateName string) (ret *models.Template) {
-	loadEvent := event.NewEvent(imbtmc.LoadTemplate, s.ID(), imbtmc.TemplatemanagerModule, nil, templateName)
+	loadEvent := event.NewEvent(imbtmc.QueryTemplate, s.ID(), imbtmc.TemplatemanagerModule, nil, templateName)
 	result := s.SendEvent(loadEvent)
 	templateVal, templateErr := result.Get()
 	if templateErr != nil {
