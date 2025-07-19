@@ -13,7 +13,20 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
+
+func (s *Workspace) OpenWorkspaceExplorer(workspaceName string) (ret *models.Workspace, err *cd.Error) {
+	workspacePtr := config.GetWorkspace(workspaceName)
+	if workspacePtr == nil {
+		log.Warnf("query workspace, workspace not exists:%s", workspaceName)
+		err = cd.NewError(cd.Unexpected, fmt.Sprintf("query workspace, workspace not exists:%s", workspaceName))
+		return
+	}
+
+	ret = workspacePtr
+	return
+}
 
 func (s *Workspace) filterWorkspaceFile(ev event.Event, re event.Result) {
 	val := ev.Data()

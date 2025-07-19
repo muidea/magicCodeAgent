@@ -55,7 +55,7 @@ func New(
 	ptr.SubscribeFunc(imkwc.RemoveWorkspace, ptr.removeWorkspace)
 	ptr.SubscribeFunc(imkwc.RefreshWorkspace, ptr.refreshWorkspace)
 	ptr.SubscribeFunc(imkwc.FilterWorkspace, ptr.filterWorkspace)
-	ptr.SubscribeFunc(imkwc.FilterWorkspaceFile, ptr.filterWorkspaceFile)
+	ptr.SubscribeFunc(imkwc.FilterWorkspaceExplorerFile, ptr.filterWorkspaceFile)
 
 	return ptr
 }

@@ -89,7 +89,7 @@ func (s *Workspace) ChatWorkspaceContentMessage(ctx context.Context, paramPtr *i
 		Role:    common.User,
 		Content: []string{paramPtr.Content},
 	}
-	err = stationPtr.ChatMessage(ctx, paramPtr.Stage, messageItemPtr)
+	err = stationPtr.ChatMessage(ctx, messageItemPtr)
 	return
 }
 
@@ -101,7 +101,7 @@ func (s *Workspace) ChatWorkspaceContentTerminate(ctx context.Context, paramPtr 
 		return
 	}
 	stationPtr := curWorkspace.(*Station)
-	err = stationPtr.ChatTerminate(ctx, paramPtr.Stage)
+	err = stationPtr.ChatTerminate(ctx)
 	return
 }
 
@@ -146,6 +146,6 @@ func (s *Workspace) DebugWorkspaceContent(ctx context.Context, paramPtr *imkwc.C
 		return
 	}
 	stationPtr := curWorkspace.(*Station)
-	err = stationPtr.DebugContent(ctx, paramPtr.Stage)
+	err = stationPtr.DebugContent(ctx)
 	return
 }

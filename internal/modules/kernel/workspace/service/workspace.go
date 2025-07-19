@@ -136,26 +136,6 @@ func (s *Workspace) disableWorkspace(ctx context.Context, res http.ResponseWrite
 	}
 }
 
-func (s *Workspace) updateWorkspaceStage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkwc.WorkspaceResult{}
-	defer fn.PackageHTTPResponse(res, result)
-	param := &models.Workspace{}
-	err := fn.ParseJSONBody(req, nil, param)
-	if err != nil {
-		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
-		log.Errorf("parse body error: %s", err.Error())
-		return
-	}
-	if !models.ValidStage(param.Stage) {
-		result.Error = cd.NewError(cd.IllegalParam, "stage can not be empty")
-		return
-	}
-	result.Error = s.bizPtr.UpdateWorkspace(param)
-	if result.Error == nil {
-		result.Value, result.Error = s.bizPtr.QueryWorkspace(param.Name)
-	}
-}
-
 func (s *Workspace) refreshWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &imkwc.WorkspaceListResult{}
 	defer fn.PackageHTTPResponse(res, result)

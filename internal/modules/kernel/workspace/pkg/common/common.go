@@ -17,6 +17,7 @@ const WorkspaceModule = "/internal/modules/kernel/workspace"
 const (
 	QuerySystemConfig                 = "/system/config/query"
 	UpdateSystemConfig                = "/system/config/update"
+	FilterWorkspace                   = "/workspace/filter"
 	QueryWorkspace                    = "/workspace/query"
 	CreateWorkspace                   = "/workspace/create"
 	DestroyWorkspace                  = "/workspace/destroy"
@@ -26,17 +27,17 @@ const (
 	RefreshWorkspace                  = "/workspace/refresh"
 	EnableWorkspace                   = "/workspace/enable"
 	DisableWorkspace                  = "/workspace/disable"
-	UpdateWorkspaceStage              = "/workspace/stage/update"
-	FilterWorkspace                   = "/workspace/filter"
-	FilterWorkspaceFile               = "/workspace/file/filter"
-	FilterWorkspaceFileTree           = "/workspace/file/tree/filter"
-	QueryWorkspaceFileContent         = "/workspace/file/content/query"
-	CreateChatWorkspaceContentSSE     = "/workspace/content/chat/sse"
-	SubmitChatWorkspaceContentMessage = "/workspace/content/chat/message"
-	TerminateChatWorkspaceContent     = "/workspace/content/chat/terminate"
-	FlterChatWorkspaceContentHistory  = "/workspace/content/chat/history"
-	DebugChatWorkspaceContent         = "/workspace/content/chat/debug"
-	FilterChatWorkspaceContentFlow    = "/workspace/content/chat/flow"
+	OpenWorkspaceExplorer             = "/workspace/explorer/open"
+	UpdateWorkspaceExplorerStage      = "/workspace/explorer/stage/update"
+	FilterWorkspaceExplorerFile       = "/workspace/explorer/file/filter"
+	FilterWorkspaceExplorerFileTree   = "/workspace/explorer/file/tree/filter"
+	QueryWorkspaceExplorerFileContent = "/workspace/explorer/file/content/query"
+	CreateChatSSE                     = "/workspace/chat/sse"
+	SubmitChatMessage                 = "/workspace/chat/message"
+	TerminateChat                     = "/workspace/chat/terminate"
+	FlterChatHistory                  = "/workspace/chat/history/filter"
+	DebugChatMessage                  = "/workspace/chat/debug"
+	FilterChatFlow                    = "/workspace/chat/flow/filter"
 )
 
 type AuthorInfo struct {
@@ -166,7 +167,6 @@ type FileContentResult struct {
 
 type ChatMessage struct {
 	Workspace string `json:"workspace"`
-	Stage     string `json:"stage"`
 	Content   string `json:"content"`
 }
 

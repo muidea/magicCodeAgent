@@ -14,6 +14,7 @@ import (
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imbcc "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
+	imbtmc "github.com/muidea/magicCodeAgent/internal/modules/blocks/templatemanager/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -41,7 +42,7 @@ func New(
 	ptr := &Tools{
 		Base: biz.New(imbtc.ToolsModule, eventHub, backgroundRoutine),
 	}
-	ptr.toolRegistry = NewToolRegistry(ptr, promptsRegistry)
+	ptr.toolRegistry = NewToolRegistry(ptr, ptr, promptsRegistry)
 
 	ptr.SubscribeFunc(imbtc.ReloadTools, ptr.Reload)
 	ptr.SubscribeFunc(imbtc.ExecuteTool, ptr.Execute)
@@ -358,5 +359,17 @@ func (s *Tools) RunCommand(workspaceName, workspaceDir, command string) (result 
 		stringBuff.WriteString(commandResultPtr.ConsoleMessage + "\n\n")
 	}
 	result = stringBuff.String()
+	return
+}
+
+func (s *Tools) QueryTemplate(name string) (result *models.Template, err *cd.Error) {
+	queryEvent := event.NewEvent(imbtmc.QueryTemplate, s.ID(), imbtmc.TemplatemanagerModule, nil, name)
+	queryResult := s.SendEvent(queryEvent)
+	templateVal, templateErr := queryResult.Get()
+	if templateErr != nil {
+		log.Errorf("queryTemplate failed, name:%s, error:%s", name, templateErr.Error())
+		return
+	}
+	result = templateVal.(*models.Template)
 	return
 }

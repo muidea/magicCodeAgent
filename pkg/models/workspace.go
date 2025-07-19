@@ -220,7 +220,7 @@ func (s *Template) Validate() error {
 }
 
 func (s *Template) LoadTools() (ret []string) {
-	finalPath := filepath.Join(TemplatePath, s.Name, "tools")
+	finalPath := filepath.Join(TemplatePath, s.Category, s.Name, "tools")
 	entityList, entityErr := fs.ReadDir(s.HostRootFS, finalPath)
 	if entityErr != nil {
 		log.Errorf("load tools failed, error:%s", entityErr.Error())
@@ -231,7 +231,7 @@ func (s *Template) LoadTools() (ret []string) {
 			continue
 		}
 
-		finalPath = filepath.Join(TemplatePath, s.Name, "tools", val.Name())
+		finalPath = filepath.Join(TemplatePath, s.Category, s.Name, "tools", val.Name())
 		fileContent, fileErr := fs.ReadFile(s.HostRootFS, finalPath)
 		if fileErr != nil {
 			log.Errorf("load tools failed, error:%s", fileErr.Error())
@@ -244,7 +244,7 @@ func (s *Template) LoadTools() (ret []string) {
 }
 
 func (s *Template) ReadPrompt(name string) (ret string, err error) {
-	finalPath := filepath.Join(TemplatePath, s.Name, "prompts", name+".md")
+	finalPath := filepath.Join(TemplatePath, s.Category, s.Name, "prompts", name+".md")
 	fileContent, fileErr := fs.ReadFile(s.HostRootFS, finalPath)
 	if fileErr != nil {
 		log.Errorf("load prompt failed, error:%s", fileErr.Error())
@@ -256,11 +256,11 @@ func (s *Template) ReadPrompt(name string) (ret string, err error) {
 }
 
 func (s *Template) GetModuleTemplatePath() (ret string) {
-	ret = filepath.Join(TemplatePath, s.Name, "template", "module")
+	ret = filepath.Join(TemplatePath, s.Category, s.Name, "template", "module")
 	return
 }
 
 func (s *Template) GetProjectTemplatePath() (ret string) {
-	ret = filepath.Join(TemplatePath, s.Name, "template", "project")
+	ret = filepath.Join(TemplatePath, s.Category, s.Name, "template", "project")
 	return
 }

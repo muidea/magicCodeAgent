@@ -325,7 +325,7 @@ func (s *Station) BroadcastReady() {
 	s.DisposeMessage(notifyMsg)
 }
 
-func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr *models.MessageItem) (err *cd.Error) {
+func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.MessageItem) (err *cd.Error) {
 	var curFlow *models.Flow
 	flowIDVal := chatContext.Value(common.FlowID{})
 	if flowIDVal != nil {
@@ -348,7 +348,7 @@ func (s *Station) ChatMessage(chatContext context.Context, stage string, itemPtr
 	return
 }
 
-func (s *Station) ChatTerminate(ctx context.Context, stage string) (err *cd.Error) {
+func (s *Station) ChatTerminate(ctx context.Context) (err *cd.Error) {
 	s.chatRunningStatus = Terminate
 
 	s.localFlowManger.Reset()
@@ -594,7 +594,7 @@ func (s *Station) GetFlows() []*models.Flow {
 	return s.localFlowManger.GetLocalFlows()
 }
 
-func (s *Station) DebugContent(ctx context.Context, stage string) (err *cd.Error) {
+func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
 	debugPath := filepath.Join(config.CurrentWorkingPath(), "debug")
 	fileList, fileErr := fp.ListPath(debugPath, "*.md", false)
 	if fileErr != nil {

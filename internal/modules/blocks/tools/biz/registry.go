@@ -20,9 +20,10 @@ type ToolRegistry struct {
 	name2Tools       map[string]imbtc.Tool
 }
 
-func NewToolRegistry(commander Commander, promptsRegistry iipc.PromptsRegistry) *ToolRegistry {
+func NewToolRegistry(commander Commander, templateQuerier TemplateQuerier, promptsRegistry iipc.PromptsRegistry) *ToolRegistry {
 	ptr := &ToolRegistry{
 		commander:       commander,
+		templateQuerier: templateQuerier,
 		promptsRegistry: promptsRegistry,
 		name2Tools:      make(map[string]imbtc.Tool),
 	}
@@ -35,9 +36,9 @@ func (s *ToolRegistry) Reload(workspacePtr *models.Workspace) (err *cd.Error) {
 		return
 	}
 
-	templatePtr, templateErr := s.templateQuerier.QueryTemplate(s.currentWorkspace.Template)
+	templatePtr, templateErr := s.templateQuerier.QueryTemplate(workspacePtr.Template)
 	if templateErr != nil {
-		log.Errorf("loading %s template failed, error: %v", s.currentWorkspace.Name, templateErr.Error())
+		log.Errorf("loading %s template failed, error: %v", workspacePtr.Name, templateErr.Error())
 		return
 	}
 

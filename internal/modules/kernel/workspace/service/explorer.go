@@ -5,10 +5,40 @@ import (
 	"net/http"
 
 	cd "github.com/muidea/magicCommon/def"
+	"github.com/muidea/magicCommon/foundation/log"
 	fn "github.com/muidea/magicCommon/foundation/net"
 
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
+
+func (s *Workspace) openWorkspace(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkwc.WorkspaceResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	workspaceName := req.URL.Query().Get("name")
+	result.Value, result.Error = s.bizPtr.OpenWorkspaceExplorer(workspaceName)
+}
+
+func (s *Workspace) updateWorkspaceStage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkwc.WorkspaceResult{}
+	defer fn.PackageHTTPResponse(res, result)
+	param := &models.Workspace{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		return
+	}
+	if !models.ValidStage(param.Stage) {
+		result.Error = cd.NewError(cd.IllegalParam, "stage can not be empty")
+		return
+	}
+	result.Error = s.bizPtr.UpdateWorkspace(param)
+	if result.Error == nil {
+		result.Value, result.Error = s.bizPtr.OpenWorkspaceExplorer(param.Name)
+	}
+}
 
 /*
 | 请求参数**（Query Parameters）
