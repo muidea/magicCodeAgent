@@ -12,6 +12,13 @@ type FileManager struct {
 	files     []string
 }
 
+func (s *FileManager) FileCount() int {
+	s.fileMutex.RLock()
+	defer s.fileMutex.RUnlock()
+
+	return len(s.files)
+}
+
 func (s *FileManager) Store(filePath string) {
 	s.fileMutex.Lock()
 	defer s.fileMutex.Unlock()

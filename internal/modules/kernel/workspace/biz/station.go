@@ -210,10 +210,8 @@ func (s *Station) Available() bool {
 }
 
 func (s *Station) checkIgnore(fileFullPath string) bool {
-	workingPath := s.workspaceConfig.GetWorkingPath()
 	for _, ignore := range s.workspaceConfig.Ignores {
-		ignorePath := filepath.Join(workingPath, ignore)
-		if strings.HasPrefix(fileFullPath, ignorePath) {
+		if strings.Contains(fileFullPath, ignore) {
 			return true
 		}
 
