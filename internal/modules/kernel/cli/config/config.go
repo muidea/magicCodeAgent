@@ -133,8 +133,7 @@ func getDefaultWorkspace() *models.Workspace {
 
 					return &models.Workspace{
 						Name:     name,
-						Category: "inner/service",
-						Template: "service_v0.0.1",
+						Template: "inner/service/service_v0.0.1",
 						Status:   "enable",
 						Stage:    "code",
 					}

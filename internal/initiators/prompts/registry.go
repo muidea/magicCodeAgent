@@ -61,8 +61,7 @@ func (s *promptsRegistry) AddPrompts(sectionName string, prompt iipc.Prompt) {
 }
 
 func (s *promptsRegistry) GetStagePromptsContent(stage string) string {
-	filterTags := s.workspacePtr.TechStack
-	filterTags = append(filterTags, s.workspacePtr.Category)
+	filterTags := s.workspacePtr.FilterTage()
 	log.Infof("GetStagePromptsContent, stage:%s, filterTags:%s", stage, filterTags)
 
 	var builder strings.Builder

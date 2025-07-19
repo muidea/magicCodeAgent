@@ -80,8 +80,20 @@ func (s *Templatemanager) ListTemplate() (ret []string) {
 	entryList, entryErr := fs.ReadDir(s.localFS, models.TemplatePath)
 	if entryErr == nil {
 		for _, entry := range entryList {
-			if entry.IsDir() {
-				templateList = append(templateList, path.Join(models.LocalKey, entry.Name()))
+			if !entry.IsDir() {
+				continue
+			}
+
+			subEntryList, subEntryErr := fs.ReadDir(s.localFS, path.Join(models.TemplatePath, entry.Name()))
+			if subEntryErr != nil {
+				continue
+			}
+
+			for _, subEntry := range subEntryList {
+				if !subEntry.IsDir() {
+					continue
+				}
+				templateList = append(templateList, path.Join(models.LocalKey, entry.Name(), subEntry.Name()))
 			}
 		}
 	}
@@ -89,8 +101,19 @@ func (s *Templatemanager) ListTemplate() (ret []string) {
 	entryList, entryErr = fs.ReadDir(s.innerFS, models.TemplatePath)
 	if entryErr == nil {
 		for _, entry := range entryList {
-			if entry.IsDir() {
-				templateList = append(templateList, path.Join(models.InnerKey, entry.Name()))
+			if !entry.IsDir() {
+				continue
+			}
+
+			subEntryList, subEntryErr := fs.ReadDir(s.innerFS, path.Join(models.TemplatePath, entry.Name()))
+			if subEntryErr != nil {
+				continue
+			}
+			for _, subEntry := range subEntryList {
+				if !subEntry.IsDir() {
+					continue
+				}
+				templateList = append(templateList, path.Join(models.InnerKey, entry.Name(), subEntry.Name()))
 			}
 		}
 	}
@@ -103,7 +126,7 @@ func (s *Templatemanager) LoadTemplate(templateName string) (ret *models.Templat
 	templateFS := s.localFS
 	items := strings.Split(templateName, "/")
 	if len(items) == 3 {
-		templateName = strings.Join(items[1:],"/")
+		templateName = strings.Join(items[1:], "/")
 		if items[0] == models.InnerKey {
 			templateFS = s.innerFS
 		} else {

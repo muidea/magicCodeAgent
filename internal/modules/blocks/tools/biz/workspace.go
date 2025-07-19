@@ -33,7 +33,16 @@ func (s *WorkspaceTool) Prompt() string {
 }
 
 func (s *WorkspaceTool) Tags() fu.StringSet {
-	return fu.StringSet{s.workspacePtr.Category}
+	tags := fu.StringSet{}
+	items := strings.Split(s.workspacePtr.Template, "/")
+	switch len(items) {
+	case 2:
+		tags.Add(items[0])
+	case 3:
+		tags.Add(items[1])
+	}
+
+	return tags
 }
 
 func (s *WorkspaceTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {

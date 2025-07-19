@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -67,7 +66,6 @@ func GetStageReferenceLabel(stage string) string {
 type Workspace struct {
 	Name         string   `json:"name"`
 	Description  string   `json:"description"`
-	Category     string   `json:"category"`
 	Template     string   `json:"template"`
 	Status       string   `json:"status"`
 	Stage        string   `json:"stage"`
@@ -106,7 +104,7 @@ func (s *Workspace) GetStageWorkingPath(stage string) string {
 }
 
 func (s *Workspace) GetFinalTemplate() string {
-	return path.Join(s.Category, s.Template)
+	return s.Template
 }
 
 func (s Workspace) GetStage() string {
@@ -123,7 +121,6 @@ func (s *Workspace) IsSamge(ptr *Workspace) bool {
 	}
 
 	return s.Name == ptr.Name &&
-		s.Category == ptr.Category &&
 		s.Template == ptr.Template &&
 		s.Status == ptr.Status &&
 		s.Stage == ptr.Stage &&
@@ -132,8 +129,20 @@ func (s *Workspace) IsSamge(ptr *Workspace) bool {
 }
 
 func (s *Workspace) IsInnerTemplate() bool {
-	items := strings.Split(s.Category, "/")
+	items := strings.Split(s.Template, "/")
 	return len(items) > 1 && items[0] == InnerKey
+}
+
+func (s *Workspace) FilterTage() fu.StringSet {
+	ret := s.TechStack
+	items := strings.Split(s.Template, "/")
+	switch len(items) {
+	case 2:
+		ret = append(ret, items[0])
+	case 3:
+		ret = append(ret, items[1])
+	}
+	return ret
 }
 
 type Template struct {
