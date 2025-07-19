@@ -91,7 +91,7 @@ func (s *Workspace) QueryFileContent(workspaceName string, filePath string) (ret
 		return
 	}
 
-	fullFilePath := filepath.Join(workspacePtr.WorkspaceDir, filePath)
+	fullFilePath := filepath.Join(workspacePtr.GetWorkingPath(), filePath)
 	if !fp.Exist(fullFilePath) {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, fullFilePath))
 		log.Errorf("QueryFileContent failed, file not exists:%s", fullFilePath)
