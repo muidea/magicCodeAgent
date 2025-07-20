@@ -34,7 +34,8 @@ func (s *Templatemanager) listTemplate(ctx context.Context, res http.ResponseWri
 	result := &imbtmc.TemplateListResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	result.Values = s.bizPtr.ListTemplate()
+	includeInner := req.URL.Query().Get("incInner")
+	result.Values = s.bizPtr.ListTemplate(includeInner == "true")
 }
 
 func (s *Templatemanager) queryTemplate(ctx context.Context, res http.ResponseWriter, req *http.Request) {

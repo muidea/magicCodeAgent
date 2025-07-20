@@ -48,7 +48,7 @@ func (s *Templatemanager) Run() (err *cd.Error) {
 }
 
 func (s *Templatemanager) listTemplate(ev event.Event, re event.Result) {
-	templateList := s.ListTemplate()
+	templateList := s.ListTemplate(true)
 	if re != nil {
 		re.Set(templateList, nil)
 	}
@@ -75,7 +75,7 @@ func (s *Templatemanager) queryTemplate(ev event.Event, re event.Result) {
 	}
 }
 
-func (s *Templatemanager) ListTemplate() (ret []string) {
+func (s *Templatemanager) ListTemplate(includeInner bool) (ret []string) {
 	var templateList []string
 	entryList, entryErr := fs.ReadDir(s.localFS, models.TemplatePath)
 	if entryErr == nil {
@@ -93,27 +93,34 @@ func (s *Templatemanager) ListTemplate() (ret []string) {
 				if !subEntry.IsDir() {
 					continue
 				}
-				templateList = append(templateList, path.Join(models.LocalKey, entry.Name(), subEntry.Name()))
+
+				if includeInner {
+					templateList = append(templateList, path.Join(models.LocalKey, entry.Name(), subEntry.Name()))
+				} else {
+					templateList = append(templateList, path.Join(entry.Name(), subEntry.Name()))
+				}
 			}
 		}
 	}
 
-	entryList, entryErr = fs.ReadDir(s.innerFS, models.TemplatePath)
-	if entryErr == nil {
-		for _, entry := range entryList {
-			if !entry.IsDir() {
-				continue
-			}
-
-			subEntryList, subEntryErr := fs.ReadDir(s.innerFS, path.Join(models.TemplatePath, entry.Name()))
-			if subEntryErr != nil {
-				continue
-			}
-			for _, subEntry := range subEntryList {
-				if !subEntry.IsDir() {
+	if includeInner {
+		entryList, entryErr = fs.ReadDir(s.innerFS, models.TemplatePath)
+		if entryErr == nil {
+			for _, entry := range entryList {
+				if !entry.IsDir() {
 					continue
 				}
-				templateList = append(templateList, path.Join(models.InnerKey, entry.Name(), subEntry.Name()))
+
+				subEntryList, subEntryErr := fs.ReadDir(s.innerFS, path.Join(models.TemplatePath, entry.Name()))
+				if subEntryErr != nil {
+					continue
+				}
+				for _, subEntry := range subEntryList {
+					if !subEntry.IsDir() {
+						continue
+					}
+					templateList = append(templateList, path.Join(models.InnerKey, entry.Name(), subEntry.Name()))
+				}
 			}
 		}
 	}
@@ -132,6 +139,8 @@ func (s *Templatemanager) QueryTemplate(templateName string) (ret *models.Templa
 		} else {
 			templateFS = s.localFS
 		}
+	} else {
+		templateFS = s.localFS
 	}
 
 	templateFinalName := filepath.Join(models.TemplatePath, templateName, "template.json")

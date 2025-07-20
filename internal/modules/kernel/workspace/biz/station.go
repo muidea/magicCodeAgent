@@ -30,6 +30,7 @@ const (
 	Idle      = "idle"
 	Terminate = "terminate"
 	Chatting  = "chatting"
+	Paused    = "paused"
 	Finished  = "finished"
 )
 
@@ -73,6 +74,7 @@ func NewStation(
 	ret := &Station{
 		bizBasePtr:           bizBasePtr,
 		workspaceConfig:      *workspacePtr,
+		chatRunningStatus:    Idle,
 		chatLoopCount:        0,
 		chatUsagePtr:         &imklc.Usage{},
 		localMessageCache:    cache.NewMessageSequenceCache(500),
@@ -347,6 +349,11 @@ func (s *Station) BroadcastReady() {
 }
 
 func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.MessageItem) (err *cd.Error) {
+	if s.chatRunningStatus == Terminate || s.chatRunningStatus == Finished {
+		// 表示从结束状态恢复过来，目前是重新开始，这里要主动的重置
+		s.localFlowManger.Reset()
+	}
+
 	var curFlow *models.Flow
 	flowIDVal := chatContext.Value(common.FlowID{})
 	if flowIDVal != nil {
@@ -372,11 +379,16 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 func (s *Station) ChatTerminate(ctx context.Context) (err *cd.Error) {
 	s.chatRunningStatus = Terminate
 
-	s.localFlowManger.Reset()
+	//s.localFlowManger.Reset()
 	return
 }
 
 func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flow) (err *cd.Error) {
+	// 如果处于终止状态,或者已经超过最大循环次数，则不处理
+	if s.chatRunningStatus != Chatting {
+		return
+	}
+
 	s.chatLoopCount++
 
 	sysPrompt := s.systemPrompt()
@@ -436,31 +448,14 @@ func (s *Station) OnClose() {
 }
 
 func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
-	msgPtr := &models.MessageItem{
-		Role:    common.Assistant,
-		Content: []string{content},
-	}
-
 	s.chatUsagePtr.Update(usagePtr)
 
-	// 如果处于终止状态,或者已经超过最大循环次数，则不处理
-	if s.chatRunningStatus != Chatting {
-		return
-	}
-
-	curFlow := s.localFlowManger.GetCurrentFlow()
-	if curFlow != nil {
-		curFlow.AppendMessage(msgPtr)
-	}
-
-	s.DisposeMessage(msgPtr)
-
 	s.bizBasePtr.AsyncTask(func() {
-		s.DisposeContent(curFlow, content)
+		s.DisposeContent(content)
 	})
 }
 
-func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
+func (s *Station) DisposeContent(content string) {
 	curTime := time.Now()
 	var finalStatus = s.chatRunningStatus
 	var chatLoopCount = s.chatLoopCount
@@ -468,7 +463,7 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 	log.Infof("DisposeContent, workspace:%s, chatLoopCount:%d", s.workspaceConfig.Name, chatLoopCount)
 	defer func() {
 		log.Infof("DisposeContent done, workspace:%s, chatLoopCount:%d, finalStatus:%s, elapseTime:%v", s.workspaceConfig.Name, chatLoopCount, finalStatus, time.Since(curTime))
-		if finalStatus == Terminate || finalStatus == Finished {
+		if finalStatus != Chatting {
 			// 发送本次消耗的Token数据
 			notifyMsg := &models.MessageItem{
 				Role: common.Notifier,
@@ -482,6 +477,14 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 			s.chatRunningStatus = finalStatus
 		}
 	}()
+
+	msgPtr := &models.MessageItem{
+		Role:    common.Assistant,
+		Content: []string{content},
+	}
+
+	curFlow := s.localFlowManger.GetCurrentFlow()
+	s.DisposeMessage(msgPtr)
 
 	blockList, blockErr := util.SpliteBlocks(content)
 	if blockErr != nil {
@@ -507,15 +510,18 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 		case "thinking":
 			// noting todo
 			continue
-		case "ask_followup_question":
-			curFlow = s.waitToContinue(curFlow, workParam, msgItem)
 		case "attempt_finish":
+			curFlow.AppendMessage(msgPtr)
 			curFlow = s.tryToFinishFlow(curFlow, workParam, msgItem)
 		case "decompose_design_plan", "decompose_code_plan":
 			curFlow = s.tryToSwitchFlow(curFlow, workParam, msgItem)
+			curFlow.AppendMessage(msgPtr)
+			curFlow.AppendMessage(msgItem)
 		case "attempt_completion":
+			curFlow.AppendMessage(msgPtr)
 			curFlow = s.tryToCompleteFlow(curFlow, workParam, msgItem)
 		default:
+			curFlow.AppendMessage(msgPtr)
 			curFlow = s.continueRun(curFlow, workParam, msgItem)
 		}
 
@@ -523,7 +529,7 @@ func (s *Station) DisposeContent(curFlow *models.Flow, content string) {
 	}
 
 	if chatLoopCount > s.chatMaxLoopCount {
-		finalStatus = Finished
+		finalStatus = Paused
 		notifyMsg = "循环次数超过最大限制，自动结束\n 如果要继续执行，可以输入'继续执行'"
 		return
 	}
@@ -594,7 +600,7 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 		}
 	}
 
-	ret.AppendMessage(msgItem)
+	//ret.AppendMessage(msgItem)
 	return
 }
 
