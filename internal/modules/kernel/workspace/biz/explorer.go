@@ -31,6 +31,15 @@ func (s *Workspace) OpenWorkspaceExplorer(workspaceName string) (ret *models.Wor
 		return
 	}
 
+	if _, oErr := os.Stat(workspacePtr.GetWorkingPath()); oErr != nil {
+		oErr = os.MkdirAll(workspacePtr.GetWorkingPath(), 0755)
+		if oErr != nil {
+			log.Errorf("open workspace explorer failed, create working path failed:%s", workspaceName)
+			err = cd.NewError(cd.Unexpected, fmt.Sprintf("open workspace explorer, create working path failed:%s", workspaceName))
+			return
+		}
+	}
+
 	reloadEvent := event.NewEvent(imbtc.ReloadTools, s.ID(), imbtc.ToolsModule, nil, workspacePtr)
 	reloadResult := s.SendEvent(reloadEvent)
 	err = reloadResult.Error()

@@ -154,6 +154,14 @@ type Template struct {
 	HostRootFS  fs.FS    `json:"-"`
 }
 
+func (s *Template) IsWeb() bool {
+	return strings.Contains(s.Category, "web")
+}
+
+func (s *Template) IsService() bool {
+	return strings.Contains(s.Category, "service")
+}
+
 /*
 ├── prompts 目录及内容必选
 │   ├── decompose-code-plan-block.md

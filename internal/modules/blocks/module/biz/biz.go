@@ -38,7 +38,7 @@ func New(
 	return ptr
 }
 
-func (s *Module) verifyWorkingPath(workingPath string) (ret string, err *cd.Error) {
+func (s *Module) verifyWorkingPath(workingPath string, templatePtr *models.Template) (ret string, err *cd.Error) {
 	if workingPath == "" {
 		err = cd.NewError(cd.IllegalParam, "working path is empty")
 		return
@@ -51,6 +51,10 @@ func (s *Module) verifyWorkingPath(workingPath string) (ret string, err *cd.Erro
 
 	if vErr := imbmcfg.Validate(); vErr != nil {
 		err = cd.NewError(cd.IllegalParam, vErr.Error())
+		return
+	}
+
+	if templatePtr.IsWeb() {
 		return
 	}
 
@@ -94,7 +98,7 @@ func (s *Module) create(ev event.Event, re event.Result) {
 
 	workingPath := config.CurrentWorkingPath()
 	workingPath = filepath.Join(workingPath, imbmcfg.GetPath())
-	modulePath, err := s.verifyWorkingPath(workingPath)
+	modulePath, err := s.verifyWorkingPath(workingPath, templatePtr)
 	if err != nil {
 		log.Errorf("create module failed, verify module working path failed, err: %v", err)
 		if re != nil {
@@ -103,7 +107,7 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	moduleWorkingPath := workingPath //filepath.Join(workingPath, imbmcfg.GetName())
+	moduleWorkingPath := workingPath
 	if oErr := os.MkdirAll(moduleWorkingPath, 0755); oErr != nil {
 		log.Errorf("create module failed, create module working path failed, err: %v", oErr)
 		if re != nil {
@@ -120,12 +124,13 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		ModuleName:  imbmcfg.GetName(),
 		ModulePath:  modulePath,
 	})
+
 	if err != nil {
 		log.Errorf("create module failed, err: %v", err)
-		if re != nil {
-			re.Set(nil, err)
-		}
-		return
+	}
+
+	if re != nil {
+		re.Set(nil, err)
 	}
 }
 

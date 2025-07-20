@@ -111,10 +111,9 @@ func (s *Initiator) create(ev event.Event, re event.Result) {
 	})
 	if err != nil {
 		log.Errorf("create initiator failed, error: %v", err)
-		if re != nil {
-			re.Set(nil, err)
-		}
-		return
+	}
+	if re != nil {
+		re.Set(nil, err)
 	}
 }
 

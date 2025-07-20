@@ -55,9 +55,8 @@ func (s *Project) verifyWorkingPath(workingPath string) *cd.Error {
 
 	normalizedPath := filepath.Clean(workingPath)
 	codeRootPath := normalizedPath
-	goModPath := filepath.Join(codeRootPath, "go.mod")
-	if _, err := os.Stat(goModPath); err != nil {
-		return cd.NewError(cd.IllegalParam, "working path must be a go module")
+	if isEmpty, isErr := fp.IsDirEmpty(codeRootPath); isErr != nil || !isEmpty {
+		return cd.NewError(cd.IllegalParam, "working path must be empty directory")
 	}
 	return nil
 }
@@ -92,10 +91,21 @@ func (s *Project) create(ev event.Event, re event.Result) {
 	})
 	if err != nil {
 		log.Errorf("create project failed, error: %v", err)
-		if re != nil {
-			re.Set(nil, err)
+	}
+
+	if templatePtr.IsService() {
+		if initErr := s.initializeService(imbpcfg.GetName(), workingPath); initErr != nil {
+			err = cd.NewError(cd.Unexpected, initErr.Error())
 		}
-		return
+	}
+	if templatePtr.IsWeb() {
+		if initErr := s.initializeWeb(imbpcfg.GetName(), workingPath); initErr != nil {
+			err = cd.NewError(cd.Unexpected, initErr.Error())
+		}
+	}
+
+	if re != nil {
+		re.Set(nil, err)
 	}
 }
 
@@ -107,9 +117,9 @@ func (s *Project) destroy(ev event.Event, re event.Result) {
 
 }
 
-func (s *Project) initializeService(projectName, projectPath string) (err error) {
-	rawPath := path.Join(projectPath, "application", "main.go")
-	dstPath := path.Join(projectPath, "application", projectName, "cmd")
+func (s *Project) initializeService(projectName, projectWorkingPath string) (err error) {
+	rawPath := path.Join(projectWorkingPath, "application", "main.go")
+	dstPath := path.Join(projectWorkingPath, "application", projectName, "cmd")
 	if !fp.Exist(dstPath) {
 		os.MkdirAll(dstPath, 0755)
 	}
@@ -123,21 +133,21 @@ func (s *Project) initializeService(projectName, projectPath string) (err error)
 	var byteBuffer bytes.Buffer
 	// 执行 go mod init github.com/muidea/{projectName} & go mod tidy & go mod vendor 完成go mod初始化
 	modInitCmd := exec.Command("go", "mod", "init", "github.com/muidea/"+projectName)
-	modInitCmd.Dir = projectPath
+	modInitCmd.Dir = projectWorkingPath
 	if err = modInitCmd.Run(); err != nil {
 		log.Errorf("go mod init failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
 		return
 	}
 
 	modTidyCmd := exec.Command("go", "mod", "tidy")
-	modTidyCmd.Dir = projectPath
+	modTidyCmd.Dir = projectWorkingPath
 	if err = modTidyCmd.Run(); err != nil {
 		log.Errorf("go mod tidy failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
 		return
 	}
 
 	modVendorCmd := exec.Command("go", "mod", "vendor")
-	modVendorCmd.Dir = projectPath
+	modVendorCmd.Dir = projectWorkingPath
 	if err = modVendorCmd.Run(); err != nil {
 		log.Errorf("go mod vendor failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
 		return
@@ -145,26 +155,10 @@ func (s *Project) initializeService(projectName, projectPath string) (err error)
 	return
 }
 
-func (s *Project) initializeWeb(projectName, projectPath string) (err error) {
+func (s *Project) initializeWeb(projectName, projectWorkingPath string) (err error) {
 	var byteBuffer bytes.Buffer
-	mvUmiRCCmd := exec.Command("mv", "umirc.ts", ".umirc.ts")
-	mvUmiRCCmd.Dir = projectPath
-	mvUmiRCCmd.Stderr = &byteBuffer
-	if err = mvUmiRCCmd.Run(); err != nil {
-		log.Errorf("mv umirc.ts failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
-		return
-	}
-
-	mvPrettierCmd := exec.Command("mv", "prettierignore", ".prettierignore")
-	mvPrettierCmd.Dir = projectPath
-	mvPrettierCmd.Stderr = &byteBuffer
-	if err = mvPrettierCmd.Run(); err != nil {
-		log.Errorf("mv umirc.ts failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())
-		return
-	}
-
 	yarnInstallCmd := exec.Command("yarn", "install")
-	yarnInstallCmd.Dir = projectPath
+	yarnInstallCmd.Dir = projectWorkingPath
 	yarnInstallCmd.Stderr = &byteBuffer
 	if err = yarnInstallCmd.Run(); err != nil {
 		log.Errorf("yarn failed, projectName:%s, \nstdErr:%v, \nerr:%s", projectName, byteBuffer.String(), err.Error())

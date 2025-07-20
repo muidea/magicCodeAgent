@@ -13,6 +13,7 @@ import (
 )
 
 type BaseCommander struct {
+	workspace           string
 	debugger            sync.Mutex
 	currentCommand      string
 	cancelCommanderFunc context.CancelFunc
@@ -23,8 +24,9 @@ type BaseCommander struct {
 }
 
 // NewBaseCommander 创建一个新的基础调试器
-func NewBaseCommander(maxLineSize int) *BaseCommander {
+func NewBaseCommander(workspace string, maxLineSize int) *BaseCommander {
 	return &BaseCommander{
+		workspace:    workspace,
 		stdErrBuffer: NewLogBuffer(maxLineSize),
 		stdOutBuffer: NewLogBuffer(maxLineSize),
 	}
@@ -47,6 +49,7 @@ func (s *BaseCommander) Run(workspaceDir, command string) (err error) {
 		}
 
 		s.currentCommand = command
+		log.Infof("workspace: %s", workspaceDir)
 		log.Infof("run command: '%s'", s.currentCommand)
 
 		s.stdErrBuffer.Reset()
@@ -60,7 +63,8 @@ func (s *BaseCommander) Run(workspaceDir, command string) (err error) {
 		wrappedCmd := fmt.Sprintf("setsid %s", command)
 		cmdPtr = exec.CommandContext(cmdContext, "/bin/bash", "-c", wrappedCmd)
 
-		cmdPtr.Env = os.Environ()
+		sysEnv := append(os.Environ(), "workspace="+s.workspace, "LOG_LEVEL=4")
+		cmdPtr.Env = sysEnv
 		cmdPtr.Dir = workspaceDir
 		cmdPtr.Stderr = s.stdErrBuffer
 		cmdPtr.Stdout = s.stdOutBuffer

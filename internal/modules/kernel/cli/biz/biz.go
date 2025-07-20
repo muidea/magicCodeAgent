@@ -1,6 +1,9 @@
 package biz
 
 import (
+	"os"
+
+	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
@@ -42,8 +45,15 @@ func (s *Cli) queryTemplate(templateName string) (ret *models.Template) {
 	return
 }
 
-func (s *Cli) Run() {
-	err := config.VerifyVar()
+func (s *Cli) Run() (err *cd.Error) {
+	defer func() {
+		if err != nil {
+			log.Errorf("run failed, error:%s", err.Error())
+			os.Exit(1)
+		}
+	}()
+
+	err = config.VerifyVar()
 	if err != nil {
 		log.Errorf("verify config failed, error:%s", err.Error())
 		return
@@ -54,22 +64,26 @@ func (s *Cli) Run() {
 	templatePtr := s.queryTemplate(workspacePtr.GetTemplate())
 	if templatePtr == nil {
 		log.Errorf("query template failed, templateName:%s", workspacePtr.GetTemplate())
+		err = cd.NewError(cd.Unexpected, "query template failed")
 		return
 	}
 
 	switch actionType {
 	case config.ModuleKey:
-		s.runModuleAction(workspacePtr, templatePtr)
+		err = s.runModuleAction(workspacePtr, templatePtr)
 	case config.InitiatorKey:
-		s.runInitiatorAction(workspacePtr, templatePtr)
+		err = s.runInitiatorAction(workspacePtr, templatePtr)
 	case config.ProjectKey:
-		s.runProjectAction(workspacePtr, templatePtr)
+		err = s.runProjectAction(workspacePtr, templatePtr)
 	default:
-		log.Warnf("unknown module type:%s", actionType)
+		log.Errorf("unknown module type:%s", actionType)
+		err = cd.NewError(cd.Unexpected, "unknown module type")
 	}
+
+	return
 }
 
-func (s *Cli) runModuleAction(workspacePtr *models.Workspace, templatePtr *models.Template) {
+func (s *Cli) runModuleAction(workspacePtr *models.Workspace, templatePtr *models.Template) *cd.Error {
 	var ev event.Event
 	switch config.GetExecuteAction() {
 	case config.CreateKey:
@@ -83,10 +97,11 @@ func (s *Cli) runModuleAction(workspacePtr *models.Workspace, templatePtr *model
 	}
 
 	ev.SetData("template", templatePtr)
-	s.SendEvent(ev)
+	result := s.SendEvent(ev)
+	return result.Error()
 }
 
-func (s *Cli) runInitiatorAction(workspacePtr *models.Workspace, templatePtr *models.Template) {
+func (s *Cli) runInitiatorAction(workspacePtr *models.Workspace, templatePtr *models.Template) *cd.Error {
 	var ev event.Event
 	switch config.GetExecuteAction() {
 	case config.CreateKey:
@@ -100,10 +115,11 @@ func (s *Cli) runInitiatorAction(workspacePtr *models.Workspace, templatePtr *mo
 	}
 
 	ev.SetData("template", templatePtr)
-	s.SendEvent(ev)
+	result := s.SendEvent(ev)
+	return result.Error()
 }
 
-func (s *Cli) runProjectAction(workspacePtr *models.Workspace, templatePtr *models.Template) {
+func (s *Cli) runProjectAction(workspacePtr *models.Workspace, templatePtr *models.Template) *cd.Error {
 	var ev event.Event
 	switch config.GetExecuteAction() {
 	case config.CreateKey:
@@ -117,5 +133,6 @@ func (s *Cli) runProjectAction(workspacePtr *models.Workspace, templatePtr *mode
 	}
 
 	ev.SetData("template", templatePtr)
-	s.SendEvent(ev)
+	result := s.SendEvent(ev)
+	return result.Error()
 }

@@ -60,7 +60,7 @@ func (s *Commander) RunCommand(workspace string, paramPtr *imbcc.CommanderParam)
 	var commanderPtr *BaseCommander
 	commanderVal, commanderOK := s.workspace2Commander.Load(workspace)
 	if !commanderOK {
-		commanderPtr = NewBaseCommander(defaultMaxBufferLinesSize)
+		commanderPtr = NewBaseCommander(workspace, defaultMaxBufferLinesSize)
 	} else {
 		commanderPtr = commanderVal.(*BaseCommander)
 	}
