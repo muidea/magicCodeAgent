@@ -1,4 +1,4 @@
-## 代码规划目录结构
+## 目录结构规划
 
 ```plaintext
 ├── .gitignore           # Git忽略规则文件

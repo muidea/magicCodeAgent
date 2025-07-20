@@ -171,11 +171,11 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 
 	workingPath := s.workspaceConfig.GetWorkingPath()
 	if ptr != nil {
-		// 当前任务执行状态
+		// 当前进度
 		// 新增，删除，修改的文件清单
-		stringBuilder.WriteString("### 当前任务执行状态\n\n")
+		stringBuilder.WriteString("### 当前进度\n\n")
 		if ptr.AddFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 新增文件清单\n\n")
+			stringBuilder.WriteString("#### 新增清单\n\n")
 			ptr.AddFiles.Range(func(filePath string) bool {
 				if strings.HasPrefix(filePath, workingPath) {
 					relativePath := filePath[len(workingPath)+1:]
@@ -186,7 +186,7 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 			stringBuilder.WriteString("\n")
 		}
 		if ptr.DelFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 删除文件清单\n\n")
+			stringBuilder.WriteString("#### 删除清单\n\n")
 			ptr.DelFiles.Range(func(filePath string) bool {
 				if strings.HasPrefix(filePath, workingPath) {
 					relativePath := filePath[len(workingPath)+1:]
@@ -197,7 +197,7 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 			stringBuilder.WriteString("\n")
 		}
 		if ptr.ModFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 修改文件清单\n\n")
+			stringBuilder.WriteString("#### 修改清单\n\n")
 			ptr.ModFiles.Range(func(filePath string) bool {
 				if strings.HasPrefix(filePath, workingPath) {
 					relativePath := filePath[len(workingPath)+1:]
