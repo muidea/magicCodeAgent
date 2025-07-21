@@ -102,6 +102,35 @@ func (s *FlowManager) appendFlow(flowPtr *models.Flow, parentPtr *models.Flow) (
 	return
 }
 
+const checkPrompt = `请按以下步骤依次执行，避免重复确认或漏检。仅在全部满足后执行attempt_completion结束任务。
+
+---
+
+## 1. 检查已完成项  
+- 所有标记为完成的项是否真正完成？  
+- 确认无错误、无异常、无遗漏。
+
+## 2. 业务层级完整性检查（设计文档对齐）  
+- **是否所有在设计文档中定义的业务模块都已建立功能模块设计？**  
+  - 对照设计文档中的业务模块清单，逐项比对确认。  
+  - 不允许遗漏任何业务模块。  
+- 每个业务模块是否已拆分至少一个功能模块？  
+- 所有功能模块是否已完成功能开发，且对齐原始业务意图？
+
+## 3. 功能层级完成检查  
+- 所有功能模块是否状态为“已完成”？  
+- 是否实现正确、符合预期，未出现遗漏或冗余？  
+- 每个功能模块是否可以回溯到具体业务需求？
+
+## 4. 判断是否结束任务  
+- 所有检查步骤均通过。  
+- 所有业务模块覆盖完毕，未有缺失或延迟项。  
+- 所有功能项完成、正确、可交付。
+
+✅ 满足以上条件 → 执行attempt_completion
+⛔ 否则 → 返回未完成项继续处理。
+`
+
 func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 	defer func() {
 		if s.currentFlowPtr != nil {
@@ -161,7 +190,7 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 			s.currentFlowPtr.AppendMessage(&models.MessageItem{
 				Role: common.User,
 				Content: []string{
-					"检查并核对所有已完成项, 如确认所有层级的工作项已处理完毕(无错误，无异常，无遗漏)则使用attempt_completion工具结束任务，否则分解目标继续处理",
+					checkPrompt,
 				},
 			})
 			break
