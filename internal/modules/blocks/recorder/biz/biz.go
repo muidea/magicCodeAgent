@@ -26,7 +26,8 @@ import (
 type Recorder struct {
 	biz.Base
 
-	dataDir string
+	currentWorkspace string
+	currentDataDir   string
 }
 
 func New(
@@ -34,8 +35,7 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Recorder {
 	ptr := &Recorder{
-		Base:    biz.New(imkdc.RecorderModule, eventHub, backgroundRoutine),
-		dataDir: filepath.Join(config.CurrentWorkingPath(), "data"),
+		Base: biz.New(imkdc.RecorderModule, eventHub, backgroundRoutine),
 	}
 
 	if config.DebugFlag() {
@@ -48,14 +48,16 @@ func New(
 }
 
 func (s *Recorder) Run() (err *cd.Error) {
-	if !config.DebugFlag() {
-		return
-	}
-	if err := s.checkDataDir(s.dataDir); err != nil {
-		log.Errorf("check data dir failed, err:%s", err)
-	}
+	/*
+		if !config.DebugFlag() {
+			return
+		}
+		if err := s.checkDataDir(s.currentDataDir); err != nil {
+			log.Errorf("check data dir failed, err:%s", err)
+		}
 
-	s.traceAllHistoryContent(s.dataDir)
+		s.traceAllHistoryContent(s.currentDataDir)
+	*/
 	return
 }
 
@@ -88,8 +90,21 @@ func (s *Recorder) recordRealtimeMessage(ev event.Event, re event.Result) {
 		log.Warnf("recordMessage message is nil, ev:%v", ev)
 		return
 	}
+	if s.currentWorkspace != msgPtr.Workspace {
+		workspacePtr := config.GetWorkspace(msgPtr.Workspace)
+		s.currentWorkspace = msgPtr.Workspace
+		if workspacePtr != nil {
+			s.currentDataDir = filepath.Join(workspacePtr.WorkspaceDir, ".data")
+		} else {
+			s.currentDataDir = filepath.Join(config.CurrentWorkingPath(), ".data")
+		}
 
-	s.traceContent(s.dataDir, msgPtr)
+		if err := s.checkDataDir(s.currentDataDir); err != nil {
+			log.Errorf("check data dir failed, err:%s", err)
+		}
+	}
+
+	s.traceContent(s.currentDataDir, msgPtr)
 }
 
 func (s *Recorder) recordHistoryMessage(ev event.Event, re event.Result) {
@@ -100,12 +115,12 @@ func (s *Recorder) recordHistoryMessage(ev event.Event, re event.Result) {
 		}
 	}()
 
-	if err := s.checkDataDir(s.dataDir); err != nil {
+	if err := s.checkDataDir(s.currentDataDir); err != nil {
 		log.Errorf("check data dir failed, err:%s", err)
 		return
 	}
 
-	err = s.traceAllHistoryContent(s.dataDir)
+	err = s.traceAllHistoryContent(s.currentDataDir)
 }
 
 func (s *Recorder) traceAllHistoryContent(dataDir string) (err *cd.Error) {

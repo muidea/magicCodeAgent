@@ -86,7 +86,7 @@ func (s *DecomposeDesignPlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.Too
 	planParam := map[string]string{
 		"Name":             name,
 		"Description":      description,
-		"Path":             pathVal,
+		"ReferencePath":    pathVal,
 		"Siblings":         siblingsList,
 		"Childrens":        childList,
 		"WorkingDirectory": workPath,

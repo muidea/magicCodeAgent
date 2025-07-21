@@ -161,7 +161,7 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 			s.currentFlowPtr.AppendMessage(&models.MessageItem{
 				Role: common.User,
 				Content: []string{
-					"继续检查并处理剩余功能, 如果确认所有层级的功能已处理完毕(无错误，无异常)则结束任务，否则分解下一级目标继续处理",
+					"继续检查并处理剩余功能, 如果确认所有层级的功能已处理完毕(无错误，无异常，无遗漏)则结束任务，否则分解下一级目标继续处理",
 				},
 			})
 			break
