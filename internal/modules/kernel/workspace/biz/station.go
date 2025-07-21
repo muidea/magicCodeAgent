@@ -552,13 +552,6 @@ func (s *Station) DisposeContent(content string) {
 	}
 }
 
-func (s *Station) waitToContinue(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
-	// ask_followup_question
-	// 当前阶段是需要等待用户的输入的，不用做任何事情
-	log.Infof("waitting to continue flow %s", curFlow)
-	return
-}
-
 func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
 	// attempt_finish
 	// 检查所有的flow是否都执行完毕，如果执行完毕就

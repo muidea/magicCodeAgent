@@ -180,11 +180,22 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 			if s.currentFlowPtr == nil {
 				break
 			}
-			if s.currentFlowPtr.CanFinish() {
-				if s.currentFlowPtr.Level != "" {
-					s.currentFlowPtr = s.currentFlowPtr.Parent
-					continue
-				}
+
+			if !s.currentFlowPtr.CanFinish() {
+				subFlowPtr := s.NewFlow("继续处理下一级功能", s.currentFlowPtr)
+				// 子层级还未分解，不能结束
+				subFlowPtr.AppendMessage(&models.MessageItem{
+					Role: common.User,
+					Content: []string{
+						"继续处理下一级功能",
+					},
+				})
+				return
+			}
+
+			if s.currentFlowPtr.Level != "" {
+				s.currentFlowPtr = s.currentFlowPtr.Parent
+				continue
 			}
 
 			s.currentFlowPtr.AppendMessage(&models.MessageItem{
