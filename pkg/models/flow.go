@@ -67,6 +67,7 @@ func GetChildLevel(level string) string {
 type Flow struct {
 	Id        string           `json:"id"`
 	Title     string           `json:"title"`
+	Owner     string           `json:"owner"`
 	Message   []*MessageItem   `json:"-"`
 	Status    int              `json:"status"`
 	AddFiles  fu.StringSortSet `json:"addFiles,omitempty"`
@@ -89,7 +90,7 @@ func (s *Flow) String() string {
 	}
 
 	var stringBuff strings.Builder
-	stringBuff.WriteString(fmt.Sprintf("Flow %s, title:%s, level:%s, status:%d, parent is %s", s.Id, s.Title, s.Level, s.Status, s.Parent.Id))
+	stringBuff.WriteString(fmt.Sprintf("Flow %s, title:%s, owner:%s, level:%s, status:%d, parent is %s", s.Id, s.Title, s.Owner, s.Level, s.Status, s.Parent.Id))
 	for _, val := range s.Childrens {
 		stringBuff.WriteString(fmt.Sprintf("\n - children:%s, title:%s, level:%s, status:%d, parent:%s", val.Id, val.Title, val.Level, val.Status, val.Parent.Id))
 	}
@@ -126,7 +127,7 @@ func (s *Flow) CanFinish() (ret bool) {
 		}
 	}()
 
-	if s.isIdle() || s.IsFinish() {
+	if /*s.isIdle() ||*/ s.IsFinish() {
 		ret = true
 		return
 	}
@@ -190,4 +191,26 @@ func (s *Flow) DelFile(filePath string) {
 
 func (s *Flow) GetLevel() string {
 	return s.Level
+}
+
+func (s *Flow) GetOwner() string {
+	return s.Owner
+}
+
+func (s *Flow) GetLatestUnFinishFlow() *Flow {
+	if s.IsFinish() || s.CanFinish() {
+		return nil
+	}
+
+	for _, child := range s.Childrens {
+		if child.IsFinish() || child.CanFinish() {
+			continue
+		}
+
+		if unfinished := child.GetLatestUnFinishFlow(); unfinished != nil {
+			return unfinished
+		}
+	}
+
+	return s
 }

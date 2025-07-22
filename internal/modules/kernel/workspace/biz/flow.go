@@ -7,6 +7,8 @@ import (
 
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
+
+	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 )
 
 type FlowManager struct {
@@ -26,10 +28,11 @@ func (s *FlowManager) Reset() {
 	s.currentFlowPtr = nil
 }
 
-func (s *FlowManager) newRootFlow(title string) *models.Flow {
+func (s *FlowManager) newRootFlow(title, owner string) *models.Flow {
 	flowPtr := &models.Flow{
 		Id:        fmt.Sprintf("flow_%d", len(s.localFlows)),
 		Title:     title,
+		Owner:     owner,
 		Message:   []*models.MessageItem{},
 		Status:    models.FLOW_STATUS_WAIT,
 		Parent:    nil,
@@ -40,18 +43,19 @@ func (s *FlowManager) newRootFlow(title string) *models.Flow {
 	return s.appendFlow(flowPtr, nil)
 }
 
-func (s *FlowManager) NewFlow(title string, parentPtr *models.Flow) *models.Flow {
+func (s *FlowManager) NewFlow(title, owner string, parentPtr *models.Flow) *models.Flow {
 	if parentPtr == nil {
 		parentPtr = s.currentFlowPtr
 	}
 
 	if parentPtr == nil {
-		return s.newRootFlow(title)
+		return s.newRootFlow(title, owner)
 	}
 
 	flowPtr := &models.Flow{
 		Id:      fmt.Sprintf("%s_%d", parentPtr.Id, len(parentPtr.Childrens)),
 		Title:   title,
+		Owner:   owner,
 		Message: []*models.MessageItem{},
 		Status:  models.FLOW_STATUS_WAIT,
 		Parent:  parentPtr,
@@ -102,33 +106,6 @@ func (s *FlowManager) appendFlow(flowPtr *models.Flow, parentPtr *models.Flow) (
 	return
 }
 
-const checkPrompt = `请按以下步骤依次执行，避免重复确认或漏检。仅在全部满足后执行attempt_completion结束任务。
-
----
-
-## 1. 检查已完成项  
-- 所有标记为完成的项是否真正完成？  
-- 确认无错误、无异常、无遗漏。
-
-## 2. 业务层级完整性检查
-- 所有业务模块是否状态为“已完成”？  
-- 是否实现正确、符合预期，未出现遗漏或冗余？  
-- 每个功能模块是否可以回溯到具体业务需求？
-
-## 3. 功能层级完成检查  
-- 所有功能模块是否状态为“已完成”？  
-- 是否实现正确、符合预期，未出现遗漏或冗余？  
-- 每个功能模块是否可以回溯到具体业务需求？
-
-## 4. 判断是否结束任务  
-- 所有检查步骤均通过。  
-- 所有业务模块覆盖完毕，未有缺失或延迟项。  
-- 所有功能项完成、正确、可交付。
-
-✅ 满足以上条件 → 执行attempt_completion
-⛔ 否则 → 返回未完成项继续处理。
-`
-
 func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 	defer func() {
 		if s.currentFlowPtr != nil {
@@ -141,69 +118,67 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 	}()
 
 	// 1. 检查当前flowPtr是否分解完成，如果没有分解完成，则要继续分解
-	hasChild := len(flowPtr.Childrens) > 0
-	if flowPtr.GetLevel() != models.BlockLevel && !hasChild {
-		subFlowPtr := s.NewFlow("继续处理下一级功能", flowPtr)
-		// 子层级还未分解，不能结束
-		subFlowPtr.AppendMessage(&models.MessageItem{
-			Role: common.User,
-			Content: []string{
-				"继续处理下一级功能",
-			},
+	if !flowPtr.CanFinish() {
+		param := map[string]string{
+			"Name": flowPtr.GetOwner(),
+		}
+		subLevelCheckPromptVal, subLevelCheckPromptErr := iipc.ReadInnerSystemPromptsWithParam("sublevel-check", param)
+		if subLevelCheckPromptErr != nil {
+			log.Errorf("read sublevel-check prompt failed, err:%s", subLevelCheckPromptErr)
+			return
+		}
+		flowPtr.AppendMessage(&models.MessageItem{
+			Role:    common.User,
+			Content: []string{subLevelCheckPromptVal},
 		})
 		return
 	}
 
-	// 这里只直接返回上一层，而不是继续根据Flow状态进行判断的原因是由于大模型并不能按照预期一次性完成所有的分解
-	// 直接返回上一次可以让他根据当前的情况，重新验算一遍，以便有遗漏，但是带来的坏处是多执行了一些步骤，会额外占用Token开销
-	if flowPtr.CanFinish() {
-		flowPtr.Status = models.FLOW_STATUS_FINISH
-	}
-	parent := flowPtr.GetParent()
-	// 这里优先处理尚未完成的子Flow
-	s.currentFlowPtr = parent
-	if parent != nil {
-		childs := []*models.Flow{}
-		for _, child := range parent.GetChildrens() {
-			if !child.CanFinish() {
-				childs = append(childs, child)
-			}
-		}
-		if len(childs) > 0 {
-			s.currentFlowPtr = childs[0]
-		}
-		//parent.Childrens = childs
-
-		for {
-			if s.currentFlowPtr == nil {
-				break
-			}
-
-			if !s.currentFlowPtr.CanFinish() {
-				s.currentFlowPtr.AppendMessage(&models.MessageItem{
-					Role: common.User,
-					Content: []string{
-						"继续处理下一级功能",
-					},
-				})
-				return
-			}
-
-			if s.currentFlowPtr.Level != "" {
-				s.currentFlowPtr = s.currentFlowPtr.Parent
-				continue
-			}
-
-			s.currentFlowPtr.AppendMessage(&models.MessageItem{
-				Role: common.User,
-				Content: []string{
-					checkPrompt,
-				},
-			})
+	s.currentFlowPtr = flowPtr
+	for {
+		s.currentFlowPtr = s.currentFlowPtr.GetParent()
+		if s.currentFlowPtr == nil {
 			break
 		}
-	}
 
+		if s.currentFlowPtr.Level == models.RootLevel {
+			// 到这里要求做final-check就可以了
+			finalCheckPromptVal, finalCheckPromptErr := iipc.ReadInnerSystemPrompts("final-check")
+			if finalCheckPromptErr != nil {
+				log.Errorf("read final-check prompt failed, err:%s", finalCheckPromptErr)
+				return
+			}
+			s.currentFlowPtr.AppendMessage(&models.MessageItem{
+				Role:    common.User,
+				Content: []string{finalCheckPromptVal},
+			})
+			return
+		}
+
+		// 2. 判断Parent是否可完成，如果可以完成，则继续取父级
+		if s.currentFlowPtr.CanFinish() {
+			continue
+		}
+
+		// 3. 深度优先，获取最小层级未完成的子流程
+		s.currentFlowPtr = s.currentFlowPtr.GetLatestUnFinishFlow()
+		if s.currentFlowPtr != nil {
+			param := map[string]string{
+				"Name": s.currentFlowPtr.GetOwner(),
+			}
+
+			subLevelCheckPromptVal, subLevelCheckPromptErr := iipc.ReadInnerSystemPromptsWithParam("sublevel-check", param)
+			if subLevelCheckPromptErr != nil {
+				log.Errorf("read sublevel-check prompt failed, err:%s", subLevelCheckPromptErr)
+				return
+			}
+			s.currentFlowPtr.AppendMessage(&models.MessageItem{
+				Role:    common.User,
+				Content: []string{subLevelCheckPromptVal},
+			})
+		}
+		return
+	}
 	return
 }
 

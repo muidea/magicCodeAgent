@@ -98,8 +98,26 @@ func (s *Station) getWorkspaceProjectStruct() (string, error) {
 }
 
 func (s *Station) getWorkspaceStatus(ptr *models.Flow) (string, error) {
+	var levelInfo strings.Builder
+	switch ptr.GetLevel() {
+	case models.ProjectLevel:
+		levelInfo.WriteString(fmt.Sprintf("项目(`%s`)，项目名-%s", ptr.GetLevel(), ptr.GetOwner()))
+	case models.ModuleLevel:
+		levelInfo.WriteString(fmt.Sprintf("业务模块(`%s`)，业务模块名-%s", ptr.GetLevel(), ptr.GetOwner()))
+		if parent := ptr.GetParent(); parent != nil {
+			levelInfo.WriteString(fmt.Sprintf(", 所属项目-%s", parent.GetOwner()))
+		}
+	case models.BlockLevel:
+		levelInfo.WriteString(fmt.Sprintf("功能模块(`%s`)，功能模块名-%s", ptr.GetLevel(), ptr.GetOwner()))
+		if parent := ptr.GetParent(); parent != nil {
+			levelInfo.WriteString(fmt.Sprintf(", 所属业务模块-%s", parent.GetOwner()))
+		}
+	default:
+		return "", nil
+	}
+
 	param := map[string]string{
-		"Level": ptr.GetLevel(),
+		"LevelInfo": levelInfo.String(),
 	}
 	return s.localPromptReader.ReadPrompt(&s.workspaceConfig, fmt.Sprintf("stage-%s-status", s.workspaceConfig.GetStage()), param)
 }
@@ -140,7 +158,7 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	//## 项目状态
 	statusContent, statusErr := s.getWorkspaceStatus(ptr)
 	if statusErr != nil {
-		log.Errorf("get workspace status failed, %s", statusErr)
+		log.Errorf("get workspace status failed, flow:%v error:%s", ptr, statusErr)
 		return "", statusErr
 	}
 	if statusContent != "" {
@@ -170,47 +188,49 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	}
 
 	workingPath := s.workspaceConfig.GetWorkingPath()
-	if ptr != nil {
-		// 当前进度
-		// 新增，删除，修改的文件清单
-		stringBuilder.WriteString("### 当前进度\n\n")
-		if ptr.AddFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 新增清单\n\n")
-			ptr.AddFiles.Range(func(filePath string) bool {
-				if strings.HasPrefix(filePath, workingPath) {
-					relativePath := filePath[len(workingPath)+1:]
-					stringBuilder.WriteString("- " + relativePath + "\n")
-				}
-				return true
-			})
-			stringBuilder.WriteString("\n")
+	/*
+		if ptr != nil {
+			// 当前进度
+			// 新增，删除，修改的文件清单
+			stringBuilder.WriteString("### 当前进度\n\n")
+			if ptr.AddFiles.Len() > 0 {
+				stringBuilder.WriteString("#### 新增清单\n\n")
+				ptr.AddFiles.Range(func(filePath string) bool {
+					if strings.HasPrefix(filePath, workingPath) {
+						relativePath := filePath[len(workingPath)+1:]
+						stringBuilder.WriteString("- " + relativePath + "\n")
+					}
+					return true
+				})
+				stringBuilder.WriteString("\n")
+			}
+			if ptr.DelFiles.Len() > 0 {
+				stringBuilder.WriteString("#### 删除清单\n\n")
+				ptr.DelFiles.Range(func(filePath string) bool {
+					if strings.HasPrefix(filePath, workingPath) {
+						relativePath := filePath[len(workingPath)+1:]
+						stringBuilder.WriteString("- " + relativePath + "\n")
+					}
+					return true
+				})
+				stringBuilder.WriteString("\n")
+			}
+			if ptr.ModFiles.Len() > 0 {
+				stringBuilder.WriteString("#### 修改清单\n\n")
+				ptr.ModFiles.Range(func(filePath string) bool {
+					if strings.HasPrefix(filePath, workingPath) {
+						relativePath := filePath[len(workingPath)+1:]
+						stringBuilder.WriteString("- " + relativePath + "\n")
+					}
+					return true
+				})
+				stringBuilder.WriteString("\n")
+			}
+			stringBuilder.WriteString("\n\n")
 		}
-		if ptr.DelFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 删除清单\n\n")
-			ptr.DelFiles.Range(func(filePath string) bool {
-				if strings.HasPrefix(filePath, workingPath) {
-					relativePath := filePath[len(workingPath)+1:]
-					stringBuilder.WriteString("- " + relativePath + "\n")
-				}
-				return true
-			})
-			stringBuilder.WriteString("\n")
-		}
-		if ptr.ModFiles.Len() > 0 {
-			stringBuilder.WriteString("#### 修改清单\n\n")
-			ptr.ModFiles.Range(func(filePath string) bool {
-				if strings.HasPrefix(filePath, workingPath) {
-					relativePath := filePath[len(workingPath)+1:]
-					stringBuilder.WriteString("- " + relativePath + "\n")
-				}
-				return true
-			})
-			stringBuilder.WriteString("\n")
-		}
-		stringBuilder.WriteString("\n\n")
-	}
+	*/
 
-	stringBuilder.WriteString("### 当前文件清单\n\n")
+	stringBuilder.WriteString("### 当前输出清单\n\n")
 	s.fileInfo.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, workingPath) {
 			relativePath := filePath[len(workingPath)+1:]
@@ -362,7 +382,7 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 		curFlow = s.localFlowManger.GetCurrentFlow()
 	}
 	if curFlow == nil {
-		curFlow = s.localFlowManger.NewFlow(itemPtr.String(), nil)
+		curFlow = s.localFlowManger.NewFlow(itemPtr.String(), "workspace", nil)
 	}
 	curFlow.AppendMessage(itemPtr)
 
@@ -566,13 +586,14 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 	// 同时这里进行校验，避免大模型跑偏了，
 	log.Infof("try to switch flow %v", curFlow)
 	level := param["level"].(string)
+	name := param["name"].(string)
 	compareVal := models.LevelGreater
 	if curFlow != nil {
 		compareVal = models.CompareLevel(curFlow.GetLevel(), level)
 	}
 	switch compareVal {
 	case models.LevelGreater:
-		ret = s.localFlowManger.NewFlow(msgItem.String(), curFlow)
+		ret = s.localFlowManger.NewFlow(msgItem.String(), name, curFlow)
 		// 子级任务
 		//s.localFlowManger.NewFlow(chatMsg, curFlow)
 	case models.LevelEqual:
@@ -580,16 +601,16 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 		if curFlow.CanFinish() {
 			curFlow.Status = models.FLOW_STATUS_FINISH
 		}
-		ret = s.localFlowManger.NewFlow(msgItem.String(), curFlow.GetParent())
+		ret = s.localFlowManger.NewFlow(msgItem.String(), name, curFlow.GetParent())
 	case models.LevelLess:
 		// 父级任务
 		parent := curFlow.GetParent()
 		if parent != nil {
-			ret = s.localFlowManger.NewFlow(msgItem.String(), parent.GetParent())
+			ret = s.localFlowManger.NewFlow(msgItem.String(), name, parent.GetParent())
 		} else {
 			// 到这里属于异常了，先记录日志看看情况
 			log.Warnf("curFlow.GetParent() is nil, %+v", curFlow.GetFlowPath())
-			ret = s.localFlowManger.NewFlow(msgItem.String(), nil)
+			ret = s.localFlowManger.NewFlow(msgItem.String(), name, nil)
 		}
 	}
 
@@ -639,7 +660,7 @@ func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
 		debugFlow = s.localFlowManger.GetCurrentFlow()
 	}
 	if debugFlow == nil {
-		debugFlow = s.localFlowManger.NewFlow("debug", nil)
+		debugFlow = s.localFlowManger.NewFlow("debug", "debug", nil)
 	}
 
 	systemPromptFile := fileList[0]
