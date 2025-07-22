@@ -142,16 +142,7 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 		}
 
 		if s.currentFlowPtr.Level == models.RootLevel {
-			// 到这里要求做final-check就可以了
-			finalCheckPromptVal, finalCheckPromptErr := iipc.ReadInnerSystemPrompts("final-check")
-			if finalCheckPromptErr != nil {
-				log.Errorf("read final-check prompt failed, err:%s", finalCheckPromptErr)
-				return
-			}
-			s.currentFlowPtr.AppendMessage(&models.MessageItem{
-				Role:    common.User,
-				Content: []string{finalCheckPromptVal},
-			})
+			s.currentFlowPtr = nil
 			return
 		}
 
