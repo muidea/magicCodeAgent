@@ -17,16 +17,16 @@
 
 **参数：**  
 
-- **name** (必填)：待设计功能名
+- **name** (必填)：待设计功能英文名
 - **level** (必填)：当前设计的功能层级
 - **path** (可选)：待设计功能所归属的父级功能的设计文档路径(相对对项目根目录的路径)
 - **description** (必填)：待设计功能描述
 
 **参数说明：**
 
-- `level` 为 `project` 时，`name` 当前项目名。
-- `level` 为 `module` 时，`name` 当前业务模块名。
-- `level` 为 `block` 时，`name` 当前功能模块名。
+- `level` 为 `project` 时，`name` 当前项目英文名。
+- `level` 为 `module` 时，`name` 当前业务模块英文名。
+- `level` 为 `block` 时，`name` 当前功能模块英文名。
 
 - `level` 为 `project` 时，`description` 表示当前项目的需求描述。  
 - `level` 为 `module` 时，`description` 表示业务模块的功能描述。  
@@ -36,13 +36,16 @@
 - `level` 为 `module` 时，`path`值为`./{项目名}-项目功能.md`
 - `level` 为 `block` 时，`path`值为`./{项目名}/{业务模块名}-业务模块.md`
 
+**强调：name必须使用待设计功能的英文名**
+
+
 **用法示例：**  
 
 ```xml
 <decompose_design_plan>
-    <name>产品新增</name>
+    <name>ProductCreate</name>
     <level>block</level>
-    <path>./产品管理/产品新增-业务模块.md</path>
+    <path>./demo/product-业务模块.md</path>
     <description>提供产品信息新增功能</description>
 </decompose_design_plan>
 ```
