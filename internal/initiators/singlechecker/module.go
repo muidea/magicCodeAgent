@@ -13,6 +13,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
+	iiscfg "github.com/muidea/magicCodeAgent/internal/initiators/singlechecker/config"
 	"github.com/muidea/magicCodeAgent/internal/initiators/singlechecker/pkg/common"
 )
 
@@ -54,7 +55,32 @@ func (s *Singlechecker) Setup(eventHub event.Hub, backgroundRoutine task.Backgro
 	}
 	sysErr := syscall.Flock(int(fileHandle.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
 	if sysErr != nil {
-		os.Exit(1)
+		if iiscfg.IsForceRestart() {
+			// 读取锁文件内容获取PID
+			pidBytes, readErr := os.ReadFile(singleCheckFile)
+			if readErr != nil {
+				os.Exit(1)
+			}
+			pidStr := string(pidBytes)
+			pid, parseErr := strconv.Atoi(pidStr)
+			if parseErr == nil {
+				// 终止旧进程
+				if process, err := os.FindProcess(pid); err == nil {
+					process.Signal(syscall.SIGKILL)
+				}
+			}
+			// 重新尝试获取锁
+			fileHandle.Close()
+			fileHandle, fileErr = os.OpenFile(singleCheckFile, os.O_CREATE|os.O_RDWR, 0666)
+			if fileErr != nil {
+				os.Exit(1)
+			}
+			sysErr = syscall.Flock(int(fileHandle.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		}
+
+		if sysErr != nil {
+			os.Exit(1)
+		}
 	}
 
 	fileErr = fileHandle.Truncate(0)
