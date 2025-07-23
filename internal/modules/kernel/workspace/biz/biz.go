@@ -174,6 +174,7 @@ func (s *Workspace) CreateWorkspace(workspacePtr *models.Workspace) (ret *models
 		}
 	}
 
+	workspacePtr.Stage = models.DesignStage
 	workspacePtr.Status = models.EnableStatus
 	workspacePtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 	if eVal := config.AddWorkspace(workspacePtr); eVal != nil {
