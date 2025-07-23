@@ -14,6 +14,7 @@ import (
 
 	_ "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry"
 	_ "github.com/muidea/magicCodeAgent/internal/initiators/singlechecker"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/module"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/project"

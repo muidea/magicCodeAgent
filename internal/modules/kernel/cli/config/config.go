@@ -8,19 +8,22 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/muidea/magicCodeAgent/internal/config"
-	"github.com/muidea/magicCodeAgent/pkg/models"
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/foundation/log"
+
+	"github.com/muidea/magicCodeAgent/internal/config"
+	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
 const (
 	ModuleKey    = "module"
 	InitiatorKey = "initiator"
 	ProjectKey   = "project"
+	CommanderKey = "commander"
 	CreateKey    = "create"
 	DestroyKey   = "destroy"
 	RefreshKey   = "refresh"
+	ExecuteKey   = "execute"
 	WorkspaceKey = "workspace"
 )
 
@@ -68,8 +71,8 @@ func VerifyVar() (err *cd.Error) {
 		err = cd.NewError(cd.IllegalParam, "actionType不能为空")
 		return
 	}
-	if actionType != ModuleKey && actionType != InitiatorKey && actionType != ProjectKey {
-		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("actionType:%s, 必须是module/initiator/project之一", actionType))
+	if actionType != ModuleKey && actionType != InitiatorKey && actionType != ProjectKey && actionType != CommanderKey {
+		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("actionType:%s, 必须是module/initiator/project/command之一", actionType))
 		return
 	}
 
@@ -78,8 +81,8 @@ func VerifyVar() (err *cd.Error) {
 		err = cd.NewError(cd.IllegalParam, "executeAction不能为空")
 		return
 	}
-	if executeAction != CreateKey && executeAction != DestroyKey && executeAction != RefreshKey {
-		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("executeAction:%s, 必须是create/destroy/refresh之一", executeAction))
+	if executeAction != CreateKey && executeAction != DestroyKey && executeAction != RefreshKey && executeAction != ExecuteKey {
+		err = cd.NewError(cd.IllegalParam, fmt.Sprintf("executeAction:%s, 必须是create/destroy/refresh/execute之一", executeAction))
 		return
 	}
 

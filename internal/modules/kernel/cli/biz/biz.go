@@ -13,9 +13,10 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/cli/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
 
-	ic "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/pkg/common"
-	mc "github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
-	pc "github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
+	imbcc "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
+	imbic "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/pkg/common"
+	imbmc "github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
+	imbpc "github.com/muidea/magicCodeAgent/internal/modules/blocks/project/pkg/common"
 	imbtmc "github.com/muidea/magicCodeAgent/internal/modules/blocks/templatemanager/pkg/common"
 )
 
@@ -75,6 +76,8 @@ func (s *Cli) Run() (err *cd.Error) {
 		err = s.runInitiatorAction(workspacePtr, templatePtr)
 	case config.ProjectKey:
 		err = s.runProjectAction(workspacePtr, templatePtr)
+	case config.CommanderKey:
+		err = s.runCommandAction(workspacePtr, templatePtr)
 	default:
 		log.Errorf("unknown module type:%s", actionType)
 		err = cd.NewError(cd.Unexpected, "unknown module type")
@@ -87,11 +90,11 @@ func (s *Cli) runModuleAction(workspacePtr *models.Workspace, templatePtr *model
 	var ev event.Event
 	switch config.GetExecuteAction() {
 	case config.CreateKey:
-		ev = event.NewEvent(mc.CreateNewModule, s.ID(), mc.ModuleModule, nil, workspacePtr)
+		ev = event.NewEvent(imbmc.CreateNewModule, s.ID(), imbmc.ModuleModule, nil, workspacePtr)
 	case config.DestroyKey:
-		ev = event.NewEvent(mc.DestroyModule, s.ID(), mc.ModuleModule, nil, workspacePtr)
+		ev = event.NewEvent(imbmc.DestroyModule, s.ID(), imbmc.ModuleModule, nil, workspacePtr)
 	case config.RefreshKey:
-		ev = event.NewEvent(mc.RefreshModule, s.ID(), mc.ModuleModule, nil, workspacePtr)
+		ev = event.NewEvent(imbmc.RefreshModule, s.ID(), imbmc.ModuleModule, nil, workspacePtr)
 	default:
 		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
 	}
@@ -105,11 +108,11 @@ func (s *Cli) runInitiatorAction(workspacePtr *models.Workspace, templatePtr *mo
 	var ev event.Event
 	switch config.GetExecuteAction() {
 	case config.CreateKey:
-		ev = event.NewEvent(ic.CreateNewInitiator, s.ID(), ic.InitiatorModule, nil, workspacePtr)
+		ev = event.NewEvent(imbic.CreateNewInitiator, s.ID(), imbic.InitiatorModule, nil, workspacePtr)
 	case config.DestroyKey:
-		ev = event.NewEvent(ic.DestroyInitiator, s.ID(), ic.InitiatorModule, nil, workspacePtr)
+		ev = event.NewEvent(imbic.DestroyInitiator, s.ID(), imbic.InitiatorModule, nil, workspacePtr)
 	case config.RefreshKey:
-		ev = event.NewEvent(ic.RefreshInitiator, s.ID(), ic.InitiatorModule, nil, workspacePtr)
+		ev = event.NewEvent(imbic.RefreshInitiator, s.ID(), imbic.InitiatorModule, nil, workspacePtr)
 	default:
 		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
 	}
@@ -123,13 +126,25 @@ func (s *Cli) runProjectAction(workspacePtr *models.Workspace, templatePtr *mode
 	var ev event.Event
 	switch config.GetExecuteAction() {
 	case config.CreateKey:
-		ev = event.NewEvent(pc.CreateNewProject, s.ID(), pc.ProjectModule, nil, workspacePtr)
+		ev = event.NewEvent(imbpc.CreateNewProject, s.ID(), imbpc.ProjectModule, nil, workspacePtr)
 	case config.DestroyKey:
-		ev = event.NewEvent(pc.DestroyProject, s.ID(), pc.ProjectModule, nil, workspacePtr)
+		ev = event.NewEvent(imbpc.DestroyProject, s.ID(), imbpc.ProjectModule, nil, workspacePtr)
 	case config.RefreshKey:
-		ev = event.NewEvent(pc.RefreshProject, s.ID(), pc.ProjectModule, nil, workspacePtr)
+		ev = event.NewEvent(imbpc.RefreshProject, s.ID(), imbpc.ProjectModule, nil, workspacePtr)
 	default:
 		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
+	}
+
+	ev.SetData("template", templatePtr)
+	result := s.SendEvent(ev)
+	return result.Error()
+}
+
+func (s *Cli) runCommandAction(workspacePtr *models.Workspace, templatePtr *models.Template) *cd.Error {
+	var ev event.Event
+	switch config.GetExecuteAction() {
+	case config.ExecuteKey:
+		ev = event.NewEvent(imbcc.CommandRun, s.ID(), imbcc.CommanderModule, nil, workspacePtr)
 	}
 
 	ev.SetData("template", templatePtr)
