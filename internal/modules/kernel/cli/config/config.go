@@ -33,11 +33,14 @@ var actionType string
 // executeAction: create,destroy,refresh
 var executeAction string
 
+var executeCommand string
+
 var currentWorkspace *models.Workspace
 
 func init() {
-	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initiator/project)")
-	flag.StringVar(&executeAction, "executeAction", "", "execute action (required, options: create/destroy/refresh)")
+	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initiator/project/commander)")
+	flag.StringVar(&executeAction, "executeAction", "", "execute action (required, options: create/destroy/refresh/execute)")
+	flag.StringVar(&executeCommand, "executeCommand", "", "execute command(optional, only for executeAction=execute)")
 }
 
 func GetActionType() string {
@@ -46,6 +49,10 @@ func GetActionType() string {
 
 func GetExecuteAction() string {
 	return executeAction
+}
+
+func GetExecuteCommand() string {
+	return executeCommand
 }
 
 func GetCurrentWorkspace() *models.Workspace {
@@ -135,10 +142,11 @@ func getDefaultWorkspace() *models.Workspace {
 					name := parts[len(parts)-1]
 
 					return &models.Workspace{
-						Name:     name,
-						Template: "inner/service/service_v0.0.1",
-						Status:   "enable",
-						Stage:    "code",
+						Name:         name,
+						Template:     "inner/service/service_v0.0.1",
+						Status:       "enable",
+						Stage:        "code",
+						WorkspaceDir: workingPath,
 					}
 				}
 			}

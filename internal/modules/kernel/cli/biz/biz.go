@@ -2,6 +2,7 @@ package biz
 
 import (
 	"os"
+	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
@@ -97,6 +98,7 @@ func (s *Cli) runModuleAction(workspacePtr *models.Workspace, templatePtr *model
 		ev = event.NewEvent(imbmc.RefreshModule, s.ID(), imbmc.ModuleModule, nil, workspacePtr)
 	default:
 		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
+		return cd.NewError(cd.Unexpected, "unknown execute action")
 	}
 
 	ev.SetData("template", templatePtr)
@@ -133,6 +135,7 @@ func (s *Cli) runProjectAction(workspacePtr *models.Workspace, templatePtr *mode
 		ev = event.NewEvent(imbpc.RefreshProject, s.ID(), imbpc.ProjectModule, nil, workspacePtr)
 	default:
 		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
+		return cd.NewError(cd.Unexpected, "unknown execute action")
 	}
 
 	ev.SetData("template", templatePtr)
@@ -140,14 +143,50 @@ func (s *Cli) runProjectAction(workspacePtr *models.Workspace, templatePtr *mode
 	return result.Error()
 }
 
-func (s *Cli) runCommandAction(workspacePtr *models.Workspace, templatePtr *models.Template) *cd.Error {
-	var ev event.Event
+func (s *Cli) runCommandAction(workspacePtr *models.Workspace, _ *models.Template) *cd.Error {
+	var commandEvent event.Event
 	switch config.GetExecuteAction() {
 	case config.ExecuteKey:
-		ev = event.NewEvent(imbcc.CommandRun, s.ID(), imbcc.CommanderModule, nil, workspacePtr)
+		paramPtr, paramErr := s.parseCommand(workspacePtr)
+		if paramErr != nil {
+			log.Errorf("parse command failed, error:%s", paramErr.Error())
+			return paramErr
+		}
+		commandEvent = event.NewEvent(imbcc.CommandRun, s.ID(), imbcc.CommanderModule, nil, workspacePtr.Name)
+		commandEvent.SetData("command", paramPtr)
+	default:
+		log.Warnf("unknown execute action:%s", config.GetExecuteAction())
+		return cd.NewError(cd.Unexpected, "unknown execute action")
 	}
 
-	ev.SetData("template", templatePtr)
-	result := s.SendEvent(ev)
-	return result.Error()
+	commandResult := s.SendEvent(commandEvent)
+	resultVal, resultErr := commandResult.Get()
+	if resultErr != nil {
+		log.Errorf("run command failed, error:%s", resultErr.Error())
+		return resultErr
+	}
+	commanderResult := resultVal.(*imbcc.CommanderResult)
+	if commanderResult.StatusMessage != "" {
+		os.Stdout.WriteString(commanderResult.StatusMessage)
+	}
+	if commanderResult.ErrorMessage != "" {
+		os.Stderr.WriteString(commanderResult.ErrorMessage)
+	}
+	return nil
+}
+
+func (s *Cli) parseCommand(workspacePtr *models.Workspace) (ret *imbcc.CommanderParam, err *cd.Error) {
+	command := config.GetExecuteCommand()
+	if command == "" {
+		err = cd.NewError(cd.InvalidParameter, "command is empty")
+		return
+	}
+
+	items := strings.Split(strings.TrimSpace(command), " ")
+	ret = &imbcc.CommanderParam{
+		WorkspaceDir: workspacePtr.GetRootPath(),
+		Command:      items[0],
+		Args:         items[1:],
+	}
+	return
 }

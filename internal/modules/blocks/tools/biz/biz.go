@@ -326,9 +326,17 @@ func (s *Tools) RunCommand(workspaceName, workspaceDir, command string) (result 
 			log.Errorf("run command failed, err:%v", err)
 		}
 	}()
+
+	items := strings.Split(strings.TrimSpace(command), " ")
+	command = items[0]
+	var args []string
+	if len(items) > 1 {
+		args = items[1:]
+	}
 	commandEvent := event.NewEvent(imbcc.CommandRun, s.ID(), imbcc.CommanderModule, nil, workspaceName)
 	paramPtr := &imbcc.CommanderParam{
 		Command:      command,
+		Args:         args,
 		WorkspaceDir: workspaceDir,
 	}
 	commandEvent.SetData("command", paramPtr)

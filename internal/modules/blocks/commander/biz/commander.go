@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -32,7 +31,7 @@ func NewBaseCommander(workspace string, maxLineSize int) *BaseCommander {
 	}
 }
 
-func (s *BaseCommander) Run(workspaceDir, command string) (err error) {
+func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err error) {
 	var cmdPtr *exec.Cmd
 	var cmdContext context.Context
 	func() {
@@ -59,18 +58,13 @@ func (s *BaseCommander) Run(workspaceDir, command string) (err error) {
 		s.cancelCommanderFunc = cancelFunc
 		cmdContext = cancelContext
 
-		// 使用 setsid 创建新的进程会话
-		wrappedCmd := fmt.Sprintf("setsid %s", command)
-		cmdPtr = exec.CommandContext(cmdContext, "/bin/bash", "-c", wrappedCmd)
-
+		cmdPtr = exec.CommandContext(cmdContext, command, args...)
 		sysEnv := append(os.Environ(), "workspace="+s.workspace, "LOG_LEVEL=4")
 		cmdPtr.Env = sysEnv
 		cmdPtr.Dir = workspaceDir
 		cmdPtr.Stderr = s.stdErrBuffer
 		cmdPtr.Stdout = s.stdOutBuffer
-
-		// 不再需要 Setpgid，因为 setsid 已完成 session 建立
-		// cmdPtr.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+		cmdPtr.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	}()
 
 	// 后台监听上下文取消，确保杀死整组进程
@@ -87,6 +81,9 @@ func (s *BaseCommander) Run(workspaceDir, command string) (err error) {
 
 	// 阻塞直到命令完成
 	err = cmdPtr.Run()
+	if err != nil {
+		log.Errorf("run command: '%s' failed, err: %s", s.currentCommand, err.Error())
+	}
 
 	s.debugger.Lock()
 	defer s.debugger.Unlock()
