@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/framework/application"
@@ -33,6 +34,11 @@ func main() {
 
 	fmt.Printf("magicCodeCli %s\n", version)
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
+
+	// 这里是为了避免与magicCodeAgent的端口冲突，并没有其他的作用
+	bindPort := config.BindPort()
+	os.Setenv("BindPort", "2"+bindPort)
+
 	config.SetApplicationInfo("magicCodeCli", buildTime, gitCommit, version)
 	err := application.Startup(service.DefaultService(config.EndpointName()))
 	if err != nil {

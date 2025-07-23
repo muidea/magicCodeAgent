@@ -105,6 +105,11 @@ func EnableDebug() {
 // BindPort 获取绑定端口
 // 返回: 端口号字符串
 func BindPort() string {
+	envBindPort, envOK := os.LookupEnv("BindPort")
+	if envOK {
+		return envBindPort
+	}
+
 	if sysConfig != nil {
 		return sysConfig.BindPort
 	}
