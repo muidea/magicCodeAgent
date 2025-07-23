@@ -17,6 +17,7 @@ import (
 	imbic "github.com/muidea/magicCodeAgent/internal/modules/blocks/initiator/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Initiator struct {
@@ -92,7 +93,7 @@ func (s *Initiator) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	initiatorWorkingPath := path.Join(workingPath, imbicfg.GetName())
+	initiatorWorkingPath := path.Join(workingPath, util.ToLower(imbicfg.GetName()))
 	if oErr := os.MkdirAll(initiatorWorkingPath, 0755); oErr != nil {
 		log.Errorf("create initiator failed, create initiator working path failed, error: %v", oErr)
 		if re != nil {

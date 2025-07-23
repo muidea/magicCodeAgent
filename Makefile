@@ -13,7 +13,7 @@ release: build
 	cp bin/magicCodeAgent build/magicCodeAgent/magicCodeAgent
 	cd build && ls -l magicCodeAgent && zip -r magicCodeAgent.zip magicCodeAgent
 
-install: build
+install: fmt build
 	cp bin/magicCodeCli /usr/local/bin/magicCodeCli
 	cp bin/magicCodeDebug /usr/local/bin/magicCodeDebug
 	cp bin/magicCodeAgent /usr/local/bin/magicCodeAgent

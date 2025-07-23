@@ -17,6 +17,7 @@ import (
 	imbmc "github.com/muidea/magicCodeAgent/internal/modules/blocks/module/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
+	"github.com/muidea/magicCodeAgent/pkg/util"
 )
 
 type Module struct {
@@ -97,8 +98,8 @@ func (s *Module) create(ev event.Event, re event.Result) {
 	templatePtr := ev.GetData("template").(*models.Template)
 
 	workingPath := config.CurrentWorkingPath()
-	workingPath = filepath.Join(workingPath, imbmcfg.GetPath())
-	modulePath, err := s.verifyWorkingPath(workingPath, templatePtr)
+	moduleWorkingPath := filepath.Join(workingPath, imbmcfg.GetPath())
+	modulePath, err := s.verifyWorkingPath(moduleWorkingPath, templatePtr)
 	if err != nil {
 		log.Errorf("create module failed, verify module working path failed, err: %v", err)
 		if re != nil {
@@ -107,7 +108,7 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	moduleWorkingPath := workingPath
+	moduleWorkingPath = path.Join(workingPath, modulePath, util.ToLower(imbmcfg.GetName()))
 	if oErr := os.MkdirAll(moduleWorkingPath, 0755); oErr != nil {
 		log.Errorf("create module failed, create module working path failed, err: %v", oErr)
 		if re != nil {
