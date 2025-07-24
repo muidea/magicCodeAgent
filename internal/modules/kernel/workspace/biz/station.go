@@ -576,7 +576,7 @@ func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *mo
 	// attempt_finish
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
 	log.Infof("try to finish flow %v", curFlow)
-	ret = s.localFlowManger.FinishFlow(curFlow)
+	ret = s.localFlowManger.FinishFlow(s.workspaceConfig.GetStage(), curFlow)
 	return
 }
 
@@ -593,9 +593,8 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 	}
 	switch compareVal {
 	case models.LevelGreater:
-		ret = s.localFlowManger.NewFlow(msgItem.String(), name, curFlow)
 		// 子级任务
-		//s.localFlowManger.NewFlow(chatMsg, curFlow)
+		ret = s.localFlowManger.NewFlow(msgItem.String(), name, curFlow)
 	case models.LevelEqual:
 		// 同级任务
 		if curFlow.CanFinish() {
@@ -614,7 +613,6 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 		}
 	}
 
-	//ret.AppendMessage(msgItem)
 	return
 }
 
