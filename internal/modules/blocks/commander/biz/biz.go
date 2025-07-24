@@ -15,7 +15,7 @@ import (
 	imbcc "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
 )
 
-var defaultCommandTimeOut = 2
+var defaultCommandTimeOut = 1
 var defaultConsoleLinesSize = 100
 
 type Commander struct {
@@ -65,15 +65,18 @@ func (s *Commander) RunCommand(workspace string, paramPtr *imbcc.CommanderParam)
 		commanderPtr = commanderVal.(*BaseCommander)
 	}
 
-	commanderPtr.Terminate()
 	timeoutVal := defaultCommandTimeOut
 
 	s.consoleBuffer.Reset()
 
+	preTime := time.Now()
 	s.Base.SyncTaskWithTimeOut(func() {
 		_ = commanderPtr.Run(paramPtr.WorkspaceDir, paramPtr.Command, paramPtr.Args)
 	}, time.Minute*time.Duration(timeoutVal))
 
+	commanderPtr.Terminate()
+
+	log.Warnf("run command elapsed: %v", time.Since(preTime))
 	ret = &imbcc.CommanderResult{
 		Workspace: workspace,
 	}

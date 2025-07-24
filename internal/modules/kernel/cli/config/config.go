@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	cd "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicCommon/foundation/log"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -115,7 +114,6 @@ func getDefaultWorkspace() *models.Workspace {
 
 	codeRootPath := workingPath
 	workingPath = filepath.ToSlash(workingPath)
-	log.Infof("working path:%s", workingPath)
 	suffixes := []string{
 		"/internal/initiators",
 		"/internal/modules/kernel",
@@ -129,7 +127,6 @@ func getDefaultWorkspace() *models.Workspace {
 		}
 	}
 
-	log.Infof("codeRootPath:%s", codeRootPath)
 	goModPath := filepath.Join(codeRootPath, "go.mod")
 	if _, err := os.Stat(goModPath); err == nil {
 		content, err := os.ReadFile(goModPath)

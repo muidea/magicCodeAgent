@@ -48,7 +48,7 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 		}
 
 		s.currentCommand = command
-		log.Infof("workspace: %s", workspaceDir)
+		log.Infof("working path: %s", workspaceDir)
 		log.Infof("run command: '%s'", s.currentCommand)
 
 		s.stdErrBuffer.Reset()
@@ -59,7 +59,17 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 		cmdContext = cancelContext
 
 		cmdPtr = exec.CommandContext(cmdContext, command, args...)
-		sysEnv := append(os.Environ(), "workspace="+s.workspace, "LOG_LEVEL=4")
+		var sysEnv []string
+		for _, env := range os.Environ() {
+			if strings.HasPrefix(env, "workspace=") {
+				continue
+			}
+			if strings.HasPrefix(env, "BindPort=") {
+				continue
+			}
+			sysEnv = append(sysEnv, env)
+		}
+		sysEnv = append(sysEnv, "workspace="+s.workspace, "LOG_LEVEL=4")
 		cmdPtr.Env = sysEnv
 		cmdPtr.Dir = workspaceDir
 		cmdPtr.Stderr = s.stdErrBuffer
@@ -67,22 +77,12 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 		cmdPtr.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	}()
 
-	// 后台监听上下文取消，确保杀死整组进程
-	go func(process *os.Process, ctx context.Context) {
-		if ctx == nil || process == nil {
-			return
-		}
-		<-ctx.Done()
-
-		// 使用负 PID 杀掉整个 session（setsid 创建的）
-		log.Warnf("cancel context received, killing process group for PID %d", process.Pid)
-		_ = syscall.Kill(-process.Pid, syscall.SIGKILL)
-	}(cmdPtr.Process, cmdContext)
-
 	// 阻塞直到命令完成
 	err = cmdPtr.Run()
 	if err != nil {
 		log.Errorf("run command: '%s' failed, err: %s", s.currentCommand, err.Error())
+	} else {
+		log.Infof("run command: '%s' done", s.currentCommand)
 	}
 
 	s.debugger.Lock()
@@ -95,15 +95,11 @@ func (s *BaseCommander) Terminate() (err error) {
 	s.debugger.Lock()
 	defer s.debugger.Unlock()
 
-	log.Warnf("terminate command: '%s'", s.currentCommand)
 	if s.cancelCommanderFunc != nil {
 		s.cancelCommanderFunc()
-		s.stdErrBuffer.Reset()
-		s.stdOutBuffer.Reset()
 	}
 
 	s.cancelCommanderFunc = nil
-	s.currentCommand = ""
 	return
 }
 
@@ -119,18 +115,18 @@ func (s *BaseCommander) Status() (statusMsg, errorMsg string) {
 	}
 
 	if !s.stdOutBuffer.IsEmpty() {
-		statusStringBuffer.WriteString("\nlatest logs:")
+		statusStringBuffer.WriteString("\nlatest logs:\n")
 		for _, val := range s.stdOutBuffer.GetLatestRecords(defaultMaxBufferLinesSize) {
-			statusStringBuffer.WriteString("  " + val)
+			statusStringBuffer.WriteString("    " + val + "\n")
 		}
 	}
 	statusMsg = statusStringBuffer.String()
 
 	if !s.stdErrBuffer.IsEmpty() {
 		errorStringBuffer := strings.Builder{}
-		errorStringBuffer.WriteString("latest errors: \n")
+		errorStringBuffer.WriteString("\nlatest errors:\n")
 		for _, val := range s.stdErrBuffer.GetLatestRecords(defaultMaxBufferLinesSize) {
-			errorStringBuffer.WriteString(val + "\n")
+			errorStringBuffer.WriteString("    " + val + "\n")
 		}
 		errorMsg = errorStringBuffer.String()
 	}
