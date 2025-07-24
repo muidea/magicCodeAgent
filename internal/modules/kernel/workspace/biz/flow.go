@@ -158,7 +158,7 @@ func (s *FlowManager) FinishFlow(stage string, flowPtr *models.Flow) (ret *model
 				"Name": s.currentFlowPtr.GetOwner(),
 			}
 
-			subLevelCheckPromptVal, subLevelCheckPromptErr := iipc.ReadInnerSystemPromptsWithParam("sublevel-check", param)
+			subLevelCheckPromptVal, subLevelCheckPromptErr := iipc.ReadInnerSystemPromptsWithParam(fmt.Sprintf("sublevel-%s-check", stage), param)
 			if subLevelCheckPromptErr != nil {
 				log.Errorf("read sublevel-check prompt failed, err:%s", subLevelCheckPromptErr)
 				return
