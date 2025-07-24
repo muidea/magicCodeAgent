@@ -15,7 +15,7 @@ import (
 	imbcc "github.com/muidea/magicCodeAgent/internal/modules/blocks/commander/pkg/common"
 )
 
-var defaultCommandTimeOut = 1
+var defaultCommandTimeOut = 2
 var defaultConsoleLinesSize = 100
 
 type Commander struct {

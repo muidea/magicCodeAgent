@@ -3,7 +3,6 @@ package biz
 import (
 	"io/fs"
 	"path"
-	"path/filepath"
 	"strings"
 
 	tc "github.com/muidea/magicCodeAgent/pkg/common"
@@ -83,6 +82,6 @@ func (s *helperImpl) cloneModuleContent(relativePath, templateFileName string) (
 	}
 	factoryPtr := factory.NewFileFactory(s.templateRootFS, s.templateBasePath, relativePath, templateFileName, contentVal)
 
-	err = factoryPtr.Create(s.workingPath, filepath.Join(util.ToLower(s.moduleName), relativePath), fileName, true)
+	err = factoryPtr.Create(s.workingPath, relativePath, fileName, true)
 	return
 }

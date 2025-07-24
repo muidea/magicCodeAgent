@@ -56,6 +56,7 @@ func (s *Module) verifyWorkingPath(workingPath string, templatePtr *models.Templ
 	}
 
 	if templatePtr.IsWeb() {
+		ret = "src/pages"
 		return
 	}
 

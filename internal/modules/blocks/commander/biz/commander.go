@@ -38,10 +38,6 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 		s.debugger.Lock()
 		defer s.debugger.Unlock()
 
-		if s.currentCommand == command {
-			return
-		}
-
 		// 如果已有正在运行的命令，先取消
 		if s.cancelCommanderFunc != nil {
 			s.cancelCommanderFunc()
@@ -49,7 +45,7 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 
 		s.currentCommand = command
 		log.Infof("working path: %s", workspaceDir)
-		log.Infof("run command: '%s'", s.currentCommand)
+		log.Infof("run command: '%s %v'", s.currentCommand, args)
 
 		s.stdErrBuffer.Reset()
 		s.stdOutBuffer.Reset()
@@ -80,7 +76,13 @@ func (s *BaseCommander) Run(workspaceDir, command string, args []string) (err er
 	// 阻塞直到命令完成
 	err = cmdPtr.Run()
 	if err != nil {
-		log.Errorf("run command: '%s' failed, err: %s", s.currentCommand, err.Error())
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "signal: killed") {
+			log.Infof("run command: '%s' done", s.currentCommand)
+			err = nil
+		} else {
+			log.Errorf("run command: '%s' failed, err: %s", s.currentCommand, err.Error())
+		}
 	} else {
 		log.Infof("run command: '%s' done", s.currentCommand)
 	}
