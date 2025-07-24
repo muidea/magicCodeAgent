@@ -6,6 +6,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/google/shlex"
+
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -327,11 +329,15 @@ func (s *Tools) RunCommand(workspaceName, workspaceDir, command string) (result 
 		}
 	}()
 
-	items := strings.Split(strings.TrimSpace(command), " ")
-	command = items[0]
+	itemsVal, itemErr := shlex.Split(strings.TrimSpace(command))
+	if itemErr != nil {
+		err = cd.NewError(cd.IllegalParam, itemErr.Error())
+		return
+	}
+	command = itemsVal[0]
 	var args []string
-	if len(items) > 1 {
-		args = items[1:]
+	if len(itemsVal) > 1 {
+		args = itemsVal[1:]
 	}
 	commandEvent := event.NewEvent(imbcc.CommandRun, s.ID(), imbcc.CommanderModule, nil, workspaceName)
 	paramPtr := &imbcc.CommanderParam{

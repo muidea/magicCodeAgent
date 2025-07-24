@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/google/shlex"
+
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -182,11 +184,20 @@ func (s *Cli) parseCommand(workspacePtr *models.Workspace) (ret *imbcc.Commander
 		return
 	}
 
-	items := strings.Split(strings.TrimSpace(command), " ")
+	itemsVal, itemErr := shlex.Split(strings.TrimSpace(command))
+	if itemErr != nil {
+		err = cd.NewError(cd.IllegalParam, itemErr.Error())
+		return
+	}
+	command = itemsVal[0]
+	var args []string
+	if len(itemsVal) > 1 {
+		args = itemsVal[1:]
+	}
 	ret = &imbcc.CommanderParam{
 		WorkspaceDir: workspacePtr.GetRootPath(),
-		Command:      items[0],
-		Args:         items[1:],
+		Command:      command,
+		Args:         args,
 	}
 	return
 }
