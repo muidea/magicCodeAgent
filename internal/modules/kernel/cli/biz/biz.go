@@ -195,7 +195,7 @@ func (s *Cli) parseCommand(workspacePtr *models.Workspace) (ret *imbcc.Commander
 		args = itemsVal[1:]
 	}
 	ret = &imbcc.CommanderParam{
-		WorkspaceDir: workspacePtr.GetRootPath(),
+		WorkspaceDir: workspacePtr.GetWorkingPath(),
 		Command:      command,
 		Args:         args,
 	}

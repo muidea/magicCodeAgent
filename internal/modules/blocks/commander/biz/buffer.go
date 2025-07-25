@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const defaultMaxBufferLinesSize = 20
+const defaultMaxBufferLinesSize = 50
 
 // LogBuffer 封装调试缓冲区功能
 type LogBuffer struct {
