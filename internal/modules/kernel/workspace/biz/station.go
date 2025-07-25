@@ -141,20 +141,6 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	}
 	stringBuilder.WriteString("\n\n")
 
-	//## 项目规划目录
-	if s.workspaceConfig.GetStage() != models.DesignStage {
-		structContent, structErr := s.getWorkspaceProjectStruct()
-		if structErr != nil {
-			log.Errorf("get workspace project struct failed, %s", structErr)
-			return "", structErr
-		}
-
-		if structContent != "" {
-			stringBuilder.WriteString(structContent)
-			stringBuilder.WriteString("\n\n")
-		}
-	}
-
 	//## 项目状态
 	statusContent, statusErr := s.getWorkspaceStatus(ptr)
 	if statusErr != nil {
@@ -244,6 +230,20 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	if instructContent != "" {
 		stringBuilder.WriteString(instructContent)
 		stringBuilder.WriteString("\n\n")
+	}
+
+	//## 项目规划目录
+	if s.workspaceConfig.GetStage() != models.DesignStage {
+		structContent, structErr := s.getWorkspaceProjectStruct()
+		if structErr != nil {
+			log.Errorf("get workspace project struct failed, %s", structErr)
+			return "", structErr
+		}
+
+		if structContent != "" {
+			stringBuilder.WriteString(structContent)
+			stringBuilder.WriteString("\n\n")
+		}
 	}
 
 	stringBuilder.WriteString("</environment_details>")
