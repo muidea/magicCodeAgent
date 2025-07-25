@@ -13,6 +13,7 @@ type CommanderParam struct {
 	WorkspaceDir string   `json:"workspaceDir"`
 	Command      string   `json:"command"`
 	Args         []string `json:"args"`
+	Timeout      int      `json:"timeout"`
 }
 
 type CommanderResult struct {

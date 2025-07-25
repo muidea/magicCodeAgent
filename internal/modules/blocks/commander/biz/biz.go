@@ -65,14 +65,16 @@ func (s *Commander) RunCommand(workspace string, paramPtr *imbcc.CommanderParam)
 		commanderPtr = commanderVal.(*BaseCommander)
 	}
 
-	timeoutVal := defaultCommandTimeOut
-
 	s.consoleBuffer.Reset()
 
 	preTime := time.Now()
+	timeoutVal := time.Minute * time.Duration(defaultCommandTimeOut)
+	if paramPtr.Timeout > 0 {
+		timeoutVal = time.Duration(paramPtr.Timeout) * time.Second
+	}
 	s.Base.SyncTaskWithTimeOut(func() {
 		_ = commanderPtr.Run(paramPtr.WorkspaceDir, paramPtr.Command, paramPtr.Args)
-	}, time.Minute*time.Duration(timeoutVal))
+	}, timeoutVal)
 
 	commanderPtr.Terminate()
 

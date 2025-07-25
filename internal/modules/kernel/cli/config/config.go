@@ -36,10 +36,13 @@ var executeCommand string
 
 var currentWorkspace *models.Workspace
 
+var timeoutValue int
+
 func init() {
 	flag.StringVar(&actionType, "actionType", "", "action type (required, options: module/initiator/project/commander)")
 	flag.StringVar(&executeAction, "executeAction", "", "execute action (required, options: create/destroy/refresh/execute)")
 	flag.StringVar(&executeCommand, "executeCommand", "", "execute command(optional, only for executeAction=execute)")
+	flag.IntVar(&timeoutValue, "timeout", 120, "timeout value for executeAction=execute, unit: second")
 }
 
 func GetActionType() string {
@@ -52,6 +55,10 @@ func GetExecuteAction() string {
 
 func GetExecuteCommand() string {
 	return executeCommand
+}
+
+func GetTimeout() int {
+	return timeoutValue
 }
 
 func GetCurrentWorkspace() *models.Workspace {

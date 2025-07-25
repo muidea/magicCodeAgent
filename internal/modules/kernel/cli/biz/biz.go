@@ -198,6 +198,8 @@ func (s *Cli) parseCommand(workspacePtr *models.Workspace) (ret *imbcc.Commander
 		WorkspaceDir: workspacePtr.GetWorkingPath(),
 		Command:      command,
 		Args:         args,
+		Timeout:      config.GetTimeout(),
 	}
+
 	return
 }

@@ -34,7 +34,7 @@ const (
 	Finished  = "finished"
 )
 
-const maxLoopCount = 100
+const maxLoopCount = 50
 
 type Observer interface {
 	ID() string
@@ -112,8 +112,6 @@ func (s *Station) getWorkspaceStatus(ptr *models.Flow) (string, error) {
 		if parent := ptr.GetParent(); parent != nil {
 			levelInfo.WriteString(fmt.Sprintf(", 所属业务模块-%s", parent.GetOwner()))
 		}
-	default:
-		return "", nil
 	}
 
 	param := map[string]string{
