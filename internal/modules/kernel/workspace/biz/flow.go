@@ -28,11 +28,10 @@ func (s *FlowManager) Reset() {
 	s.currentFlowPtr = nil
 }
 
-func (s *FlowManager) newRootFlow(title, owner string) *models.Flow {
+func (s *FlowManager) newRootFlow(name string) *models.Flow {
 	flowPtr := &models.Flow{
 		Id:        fmt.Sprintf("flow_%d", len(s.localFlows)),
-		Title:     title,
-		Owner:     owner,
+		Name:      name,
 		Message:   []*models.MessageItem{},
 		Status:    models.FLOW_STATUS_WAIT,
 		Parent:    nil,
@@ -43,19 +42,18 @@ func (s *FlowManager) newRootFlow(title, owner string) *models.Flow {
 	return s.appendFlow(flowPtr, nil)
 }
 
-func (s *FlowManager) NewFlow(title, owner string, parentPtr *models.Flow) *models.Flow {
+func (s *FlowManager) NewFlow(name string, parentPtr *models.Flow) *models.Flow {
 	if parentPtr == nil {
 		parentPtr = s.currentFlowPtr
 	}
 
 	if parentPtr == nil {
-		return s.newRootFlow(title, owner)
+		return s.newRootFlow(name)
 	}
 
 	flowPtr := &models.Flow{
 		Id:      fmt.Sprintf("%s_%d", parentPtr.Id, len(parentPtr.Childrens)),
-		Title:   title,
-		Owner:   owner,
+		Name:    name,
 		Message: []*models.MessageItem{},
 		Status:  models.FLOW_STATUS_WAIT,
 		Parent:  parentPtr,
@@ -120,7 +118,7 @@ func (s *FlowManager) FinishFlow(stage string, flowPtr *models.Flow) (ret *model
 	// 1. 检查当前flowPtr是否分解完成，如果没有分解完成，则要继续分解
 	if !flowPtr.CanFinish() {
 		param := map[string]string{
-			"Name": flowPtr.GetOwner(),
+			"Name": flowPtr.GetName(),
 		}
 		subLevelCheckPromptVal, subLevelCheckPromptErr := iipc.ReadInnerSystemPromptsWithParam(fmt.Sprintf("sublevel-%s-check", stage), param)
 		if subLevelCheckPromptErr != nil {
@@ -155,7 +153,7 @@ func (s *FlowManager) FinishFlow(stage string, flowPtr *models.Flow) (ret *model
 		s.currentFlowPtr = s.currentFlowPtr.GetLatestUnFinishFlow()
 		if s.currentFlowPtr != nil {
 			param := map[string]string{
-				"Name": s.currentFlowPtr.GetOwner(),
+				"Name": s.currentFlowPtr.GetName(),
 			}
 
 			subLevelCheckPromptVal, subLevelCheckPromptErr := iipc.ReadInnerSystemPromptsWithParam(fmt.Sprintf("sublevel-%s-check", stage), param)

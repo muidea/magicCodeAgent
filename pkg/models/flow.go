@@ -66,8 +66,7 @@ func GetChildLevel(level string) string {
 
 type Flow struct {
 	Id        string           `json:"id"`
-	Title     string           `json:"title"`
-	Owner     string           `json:"owner"`
+	Name      string           `json:"name"`
 	Message   []*MessageItem   `json:"-"`
 	Status    int              `json:"status"`
 	AddFiles  fu.StringSortSet `json:"addFiles,omitempty"`
@@ -81,18 +80,18 @@ type Flow struct {
 func (s *Flow) String() string {
 	if s.Parent == nil {
 		var stringBuff strings.Builder
-		stringBuff.WriteString(fmt.Sprintf("Flow %s, title:%s, level:%s, status:%d, parent is null", s.Id, s.Title, s.Level, s.Status))
+		stringBuff.WriteString(fmt.Sprintf("Flow %s, name:%s, level:%s, status:%d, parent is null", s.Id, s.Name, s.Level, s.Status))
 		for _, val := range s.Childrens {
-			stringBuff.WriteString(fmt.Sprintf("\n - children:%s, title:%s, level:%s, status:%d, parent:%s", val.Id, val.Title, val.Level, val.Status, val.Parent.Id))
+			stringBuff.WriteString(fmt.Sprintf("\n - children:%s, name:%s, level:%s, status:%d, parent:%s", val.Id, val.Name, val.Level, val.Status, val.Parent.Id))
 		}
 
 		return stringBuff.String()
 	}
 
 	var stringBuff strings.Builder
-	stringBuff.WriteString(fmt.Sprintf("Flow %s, title:%s, owner:%s, level:%s, status:%d, parent is %s", s.Id, s.Title, s.Owner, s.Level, s.Status, s.Parent.Id))
+	stringBuff.WriteString(fmt.Sprintf("Flow %s, name:%s, level:%s, status:%d, parent is %s", s.Id, s.Name, s.Level, s.Status, s.Parent.Id))
 	for _, val := range s.Childrens {
-		stringBuff.WriteString(fmt.Sprintf("\n - children:%s, title:%s, level:%s, status:%d, parent:%s", val.Id, val.Title, val.Level, val.Status, val.Parent.Id))
+		stringBuff.WriteString(fmt.Sprintf("\n - children:%s, name:%s, level:%s, status:%d, parent:%s", val.Id, val.Name, val.Level, val.Status, val.Parent.Id))
 	}
 	return stringBuff.String()
 }
@@ -114,10 +113,6 @@ func (s *Flow) GetParent() *Flow {
 
 func (s *Flow) IsFinish() bool {
 	return s.Status == FLOW_STATUS_FINISH
-}
-
-func (s *Flow) isIdle() bool {
-	return s.AddFiles.Len() == 0 && s.ModFiles.Len() == 0 && s.DelFiles.Len() == 0
 }
 
 func (s *Flow) CanFinish() (ret bool) {
@@ -193,8 +188,8 @@ func (s *Flow) GetLevel() string {
 	return s.Level
 }
 
-func (s *Flow) GetOwner() string {
-	return s.Owner
+func (s *Flow) GetName() string {
+	return s.Name
 }
 
 func (s *Flow) GetLatestUnFinishFlow() *Flow {

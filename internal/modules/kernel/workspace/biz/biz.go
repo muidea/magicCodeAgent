@@ -183,11 +183,6 @@ func (s *Workspace) CreateWorkspace(workspacePtr *models.Workspace) (ret *models
 		return
 	}
 
-	err = s.enableWorkspaceInternal(workspacePtr)
-	if err != nil {
-		return
-	}
-
 	ret = workspacePtr
 	return
 }
@@ -235,7 +230,7 @@ func (s *Workspace) addWorkspace(ev event.Event, re event.Result) {
 func (s *Workspace) AddWorkspace(workspacePtr *models.Workspace) (ret *models.Workspace, err *cd.Error) {
 	workspace, ok := s.workspaceStationCache.Load(workspacePtr.Name)
 	if ok {
-		ret = &workspace.(*Station).workspaceConfig
+		ret = &workspace.(*Station).currentWorkspace
 		return
 	}
 
@@ -249,13 +244,6 @@ func (s *Workspace) AddWorkspace(workspacePtr *models.Workspace) (ret *models.Wo
 	if eVal := config.AddWorkspace(workspacePtr); eVal != nil {
 		log.Errorf("add workspace failed, add workspace failed:%s", workspacePtr.WorkspaceDir)
 		err = cd.NewError(cd.Unexpected, eVal.Error())
-		return
-	}
-
-	if workspacePtr.Status == models.EnableStatus {
-		err = s.enableWorkspaceInternal(workspacePtr)
-	}
-	if err != nil {
 		return
 	}
 
@@ -303,7 +291,7 @@ func (s *Workspace) removeWorkspace(ev event.Event, re event.Result) {
 func (s *Workspace) RemoveWorkspace(workspaceName string) (err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if ok {
-		workspacePtr := curWorkspace.(*Station).workspaceConfig
+		workspacePtr := curWorkspace.(*Station).currentWorkspace
 		err = s.disableWorkspaceInternal(&workspacePtr)
 		if err != nil {
 			return
@@ -347,10 +335,6 @@ func (s *Workspace) RefreshWorkspace(workspaceName string) (err *cd.Error) {
 		return
 	}
 
-	err = s.enableWorkspaceInternal(wPtr)
-	if err != nil {
-		return
-	}
 	return
 }
 
@@ -361,12 +345,6 @@ func (s *Workspace) EnableWorkspace(workspaceName string) (err *cd.Error) {
 		return
 	}
 
-	err = s.enableWorkspaceInternal(wPtr)
-	if err != nil {
-		log.Errorf("enable workspace failed, enable workspace failed:%s", wPtr.WorkspaceDir)
-		return
-	}
-
 	wPtr.Status = models.EnableStatus
 	wPtr.UpdateTime = time.Now().Format(fu.CSTLayout)
 	if eVal := config.EnableWorkspace(workspaceName); eVal != nil {
@@ -374,19 +352,6 @@ func (s *Workspace) EnableWorkspace(workspaceName string) (err *cd.Error) {
 		return cd.NewError(cd.Unexpected, eVal.Error())
 	}
 
-	return
-}
-
-func (s *Workspace) enableWorkspaceInternal(workspacePtr *models.Workspace) (err *cd.Error) {
-	if !fp.Exist(workspacePtr.WorkspaceDir) || !workspacePtr.Available() {
-		log.Warnf("enable workspace, workspace not exists:%s", workspacePtr.WorkspaceDir)
-		return
-	}
-
-	workspace := NewStation(&s.Base, workspacePtr, s, s, s, s.promptsRegistry)
-	s.workspaceStationCache.Store(workspacePtr.Name, workspace)
-
-	s.fileMonitor.AddPath(workspacePtr.WorkspaceDir)
 	return
 }
 

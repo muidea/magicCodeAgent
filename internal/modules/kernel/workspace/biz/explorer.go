@@ -25,18 +25,26 @@ func (s *Workspace) OpenWorkspaceExplorer(workspaceName string) (ret *models.Wor
 		return
 	}
 
-	if !workspacePtr.Available() {
+	if !fp.Exist(workspacePtr.WorkspaceDir) || !workspacePtr.Available() {
 		log.Warnf("open workspace explorer failed, workspace not available:%s", workspaceName)
 		err = cd.NewError(cd.Unexpected, fmt.Sprintf("open workspace explorer, workspace not available:%s", workspaceName))
 		return
 	}
 
-	if _, oErr := os.Stat(workspacePtr.GetWorkingPath()); oErr != nil {
-		oErr = os.MkdirAll(workspacePtr.GetWorkingPath(), 0755)
-		if oErr != nil {
-			log.Errorf("open workspace explorer failed, create working path failed:%s", workspaceName)
-			err = cd.NewError(cd.Unexpected, fmt.Sprintf("open workspace explorer, create working path failed:%s", workspaceName))
-			return
+	_, existOK := s.workspaceStationCache.Load(workspaceName)
+	if !existOK {
+		workspace := NewStation(&s.Base, workspacePtr, s, s, s, s.promptsRegistry)
+		s.workspaceStationCache.Store(workspacePtr.Name, workspace)
+
+		s.fileMonitor.AddPath(workspacePtr.WorkspaceDir)
+
+		if _, oErr := os.Stat(workspacePtr.GetWorkingPath()); oErr != nil {
+			oErr = os.MkdirAll(workspacePtr.GetWorkingPath(), 0755)
+			if oErr != nil {
+				log.Errorf("open workspace explorer failed, create working path failed:%s", workspaceName)
+				err = cd.NewError(cd.Unexpected, fmt.Sprintf("open workspace explorer, create working path failed:%s", workspaceName))
+				return
+			}
 		}
 	}
 
@@ -86,8 +94,8 @@ func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filt
 		return
 	}
 
-	if !fp.Exist(curWorkspace.(*Station).workspaceConfig.WorkspaceDir) {
-		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).workspaceConfig.WorkspaceDir))
+	if !fp.Exist(curWorkspace.(*Station).currentWorkspace.WorkspaceDir) {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s, path:%s not exists", workspaceName, curWorkspace.(*Station).currentWorkspace.WorkspaceDir))
 		return
 	}
 
@@ -107,7 +115,7 @@ func (s *Workspace) FilterWorkspaceFileTree(workspaceName, basePath string) (ret
 		return
 	}
 
-	workingRootPath := curWorkspace.(*Station).workspaceConfig.GetWorkingPath()
+	workingRootPath := curWorkspace.(*Station).currentWorkspace.GetWorkingPath()
 	filter := NewBasePathFilter(workingRootPath, basePath)
 
 	fileList := curWorkspace.(*Station).Filter(filter)

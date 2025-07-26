@@ -42,9 +42,10 @@ type Observer interface {
 }
 
 type Station struct {
-	bizBasePtr      *biz.Base
-	workspaceConfig models.Workspace
-	fileInfo        util.FileManager
+	bizBasePtr           *biz.Base
+	currentWorkspace     models.Workspace
+	workspaceFileManager util.FileManager
+	workspaceFlowStatus  *FlowStatus
 
 	chatRunningStatus string
 
@@ -73,7 +74,7 @@ func NewStation(
 ) *Station {
 	ret := &Station{
 		bizBasePtr:           bizBasePtr,
-		workspaceConfig:      *workspacePtr,
+		currentWorkspace:     *workspacePtr,
 		chatRunningStatus:    Idle,
 		chatLoopCount:        0,
 		chatUsagePtr:         &imklc.Usage{},
@@ -89,52 +90,80 @@ func NewStation(
 }
 
 func (s *Station) systemPrompt() string {
-	return s.innerPromptsRegistry.GetStagePromptsContent(s.workspaceConfig.GetStage())
+	return s.innerPromptsRegistry.GetStagePromptsContent(s.currentWorkspace.GetStage())
 }
 
 func (s *Station) getWorkspaceProjectStruct() (string, error) {
 	param := map[string]string{}
-	return s.localPromptReader.ReadPrompt(&s.workspaceConfig, "project-struct", param)
+	return s.localPromptReader.ReadPrompt(&s.currentWorkspace, "project-struct", param)
 }
 
 func (s *Station) getWorkspaceStatus(ptr *models.Flow) (string, error) {
 	var levelInfo strings.Builder
 	switch ptr.GetLevel() {
 	case models.ProjectLevel:
-		levelInfo.WriteString(fmt.Sprintf("项目(`%s`)，项目名-%s", ptr.GetLevel(), ptr.GetOwner()))
+		levelInfo.WriteString(fmt.Sprintf("项目(`%s`)，项目名-%s", ptr.GetLevel(), ptr.GetName()))
 	case models.ModuleLevel:
-		levelInfo.WriteString(fmt.Sprintf("业务模块(`%s`)，业务模块名-%s", ptr.GetLevel(), ptr.GetOwner()))
+		levelInfo.WriteString(fmt.Sprintf("业务模块(`%s`)，业务模块名-%s", ptr.GetLevel(), ptr.GetName()))
 		if parent := ptr.GetParent(); parent != nil {
-			levelInfo.WriteString(fmt.Sprintf(", 所属项目-%s", parent.GetOwner()))
+			levelInfo.WriteString(fmt.Sprintf(", 所属项目-%s", parent.GetName()))
 		}
 	case models.BlockLevel:
-		levelInfo.WriteString(fmt.Sprintf("功能模块(`%s`)，功能模块名-%s", ptr.GetLevel(), ptr.GetOwner()))
+		levelInfo.WriteString(fmt.Sprintf("功能模块(`%s`)，功能模块名-%s", ptr.GetLevel(), ptr.GetName()))
 		if parent := ptr.GetParent(); parent != nil {
-			levelInfo.WriteString(fmt.Sprintf(", 所属业务模块-%s", parent.GetOwner()))
+			levelInfo.WriteString(fmt.Sprintf(", 所属业务模块-%s", parent.GetName()))
 		}
 	}
 
+	flowStatus := s.getStageFlowStatus()
 	param := map[string]string{
-		"LevelInfo": levelInfo.String(),
+		"LevelInfo":  levelInfo.String(),
+		"FlowStatus": flowStatus,
 	}
-	return s.localPromptReader.ReadPrompt(&s.workspaceConfig, fmt.Sprintf("stage-%s-status", s.workspaceConfig.GetStage()), param)
+	return s.localPromptReader.ReadPrompt(&s.currentWorkspace, fmt.Sprintf("stage-%s-status", s.currentWorkspace.GetStage()), param)
+}
+
+func (s *Station) getStageFlowStatus() string {
+	switch s.currentWorkspace.GetStage() {
+	case models.CodeStage:
+	default:
+		return ""
+	}
+
+	if s.workspaceFlowStatus == nil {
+		referenceStageVal := models.GetStageReferenceStage(s.currentWorkspace.GetStage())
+		referencePath := s.currentWorkspace.GetStageWorkingPath(referenceStageVal)
+		fileList := []string{}
+		s.workspaceFileManager.Range(func(filePath string) bool {
+			if strings.HasPrefix(filePath, referencePath) {
+				relativePath := filePath[len(referencePath)+1:]
+				fileList = append(fileList, relativePath)
+			}
+			return true
+		})
+		s.workspaceFlowStatus = NewFlowStatus(fileList)
+	}
+	stringBuilder := bytes.NewBufferString("")
+	stringBuilder.WriteString("4. 当前开发进展：\n")
+	DumpFlowStatusTree(s.workspaceFlowStatus, stringBuilder)
+	return stringBuilder.String()
 }
 
 func (s *Station) getWorkspaceSpecialInstruction() string {
 	param := map[string]string{}
-	return s.innerPromptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.workspaceConfig.GetStage()), param)
+	return s.innerPromptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.currentWorkspace.GetStage()), param)
 }
 
 func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
-	stringBuilder.WriteString("# 项目名称\n\n" + s.workspaceConfig.Name + "\n\n")
+	stringBuilder.WriteString("# 项目名称\n\n" + s.currentWorkspace.Name + "\n\n")
 
 	stringBuilder.WriteString("## 项目描述\n\n")
-	stringBuilder.WriteString(s.workspaceConfig.Description + "\n\n")
+	stringBuilder.WriteString(s.currentWorkspace.Description + "\n\n")
 
 	stringBuilder.WriteString("## 技术栈\n\n")
-	for _, val := range s.workspaceConfig.TechStack {
+	for _, val := range s.currentWorkspace.TechStack {
 		stringBuilder.WriteString("- " + val + "\n")
 	}
 	stringBuilder.WriteString("\n\n")
@@ -151,13 +180,13 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	}
 
 	// 参考内容清单
-	referenceStageVal := models.GetStageReferenceStage(s.workspaceConfig.GetStage())
+	referenceStageVal := models.GetStageReferenceStage(s.currentWorkspace.GetStage())
 	referenceLabel := models.GetStageReferenceLabel(referenceStageVal)
-	referencePath := s.workspaceConfig.GetStageWorkingPath(referenceStageVal)
+	referencePath := s.currentWorkspace.GetStageWorkingPath(referenceStageVal)
 	if referencePath != "" {
 		hasReference := false
 		stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", referenceLabel))
-		s.fileInfo.Range(func(filePath string) bool {
+		s.workspaceFileManager.Range(func(filePath string) bool {
 			if strings.HasPrefix(filePath, referencePath) {
 				relativePath := filePath[len(referencePath)+1:]
 				stringBuilder.WriteString("- " + relativePath + "\n")
@@ -171,7 +200,7 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 		}
 	}
 
-	workingPath := s.workspaceConfig.GetWorkingPath()
+	workingPath := s.currentWorkspace.GetWorkingPath()
 	/*
 		if ptr != nil {
 			// 当前进度
@@ -215,7 +244,7 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	*/
 
 	stringBuilder.WriteString("### 当前输出清单\n\n")
-	s.fileInfo.Range(func(filePath string) bool {
+	s.workspaceFileManager.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, workingPath) {
 			relativePath := filePath[len(workingPath)+1:]
 			stringBuilder.WriteString("- " + relativePath + "\n")
@@ -231,7 +260,7 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	}
 
 	//## 项目规划目录
-	if s.workspaceConfig.GetStage() != models.DesignStage {
+	if s.currentWorkspace.GetStage() != models.DesignStage {
 		structContent, structErr := s.getWorkspaceProjectStruct()
 		if structErr != nil {
 			log.Errorf("get workspace project struct failed, %s", structErr)
@@ -249,11 +278,11 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 }
 
 func (s *Station) Available() bool {
-	return s.workspaceConfig.Available()
+	return s.currentWorkspace.Available()
 }
 
 func (s *Station) checkIgnore(fileFullPath string) bool {
-	for _, ignore := range s.workspaceConfig.Ignores {
+	for _, ignore := range s.currentWorkspace.Ignores {
 		if strings.Contains(fileFullPath, ignore) {
 			return true
 		}
@@ -264,7 +293,7 @@ func (s *Station) checkIgnore(fileFullPath string) bool {
 }
 
 func (s *Station) AddFile(filePath string) bool {
-	if !fp.IsSubPath(s.workspaceConfig.GetRootPath(), filePath) {
+	if !fp.IsSubPath(s.currentWorkspace.GetRootPath(), filePath) {
 		return false
 	}
 
@@ -278,12 +307,12 @@ func (s *Station) AddFile(filePath string) bool {
 		curFlowPtr.AddFile(filePath)
 	}
 
-	s.fileInfo.Store(filePath)
+	s.workspaceFileManager.Store(filePath)
 	return true
 }
 
 func (s *Station) RemoveFile(filePath string) bool {
-	if !fp.IsSubPath(s.workspaceConfig.WorkspaceDir, filePath) {
+	if !fp.IsSubPath(s.currentWorkspace.WorkspaceDir, filePath) {
 		return false
 	}
 
@@ -297,12 +326,12 @@ func (s *Station) RemoveFile(filePath string) bool {
 		curFlowPtr.AddFile(filePath)
 	}
 
-	s.fileInfo.Delete(filePath)
+	s.workspaceFileManager.Delete(filePath)
 	return true
 }
 
 func (s *Station) WriteFile(filePath string) bool {
-	if !fp.IsSubPath(s.workspaceConfig.WorkspaceDir, filePath) {
+	if !fp.IsSubPath(s.currentWorkspace.WorkspaceDir, filePath) {
 		return false
 	}
 
@@ -315,12 +344,12 @@ func (s *Station) WriteFile(filePath string) bool {
 	if curFlowPtr != nil {
 		curFlowPtr.ModFile(filePath)
 	}
-	s.fileInfo.Store(filePath)
+	s.workspaceFileManager.Store(filePath)
 	return true
 }
 
 func (s *Station) Filter(filter fu.Filter) (ret []string) {
-	s.fileInfo.Range(func(filePath string) bool {
+	s.workspaceFileManager.Range(func(filePath string) bool {
 		if filter != nil && filter.Filter(filePath) {
 			ret = append(ret, filePath)
 		} else if filter == nil {
@@ -380,7 +409,7 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 		curFlow = s.localFlowManger.GetCurrentFlow()
 	}
 	if curFlow == nil {
-		curFlow = s.localFlowManger.NewFlow(itemPtr.String(), "workspace", nil)
+		curFlow = s.localFlowManger.NewFlow("workspace", nil)
 	}
 	curFlow.AppendMessage(itemPtr)
 
@@ -418,7 +447,7 @@ func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flo
 
 	contentContext := context.WithValue(chatContext, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	msgErr := s.localAssistant.Chat(providerContext, &s.workspaceConfig, sysPrompt, envPrompt, chatFlow.GetFlowPath())
+	msgErr := s.localAssistant.Chat(providerContext, &s.currentWorkspace, sysPrompt, envPrompt, chatFlow.GetFlowPath())
 	if msgErr != nil {
 		err = msgErr
 		log.Errorf("internalChat, s.localAssistant.Chat error:%v", msgErr)
@@ -432,7 +461,7 @@ func (s *Station) DisposeMessage(itemPtr *models.MessageItem) {
 	messageInfoPtr := &models.MessageInfo{
 		Item:       *itemPtr,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
-		Workspace:  s.workspaceConfig.Name,
+		Workspace:  s.currentWorkspace.Name,
 	}
 
 	msgPtr := s.localMessageCache.Add(messageInfoPtr)
@@ -478,9 +507,9 @@ func (s *Station) DisposeContent(content string) {
 	var finalStatus = s.chatRunningStatus
 	var chatLoopCount = s.chatLoopCount
 	var notifyMsg = "会话被中断！"
-	log.Infof("DisposeContent, workspace:%s, chatLoopCount:%d", s.workspaceConfig.Name, chatLoopCount)
+	log.Infof("DisposeContent, workspace:%s, chatLoopCount:%d", s.currentWorkspace.Name, chatLoopCount)
 	defer func() {
-		log.Infof("DisposeContent done, workspace:%s, chatLoopCount:%d, finalStatus:%s, elapseTime:%v", s.workspaceConfig.Name, chatLoopCount, finalStatus, time.Since(curTime))
+		log.Infof("DisposeContent done, workspace:%s, chatLoopCount:%d, finalStatus:%s, elapseTime:%v", s.currentWorkspace.Name, chatLoopCount, finalStatus, time.Since(curTime))
 		if finalStatus != Chatting {
 			// 发送本次消耗的Token数据
 			notifyMsg := &models.MessageItem{
@@ -513,7 +542,7 @@ func (s *Station) DisposeContent(content string) {
 	}
 
 	for _, block := range blockList {
-		workParam, workResult, workErr := s.localWorker.DoWork(&s.workspaceConfig, block)
+		workParam, workResult, workErr := s.localWorker.DoWork(&s.currentWorkspace, block)
 		if workErr != nil {
 			finalStatus = Terminate
 			notifyMsg = fmt.Sprintf("执行出错, Tool执行出错:%v", workErr.Error())
@@ -530,13 +559,16 @@ func (s *Station) DisposeContent(content string) {
 			continue
 		case "attempt_finish":
 			curFlow.AppendMessage(msgPtr)
+			s.workspaceFlowStatus.FinishFlow(curFlow)
 			curFlow = s.tryToFinishFlow(curFlow, workParam, msgItem)
 		case "decompose_design_plan", "decompose_code_plan":
 			curFlow = s.tryToSwitchFlow(curFlow, workParam, msgItem)
+			s.workspaceFlowStatus.StartFlow(curFlow)
 			curFlow.AppendMessage(msgPtr)
 			curFlow.AppendMessage(msgItem)
 		case "attempt_completion":
 			curFlow.AppendMessage(msgPtr)
+			s.workspaceFlowStatus.FinishFlow(curFlow)
 			curFlow = s.tryToCompleteFlow(curFlow, workParam, msgItem)
 		default:
 			curFlow.AppendMessage(msgPtr)
@@ -574,7 +606,7 @@ func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *mo
 	// attempt_finish
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
 	log.Infof("try to finish flow %v", curFlow)
-	ret = s.localFlowManger.FinishFlow(s.workspaceConfig.GetStage(), curFlow)
+	ret = s.localFlowManger.FinishFlow(s.currentWorkspace.GetStage(), curFlow)
 	return
 }
 
@@ -592,22 +624,22 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, m
 	switch compareVal {
 	case models.LevelGreater:
 		// 子级任务
-		ret = s.localFlowManger.NewFlow(msgItem.String(), name, curFlow)
+		ret = s.localFlowManger.NewFlow(name, curFlow)
 	case models.LevelEqual:
 		// 同级任务
 		if curFlow.CanFinish() {
 			curFlow.Status = models.FLOW_STATUS_FINISH
 		}
-		ret = s.localFlowManger.NewFlow(msgItem.String(), name, curFlow.GetParent())
+		ret = s.localFlowManger.NewFlow(name, curFlow.GetParent())
 	case models.LevelLess:
 		// 父级任务
 		parent := curFlow.GetParent()
 		if parent != nil {
-			ret = s.localFlowManger.NewFlow(msgItem.String(), name, parent.GetParent())
+			ret = s.localFlowManger.NewFlow(name, parent.GetParent())
 		} else {
 			// 到这里属于异常了，先记录日志看看情况
 			log.Warnf("curFlow.GetParent() is nil, %+v", curFlow.GetFlowPath())
-			ret = s.localFlowManger.NewFlow(msgItem.String(), name, nil)
+			ret = s.localFlowManger.NewFlow(name, nil)
 		}
 	}
 
@@ -656,7 +688,7 @@ func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
 		debugFlow = s.localFlowManger.GetCurrentFlow()
 	}
 	if debugFlow == nil {
-		debugFlow = s.localFlowManger.NewFlow("debug", "debug", nil)
+		debugFlow = s.localFlowManger.NewFlow("debug", nil)
 	}
 
 	systemPromptFile := fileList[0]
@@ -697,7 +729,7 @@ func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
 	envPrompt := string(envByte)
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	msgErr := s.localAssistant.Chat(providerContext, &s.workspaceConfig, systemPrompt, envPrompt, debugFlow.GetFlowPath())
+	msgErr := s.localAssistant.Chat(providerContext, &s.currentWorkspace, systemPrompt, envPrompt, debugFlow.GetFlowPath())
 	if msgErr != nil {
 		log.Errorf("chat error:%v", msgErr)
 		return

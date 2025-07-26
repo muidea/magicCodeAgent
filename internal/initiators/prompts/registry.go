@@ -62,7 +62,7 @@ func (s *promptsRegistry) AddPrompts(sectionName string, prompt iipc.Prompt) {
 
 func (s *promptsRegistry) GetStagePromptsContent(stage string) string {
 	filterTags := s.workspacePtr.FilterTage()
-	log.Infof("GetStagePromptsContent, stage:%s, filterTags:%s", stage, filterTags)
+	log.Infof("getStagePromptsContent, stage:%s, filterTags:%s", stage, filterTags)
 
 	var builder strings.Builder
 	builder.WriteString(s.getRolePrompts(stage))
