@@ -15,6 +15,19 @@ type FlowStatus struct {
 	Childrens []*FlowStatus `json:"childrens"`
 }
 
+func (s *FlowStatus) String() string {
+	switch s.Level {
+	case models.ProjectLevel:
+		return fmt.Sprintf("%s, 层级：项目（`%s`), 状态：%s", s.Name, s.Level, s.Status)
+	case models.ModuleLevel:
+		return fmt.Sprintf("%s, 层级：业务模块(`%s`), 状态：%s", s.Name, s.Level, s.Status)
+	case models.BlockLevel:
+		return fmt.Sprintf("%s, 层级：功能模块(`%s`), 状态：%s", s.Name, s.Level, s.Status)
+	default:
+		return ""
+	}
+}
+
 func (s *FlowStatus) StartFlow(ptr *models.Flow) {
 	flowStack := []*models.Flow{}
 	for ptr != nil {
@@ -34,7 +47,7 @@ func (s *FlowStatus) StartFlow(ptr *models.Flow) {
 
 		idx--
 		if idx < 0 {
-			curPtr.Status = "已开发, 未完成"
+			curPtr.Status = "正在开发"
 			break
 		}
 		flow = flowStack[idx]
@@ -83,7 +96,7 @@ func NewFlowStatus(flowList []string) *FlowStatus {
 	root := &FlowStatus{
 		Name:      "root",
 		Level:     "root",
-		Status:    "待开始",
+		Status:    "未开发",
 		Childrens: []*FlowStatus{},
 	}
 
@@ -129,7 +142,7 @@ func insertFlowStatus(current *FlowStatus, parts []string, depth int) {
 		child = &FlowStatus{
 			Name:      name,
 			Level:     level,
-			Status:    "待开始",
+			Status:    "未开发",
 			Childrens: []*FlowStatus{},
 		}
 		current.Childrens = append(current.Childrens, child)
@@ -142,7 +155,7 @@ func insertFlowStatus(current *FlowStatus, parts []string, depth int) {
 // 打印 FlowStatus 树结构
 func DumpFlowStatusTree(root *FlowStatus, buf *bytes.Buffer) {
 	// 打印 root 本身，不加前缀
-	buf.WriteString(fmt.Sprintf("%s [%s] (%s)\n", root.Name, root.Level, root.Status))
+	buf.WriteString(fmt.Sprintf("%s\n", root))
 
 	// 打印子节点
 	for i, child := range root.Childrens {
@@ -160,7 +173,7 @@ func dumpNode(node *FlowStatus, buf *bytes.Buffer, prefix string, isLast bool) {
 		connector = "└── "
 		childPrefix = prefix + "    "
 	}
-	buf.WriteString(fmt.Sprintf("%s%s%s [%s] (%s)\n", prefix, connector, node.Name, node.Level, node.Status))
+	buf.WriteString(fmt.Sprintf("%s%s%s\n", prefix, connector, node))
 
 	for i, child := range node.Childrens {
 		isLastChild := i == len(node.Childrens)-1
