@@ -31,23 +31,14 @@ func (s *Workspace) OpenWorkspaceExplorer(workspaceName string) (ret *models.Wor
 		return
 	}
 
-	_, existOK := s.workspaceStationCache.Load(workspaceName)
-	if !existOK {
-		workspace := NewStation(&s.Base, workspacePtr, s, s, s, s.promptsRegistry)
-		s.workspaceStationCache.Store(workspacePtr.Name, workspace)
-
-		s.fileMonitor.AddPath(workspacePtr.WorkspaceDir)
-
-		if _, oErr := os.Stat(workspacePtr.GetWorkingPath()); oErr != nil {
-			oErr = os.MkdirAll(workspacePtr.GetWorkingPath(), 0755)
-			if oErr != nil {
-				log.Errorf("open workspace explorer failed, create working path failed:%s", workspaceName)
-				err = cd.NewError(cd.Unexpected, fmt.Sprintf("open workspace explorer, create working path failed:%s", workspaceName))
-				return
-			}
-		}
+	stationPtr, stationErr := s.enableWorkspaceInternal(workspacePtr)
+	if stationErr != nil {
+		log.Warnf("open workspace explorer failed, workspace not available:%s", workspaceName)
+		err = stationErr
+		return
 	}
 
+	stationPtr.Refesh(workspacePtr)
 	reloadEvent := event.NewEvent(imbtc.ReloadTools, s.ID(), imbtc.ToolsModule, nil, workspacePtr)
 	reloadResult := s.SendEvent(reloadEvent)
 	err = reloadResult.Error()
@@ -99,7 +90,7 @@ func (s *Workspace) FilterWorkspaceFileList(workspaceName string, filter fu.Filt
 		return
 	}
 
-	ret = curWorkspace.(*Station).Filter(filter)
+	ret = curWorkspace.(*Station).FilterFile(filter)
 	return
 }
 
@@ -118,7 +109,7 @@ func (s *Workspace) FilterWorkspaceFileTree(workspaceName, basePath string) (ret
 	workingRootPath := curWorkspace.(*Station).currentWorkspace.GetWorkingPath()
 	filter := NewBasePathFilter(workingRootPath, basePath)
 
-	fileList := curWorkspace.(*Station).Filter(filter)
+	fileList := curWorkspace.(*Station).FilterFile(filter)
 	return ConvertPathsToTree(workingRootPath, fileList), nil
 }
 

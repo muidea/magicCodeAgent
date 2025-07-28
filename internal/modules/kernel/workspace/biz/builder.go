@@ -125,7 +125,7 @@ func (s *Workspace) ChatWorkspaceContentHistory(workspaceName string) (ret []*mo
 	return
 }
 
-func (s *Workspace) FilterWorkspaceFlow(workspaceName string) (ret []*models.Flow, err *cd.Error) {
+func (s *Workspace) FilterWorkspaceFlow(workspaceName string) (ret *models.Flow, err *cd.Error) {
 	curWorkspace, ok := s.workspaceStationCache.Load(workspaceName)
 	if !ok {
 		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", workspaceName))

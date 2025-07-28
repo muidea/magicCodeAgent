@@ -319,19 +319,9 @@ func (s *Workspace) refreshWorkspace(ev event.Event, re event.Result) {
 }
 
 func (s *Workspace) RefreshWorkspace(workspaceName string) (err *cd.Error) {
-	wPtr, wErr := config.RefreshWorkspace(workspaceName)
+	_, wErr := config.RefreshWorkspace(workspaceName)
 	if wErr != nil {
 		log.Warnf("refresh workspace, workspace not exists:%s", workspaceName)
-		return
-	}
-
-	if wPtr.Status != models.EnableStatus {
-		log.Warnf("refresh workspace, workspace not enable:%s", wPtr.WorkspaceDir)
-		return
-	}
-
-	err = s.disableWorkspaceInternal(wPtr)
-	if err != nil {
 		return
 	}
 
@@ -352,6 +342,28 @@ func (s *Workspace) EnableWorkspace(workspaceName string) (err *cd.Error) {
 		return cd.NewError(cd.Unexpected, eVal.Error())
 	}
 
+	//err = s.enableWorkspaceInternal(wPtr)
+	return
+}
+
+func (s *Workspace) enableWorkspaceInternal(workspacePtr *models.Workspace) (ret *Station, err *cd.Error) {
+	if !fp.Exist(workspacePtr.WorkspaceDir) || !workspacePtr.Available() {
+		errMsg := fmt.Sprintf("enable workspace, workspace not exists:%s", workspacePtr.WorkspaceDir)
+		log.Warnf(errMsg)
+		err = cd.NewError(cd.Unexpected, errMsg)
+		return
+	}
+	existStation, existOK := s.workspaceStationCache.Load(workspacePtr.GetName())
+	if existOK {
+		ret = existStation.(*Station)
+		return
+	}
+
+	workspaceStation := NewStation(&s.Base, workspacePtr, s, s, s, s.promptsRegistry)
+	s.workspaceStationCache.Store(workspacePtr.Name, workspaceStation)
+
+	_ = s.fileMonitor.AddPath(workspacePtr.WorkspaceDir)
+	ret = workspaceStation
 	return
 }
 
@@ -378,12 +390,6 @@ func (s *Workspace) DisableWorkspace(workspaceName string) (err *cd.Error) {
 }
 
 func (s *Workspace) disableWorkspaceInternal(workspacePtr *models.Workspace) (err *cd.Error) {
-	if !fp.Exist(workspacePtr.WorkspaceDir) {
-		log.Warnf("remove workspace, workspace not exists:%s", workspacePtr.WorkspaceDir)
-		s.workspaceStationCache.Delete(workspacePtr.Name)
-		return
-	}
-
 	s.fileMonitor.RemovePath(workspacePtr.WorkspaceDir)
 	s.workspaceStationCache.Delete(workspacePtr.Name)
 	return

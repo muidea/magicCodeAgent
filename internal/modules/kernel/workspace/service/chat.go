@@ -75,7 +75,7 @@ func (s *Workspace) submitChatWorkspaceContentMessage(ctx context.Context, res h
 	result.Error = nil
 }
 
-func (s *Workspace) TerminateChatWorkspaceContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) terminateChatWorkspaceContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	param := &imkwc.ChatMessage{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
@@ -110,7 +110,7 @@ func (s *Workspace) TerminateChatWorkspaceContent(ctx context.Context, res http.
 	result.Error = nil
 }
 
-func (s *Workspace) FilterChatWorkspaceContentHistory(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) filterChatWorkspaceContentHistory(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &imkwc.ChatHistoryResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
@@ -118,7 +118,7 @@ func (s *Workspace) FilterChatWorkspaceContentHistory(ctx context.Context, res h
 	result.Values, result.Error = s.bizPtr.ChatWorkspaceContentHistory(workspaceName)
 }
 
-func (s *Workspace) DebugChatWorkspaceContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) debugChatWorkspaceContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	param := &imkwc.ChatMessage{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
@@ -153,10 +153,10 @@ func (s *Workspace) DebugChatWorkspaceContent(ctx context.Context, res http.Resp
 	result.Error = nil
 }
 
-func (s *Workspace) FilterChatWorkspaceContentFlow(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) filterChatWorkspaceContentFlow(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &imkwc.FilterFlowResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspaceName := req.URL.Query().Get("workspace")
-	result.Values, result.Error = s.bizPtr.FilterWorkspaceFlow(workspaceName)
+	result.Value, result.Error = s.bizPtr.FilterWorkspaceFlow(workspaceName)
 }

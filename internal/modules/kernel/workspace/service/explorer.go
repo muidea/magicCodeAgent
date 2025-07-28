@@ -20,7 +20,7 @@ func (s *Workspace) openWorkspace(ctx context.Context, res http.ResponseWriter, 
 	result.Value, result.Error = s.bizPtr.OpenWorkspaceExplorer(workspaceName)
 }
 
-func (s *Workspace) updateWorkspaceStage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) switchWorkspaceStage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &imkwc.WorkspaceResult{}
 	defer fn.PackageHTTPResponse(res, result)
 	param := &models.Workspace{}

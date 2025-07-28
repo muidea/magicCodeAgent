@@ -12,6 +12,7 @@ type FlowStatus struct {
 	Name      string        `json:"name"`
 	Level     string        `json:"level"`
 	Status    string        `json:"status"`
+	FlowPtr   *models.Flow  `json:"flowPtr"`
 	Childrens []*FlowStatus `json:"childrens"`
 }
 
@@ -48,6 +49,7 @@ func (s *FlowStatus) StartFlow(ptr *models.Flow) {
 		idx--
 		if idx < 0 {
 			curPtr.Status = "正在开发"
+			curPtr.FlowPtr = ptr
 			break
 		}
 		flow = flowStack[idx]

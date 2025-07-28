@@ -45,7 +45,6 @@ type Station struct {
 	bizBasePtr           *biz.Base
 	currentWorkspace     models.Workspace
 	workspaceFileManager util.FileManager
-	workspaceFlowStatus  *FlowStatus
 
 	chatRunningStatus string
 
@@ -57,10 +56,10 @@ type Station struct {
 	observerList []Observer
 
 	localMessageCache    *cache.MessageSequenceCache
-	localFlowManger      *FlowManager
 	localWorker          Worker
 	localAssistant       Assistant
 	localPromptReader    PromptReader
+	localFlowManger      *FlowManager
 	innerPromptsRegistry iipc.PromptsRegistry
 }
 
@@ -79,14 +78,38 @@ func NewStation(
 		chatLoopCount:        0,
 		chatUsagePtr:         &imklc.Usage{},
 		localMessageCache:    cache.NewMessageSequenceCache(500),
-		localFlowManger:      NewFlowManager(),
 		localWorker:          worker,
 		localAssistant:       assistant,
 		localPromptReader:    reader,
+		localFlowManger:      NewFlowManager(workspacePtr.GetName()),
 		innerPromptsRegistry: promptsRegistry,
 	}
 
 	return ret
+}
+
+func (s *Station) Refesh(workspacePtr *models.Workspace) {
+	s.currentWorkspace = *workspacePtr
+	if _, oErr := os.Stat(workspacePtr.GetWorkingPath()); oErr != nil {
+		oErr = os.MkdirAll(workspacePtr.GetWorkingPath(), 0755)
+		if oErr != nil {
+			log.Errorf("open workspace explorer failed, create working path failed:%s", workspacePtr.GetName())
+			return
+		}
+	}
+
+	referenceStageVal := models.GetStageReferenceStage(s.currentWorkspace.GetStage())
+	referencePath := s.currentWorkspace.GetStageWorkingPath(referenceStageVal)
+	fileList := []string{}
+	s.workspaceFileManager.Range(func(filePath string) bool {
+		if strings.HasPrefix(filePath, referencePath) {
+			relativePath := filePath[len(referencePath)+1:]
+			fileList = append(fileList, relativePath)
+		}
+		return true
+	})
+
+	s.localFlowManger.InitFlow(fileList, s.currentWorkspace.GetStage())
 }
 
 func (s *Station) systemPrompt() string {
@@ -124,28 +147,13 @@ func (s *Station) getWorkspaceStatus(ptr *models.Flow) (string, error) {
 }
 
 func (s *Station) getStageFlowStatus() string {
-	switch s.currentWorkspace.GetStage() {
-	case models.CodeStage:
-	default:
+	rootFlow := s.localFlowManger.GetStageRoot(s.currentWorkspace.GetStage())
+	if rootFlow == nil {
 		return ""
-	}
-
-	if s.workspaceFlowStatus == nil {
-		referenceStageVal := models.GetStageReferenceStage(s.currentWorkspace.GetStage())
-		referencePath := s.currentWorkspace.GetStageWorkingPath(referenceStageVal)
-		fileList := []string{}
-		s.workspaceFileManager.Range(func(filePath string) bool {
-			if strings.HasPrefix(filePath, referencePath) {
-				relativePath := filePath[len(referencePath)+1:]
-				fileList = append(fileList, relativePath)
-			}
-			return true
-		})
-		s.workspaceFlowStatus = NewFlowStatus(fileList)
 	}
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("4. 当前开发进展：\n")
-	DumpFlowStatusTree(s.workspaceFlowStatus, stringBuilder)
+	models.DumpFlowStatusTree(rootFlow, stringBuilder)
 	return stringBuilder.String()
 }
 
@@ -348,7 +356,7 @@ func (s *Station) WriteFile(filePath string) bool {
 	return true
 }
 
-func (s *Station) Filter(filter fu.Filter) (ret []string) {
+func (s *Station) FilterFile(filter fu.Filter) (ret []string) {
 	s.workspaceFileManager.Range(func(filePath string) bool {
 		if filter != nil && filter.Filter(filePath) {
 			ret = append(ret, filePath)
@@ -401,16 +409,7 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 		s.localFlowManger.Reset()
 	}
 
-	var curFlow *models.Flow
-	flowIDVal := chatContext.Value(common.FlowID{})
-	if flowIDVal != nil {
-		curFlow = s.localFlowManger.GetFlow(flowIDVal.(string))
-	} else {
-		curFlow = s.localFlowManger.GetCurrentFlow()
-	}
-	if curFlow == nil {
-		curFlow = s.localFlowManger.NewFlow("workspace", nil)
-	}
+	curFlow := s.localFlowManger.GetCurrentFlow()
 	curFlow.AppendMessage(itemPtr)
 
 	s.chatMaxLoopCount = maxLoopCount
@@ -425,8 +424,6 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 
 func (s *Station) ChatTerminate(ctx context.Context) (err *cd.Error) {
 	s.chatRunningStatus = Terminate
-
-	//s.localFlowManger.Reset()
 	return
 }
 
@@ -530,7 +527,6 @@ func (s *Station) DisposeContent(content string) {
 		Content: []string{content},
 	}
 
-	curFlow := s.localFlowManger.GetCurrentFlow()
 	s.DisposeMessage(msgPtr)
 
 	blockList, blockErr := util.SpliteBlocks(content)
@@ -541,6 +537,7 @@ func (s *Station) DisposeContent(content string) {
 		return
 	}
 
+	curFlow := s.localFlowManger.GetCurrentFlow()
 	for _, block := range blockList {
 		workParam, workResult, workErr := s.localWorker.DoWork(&s.currentWorkspace, block)
 		if workErr != nil {
@@ -559,20 +556,22 @@ func (s *Station) DisposeContent(content string) {
 			continue
 		case "attempt_finish":
 			curFlow.AppendMessage(msgPtr)
-			s.workspaceFlowStatus.FinishFlow(curFlow)
-			curFlow = s.tryToFinishFlow(curFlow, workParam, msgItem)
+			curFlow = s.tryToFinishFlow(curFlow, workParam)
 		case "decompose_design_plan", "decompose_code_plan":
-			curFlow = s.tryToSwitchFlow(curFlow, workParam, msgItem)
-			s.workspaceFlowStatus.StartFlow(curFlow)
+			newFlow, newErr := s.tryToSwitchFlow(curFlow, workParam)
+			if newErr != nil {
+				msgItem.Content = []string{newErr.Error()}
+			} else {
+				curFlow = newFlow
+			}
 			curFlow.AppendMessage(msgPtr)
 			curFlow.AppendMessage(msgItem)
 		case "attempt_completion":
 			curFlow.AppendMessage(msgPtr)
-			s.workspaceFlowStatus.FinishFlow(curFlow)
-			curFlow = s.tryToCompleteFlow(curFlow, workParam, msgItem)
+			curFlow = s.tryToCompleteFlow(curFlow, workParam)
 		default:
 			curFlow.AppendMessage(msgPtr)
-			curFlow = s.continueRun(curFlow, workParam, msgItem)
+			curFlow.AppendMessage(msgItem)
 		}
 
 		s.DisposeMessage(msgItem)
@@ -602,51 +601,44 @@ func (s *Station) DisposeContent(content string) {
 	}
 }
 
-func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
+func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam) (ret *models.Flow) {
 	// attempt_finish
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
 	log.Infof("try to finish flow %v", curFlow)
-	ret = s.localFlowManger.FinishFlow(s.currentWorkspace.GetStage(), curFlow)
+	flowPtr := s.localFlowManger.FinishFlow(curFlow)
+	if flowPtr != nil {
+		// 到这里说明需要继续处理下一级工作项
+		param := map[string]string{
+			"Name": flowPtr.GetName(),
+		}
+		subLevelCheckPromptVal, subLevelCheckPromptErr := iipc.ReadInnerSystemPromptsWithParam(fmt.Sprintf("sublevel-%s-check", s.currentWorkspace.GetStage()), param)
+		if subLevelCheckPromptErr != nil {
+			log.Errorf("read sublevel-check prompt failed, err:%s", subLevelCheckPromptErr)
+			return
+		}
+		flowPtr.AppendMessage(&models.MessageItem{
+			Role:    common.User,
+			Content: []string{subLevelCheckPromptVal},
+		})
+	}
+
+	ret = flowPtr
 	return
 }
 
-func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
+func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam) (ret *models.Flow, err error) {
 	// decompose_design_plan
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
 	log.Infof("try to switch flow %v", curFlow)
 	level := param["level"].(string)
 	name := param["name"].(string)
-	compareVal := models.LevelGreater
-	if curFlow != nil {
-		compareVal = models.CompareLevel(curFlow.GetLevel(), level)
-	}
-	switch compareVal {
-	case models.LevelGreater:
-		// 子级任务
-		ret = s.localFlowManger.NewFlow(name, curFlow)
-	case models.LevelEqual:
-		// 同级任务
-		if curFlow.CanFinish() {
-			curFlow.Status = models.FLOW_STATUS_FINISH
-		}
-		ret = s.localFlowManger.NewFlow(name, curFlow.GetParent())
-	case models.LevelLess:
-		// 父级任务
-		parent := curFlow.GetParent()
-		if parent != nil {
-			ret = s.localFlowManger.NewFlow(name, parent.GetParent())
-		} else {
-			// 到这里属于异常了，先记录日志看看情况
-			log.Warnf("curFlow.GetParent() is nil, %+v", curFlow.GetFlowPath())
-			ret = s.localFlowManger.NewFlow(name, nil)
-		}
-	}
-
+	path := param["path"].(string)
+	ret, err = s.localFlowManger.SwitchFlow(name, level, path, s.currentWorkspace.GetStage())
 	return
 }
 
-func (s *Station) tryToCompleteFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *models.MessageItem) (ret *models.Flow) {
+func (s *Station) tryToCompleteFlow(curFlow *models.Flow, _ imbtc.ToolParam) (ret *models.Flow) {
 	// attempt_completion
 	// 到这里说明当前的Flow已经完成了，直接结束当前的Flow
 	log.Infof("try to complete flow %v", curFlow)
@@ -654,18 +646,8 @@ func (s *Station) tryToCompleteFlow(curFlow *models.Flow, _ imbtc.ToolParam, _ *
 	return
 }
 
-func (s *Station) continueRun(curFlow *models.Flow, _ imbtc.ToolParam, msgItem *models.MessageItem) (ret *models.Flow) {
-	log.Infof("continue run flow %v", curFlow)
-	if curFlow != nil {
-		curFlow.AppendMessage(msgItem)
-	}
-
-	ret = curFlow
-	return
-}
-
-func (s *Station) GetFlows() []*models.Flow {
-	return s.localFlowManger.GetLocalFlows()
+func (s *Station) GetFlows() *models.Flow {
+	return s.localFlowManger.GetStageRoot(s.currentWorkspace.GetStage())
 }
 
 func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
@@ -680,16 +662,7 @@ func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
 		return
 	}
 
-	var debugFlow *models.Flow
-	flowIDVal := ctx.Value(common.FlowID{})
-	if flowIDVal != nil {
-		debugFlow = s.localFlowManger.GetFlow(flowIDVal.(string))
-	} else {
-		debugFlow = s.localFlowManger.GetCurrentFlow()
-	}
-	if debugFlow == nil {
-		debugFlow = s.localFlowManger.NewFlow("debug", nil)
-	}
+	debugFlow := s.localFlowManger.GetCurrentFlow()
 
 	systemPromptFile := fileList[0]
 	systemByte, systemErr := os.ReadFile(systemPromptFile)

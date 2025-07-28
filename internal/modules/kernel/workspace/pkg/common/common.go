@@ -28,7 +28,7 @@ const (
 	EnableWorkspace                   = "/workspace/enable"
 	DisableWorkspace                  = "/workspace/disable"
 	OpenWorkspaceExplorer             = "/workspace/explorer/open"
-	UpdateWorkspaceExplorerStage      = "/workspace/explorer/stage/update"
+	SwitchWorkspaceExplorerStage      = "/workspace/explorer/stage/switch"
 	FilterWorkspaceExplorerFile       = "/workspace/explorer/file/filter"
 	FilterWorkspaceExplorerFileTree   = "/workspace/explorer/file/tree/filter"
 	QueryWorkspaceExplorerFileContent = "/workspace/explorer/file/content/query"
@@ -181,7 +181,7 @@ type ChatHistoryResult struct {
 
 type FilterFlowResult struct {
 	cd.Result
-	Values []*models.Flow `json:"values"`
+	Value *models.Flow `json:"value"`
 }
 
 type DebugWorkspaceResult struct {

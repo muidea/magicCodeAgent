@@ -6,12 +6,6 @@ import (
 	"strconv"
 )
 
-type FlowID struct{}
-
-func (s *FlowID) String() string {
-	return "FlowID"
-}
-
 type ContentSink struct{}
 
 func (s *ContentSink) String() string {

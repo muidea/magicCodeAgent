@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -8,8 +9,9 @@ import (
 )
 
 const (
-	FLOW_STATUS_WAIT = iota
-	FLOW_STATUS_FINISH
+	StatusInit = iota
+	StatusDoing
+	StatusDone
 )
 
 const (
@@ -24,6 +26,18 @@ const (
 	LevelEqual   = 0
 	LevelLess    = -1
 )
+
+var designStatus = map[int]string{
+	0: "未设计",
+	1: "正在设计",
+	2: "已完成",
+}
+
+var codeStatus = map[int]string{
+	0: "未开发",
+	1: "正在开发",
+	2: "已完成",
+}
 
 // 比较l1, l3的层级关系
 // 如果l1 > l2, 返回1，表示l1比l2高一个层级
@@ -67,20 +81,59 @@ func GetChildLevel(level string) string {
 type Flow struct {
 	Id        string           `json:"id"`
 	Name      string           `json:"name"`
-	Message   []*MessageItem   `json:"-"`
+	Level     string           `json:"level"`
+	Stage     string           `json:"stage"`
 	Status    int              `json:"status"`
+	Path      string           `json:"path"`
+	Message   []*MessageItem   `json:"-"`
 	AddFiles  fu.StringSortSet `json:"addFiles,omitempty"`
 	ModFiles  fu.StringSortSet `json:"modFiles,omitempty"`
 	DelFiles  fu.StringSortSet `json:"delFiles,omitempty"`
 	Parent    *Flow            `json:"-"`
 	Childrens []*Flow          `json:"childrens"`
-	Level     string           `json:"level"`
+}
+
+func (s *Flow) GetName() string {
+	return s.Name
+}
+
+func (s *Flow) GetLevel() string {
+	return s.Level
+}
+
+func (s *Flow) GetStage() string {
+	return s.Stage
+}
+
+func (s *Flow) GetPath() string {
+	return s.Path
+}
+
+func (s *Flow) GetStatus() string {
+	getStatusStr := func() string {
+		switch s.Stage {
+		case DesignStage:
+			return designStatus[s.Status]
+		default:
+			return codeStatus[s.Status]
+		}
+	}
+	switch s.Level {
+	case ProjectLevel:
+		return fmt.Sprintf("%s, 层级：项目（`%s`), 状态：%s", s.Name, s.Level, getStatusStr())
+	case ModuleLevel:
+		return fmt.Sprintf("%s, 层级：业务模块(`%s`), 状态：%s", s.Name, s.Level, getStatusStr())
+	case BlockLevel:
+		return fmt.Sprintf("%s, 层级：功能模块(`%s`), 状态：%s", s.Name, s.Level, getStatusStr())
+	default:
+		return ""
+	}
 }
 
 func (s *Flow) String() string {
 	if s.Parent == nil {
 		var stringBuff strings.Builder
-		stringBuff.WriteString(fmt.Sprintf("Flow %s, name:%s, level:%s, status:%d, parent is null", s.Id, s.Name, s.Level, s.Status))
+		stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, status:%d, parent is null", s.Id, s.Name, s.Level, s.Status))
 		for _, val := range s.Childrens {
 			stringBuff.WriteString(fmt.Sprintf("\n - children:%s, name:%s, level:%s, status:%d, parent:%s", val.Id, val.Name, val.Level, val.Status, val.Parent.Id))
 		}
@@ -89,7 +142,7 @@ func (s *Flow) String() string {
 	}
 
 	var stringBuff strings.Builder
-	stringBuff.WriteString(fmt.Sprintf("Flow %s, name:%s, level:%s, status:%d, parent is %s", s.Id, s.Name, s.Level, s.Status, s.Parent.Id))
+	stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, status:%d, parent is %s", s.Id, s.Name, s.Level, s.Status, s.Parent.Id))
 	for _, val := range s.Childrens {
 		stringBuff.WriteString(fmt.Sprintf("\n - children:%s, name:%s, level:%s, status:%d, parent:%s", val.Id, val.Name, val.Level, val.Status, val.Parent.Id))
 	}
@@ -112,24 +165,28 @@ func (s *Flow) GetParent() *Flow {
 }
 
 func (s *Flow) IsFinish() bool {
-	return s.Status == FLOW_STATUS_FINISH
+	return s.Status == StatusDone
+}
+
+func (s *Flow) IsLeaf() bool {
+	return s.Level == BlockLevel
 }
 
 func (s *Flow) CanFinish() (ret bool) {
 	defer func() {
 		if ret {
-			s.Status = FLOW_STATUS_FINISH
+			s.Status = StatusDone
 		}
 	}()
 
-	if /*s.isIdle() ||*/ s.IsFinish() {
+	if s.IsFinish() {
 		ret = true
 		return
 	}
 
-	// 如果Flow没有子节点，并且是最终level，直接认为是可以结束的
+	// 如果Flow没有子节点，并且是最终level，并且已开发，直接认为是可以结束的
 	if len(s.Childrens) == 0 {
-		ret = s.Level == BlockLevel
+		ret = s.IsLeaf() && s.Status != StatusInit
 		return
 	}
 
@@ -184,21 +241,13 @@ func (s *Flow) DelFile(filePath string) {
 	s.AddFiles = s.AddFiles.Remove(filePath)
 }
 
-func (s *Flow) GetLevel() string {
-	return s.Level
-}
-
-func (s *Flow) GetName() string {
-	return s.Name
-}
-
 func (s *Flow) GetLatestUnFinishFlow() *Flow {
-	if s.IsFinish() || s.CanFinish() {
+	if s.CanFinish() {
 		return nil
 	}
 
 	for _, child := range s.Childrens {
-		if child.IsFinish() || child.CanFinish() {
+		if child.CanFinish() {
 			continue
 		}
 
@@ -208,4 +257,33 @@ func (s *Flow) GetLatestUnFinishFlow() *Flow {
 	}
 
 	return s
+}
+
+// 打印 Flow 树结构
+func DumpFlowStatusTree(root *Flow, buf *bytes.Buffer) {
+	// 打印 root 本身，不加前缀
+	buf.WriteString(fmt.Sprintf("%s\n", root.GetStatus()))
+
+	// 打印子节点
+	for i, child := range root.Childrens {
+		isLast := i == len(root.Childrens)-1
+		dumpFlowStatus(child, buf, "", isLast)
+	}
+
+	buf.WriteString("\n")
+}
+
+func dumpFlowStatus(node *Flow, buf *bytes.Buffer, prefix string, isLast bool) {
+	connector := "├── "
+	childPrefix := prefix + "│   "
+	if isLast {
+		connector = "└── "
+		childPrefix = prefix + "    "
+	}
+	buf.WriteString(fmt.Sprintf("%s%s%s\n", prefix, connector, node.GetStatus()))
+
+	for i, child := range node.Childrens {
+		isLastChild := i == len(node.Childrens)-1
+		dumpFlowStatus(child, buf, childPrefix, isLastChild)
+	}
 }
