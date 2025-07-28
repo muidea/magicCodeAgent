@@ -114,7 +114,7 @@ func (s *DecomposeCodePlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolR
 	return
 }
 
-func (s *DecomposeCodePlanTool) getChildFiles(workspaceDir, stage, pathVal string) (childsFiles string, err error) {
+func (s *DecomposeCodePlanTool) getChildFiles(workspaceDir, stage, pathVal string) (ret string, err error) {
 	rootPath := filepath.Join(workspaceDir, stage)
 	finalParentFile := filepath.Join(rootPath, pathVal)
 	if !fp.Exist(finalParentFile) {
@@ -153,7 +153,6 @@ func (s *DecomposeCodePlanTool) getChildFiles(workspaceDir, stage, pathVal strin
 	for _, item := range childList {
 		childBuffer.WriteString("- " + item + "\n")
 	}
-	childsFiles = childBuffer.String()
-	log.Infof("child:\n%s\n", childsFiles)
+	ret = childBuffer.String()
 	return
 }

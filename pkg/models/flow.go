@@ -134,18 +134,11 @@ func (s *Flow) String() string {
 	if s.Parent == nil {
 		var stringBuff strings.Builder
 		stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, status:%d, parent is null", s.Id, s.Name, s.Level, s.Status))
-		for _, val := range s.Childrens {
-			stringBuff.WriteString(fmt.Sprintf("\n - children:%s, name:%s, level:%s, status:%d, parent:%s", val.Id, val.Name, val.Level, val.Status, val.Parent.Id))
-		}
-
 		return stringBuff.String()
 	}
 
 	var stringBuff strings.Builder
 	stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, status:%d, parent is %s", s.Id, s.Name, s.Level, s.Status, s.Parent.Id))
-	for _, val := range s.Childrens {
-		stringBuff.WriteString(fmt.Sprintf("\n - children:%s, name:%s, level:%s, status:%d, parent:%s", val.Id, val.Name, val.Level, val.Status, val.Parent.Id))
-	}
 	return stringBuff.String()
 }
 

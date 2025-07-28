@@ -607,18 +607,18 @@ func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam) (ret 
 	log.Infof("try to finish flow %v", curFlow)
 	flowPtr := s.localFlowManger.FinishFlow(curFlow)
 	if flowPtr != nil {
-		// 到这里说明需要继续处理下一级工作项
 		param := map[string]string{
 			"Name": flowPtr.GetName(),
 		}
-		subLevelCheckPromptVal, subLevelCheckPromptErr := iipc.ReadInnerSystemPromptsWithParam(fmt.Sprintf("sublevel-%s-check", s.currentWorkspace.GetStage()), param)
-		if subLevelCheckPromptErr != nil {
-			log.Errorf("read sublevel-check prompt failed, err:%s", subLevelCheckPromptErr)
+		promptName := fmt.Sprintf("check-%s-%s", s.currentWorkspace.GetStage(), flowPtr.GetLevel())
+		checkPromptVal, checkPromptErr := s.localPromptReader.ReadPrompt(&s.currentWorkspace, promptName, param)
+		if checkPromptErr != nil {
+			log.Errorf("read prompt:%s failed, err:%s", promptName, checkPromptErr)
 			return
 		}
 		flowPtr.AppendMessage(&models.MessageItem{
 			Role:    common.User,
-			Content: []string{subLevelCheckPromptVal},
+			Content: []string{checkPromptVal},
 		})
 	}
 
