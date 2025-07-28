@@ -241,8 +241,6 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 		ret = s.currentFlowPtr
 	}()
 
-	flowPtr.Status = models.StatusDone
-
 	// 1. 检查当前flowPtr是否分解完成，如果没有分解完成，则要继续分解
 	if !flowPtr.CanFinish() {
 		s.currentFlowPtr = flowPtr
