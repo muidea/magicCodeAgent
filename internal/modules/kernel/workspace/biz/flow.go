@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -159,6 +160,26 @@ func (s *FlowManager) GetStageRoot(stage string) (ret *models.Flow) {
 }
 
 func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.Flow, err error) {
+	defer func() {
+		// 这里对ret进行校验，避免出现越级的情况，以防止模型跑偏
+		if ret == nil {
+			return
+		}
+		parentPtr := ret.GetParent()
+		if parentPtr == nil {
+			return
+		}
+
+		if parentPtr.Status == models.StatusInit {
+			switch stage {
+			case models.DesignStage:
+				err = errors.New("出现越级设计，需要重新调整")
+			case models.CodeStage:
+				err = errors.New("出现越级开发，需要重新调整")
+			}
+		}
+	}()
+
 	path = cleanPath(path)
 	parentPath := getParentPath(path)
 	var currentPtr *models.Flow
