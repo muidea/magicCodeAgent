@@ -133,12 +133,12 @@ func (s *Flow) GetStatus() string {
 func (s *Flow) String() string {
 	if s.Parent == nil {
 		var stringBuff strings.Builder
-		stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, status:%d, parent is null", s.Id, s.Name, s.Level, s.Status))
+		stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, path:%s, status:%d, parent is null", s.Id, s.Name, s.Level, s.Path, s.Status))
 		return stringBuff.String()
 	}
 
 	var stringBuff strings.Builder
-	stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, status:%d, parent is %s", s.Id, s.Name, s.Level, s.Status, s.Parent.Id))
+	stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, path:%s, status:%d, parent is %s", s.Id, s.Name, s.Level, s.Path, s.Status, s.Parent.Id))
 	return stringBuff.String()
 }
 

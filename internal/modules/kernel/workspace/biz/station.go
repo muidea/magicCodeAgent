@@ -633,7 +633,11 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam) (
 	log.Infof("try to switch flow %v", curFlow)
 	level := param["level"].(string)
 	name := param["name"].(string)
-	path := param["path"].(string)
+	var path string
+	pathVal, pathOK := param["path"]
+	if pathOK {
+		path = pathVal.(string)
+	}
 	ret, err = s.localFlowManger.SwitchFlow(name, level, path, s.currentWorkspace.GetStage())
 	return
 }

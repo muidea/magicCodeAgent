@@ -71,7 +71,7 @@ func NewFlowManager(rootName string) *FlowManager {
 		Level:   models.RootLevel,
 		Stage:   "",
 		Status:  models.StatusDoing,
-		Path:    "",
+		Path:    "*",
 		Message: make([]*models.MessageItem, 0),
 	})
 	ptr.currentFlowPtr = ptr.localFlows[0]
@@ -145,7 +145,7 @@ func (s *FlowManager) Reset() {
 }
 
 func (s *FlowManager) getID(parentPtr *models.Flow) string {
-	return fmt.Sprintf("%s_%03d", parentPtr.Id, len(parentPtr.Childrens))
+	return fmt.Sprintf("%s_%d", parentPtr.Id, len(parentPtr.Childrens))
 }
 
 func (s *FlowManager) GetStageRoot(stage string) (ret *models.Flow) {
@@ -182,11 +182,16 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 
 	path = cleanPath(path)
 	parentPath := getParentPath(path)
+	if level == models.ProjectLevel {
+		parentPath = "*"
+	}
+	log.Infof("name:%s, level:%s, path:%s, parentPath:%s, stage:%s", name, level, path, parentPath, stage)
 	var currentPtr *models.Flow
 	var parentPtr *models.Flow
 	idx := 0
 	for {
 		flow := s.localFlows[idx]
+		log.Infof("%s", flow)
 		if flow.GetName() == name && flow.GetPath() == path && flow.GetStage() == stage {
 			currentPtr = flow
 			break
@@ -235,6 +240,7 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 			Parent:  parentPtr,
 		}
 		parentPtr.Childrens = append(parentPtr.Childrens, flowPtr)
+		s.localFlows = append(s.localFlows, flowPtr)
 	}
 	flowPtr.Status = models.StatusDoing
 
