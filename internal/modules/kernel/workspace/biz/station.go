@@ -152,7 +152,7 @@ func (s *Station) getStageFlowStatus() string {
 		return ""
 	}
 	stringBuilder := bytes.NewBufferString("")
-	stringBuilder.WriteString("4. 当前开发进展：\n")
+	stringBuilder.WriteString("4. 所有层级状态：\n")
 	models.DumpFlowStatusTree(rootFlow, stringBuilder)
 	return stringBuilder.String()
 }
