@@ -181,6 +181,10 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 	}()
 
 	path = cleanPath(path)
+	// 只有DesignStage才需要添加名称，这是因为设计阶段path是输出对象不是参照对象
+	if stage == models.DesignStage {
+		path = filepath.Join(path, name)
+	}
 	parentPath := getParentPath(path)
 	if level == models.ProjectLevel {
 		parentPath = "*"
