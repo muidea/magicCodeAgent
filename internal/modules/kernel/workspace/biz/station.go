@@ -109,6 +109,7 @@ func (s *Station) Refesh(workspacePtr *models.Workspace) {
 		return true
 	})
 
+	s.localFlowManger.Reset()
 	s.localFlowManger.InitFlow(fileList, s.currentWorkspace.GetStage())
 }
 
