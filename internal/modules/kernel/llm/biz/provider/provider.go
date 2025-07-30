@@ -183,6 +183,8 @@ func (s *Provider) OnRecv(event, content string, usagePtr *imklc.Usage) {
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
 		Workspace:  s.workspaceName,
 	}
+
+	log.Infof("OnRecv, event:%s, dataSize:%d", event, len(content))
 	if s.messageSink != nil {
 		s.messageSink.OnRecvMessage(recvMsg, usagePtr)
 	}

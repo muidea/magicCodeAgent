@@ -68,6 +68,7 @@ func (s *Workspace) submitChatWorkspaceContentMessage(ctx context.Context, res h
 	}
 	err = holder.Run(taskFunc)
 	if err != nil {
+		log.Errorf("run task error: %s", err.Error())
 		result.Error = cd.NewError(cd.Unexpected, err.Error())
 		return
 	}

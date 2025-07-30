@@ -23,9 +23,9 @@
 
 **参数说明：**
 
-- `level` 为 `project` 时，`name` 当前项目名, `description` 为项目功能描述。
-- `level` 为 `module` 时，`name` 当前业务模块名, `description` 为业务模块功能描述。
-- `level` 为 `block` 时，`name` 当前业务模块名, `description` 为业务模块功能描述。
+- `level` 为 `project` 时，`name` 待开发项目名, `description` 为项目功能描述。
+- `level` 为 `module` 时，`name` 待开发业务模块名, `description` 为业务模块功能描述。
+- `level` 为 `block` 时，`name` 待开发业务模块名, `description` 为业务模块功能描述。
 
 - `level` 为 `project` 时，`path`值为`./{项目名}-项目功能.md`
 - `level` 为 `module` 时，`path`值为`./{项目名}/{业务模块名}-业务模块.md`
@@ -37,9 +37,9 @@
 
 ```xml
 <decompose_code_plan>
-    <name>产品编辑</name>
+    <name>ProductEdit</name>
     <level>block</level>
-    <path>./demo/Product/product_edit-功能模块.md</path>
+    <path>./demo/Product/ProductEdit-功能模块.md</path>
     <description>提供产品信息修改功能，包括基本信息、分类和图片的更新</description>
 </decompose_code_plan>
 ```
@@ -48,9 +48,9 @@
 
 ```xml
 <decompose_code_plan>
-    <name>产品展示系统</name>
+    <name>demoProject</name>
     <level>project</level>
-    <path>./product-项目功能.md</path>
+    <path>./demoProject-项目功能.md</path>
     <description>产品展示系统，主要实现产品信息、分类信息和图片的管理功能，支持用户对产品的登记和发布操作</description>
 </decompose_code_plan>
 ```

@@ -24,9 +24,9 @@
 
 **参数说明：**
 
-- `level` 为 `project` 时，`name` 当前项目英文名。
-- `level` 为 `module` 时，`name` 当前业务模块英文名。
-- `level` 为 `block` 时，`name` 当前功能模块英文名。
+- `level` 为 `project` 时，`name` 待设计项目英文名。
+- `level` 为 `module` 时，`name` 待设计业务模块英文名。
+- `level` 为 `block` 时，`name` 待设计功能模块英文名。
 
 - `level` 为 `project` 时，`description` 表示当前项目的需求描述。  
 - `level` 为 `module` 时，`description` 表示业务模块的功能描述。  
@@ -45,7 +45,7 @@
 <decompose_design_plan>
     <name>ProductCreate</name>
     <level>block</level>
-    <path>./demo/product-业务模块.md</path>
+    <path>./demo/Product-业务模块.md</path>
     <description>提供产品信息新增功能</description>
 </decompose_design_plan>
 ```

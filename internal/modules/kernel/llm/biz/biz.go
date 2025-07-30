@@ -121,6 +121,7 @@ func (s *LLM) chatCompletion(ev event.Event, re event.Result) {
 	err := s.ChatCompletionStream(workspaceVal, contextVal, requestVal)
 	if re != nil {
 		if err != nil {
+			log.Errorf("chat completion stream failed, err:%v", err)
 			re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
 			return
 		}
