@@ -122,26 +122,24 @@ func (s *Station) getWorkspaceProjectStruct() (string, error) {
 }
 
 func (s *Station) getWorkspaceStatus(ptr *models.Flow) (string, error) {
-	var levelInfo strings.Builder
+	var levelStatus strings.Builder
+	levelStatus.WriteString(fmt.Sprintf("* 当前阶段：`%s`\n", ptr.GetStage()))
 	switch ptr.GetLevel() {
 	case models.ProjectLevel:
-		levelInfo.WriteString(fmt.Sprintf("项目(`%s`)，项目名-%s", ptr.GetLevel(), ptr.GetName()))
+		levelStatus.WriteString(fmt.Sprintf("* 当前层级：项目（`%s`）\n", ptr.GetLevel()))
+		levelStatus.WriteString(fmt.Sprintf("* 项目名：%s\n", ptr.GetName()))
 	case models.ModuleLevel:
-		levelInfo.WriteString(fmt.Sprintf("业务模块(`%s`)，业务模块名-%s", ptr.GetLevel(), ptr.GetName()))
-		if parent := ptr.GetParent(); parent != nil {
-			levelInfo.WriteString(fmt.Sprintf(", 所属项目-%s", parent.GetName()))
-		}
+		levelStatus.WriteString(fmt.Sprintf("* 当前层级：业务模块（`%s`）\n", ptr.GetLevel()))
+		levelStatus.WriteString(fmt.Sprintf("* 当前模块：`%s`，所属项目：`%s`\n", ptr.GetName(), ptr.GetParent().GetName()))
 	case models.BlockLevel:
-		levelInfo.WriteString(fmt.Sprintf("功能模块(`%s`)，功能模块名-%s", ptr.GetLevel(), ptr.GetName()))
-		if parent := ptr.GetParent(); parent != nil {
-			levelInfo.WriteString(fmt.Sprintf(", 所属业务模块-%s", parent.GetName()))
-		}
+		levelStatus.WriteString(fmt.Sprintf("* 当前层级：功能模块（`%s`）\n", ptr.GetLevel()))
+		levelStatus.WriteString(fmt.Sprintf("* 当前模块：`%s`，所属业务模块：`%s`\n", ptr.GetName(), ptr.GetParent().GetName()))
 	}
 
 	flowStatus := s.getStageFlowStatus()
 	param := map[string]string{
-		"LevelInfo":  levelInfo.String(),
-		"FlowStatus": flowStatus,
+		"LevelStatus": levelStatus.String(),
+		"FlowStatus":  flowStatus,
 	}
 	return s.localPromptReader.ReadPrompt(&s.currentWorkspace, fmt.Sprintf("stage-%s-status", s.currentWorkspace.GetStage()), param)
 }
