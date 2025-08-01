@@ -34,7 +34,7 @@ const (
 	Finished  = "finished"
 )
 
-const maxLoopCount = 50
+const maxLoopCount = 10
 
 type Observer interface {
 	ID() string
@@ -48,9 +48,9 @@ type Station struct {
 
 	chatRunningStatus string
 
-	chatMaxLoopCount int64
-	chatLoopCount    int64
-	chatUsagePtr     *imklc.Usage
+	chatMaxLoopCount     int64
+	chatCurrentLoopCount int64
+	chatUsagePtr         *imklc.Usage
 
 	stationMutex sync.RWMutex
 	observerList []Observer
@@ -75,7 +75,7 @@ func NewStation(
 		bizBasePtr:           bizBasePtr,
 		currentWorkspace:     *workspacePtr,
 		chatRunningStatus:    Idle,
-		chatLoopCount:        0,
+		chatCurrentLoopCount: 0,
 		chatUsagePtr:         &imklc.Usage{},
 		localMessageCache:    cache.NewMessageSequenceCache(500),
 		localWorker:          worker,
@@ -412,7 +412,7 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 
 	s.chatMaxLoopCount = maxLoopCount
 	s.chatRunningStatus = Chatting
-	s.chatLoopCount = 0
+	s.chatCurrentLoopCount = 0
 
 	s.DisposeMessage(itemPtr)
 
@@ -431,7 +431,13 @@ func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flo
 		return
 	}
 
-	s.chatLoopCount++
+	s.chatCurrentLoopCount++
+	currentChatLoopCount := s.chatCurrentLoopCount
+	log.Infof("internalChat, chatting start...., loopCount:%d", currentChatLoopCount)
+	preTime := time.Now()
+	defer func() {
+		log.Infof("internalChat, chatting finish...., loopCount:%d, cost:%v", currentChatLoopCount, time.Since(preTime))
+	}()
 
 	sysPrompt := s.systemPrompt()
 	envPrompt, envErr := s.envPrompt(chatFlow)
@@ -493,18 +499,47 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	s.chatUsagePtr.Update(usagePtr)
 
 	s.bizBasePtr.AsyncTask(func() {
-		s.DisposeContent(content)
+		nextFlow := s.DisposeContent(content)
+		if nextFlow != nil {
+			err := s.internalChat(context.Background(), nextFlow)
+			if err != nil {
+				notifyMsg := &models.MessageItem{
+					Role: common.Notifier,
+					Content: []string{
+						formatUsage(s.chatUsagePtr, s.chatCurrentLoopCount),
+						"",
+					},
+				}
+				s.DisposeMessage(notifyMsg)
+				log.Errorf("internalChat error: %v", err)
+				return
+			}
+		}
 	})
 }
 
-func (s *Station) DisposeContent(content string) {
+func (s *Station) internalDoWork(workspaceConfig *models.Workspace, curChatLoopCount int64, content string) (param imbtc.ToolParam, result *imbtc.ToolResult, err *cd.Error) {
+	preTime := time.Now()
+	var toolName string
+	log.Infof("internalDoWork, doWork start..., loopCount:%d", curChatLoopCount)
+	defer func() {
+		log.Infof("internalDoWork, doWork finish..., loopCount:%d, toolName:%s, cost:%v, error:%+v", curChatLoopCount, toolName, time.Since(preTime), err)
+	}()
+	param, result, err = s.localWorker.DoWork(workspaceConfig, content)
+	if result != nil {
+		toolName = result.Name
+	}
+	return
+}
+
+func (s *Station) DisposeContent(content string) (ret *models.Flow) {
 	curTime := time.Now()
 	var finalStatus = s.chatRunningStatus
-	var chatLoopCount = s.chatLoopCount
+	var chatLoopCount = s.chatCurrentLoopCount
 	var notifyMsg = "会话被中断！"
-	log.Infof("DisposeContent, workspace:%s, chatLoopCount:%d", s.currentWorkspace.Name, chatLoopCount)
+	log.Infof("DisposeContent being, workspace:%s, loopCount:%d", s.currentWorkspace.Name, chatLoopCount)
 	defer func() {
-		log.Infof("DisposeContent done, workspace:%s, chatLoopCount:%d, finalStatus:%s, elapseTime:%v", s.currentWorkspace.Name, chatLoopCount, finalStatus, time.Since(curTime))
+		log.Infof("DisposeContent done, workspace:%s, loopCount:%d, finalStatus:%s, elapseTime:%v", s.currentWorkspace.Name, chatLoopCount, finalStatus, time.Since(curTime))
 		if finalStatus != Chatting {
 			// 发送本次消耗的Token数据
 			notifyMsg := &models.MessageItem{
@@ -537,11 +572,11 @@ func (s *Station) DisposeContent(content string) {
 
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	for _, block := range blockList {
-		workParam, workResult, workErr := s.localWorker.DoWork(&s.currentWorkspace, block)
+		workParam, workResult, workErr := s.internalDoWork(&s.currentWorkspace, chatLoopCount, block)
 		if workErr != nil {
 			finalStatus = Terminate
 			notifyMsg = fmt.Sprintf("执行出错, Tool执行出错:%v", workErr.Error())
-			log.Errorf("DisposeContent, s.localWorker.DoWork err:%v", workErr)
+			log.Errorf("DisposeContent, s.internalDoWork err:%v", workErr)
 			return
 		}
 
@@ -575,20 +610,10 @@ func (s *Station) DisposeContent(content string) {
 		s.DisposeMessage(msgItem)
 	}
 
-	if chatLoopCount > s.chatMaxLoopCount {
+	if chatLoopCount >= s.chatMaxLoopCount {
 		finalStatus = Paused
 		notifyMsg = "循环次数超过最大限制，自动结束\n 如果要继续执行，可以输入'继续执行'"
 		return
-	}
-
-	if curFlow != nil {
-		err := s.internalChat(context.Background(), curFlow)
-		if err != nil {
-			finalStatus = Terminate
-			notifyMsg = fmt.Sprintf("执行出错, 调用大模型出错:%v", err.Error())
-			log.Errorf("DisposeContent, internalChat error: %v", err)
-			return
-		}
 	}
 
 	// 如果所有的Flow都执行完毕，则将状态置为Finish
@@ -597,6 +622,9 @@ func (s *Station) DisposeContent(content string) {
 		finalStatus = Finished
 		notifyMsg = "执行完毕"
 	}
+
+	ret = curFlow
+	return
 }
 
 func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam) (ret *models.Flow) {
@@ -699,7 +727,7 @@ func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
 	s.chatMaxLoopCount = 2
 	s.chatRunningStatus = Chatting
 
-	s.chatLoopCount++
+	s.chatCurrentLoopCount++
 	systemPrompt := string(systemByte)
 	envPrompt := string(envByte)
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)

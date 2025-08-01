@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/sashabaranov/go-openai"
 
@@ -94,6 +95,11 @@ func (s *LLM) constructRequest(
 }
 
 func (s *LLM) chatCompletion(ev event.Event, re event.Result) {
+	preTime := time.Now()
+	defer func() {
+		log.Infof("chat completion, workspace:%s, elapse:%v", ev.GetData("workspace"), time.Since(preTime))
+	}()
+
 	messageListVal, messageListOK := ev.Data().(models.MessageItemList)
 	if !messageListOK {
 		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid message list"))

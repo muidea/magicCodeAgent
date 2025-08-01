@@ -89,6 +89,11 @@ func (s *StreamTunnel) OnRecv(event string, data []byte) {
 }
 
 func (s *StreamTunnel) Run(value any) (err error) {
+	preTime := time.Now()
+	dataSize := 0
+	defer func() {
+		log.Infof("sse stream tunnel run done, dataSize:%d, elapse:%v, error:%v", dataSize, time.Since(preTime), err)
+	}()
 	if value == nil {
 		err = s.sseClient.Get(s.context, s.header, s)
 		return
@@ -101,6 +106,7 @@ func (s *StreamTunnel) Run(value any) (err error) {
 		return
 	}
 
+	dataSize = len(byteVal)
 	err = s.sseClient.Post(s.context, byteVal, s.header, s)
 	if err != nil {
 		log.Errorf("Run failed, data:[%s], error:%v", string(byteVal), err)

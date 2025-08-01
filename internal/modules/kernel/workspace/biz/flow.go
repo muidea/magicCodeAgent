@@ -189,13 +189,17 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 	if level == models.ProjectLevel {
 		parentPath = "*"
 	}
+	/*
+		try to switch flow id:0_0, name:demoProduct, level:project, path:demoProduct, status:1, parent is 0
+		name:Category, level:module, path:demoProduct/Category, parentPath:demoProduct, stage:code
+	*/
 	log.Infof("name:%s, level:%s, path:%s, parentPath:%s, stage:%s", name, level, path, parentPath, stage)
 	var currentPtr *models.Flow
 	var parentPtr *models.Flow
 	idx := 0
 	for {
 		flow := s.localFlows[idx]
-		log.Infof("%s", flow)
+		log.Infof("%v", flow)
 		if flow.GetName() == name && flow.GetPath() == path && flow.GetStage() == stage {
 			currentPtr = flow
 			break

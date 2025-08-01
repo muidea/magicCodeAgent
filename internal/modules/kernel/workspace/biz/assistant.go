@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"time"
 
 	imklc "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
@@ -30,8 +31,6 @@ func (s *Workspace) Chat(
 		Content: []string{systemPrompt},
 	}
 
-	log.Warnf("flowPathList size:%d", len(flowPathList))
-
 	const maxCount = 30
 	userMessageList := models.MessageItemList{}
 	for _, curPtr := range flowPathList {
@@ -48,11 +47,13 @@ func (s *Workspace) Chat(
 		Role:    common.User,
 		Content: []string{workspaceEnvPrompt},
 	})
+	preTime := time.Now()
 	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, userMessageList)
 	ev.SetData("context", chatContext)
 	ev.SetData("workspace", workspaceConfig.Name)
 	ev.SetData("systemMessage", systemMessage)
 	result := s.SendEvent(ev)
 	err = result.Error()
+	log.Infof("chat llm elapse time:%v", time.Since(preTime))
 	return
 }
