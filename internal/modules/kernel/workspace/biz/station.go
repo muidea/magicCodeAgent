@@ -407,16 +407,31 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 		s.localFlowManger.Reset()
 	}
 
-	curFlow := s.localFlowManger.GetCurrentFlow()
-	curFlow.AppendMessage(itemPtr)
+	s.bizBasePtr.AsyncTask(func() {
+		curFlow := s.localFlowManger.GetCurrentFlow()
+		curFlow.AppendMessage(itemPtr)
 
-	s.chatMaxLoopCount = maxLoopCount
-	s.chatRunningStatus = Chatting
-	s.chatCurrentLoopCount = 0
+		s.chatMaxLoopCount = maxLoopCount
+		s.chatRunningStatus = Chatting
+		s.chatCurrentLoopCount = 0
 
-	s.DisposeMessage(itemPtr)
+		s.DisposeMessage(itemPtr)
 
-	err = s.internalChat(chatContext, curFlow)
+		err := s.internalChat(context.Background(), curFlow)
+		if err != nil {
+			notifyMsg := &models.MessageItem{
+				Role: common.Notifier,
+				Content: []string{
+					formatUsage(s.chatUsagePtr, s.chatCurrentLoopCount),
+					"",
+				},
+			}
+			s.DisposeMessage(notifyMsg)
+			log.Errorf("internalChat error: %v", err)
+			return
+		}
+	})
+
 	return
 }
 
