@@ -53,11 +53,13 @@ func (s *Project) verifyWorkingPath(workingPath string) *cd.Error {
 		return cd.NewError(cd.IllegalParam, vErr.Error())
 	}
 
-	normalizedPath := filepath.Clean(workingPath)
-	codeRootPath := normalizedPath
-	if isEmpty, isErr := fp.IsDirEmpty(codeRootPath); isErr != nil || !isEmpty {
-		return cd.NewError(cd.IllegalParam, "working path must be empty directory")
-	}
+	/*
+		normalizedPath := filepath.Clean(workingPath)
+		codeRootPath := normalizedPath
+		if isEmpty, isErr := fp.IsDirEmpty(codeRootPath); isErr != nil || !isEmpty {
+			return cd.NewError(cd.IllegalParam, "working path must be empty directory")
+		}
+	*/
 	return nil
 }
 

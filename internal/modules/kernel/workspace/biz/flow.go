@@ -222,7 +222,7 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 	if parentPtr == nil {
 		// 至少要找到Root节点
 		log.Errorf("path与level不匹配，需要核对输入参数")
-		err = fmt.Errorf("path与level不匹配，需要核对输入参数")
+		err = fmt.Errorf("path与level不匹配，需要核对name，level和path参数")
 		return
 	}
 
