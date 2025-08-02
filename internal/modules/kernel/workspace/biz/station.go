@@ -34,7 +34,7 @@ const (
 	Finished  = "finished"
 )
 
-const maxLoopCount = 10
+const maxLoopCount = 200
 
 type Observer interface {
 	ID() string
