@@ -28,3 +28,4 @@
 - MCP operations should be used one at a time, similar to other tool usage. Wait for confirmation of success before proceeding with additional operations.
 - It is critical you wait for the user's response after each tool use, in order to confirm the success of the tool use. For example, if asked to make a todo app, you would create a file, wait for the user's response it was created successfully, then create another file if needed, wait for the user's response it was created successfully, etc.
 - 在任何工作模式下，请以当前工作目录为根目录，开展工作。
+- 严禁使用未定义的tools工具。

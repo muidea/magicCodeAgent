@@ -100,6 +100,10 @@ func (s *ToolRegistry) loadInnerTools(templatePtr *models.Template) {
 		workspacePtr: s.currentWorkspace,
 		templatePtr:  templatePtr,
 	})
+	s.Register(&DecomposeDebugPlanTool{
+		workspacePtr: s.currentWorkspace,
+		templatePtr:  templatePtr,
+	})
 }
 
 func (s *ToolRegistry) loadWorkspaceTools(templatePtr *models.Template) {
