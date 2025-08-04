@@ -1,13 +1,13 @@
-### decompose_design_plan
+### decompose_design_task
 
 **描述：**  
 
-在功能设计阶段，基于根据当前的设计要求，制定功能的设计目标和要求。
+在功能设计阶段，基于根据当前的设计要求，制定当前阶段代码设计任务。
 
 **注意：**  
 
-- `decompose_design_plan`不允许批量执行，只能单次执行。
-- 任何时候开始设计，都必须先使用`decompose_design_plan`来制定功能设计目标。
+- `decompose_design_task`不允许批量执行，只能单次执行。
+- 任何时候开始设计，都必须先使用`decompose_design_task`来制定功能设计任务。
 
 **功能层级 (level) 定义：**  
 
@@ -36,16 +36,17 @@
 - `level` 为 `module` 时，`path`值为`./{项目名}-项目功能.md`
 - `level` 为 `block` 时，`path`值为`./{项目名}/{业务模块名}-业务模块.md`
 
-**强调：name必须使用待设计功能的英文名**
-
+>强调：name必须使用待设计功能的英文名**
 
 **用法示例：**  
 
+1. 制定产品信息新增设计任务
+
 ```xml
-<decompose_design_plan>
+<decompose_design_task>
     <name>ProductCreate</name>
     <level>block</level>
     <path>./demo/Product-业务模块.md</path>
     <description>提供产品信息新增功能</description>
-</decompose_design_plan>
+</decompose_design_task>
 ```

@@ -3,6 +3,7 @@ package biz
 import (
 	"fmt"
 	"html/template"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -17,16 +18,16 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type DecomposeDebugPlanTool struct {
+type DecomposeDesignTaskTool struct {
 	workspacePtr *models.Workspace
 	templatePtr  *models.Template
 }
 
-func (s *DecomposeDebugPlanTool) Name() string {
-	return "decompose_debug_plan"
+func (s *DecomposeDesignTaskTool) Name() string {
+	return "decompose_design_task"
 }
 
-func (s *DecomposeDebugPlanTool) Prompt() string {
+func (s *DecomposeDesignTaskTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
@@ -36,9 +37,9 @@ func (s *DecomposeDebugPlanTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *DecomposeDebugPlanTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
+func (s *DecomposeDesignTaskTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *DecomposeDebugPlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *DecomposeDesignTaskTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -79,17 +80,18 @@ func (s *DecomposeDebugPlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.Tool
 	}
 
 	rootPath := s.workspacePtr.GetRootPath()
-	childList, childErr := s.getChildFiles(rootPath, "design", pathVal)
-	if childErr != nil {
-		log.Errorf("failed to get child files, error:%s", childErr.Error())
-		result = "error: 制定测试验证目标失败!\n" + childErr.Error()
-		return
-	}
+	stage := "design"
+	siblingsList, childList, workPath := s.getSiblingsAndChilds(rootPath, stage, name, level)
 
 	planParam := map[string]string{
-		"DesignPath": childList,
+		"Name":             name,
+		"Description":      description,
+		"ReferencePath":    pathVal,
+		"Siblings":         siblingsList,
+		"Childrens":        childList,
+		"WorkingDirectory": workPath,
 	}
-	planFileName := fmt.Sprintf("decompose-debug-plan-%s", level)
+	planFileName := fmt.Sprintf("decompose-design-task-%s", level)
 	promptVal, promptErr := s.templatePtr.ReadPrompt(planFileName)
 	if promptErr != nil {
 		err = promptErr
@@ -114,45 +116,67 @@ func (s *DecomposeDebugPlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.Tool
 	return
 }
 
-func (s *DecomposeDebugPlanTool) getChildFiles(workspaceDir, stage, pathVal string) (ret string, err error) {
+func (s *DecomposeDesignTaskTool) getSiblingsAndChilds(workspaceDir, stage, name, level string) (siblings, childs, workPath string) {
 	rootPath := filepath.Join(workspaceDir, stage)
-	finalParentFile := filepath.Join(rootPath, pathVal)
-	if !fp.Exist(finalParentFile) {
-		log.Errorf("finalParentFile:%s not exist", finalParentFile)
-		err = fmt.Errorf("设计文档:%s不存在, 需要重新核对路径", pathVal)
+	if !fp.Exist(rootPath) {
+		os.MkdirAll(rootPath, 0755)
+	}
+	fileList, fileErr := fp.ListPath(rootPath, "*.md", true)
+	if fileErr != nil {
 		return
 	}
 
+	currentPath := "."
+	childPath := "."
+	siblingList := fu.StringSet{}
 	childList := fu.StringSet{}
-	filePath := finalParentFile[len(rootPath)+1:]
-	childList = childList.Add(filePath)
 
-	parentFilePath, parentFileName := path.Split(finalParentFile)
-	subItems := strings.Split(parentFileName, "-")
-	if len(subItems) != 2 {
-		err = fmt.Errorf("设计文档:%s不存在, 需要重新核对路径", pathVal)
-		return
+	offset := -1
+	switch level {
+	case models.ProjectLevel:
+		offset = 0
+	case models.ModuleLevel:
+		offset = 1
+	case models.BlockLevel:
+		offset = 2
 	}
 
-	finalChildPath := filepath.Join(parentFilePath, subItems[0])
-	if fp.Exist(finalChildPath) {
-		childFileList, childFileErr := fp.ListPath(finalChildPath, "*.md", false)
-		if childFileErr != nil {
-			log.Errorf("list path:%s error:%s", finalChildPath, childFileErr)
-			err = fmt.Errorf("访问设计文档: %s 对应的子目录出错: %s", pathVal, childFileErr.Error())
-			return
+	for _, val := range fileList {
+		filePath := val[len(rootPath)+1:]
+		items := strings.Split(filePath, "/")
+		if len(items) != offset+1 {
+			continue
 		}
-
-		for _, val := range childFileList {
-			filePath = val[len(rootPath)+1:]
+		if offset == 0 {
 			childList = childList.Add(filePath)
+			continue
 		}
+		if items[offset-1] != name {
+			continue
+		}
+		childPath = strings.Join(items[:offset], "/")
+		childList = childList.Add(filePath)
 	}
+	if childPath != "." {
+		currentPath = path.Join(rootPath, filepath.Dir(childPath))
+		siblingList, _ = fp.ListPath(currentPath, "*.md", false)
+	}
+
+	siblingBuffer := strings.Builder{}
+	for _, item := range siblingList {
+		item := item[len(rootPath)+1:]
+		siblingBuffer.WriteString("- " + item + "\n")
+	}
+	siblings = siblingBuffer.String()
 
 	childBuffer := strings.Builder{}
 	for _, item := range childList {
 		childBuffer.WriteString("- " + item + "\n")
 	}
-	ret = childBuffer.String()
+	childs = childBuffer.String()
+
+	workPath = currentPath
+
+	//log.Infof("slibling:\n%s \nchild:\n%s\nworkPath:%s\n", siblings, childs, workPath)
 	return
 }

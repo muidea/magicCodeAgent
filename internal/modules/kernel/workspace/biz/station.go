@@ -514,7 +514,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 	s.chatUsagePtr.Update(usagePtr)
 
 	s.bizBasePtr.AsyncTask(func() {
-		nextFlow := s.DisposeContent(content)
+		nextFlow := s.disposeContent(content)
 		if nextFlow != nil {
 			err := s.internalChat(context.Background(), nextFlow)
 			if err != nil {
@@ -547,14 +547,14 @@ func (s *Station) internalDoWork(workspaceConfig *models.Workspace, curChatLoopC
 	return
 }
 
-func (s *Station) DisposeContent(content string) (ret *models.Flow) {
+func (s *Station) disposeContent(content string) (ret *models.Flow) {
 	curTime := time.Now()
 	var finalStatus = s.chatRunningStatus
 	var chatLoopCount = s.chatCurrentLoopCount
 	var notifyMsg = "会话被中断！"
-	log.Infof("DisposeContent being, workspace:%s, loopCount:%d", s.currentWorkspace.Name, chatLoopCount)
+	log.Infof("disposeContent being, workspace:%s, loopCount:%d", s.currentWorkspace.Name, chatLoopCount)
 	defer func() {
-		log.Infof("DisposeContent done, workspace:%s, loopCount:%d, finalStatus:%s, elapseTime:%v", s.currentWorkspace.Name, chatLoopCount, finalStatus, time.Since(curTime))
+		log.Infof("disposeContent done, workspace:%s, loopCount:%d, finalStatus:%s, elapseTime:%v", s.currentWorkspace.Name, chatLoopCount, finalStatus, time.Since(curTime))
 		if finalStatus != Chatting {
 			// 发送本次消耗的Token数据
 			notifyMsg := &models.MessageItem{
@@ -581,7 +581,7 @@ func (s *Station) DisposeContent(content string) (ret *models.Flow) {
 	if blockErr != nil {
 		finalStatus = Terminate
 		notifyMsg = fmt.Sprintf("执行出错, 分解数据出错:%v", blockErr.Error())
-		log.Errorf("DisposeContent, util.SpliteBlocks err:%v", blockErr)
+		log.Errorf("disposeContent, util.SpliteBlocks err:%v", blockErr)
 		return
 	}
 
@@ -591,7 +591,7 @@ func (s *Station) DisposeContent(content string) (ret *models.Flow) {
 		if workErr != nil {
 			finalStatus = Terminate
 			notifyMsg = fmt.Sprintf("执行出错, Tool执行出错:%v", workErr.Error())
-			log.Errorf("DisposeContent, s.internalDoWork err:%v", workErr)
+			log.Errorf("disposeContent, s.internalDoWork err:%v", workErr)
 			return
 		}
 
@@ -602,10 +602,15 @@ func (s *Station) DisposeContent(content string) (ret *models.Flow) {
 		case "thinking":
 			// noting todo
 			continue
-		case "attempt_finish":
+		case "attempt_finish_task":
 			curFlow.AppendMessage(msgPtr)
-			curFlow = s.tryToFinishFlow(curFlow, workParam)
-		case "decompose_design_plan", "decompose_code_plan":
+			newFlow, newErr := s.tryToFinishFlow(curFlow, workParam)
+			if newErr != nil {
+				msgItem.Content = []string{newErr.Error()}
+			} else {
+				curFlow = newFlow
+			}
+		case "decompose_design_task", "decompose_code_task":
 			newFlow, newErr := s.tryToSwitchFlow(curFlow, workParam)
 			if newErr != nil {
 				msgItem.Content = []string{newErr.Error()}
@@ -642,11 +647,26 @@ func (s *Station) DisposeContent(content string) (ret *models.Flow) {
 	return
 }
 
-func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam) (ret *models.Flow) {
-	// attempt_finish
+func (s *Station) tryToFinishFlow(curFlow *models.Flow, param imbtc.ToolParam) (ret *models.Flow, err error) {
+	// attempt_finish_task
 	// 检查所有的flow是否都执行完毕，如果执行完毕就
 	log.Infof("try to finish flow %v", curFlow)
-	flowPtr := s.localFlowManger.FinishFlow(curFlow)
+	level := param["level"].(string)
+	name := param["name"].(string)
+	var path string
+	pathVal, pathOK := param["path"]
+	if pathOK {
+		path = pathVal.(string)
+	}
+	needContinue := param["needContinue"].(string) == "true"
+
+	flowPtr, flowErr := s.localFlowManger.FinishFlow(name, level, path, needContinue, s.currentWorkspace.GetStage())
+	if flowErr != nil {
+		err = flowErr
+		log.Errorf("finish flow failed, %v", flowErr)
+		return
+	}
+
 	if flowPtr != nil {
 		param := map[string]string{
 			"Name": flowPtr.GetName(),
@@ -668,7 +688,7 @@ func (s *Station) tryToFinishFlow(curFlow *models.Flow, _ imbtc.ToolParam) (ret 
 }
 
 func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam) (ret *models.Flow, err error) {
-	// decompose_design_plan
+	// decompose_design_task
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
 	log.Infof("try to switch flow %v", curFlow)

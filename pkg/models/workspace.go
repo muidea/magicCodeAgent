@@ -164,12 +164,12 @@ func (s *Template) IsService() bool {
 
 /*
 ├── prompts 目录及内容必选
-│   ├── decompose-code-plan-block.md
-│   ├── decompose-code-plan-module.md
-│   ├── decompose-code-plan-project.md
-│   ├── decompose-design-plan-block.md
-│   ├── decompose-design-plan-module.md
-│   ├── decompose-design-plan-project.md
+│   ├── decompose-code-task-block.md
+│   ├── decompose-code-task-module.md
+│   ├── decompose-code-task-project.md
+│   ├── decompose-design-task-block.md
+│   ├── decompose-design-task-module.md
+│   ├── decompose-design-task-project.md
 │   ├── project-struct.md
 │   ├── stage-code-status.md
 │   └── stage-design-status.md
@@ -190,12 +190,12 @@ func (s *Template) Validate() error {
 	}
 
 	requiredFiles := []string{
-		"prompts/decompose-code-plan-block.md",
-		"prompts/decompose-code-plan-module.md",
-		"prompts/decompose-code-plan-project.md",
-		"prompts/decompose-design-plan-block.md",
-		"prompts/decompose-design-plan-module.md",
-		"prompts/decompose-design-plan-project.md",
+		"prompts/decompose-code-task-block.md",
+		"prompts/decompose-code-task-module.md",
+		"prompts/decompose-code-task-project.md",
+		"prompts/decompose-design-task-block.md",
+		"prompts/decompose-design-task-module.md",
+		"prompts/decompose-design-task-project.md",
 		"prompts/project-struct.md",
 		"prompts/stage-code-status.md",
 		"prompts/stage-design-status.md",

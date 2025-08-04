@@ -1,13 +1,13 @@
-### decompose_code_plan
+### decompose_debug_task
 
 **描述：**  
 
-在代码开发阶段，基于设计阶段输出的设计文档，制定当前阶段代码开发目标。
+在测试验证阶段，制定测试验证目标。
 
 **注意：**  
 
-- `decompose_code_plan`不允许批量执行，只能单次执行。
-- 任何时候开始代码开发，都必须先使用`decompose_code_plan`来制定代码开发目标。
+- `decompose_debug_task`不允许批量执行，只能单次执行。
+- 任何时候开始测试验证，都必须先使用`decompose_debug_task`来制定测试验证目标。
 
 **功能层级 (level) 定义：**  
 
@@ -33,24 +33,24 @@
 
 **用法示例：**  
 
-1. 制定产品管理对应的功能模块级开发目标
+1. 制定产品管理对应的功能模块级开发任务
 
 ```xml
-<decompose_code_plan>
+<decompose_debug_task>
     <name>ProductEdit</name>
     <level>block</level>
     <path>./demo/Product/ProductEdit-功能模块.md</path>
     <description>提供产品信息修改功能，包括基本信息、分类和图片的更新</description>
-</decompose_code_plan>
+</decompose_debug_task>
 ```
 
 2. 制定产品展示系统对应的项目功能级开发目标
 
 ```xml
-<decompose_code_plan>
+<decompose_debug_task>
     <name>demoProject</name>
     <level>project</level>
     <path>./demoProject-项目功能.md</path>
     <description>产品展示系统，主要实现产品信息、分类信息和图片的管理功能，支持用户对产品的登记和发布操作</description>
-</decompose_code_plan>
+</decompose_debug_task>
 ```

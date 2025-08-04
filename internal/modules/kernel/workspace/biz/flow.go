@@ -159,6 +159,14 @@ func (s *FlowManager) GetStageRoot(stage string) (ret *models.Flow) {
 	return
 }
 
+func (s *FlowManager) GetCurrentFlow() *models.Flow {
+	return s.currentFlowPtr
+}
+
+func (s *FlowManager) GetLocalFlows() []*models.Flow {
+	return s.localFlows
+}
+
 func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.Flow, err error) {
 	defer func() {
 		// 这里对ret进行校验，避免出现越级的情况，以防止模型跑偏
@@ -180,27 +188,24 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 		}
 	}()
 
-	path = cleanPath(path)
+	finalPath := cleanPath(path)
 	// 只有DesignStage才需要添加名称，这是因为设计阶段path是输出对象不是参照对象
 	if stage == models.DesignStage {
-		path = filepath.Join(path, name)
+		finalPath = filepath.Join(finalPath, name)
 	}
-	parentPath := getParentPath(path)
+
+	parentPath := getParentPath(finalPath)
 	if level == models.ProjectLevel {
 		parentPath = "*"
 	}
-	/*
-		try to switch flow id:0_0, name:demoProduct, level:project, path:demoProduct, status:1, parent is 0
-		name:Category, level:module, path:demoProduct/Category, parentPath:demoProduct, stage:code
-	*/
-	log.Infof("name:%s, level:%s, path:%s, parentPath:%s, stage:%s, flowSize:%d", name, level, path, parentPath, stage, len(s.localFlows))
+	log.Infof("name:%s, level:%s, path:%s, parentPath:%s, stage:%s, flowSize:%d", name, level, finalPath, parentPath, stage, len(s.localFlows))
 	var currentPtr *models.Flow
 	var parentPtr *models.Flow
 	idx := 0
 	for {
 		flow := s.localFlows[idx]
 		log.Infof("idx:%d, %v", idx, flow)
-		if flow.GetName() == name && flow.GetPath() == path && flow.GetStage() == stage {
+		if flow.GetName() == name && flow.GetPath() == finalPath && flow.GetStage() == stage {
 			currentPtr = flow
 			break
 		}
@@ -213,6 +218,12 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 		}
 	}
 	if currentPtr != nil {
+		if currentPtr.Status != models.StatusInit {
+			log.Errorf("重复任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
+			err = fmt.Errorf("重复任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, path)
+			return
+		}
+
 		currentPtr.Status = models.StatusDoing
 		s.currentFlowPtr = currentPtr
 		ret = currentPtr
@@ -220,15 +231,14 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 	}
 
 	if parentPtr == nil {
-		// 至少要找到Root节点
-		log.Errorf("path与level不匹配，需要核对输入参数")
-		err = fmt.Errorf("path与level不匹配，需要核对name，level和path参数")
+		log.Errorf("越级任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
+		err = fmt.Errorf("越级任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, path)
 		return
 	}
 
 	if models.GetChildLevel(parentPtr.GetLevel()) != level {
-		log.Errorf("path与level不匹配，需要核对输入参数, currentLevel:%s, expectLevel:%s", level, models.GetChildLevel(parentPtr.GetLevel()))
-		err = fmt.Errorf("path与level不匹配，需要核对输入参数")
+		log.Errorf("越级任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
+		err = fmt.Errorf("越级任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, path)
 		return
 	}
 
@@ -245,7 +255,7 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 			Name:    name,
 			Level:   level,
 			Stage:   stage,
-			Path:    path,
+			Path:    finalPath,
 			Message: []*models.MessageItem{},
 			Parent:  parentPtr,
 		}
@@ -259,15 +269,7 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 	return
 }
 
-func (s *FlowManager) GetCurrentFlow() *models.Flow {
-	return s.currentFlowPtr
-}
-
-func (s *FlowManager) GetLocalFlows() []*models.Flow {
-	return s.localFlows
-}
-
-func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
+func (s *FlowManager) FinishFlow(name, level, path string, needContinue bool, stage string) (ret *models.Flow, err error) {
 	defer func() {
 		if s.currentFlowPtr != nil {
 			log.Infof("continue run flow %s", s.currentFlowPtr)
@@ -278,33 +280,35 @@ func (s *FlowManager) FinishFlow(flowPtr *models.Flow) (ret *models.Flow) {
 		ret = s.currentFlowPtr
 	}()
 
+	finalPath := cleanPath(path)
+	log.Infof("name:%s, level:%s, path:%s, stage:%s, flowSize:%d", name, level, finalPath, stage, len(s.localFlows))
+	if s.currentFlowPtr.GetName() != name || s.currentFlowPtr.GetLevel() != level || s.currentFlowPtr.GetPath() != finalPath || s.currentFlowPtr.GetStage() != stage {
+		err = fmt.Errorf("参数不一致, 与当前任务%s参数不一致，需要核对输入参数", name)
+		return
+	}
+
+	if needContinue {
+		s.currentFlowPtr.Status = models.StatusFinish
+	} else {
+		s.currentFlowPtr.Status = models.StatusDone
+	}
 	// 1. 检查当前flowPtr是否分解完成，如果没有分解完成，则要继续分解
-	if !flowPtr.CanFinish() {
-		s.currentFlowPtr = flowPtr
+	if !s.currentFlowPtr.CanFinish() {
 		return
 	}
 
-	s.currentFlowPtr = flowPtr
-	for {
-		s.currentFlowPtr = s.currentFlowPtr.GetParent()
-		if s.currentFlowPtr == nil {
-			break
-		}
-
-		if s.currentFlowPtr.Level == models.RootLevel {
-			s.currentFlowPtr = nil
-			return
-		}
-
-		// 2. 判断Parent是否可完成，如果可以完成，则继续取父级
-		if s.currentFlowPtr.CanFinish() {
-			continue
-		}
-
-		// 3. 深度优先，获取最小层级未完成的子流程
-		s.currentFlowPtr = s.currentFlowPtr.GetLatestUnFinishFlow()
+	s.currentFlowPtr = s.currentFlowPtr.GetParent()
+	if s.currentFlowPtr == nil || s.currentFlowPtr.Level == models.RootLevel {
+		s.currentFlowPtr = nil
 		return
 	}
+
+	subFlowPtr := s.currentFlowPtr.GetLatestUnFinishFlow()
+	if subFlowPtr != nil {
+		s.currentFlowPtr = subFlowPtr
+		return
+	}
+
 	return
 }
 

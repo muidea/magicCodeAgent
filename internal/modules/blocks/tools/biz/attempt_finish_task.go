@@ -12,10 +12,10 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type AttemptFinishTool struct{}
+type AttemptFinishTaskTool struct{}
 
-func (s *AttemptFinishTool) Name() string { return "attempt_finish" }
-func (s *AttemptFinishTool) Prompt() string {
+func (s *AttemptFinishTaskTool) Name() string { return "attempt_finish_task" }
+func (s *AttemptFinishTaskTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("Failed to read prompts: %s", promptsErr.Error())
@@ -25,9 +25,9 @@ func (s *AttemptFinishTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *AttemptFinishTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
+func (s *AttemptFinishTaskTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *AttemptFinishTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *AttemptFinishTaskTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -46,6 +46,21 @@ func (s *AttemptFinishTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResul
 		}
 	}()
 
+	name, ok := param["name"].(string)
+	if !ok || name == "" {
+		err = fmt.Errorf("name is empty")
+		return
+	}
+	level, ok := param["level"].(string)
+	if !ok || level == "" {
+		err = fmt.Errorf("level is empty")
+		return
+	}
+	path, ok := param["path"].(string)
+	if !ok || path == "" {
+		err = fmt.Errorf("path is empty")
+		return
+	}
 	resultVal, resultOK := param["result"].(string)
 	if !resultOK || resultVal == "" {
 		err = fmt.Errorf("missing or invalid result parameter")

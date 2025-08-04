@@ -11,6 +11,7 @@ import (
 const (
 	StatusInit = iota
 	StatusDoing
+	StatusFinish
 	StatusDone
 )
 
@@ -30,13 +31,15 @@ const (
 var designStatus = map[int]string{
 	0: "未设计",
 	1: "正在设计",
-	2: "已完成",
+	3: "完成设计",
+	2: "全部完成",
 }
 
 var codeStatus = map[int]string{
 	0: "未开发",
 	1: "正在开发",
-	2: "已完成",
+	2: "完成开发",
+	3: "全部完成",
 }
 
 // 比较l1, l3的层级关系
@@ -166,20 +169,14 @@ func (s *Flow) IsLeaf() bool {
 }
 
 func (s *Flow) CanFinish() (ret bool) {
-	defer func() {
-		if ret {
-			s.Status = StatusDone
-		}
-	}()
-
 	if s.IsFinish() {
 		ret = true
 		return
 	}
 
-	// 如果Flow没有子节点，并且是最终level，并且已开发，直接认为是可以结束的
+	// 如果Flow没有子节点，并且是最终level，并且已全部完成，直接认为是可以结束的
 	if len(s.Childrens) == 0 {
-		ret = s.IsLeaf() && s.Status != StatusInit
+		ret = s.IsLeaf() && s.Status == StatusDone
 		return
 	}
 
@@ -193,7 +190,9 @@ func (s *Flow) CanFinish() (ret bool) {
 	}
 
 	// 所有的子节点都能结束，则认为该Flow可以结束
-	ret = true
+	if s.Status >= StatusFinish {
+		ret = true
+	}
 	return
 }
 

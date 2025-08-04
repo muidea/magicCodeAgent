@@ -91,16 +91,16 @@ func (s *ToolRegistry) loadInnerTools(templatePtr *models.Template) {
 		commander:    s.commander,
 		workspacePtr: s.currentWorkspace,
 	})
-	s.Register(&AttemptFinishTool{})
-	s.Register(&DecomposeDesignPlanTool{
+	s.Register(&AttemptFinishTaskTool{})
+	s.Register(&DecomposeDesignTaskTool{
 		workspacePtr: s.currentWorkspace,
 		templatePtr:  templatePtr,
 	})
-	s.Register(&DecomposeCodePlanTool{
+	s.Register(&DecomposeCodeTaskTool{
 		workspacePtr: s.currentWorkspace,
 		templatePtr:  templatePtr,
 	})
-	s.Register(&DecomposeDebugPlanTool{
+	s.Register(&DecomposeDebugTaskTool{
 		workspacePtr: s.currentWorkspace,
 		templatePtr:  templatePtr,
 	})

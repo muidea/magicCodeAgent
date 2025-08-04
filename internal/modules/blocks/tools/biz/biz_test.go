@@ -199,4 +199,24 @@ clean:
 	assert.NoError(t, err, "parseParamContent error")
 	assert.Equal(t, "execute_command", funcName15, "funcName15 error")
 	assert.Equal(t, 1, len(param15), "param15 error")
+
+	funcName16, param16, err := parseParamContent(`<attempt_finish_task>
+<name>CategoryQuery</name>
+<level>block</level>
+<path>./demoProduct/Category/CategoryQuery-功能模块.md</path>
+<needContinue>true</needContinue>
+<result>
+已完成CategoryQuery功能模块开发，包含以下内容：
+1. 实现了分类信息查询功能，支持模糊查询和分页
+2. 代码实现与设计文档严格一致
+3. 使用ProTable组件实现了列表展示和查询表单
+4. 已集成到Category业务模块的路由配置中
+5. 代码通过静态检查，无错误
+</result>
+</attempt_finish_task>`)
+	assert.NoError(t, err, "parseParamContent error")
+	assert.Equal(t, "attempt_finish_task", funcName16, "funcName16 error")
+	assert.Equal(t, 5, len(param16), "param16 error")
+	assert.Equal(t, "CategoryQuery", param16["name"], "param16 name error")
+	assert.Equal(t, "true", param16["needContinue"], "param16 level error")
 }

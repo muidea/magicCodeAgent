@@ -17,16 +17,16 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-type DecomposeCodePlanTool struct {
+type DecomposeCodeTaskTool struct {
 	workspacePtr *models.Workspace
 	templatePtr  *models.Template
 }
 
-func (s *DecomposeCodePlanTool) Name() string {
-	return "decompose_code_plan"
+func (s *DecomposeCodeTaskTool) Name() string {
+	return "decompose_code_task"
 }
 
-func (s *DecomposeCodePlanTool) Prompt() string {
+func (s *DecomposeCodeTaskTool) Prompt() string {
 	promptsVal, promptsErr := imbtc.ReadInnerToolsPrompts(s.Name())
 	if promptsErr != nil {
 		log.Warnf("failed to read prompts, error: %s", promptsErr.Error())
@@ -36,9 +36,9 @@ func (s *DecomposeCodePlanTool) Prompt() string {
 	return promptsVal
 }
 
-func (s *DecomposeCodePlanTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
+func (s *DecomposeCodeTaskTool) Tags() fu.StringSet { return fu.StringSet{iipc.Global} }
 
-func (s *DecomposeCodePlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
+func (s *DecomposeCodeTaskTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolResult, err error) {
 	var result string
 	defer func() {
 		ret = &imbtc.ToolResult{
@@ -89,7 +89,7 @@ func (s *DecomposeCodePlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolR
 	planParam := map[string]string{
 		"DesignPath": childList,
 	}
-	planFileName := fmt.Sprintf("decompose-code-plan-%s", level)
+	planFileName := fmt.Sprintf("decompose-code-task-%s", level)
 	promptVal, promptErr := s.templatePtr.ReadPrompt(planFileName)
 	if promptErr != nil {
 		err = promptErr
@@ -114,7 +114,7 @@ func (s *DecomposeCodePlanTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolR
 	return
 }
 
-func (s *DecomposeCodePlanTool) getChildFiles(workspaceDir, stage, pathVal string) (ret string, err error) {
+func (s *DecomposeCodeTaskTool) getChildFiles(workspaceDir, stage, pathVal string) (ret string, err error) {
 	rootPath := filepath.Join(workspaceDir, stage)
 	finalParentFile := filepath.Join(rootPath, pathVal)
 	if !fp.Exist(finalParentFile) {
