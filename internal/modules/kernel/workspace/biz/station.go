@@ -610,6 +610,7 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 			} else {
 				curFlow = newFlow
 			}
+			curFlow.AppendMessage(msgItem)
 		case "decompose_design_task", "decompose_code_task":
 			newFlow, newErr := s.tryToSwitchFlow(curFlow, workParam)
 			if newErr != nil {

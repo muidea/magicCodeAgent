@@ -205,7 +205,7 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 	for {
 		flow := s.localFlows[idx]
 		log.Infof("idx:%d, %v", idx, flow)
-		if flow.GetName() == name && flow.GetPath() == finalPath && flow.GetStage() == stage {
+		if flow.GetName() == name && flow.GetPath() == finalPath && flow.GetLevel() == level && flow.GetStage() == stage {
 			currentPtr = flow
 			break
 		}
@@ -218,9 +218,9 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 		}
 	}
 	if currentPtr != nil {
-		if currentPtr.Status != models.StatusInit {
-			log.Errorf("重复任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
-			err = fmt.Errorf("重复任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, path)
+		if currentPtr.Status > models.StatusDoing {
+			log.Errorf("任务已经执行，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
+			err = fmt.Errorf("任务已经执行完成，继续处理其他任务")
 			return
 		}
 
@@ -231,14 +231,14 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 	}
 
 	if parentPtr == nil {
-		log.Errorf("越级任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
-		err = fmt.Errorf("越级任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, path)
+		log.Errorf("父级任务不存在，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
+		err = fmt.Errorf("父级任务不存在，需要核对输入参数path:%s是否正确", path)
 		return
 	}
 
 	if models.GetChildLevel(parentPtr.GetLevel()) != level {
 		log.Errorf("越级任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
-		err = fmt.Errorf("越级任务，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, path)
+		err = fmt.Errorf("越级任务，需要核对输入参数level:%s是否正确", level)
 		return
 	}
 
@@ -299,7 +299,7 @@ func (s *FlowManager) FinishFlow(name, level, path string, needContinue bool, st
 	}
 
 	if finishFlow == nil {
-		err = fmt.Errorf("找不到对应的任务, 需要核对输入参数name:%s,level:%s, path:%s,", name, level, path)
+		err = fmt.Errorf("找不到对应的任务, 需要核对输入参数name:%s,level:%s, path:%s，提供正确的参数", name, level, path)
 		return
 	}
 
