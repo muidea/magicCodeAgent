@@ -282,22 +282,39 @@ func (s *FlowManager) FinishFlow(name, level, path string, needContinue bool, st
 
 	finalPath := cleanPath(path)
 	log.Infof("name:%s, level:%s, path:%s, stage:%s, flowSize:%d", name, level, finalPath, stage, len(s.localFlows))
-	if s.currentFlowPtr.GetName() != name || s.currentFlowPtr.GetLevel() != level || s.currentFlowPtr.GetPath() != finalPath || s.currentFlowPtr.GetStage() != stage {
-		err = fmt.Errorf("参数不一致, 与当前任务%s参数不一致，需要核对输入参数", name)
+
+	var finishFlow *models.Flow
+	idx := 0
+	for {
+		flow := s.localFlows[idx]
+		if flow.GetName() == name && flow.GetLevel() == level && flow.GetPath() == finalPath && flow.GetStage() == stage {
+			finishFlow = flow
+			break
+		}
+
+		idx++
+		if idx >= len(s.localFlows) {
+			break
+		}
+	}
+
+	if finishFlow == nil {
+		err = fmt.Errorf("找不到对应的任务, 需要核对输入参数name:%s,level:%s, path:%s,", name, level, path)
 		return
 	}
 
 	if needContinue {
-		s.currentFlowPtr.Status = models.StatusFinish
+		finishFlow.Status = models.StatusFinish
 	} else {
-		s.currentFlowPtr.Status = models.StatusDone
+		finishFlow.Status = models.StatusDone
 	}
 	// 1. 检查当前flowPtr是否分解完成，如果没有分解完成，则要继续分解
-	if !s.currentFlowPtr.CanFinish() {
+	if !finishFlow.CanFinish() {
+		s.currentFlowPtr = finishFlow
 		return
 	}
 
-	s.currentFlowPtr = s.currentFlowPtr.GetParent()
+	s.currentFlowPtr = finishFlow.GetParent()
 	if s.currentFlowPtr == nil || s.currentFlowPtr.Level == models.RootLevel {
 		s.currentFlowPtr = nil
 		return

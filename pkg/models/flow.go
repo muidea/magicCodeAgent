@@ -31,8 +31,8 @@ const (
 var designStatus = map[int]string{
 	0: "未设计",
 	1: "正在设计",
-	3: "完成设计",
-	2: "全部完成",
+	2: "完成设计",
+	3: "全部完成",
 }
 
 var codeStatus = map[int]string{
@@ -176,7 +176,7 @@ func (s *Flow) CanFinish() (ret bool) {
 
 	// 如果Flow没有子节点，并且是最终level，并且已全部完成，直接认为是可以结束的
 	if len(s.Childrens) == 0 {
-		ret = s.IsLeaf() && s.Status == StatusDone
+		ret = s.IsLeaf() && s.Status >= StatusFinish
 		return
 	}
 
