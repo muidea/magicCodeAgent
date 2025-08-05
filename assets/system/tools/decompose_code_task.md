@@ -8,6 +8,7 @@
 
 - `decompose_code_task`不允许批量执行，只能单次执行。
 - 任何时候开始代码开发，都必须先使用`decompose_code_task`来制定代码开发任务。
+- 在制定新开发任务前，务必先使用`attempt_finish_task`提交前一个任务确认。
 
 **功能层级 (level) 定义：**  
 

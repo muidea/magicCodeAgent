@@ -8,6 +8,7 @@
 
 - `decompose_design_task`不允许批量执行，只能单次执行。
 - 任何时候开始设计，都必须先使用`decompose_design_task`来制定功能设计任务。
+- 在制定新设计任务前，务必先使用`attempt_finish_task`提交前一个任务确认。
 
 **功能层级 (level) 定义：**  
 

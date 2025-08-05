@@ -692,6 +692,14 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam) (
 	// decompose_design_task
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
+	if curFlow != nil {
+		if curFlow.Status < models.StatusFinish && curFlow.GetLevel() != models.RootLevel {
+			err = fmt.Errorf("当前任务尚未提交任务完成确认，需要确认任务是否完成，如果已执行完成，先提交任务完成确认，再启动新任务")
+			log.Errorf("try to switch failed, current flow %v not finish", curFlow)
+			return
+		}
+	}
+
 	log.Infof("try to switch flow %v", curFlow)
 	level := param["level"].(string)
 	name := param["name"].(string)
