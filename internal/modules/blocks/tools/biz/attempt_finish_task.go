@@ -67,6 +67,6 @@ func (s *AttemptFinishTaskTool) Execute(param imbtc.ToolParam) (ret *imbtc.ToolR
 		return
 	}
 
-	result = "attempt finish successed."
+	result = "attempt finish task successed."
 	return
 }

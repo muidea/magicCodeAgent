@@ -220,7 +220,7 @@ func (s *FlowManager) SwitchFlow(name, level, path, stage string) (ret *models.F
 	if currentPtr != nil {
 		if currentPtr.Status > models.StatusDoing {
 			log.Errorf("任务已经执行，需要核对输入参数name:%s, level:%s, path:%s是否正确", name, level, finalPath)
-			err = fmt.Errorf("任务已经执行完成，继续处理其他任务")
+			err = fmt.Errorf("任务%s已经执行完成，继续处理其他任务", currentPtr.GetName())
 			return
 		}
 
@@ -303,11 +303,12 @@ func (s *FlowManager) FinishFlow(name, level, path string, needContinue bool, st
 		return
 	}
 
-	if needContinue {
+	if needContinue || !finishFlow.CanFinish() {
 		finishFlow.Status = models.StatusFinish
 	} else {
 		finishFlow.Status = models.StatusDone
 	}
+
 	// 1. 检查当前flowPtr是否分解完成，如果没有分解完成，则要继续分解
 	if !finishFlow.CanFinish() {
 		s.currentFlowPtr = finishFlow

@@ -83,8 +83,8 @@ func (s *promptsRegistry) GetStagePromptsContent(stage string) string {
 	builder.WriteString(s.getCustomInstructionsPrompts())
 	builder.WriteString("\n\n")
 
-	builder.WriteString(s.getModelsPrompts())
-	builder.WriteString("\n\n")
+	//builder.WriteString(s.getModelsPrompts())
+	//builder.WriteString("\n\n")
 
 	builder.WriteString(s.getRulesPrompts())
 	builder.WriteString("\n\n")

@@ -604,13 +604,13 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 			continue
 		case "attempt_finish_task":
 			curFlow.AppendMessage(msgPtr)
+			curFlow.AppendMessage(msgItem)
 			newFlow, newErr := s.tryToFinishFlow(curFlow, workParam)
 			if newErr != nil {
 				msgItem.Content = []string{newErr.Error()}
 			} else {
 				curFlow = newFlow
 			}
-			curFlow.AppendMessage(msgItem)
 		case "decompose_design_task", "decompose_code_task":
 			newFlow, newErr := s.tryToSwitchFlow(curFlow, workParam)
 			if newErr != nil {
@@ -678,7 +678,7 @@ func (s *Station) tryToFinishFlow(curFlow *models.Flow, param imbtc.ToolParam) (
 			log.Errorf("read prompt:%s failed, err:%s", promptName, checkPromptErr)
 			return
 		}
-		flowPtr.AppendMessage(&models.MessageItem{
+		flowPtr.ResumeFlow(&models.MessageItem{
 			Role:    common.User,
 			Content: []string{checkPromptVal},
 		})
@@ -694,7 +694,7 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam) (
 	// 同时这里进行校验，避免大模型跑偏了，
 	if curFlow != nil {
 		if curFlow.Status < models.StatusFinish && curFlow.GetLevel() != models.RootLevel {
-			err = fmt.Errorf("当前任务尚未提交任务完成确认，需要确认任务是否完成，如果已执行完成，先提交任务完成确认，再启动新任务")
+			err = fmt.Errorf("当前任务%s尚未提交任务完成确认，需要确认任务是否完成，如果已执行完成，先提交任务完成确认，再启动新任务", curFlow.GetName())
 			log.Errorf("try to switch failed, current flow %v not finish", curFlow)
 			return
 		}

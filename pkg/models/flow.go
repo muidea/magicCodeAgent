@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/muidea/magicCommon/foundation/log"
 	fu "github.com/muidea/magicCommon/foundation/util"
 )
 
@@ -31,15 +32,15 @@ const (
 var designStatus = map[int]string{
 	0: "未设计",
 	1: "正在设计",
-	2: "完成设计",
-	3: "全部完成",
+	2: "设计文档已输出",
+	3: "设计完成",
 }
 
 var codeStatus = map[int]string{
 	0: "未开发",
 	1: "正在开发",
-	2: "完成开发",
-	3: "全部完成",
+	2: "代码已输出",
+	3: "开发完成",
 }
 
 // 比较l1, l3的层级关系
@@ -82,18 +83,19 @@ func GetChildLevel(level string) string {
 }
 
 type Flow struct {
-	Id        string           `json:"id"`
-	Name      string           `json:"name"`
-	Level     string           `json:"level"`
-	Stage     string           `json:"stage"`
-	Status    int              `json:"status"`
-	Path      string           `json:"path"`
-	Message   []*MessageItem   `json:"-"`
-	AddFiles  fu.StringSortSet `json:"addFiles,omitempty"`
-	ModFiles  fu.StringSortSet `json:"modFiles,omitempty"`
-	DelFiles  fu.StringSortSet `json:"delFiles,omitempty"`
-	Parent    *Flow            `json:"-"`
-	Childrens []*Flow          `json:"childrens"`
+	Id            string           `json:"id"`
+	Name          string           `json:"name"`
+	Level         string           `json:"level"`
+	Stage         string           `json:"stage"`
+	Status        int              `json:"status"`
+	Path          string           `json:"path"`
+	Message       []*MessageItem   `json:"-"`
+	MessageResume bool             `json:"-"`
+	AddFiles      fu.StringSortSet `json:"addFiles,omitempty"`
+	ModFiles      fu.StringSortSet `json:"modFiles,omitempty"`
+	DelFiles      fu.StringSortSet `json:"delFiles,omitempty"`
+	Parent        *Flow            `json:"-"`
+	Childrens     []*Flow          `json:"childrens"`
 }
 
 func (s *Flow) GetName() string {
@@ -150,6 +152,16 @@ func (s *Flow) AppendMessage(m *MessageItem) {
 		s.Message = make([]*MessageItem, 0)
 	}
 	s.Message = append(s.Message, m)
+	s.MessageResume = false
+}
+
+func (s *Flow) ResumeFlow(m *MessageItem) {
+	if !s.MessageResume {
+		s.Message = append(s.Message, m)
+		s.MessageResume = true
+		return
+	}
+	log.Infof("resume flow:%s, level:%s, path:%s, status:%d, parent:%s", s.GetName(), s.GetLevel(), s.GetPath(), s.GetStatus(), s.Parent.GetName())
 }
 
 func (s *Flow) GetChildrens() []*Flow {
