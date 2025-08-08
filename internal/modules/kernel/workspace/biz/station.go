@@ -398,7 +398,7 @@ func (s *Station) BroadcastReady() {
 		},
 	}
 
-	s.DisposeMessage(notifyMsg)
+	s.disposeMessage(notifyMsg)
 }
 
 func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.MessageItem) (err *cd.Error) {
@@ -415,7 +415,7 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 		s.chatRunningStatus = Chatting
 		s.chatCurrentLoopCount = 0
 
-		s.DisposeMessage(itemPtr)
+		s.disposeMessage(itemPtr)
 
 		err := s.internalChat(context.Background(), curFlow)
 		if err != nil {
@@ -426,7 +426,7 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 					"",
 				},
 			}
-			s.DisposeMessage(notifyMsg)
+			s.disposeMessage(notifyMsg)
 			log.Errorf("internalChat error: %v", err)
 			return
 		}
@@ -473,7 +473,7 @@ func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flo
 	return
 }
 
-func (s *Station) DisposeMessage(itemPtr *models.MessageItem) {
+func (s *Station) disposeMessage(itemPtr *models.MessageItem) {
 	messageInfoPtr := &models.MessageInfo{
 		Item:       *itemPtr,
 		CreateTime: time.Now().Local().Format(fu.CSTLayoutWithMillisecond),
@@ -507,7 +507,7 @@ func (s *Station) OnClose() {
 		Content: []string{"通讯中断，需要重试！"},
 	}
 
-	s.DisposeMessage(msgPtr)
+	s.disposeMessage(msgPtr)
 }
 
 func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
@@ -525,7 +525,7 @@ func (s *Station) OnRecv(event, content string, usagePtr *imklc.Usage) {
 						"",
 					},
 				}
-				s.DisposeMessage(notifyMsg)
+				s.disposeMessage(notifyMsg)
 				log.Errorf("internalChat error: %v", err)
 				return
 			}
@@ -564,7 +564,7 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 					notifyMsg,
 				},
 			}
-			s.DisposeMessage(notifyMsg)
+			s.disposeMessage(notifyMsg)
 
 			s.chatRunningStatus = finalStatus
 		}
@@ -575,7 +575,7 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 		Content: []string{content},
 	}
 
-	s.DisposeMessage(msgPtr)
+	s.disposeMessage(msgPtr)
 
 	blockList, blockErr := util.SpliteBlocks(content)
 	if blockErr != nil {
@@ -628,7 +628,7 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 			curFlow.AppendMessage(msgItem)
 		}
 
-		s.DisposeMessage(msgItem)
+		s.disposeMessage(msgItem)
 	}
 
 	if chatLoopCount >= s.chatMaxLoopCount {

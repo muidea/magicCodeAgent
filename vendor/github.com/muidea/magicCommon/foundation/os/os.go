@@ -1,4 +1,4 @@
-package util
+package os
 
 import (
 	"os"
@@ -28,4 +28,20 @@ func GetHomeDir() string {
 		return ""
 	}
 	return home
+}
+
+func GetMemoryUseable() (int64, error) {
+	if IsRunningInContainer() {
+		return GetContainerMemoryLimit()
+	}
+
+	return GetSystemMemory()
+}
+
+func GetCPUUseable() (float64, error) {
+	if IsRunningInContainer() {
+		return GetContainerCPULimit()
+	}
+
+	return GetSystemCPU(), nil
 }

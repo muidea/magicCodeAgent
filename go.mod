@@ -10,7 +10,7 @@ replace (
 require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/mark3labs/mcp-go v0.17.0
-	github.com/muidea/magicCommon v1.4.1
+	github.com/muidea/magicCommon v1.4.10
 	github.com/muidea/magicEngine v1.4.0
 	github.com/sashabaranov/go-openai v1.38.1
 )

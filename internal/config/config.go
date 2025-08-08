@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fo "github.com/muidea/magicCommon/foundation/os"
 	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
@@ -53,7 +54,7 @@ func init() {
 }
 
 func RootConfigDir() string {
-	return path.Join(fu.GetHomeDir(), ".magicCodeAgent")
+	return path.Join(fo.GetHomeDir(), ".magicCodeAgent")
 }
 
 // LoadConfig 加载配置文件
