@@ -281,7 +281,7 @@ func (s *FlowManager) FinishFlow(name, level, path string, needContinue bool, st
 	}()
 
 	finalPath := cleanPath(path)
-	log.Infof("name:%s, level:%s, path:%s, stage:%s, flowSize:%d", name, level, finalPath, stage, len(s.localFlows))
+	log.Infof("name:%s, level:%s, path:%s, finalPath:%s, stage:%s, flowSize:%d", name, level, path, finalPath, stage, len(s.localFlows))
 
 	var finishFlow *models.Flow
 	idx := 0

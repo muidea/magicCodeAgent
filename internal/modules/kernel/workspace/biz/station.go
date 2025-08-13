@@ -3,6 +3,7 @@ package biz
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -672,7 +673,7 @@ func (s *Station) tryToFinishFlow(curFlow *models.Flow, param imbtc.ToolParam) (
 		param := map[string]string{
 			"Name": flowPtr.GetName(),
 		}
-		promptName := fmt.Sprintf("check-%s-%s", s.currentWorkspace.GetStage(), flowPtr.GetLevel())
+		promptName := fmt.Sprintf("check-finish-%s-%s", s.currentWorkspace.GetStage(), flowPtr.GetLevel())
 		checkPromptVal, checkPromptErr := s.localPromptReader.ReadPrompt(&s.currentWorkspace, promptName, param)
 		if checkPromptErr != nil {
 			log.Errorf("read prompt:%s failed, err:%s", promptName, checkPromptErr)
@@ -694,7 +695,17 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam) (
 	// 同时这里进行校验，避免大模型跑偏了，
 	if curFlow != nil {
 		if curFlow.Status < models.StatusFinish && curFlow.GetLevel() != models.RootLevel {
-			err = fmt.Errorf("当前任务%s尚未提交任务完成确认，需要确认任务是否完成，如果已执行完成，先提交任务完成确认，再启动新任务", curFlow.GetName())
+			param := map[string]string{
+				"Name": curFlow.GetName(),
+			}
+			promptName := "check-switch-task"
+			checkPromptVal, checkPromptErr := s.localPromptReader.ReadPrompt(&s.currentWorkspace, promptName, param)
+			if checkPromptErr != nil {
+				log.Errorf("read prompt:%s failed, err:%s", promptName, checkPromptErr)
+				err = checkPromptErr
+				return
+			}
+			err = errors.New(checkPromptVal)
 			log.Errorf("try to switch failed, current flow %v not finish", curFlow)
 			return
 		}
