@@ -287,6 +287,7 @@ func (s *FlowManager) FinishFlow(name, level, path string, needContinue bool, st
 	idx := 0
 	for {
 		flow := s.localFlows[idx]
+		log.Infof("idx:%d, %v", idx, flow)
 		if flow.GetName() == name && flow.GetLevel() == level && flow.GetPath() == finalPath && flow.GetStage() == stage {
 			finishFlow = flow
 			break

@@ -693,7 +693,22 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam) (
 	// decompose_design_task
 	// 到这里说明在开始任务分解，需要根据任务分解的层次切换当前的Flow
 	// 同时这里进行校验，避免大模型跑偏了，
+	log.Infof("try to switch flow %v", curFlow)
+	level := param["level"].(string)
+	name := param["name"].(string)
+	var path string
+	pathVal, pathOK := param["path"]
+	if pathOK {
+		path = pathVal.(string)
+	}
+	finalPath := cleanPath(path)
+
 	if curFlow != nil {
+		if curFlow.GetName() == name && curFlow.GetLevel() == level && curFlow.GetPath() == finalPath {
+			ret = curFlow
+			return
+		}
+
 		if curFlow.Status < models.StatusFinish && curFlow.GetLevel() != models.RootLevel {
 			param := map[string]string{
 				"Name": curFlow.GetName(),
@@ -711,14 +726,6 @@ func (s *Station) tryToSwitchFlow(curFlow *models.Flow, param imbtc.ToolParam) (
 		}
 	}
 
-	log.Infof("try to switch flow %v", curFlow)
-	level := param["level"].(string)
-	name := param["name"].(string)
-	var path string
-	pathVal, pathOK := param["path"]
-	if pathOK {
-		path = pathVal.(string)
-	}
 	ret, err = s.localFlowManger.SwitchFlow(name, level, path, s.currentWorkspace.GetStage())
 	return
 }
