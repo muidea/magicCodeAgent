@@ -98,20 +98,21 @@ func (s *Station) Refesh(workspacePtr *models.Workspace) {
 			return
 		}
 	}
-
-	referenceStageVal := models.GetStageReferenceStage(s.currentWorkspace.GetStage())
-	referencePath := s.currentWorkspace.GetStageWorkingPath(referenceStageVal)
-	fileList := []string{}
-	s.workspaceFileManager.Range(func(filePath string) bool {
-		if strings.HasPrefix(filePath, referencePath) {
-			relativePath := filePath[len(referencePath)+1:]
-			fileList = append(fileList, relativePath)
-		}
-		return true
-	})
-
 	s.localFlowManger.Reset()
-	s.localFlowManger.InitFlow(fileList, s.currentWorkspace.GetStage())
+	if s.currentWorkspace.GetStage() == models.CodeStage {
+		referenceStageVal := models.GetStageReferenceStage(s.currentWorkspace.GetStage())
+		referencePath := s.currentWorkspace.GetStageWorkingPath(referenceStageVal)
+		fileList := []string{}
+		s.workspaceFileManager.Range(func(filePath string) bool {
+			if strings.HasPrefix(filePath, referencePath) {
+				relativePath := filePath[len(referencePath)+1:]
+				fileList = append(fileList, relativePath)
+			}
+			return true
+		})
+
+		s.localFlowManger.InitFlow(fileList, s.currentWorkspace.GetStage())
+	}
 }
 
 func (s *Station) systemPrompt() string {
