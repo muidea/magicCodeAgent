@@ -3,12 +3,9 @@ package biz
 import (
 	"fmt"
 	"html/template"
-	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/muidea/magicCommon/foundation/log"
-	fp "github.com/muidea/magicCommon/foundation/path"
 	fu "github.com/muidea/magicCommon/foundation/util"
 
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
@@ -67,29 +64,21 @@ func (s *DecomposeDebugTaskTool) Execute(param imbtc.ToolParam) (ret *imbtc.Tool
 		err = fmt.Errorf("level is empty")
 		return
 	}
-	pathVal := ""
-	path, ok := param["path"].(string)
-	if ok {
-		pathVal = path
-	}
+	//path, ok := param["path"].(string)
+	//if ok {
+	//	pathVal = path
+	//}
 	description, ok := param["description"].(string)
 	if !ok || description == "" {
 		err = fmt.Errorf("description is empty")
 		return
 	}
 
-	rootPath := s.workspacePtr.GetRootPath()
-	childList, childErr := s.getChildFiles(rootPath, "design", pathVal)
-	if childErr != nil {
-		log.Errorf("failed to get child files, error:%s", childErr.Error())
-		result = "error: 制定测试验证目标失败!\n" + childErr.Error()
-		return
-	}
-
 	planParam := map[string]string{
-		"DesignPath": childList,
+		"Name":        name,
+		"Description": description,
 	}
-	planFileName := fmt.Sprintf("decompose-debug-task-%s", level)
+	planFileName := fmt.Sprintf("decompose-debug-task-%s", "project")
 	promptVal, promptErr := s.templatePtr.ReadPrompt(planFileName)
 	if promptErr != nil {
 		err = promptErr
@@ -111,48 +100,5 @@ func (s *DecomposeDebugTaskTool) Execute(param imbtc.ToolParam) (ret *imbtc.Tool
 	}
 
 	result = builder.String()
-	return
-}
-
-func (s *DecomposeDebugTaskTool) getChildFiles(workspaceDir, stage, pathVal string) (ret string, err error) {
-	rootPath := filepath.Join(workspaceDir, stage)
-	finalParentFile := filepath.Join(rootPath, pathVal)
-	if !fp.Exist(finalParentFile) {
-		log.Errorf("finalParentFile:%s not exist", finalParentFile)
-		err = fmt.Errorf("设计文档:%s不存在, 需要重新核对路径", pathVal)
-		return
-	}
-
-	childList := fu.StringSet{}
-	filePath := finalParentFile[len(rootPath)+1:]
-	childList = childList.Add(filePath)
-
-	parentFilePath, parentFileName := path.Split(finalParentFile)
-	subItems := strings.Split(parentFileName, "-")
-	if len(subItems) != 2 {
-		err = fmt.Errorf("设计文档:%s不存在, 需要重新核对路径", pathVal)
-		return
-	}
-
-	finalChildPath := filepath.Join(parentFilePath, subItems[0])
-	if fp.Exist(finalChildPath) {
-		childFileList, childFileErr := fp.ListPath(finalChildPath, "*.md", false)
-		if childFileErr != nil {
-			log.Errorf("list path:%s error:%s", finalChildPath, childFileErr)
-			err = fmt.Errorf("访问设计文档: %s 对应的子目录出错: %s", pathVal, childFileErr.Error())
-			return
-		}
-
-		for _, val := range childFileList {
-			filePath = val[len(rootPath)+1:]
-			childList = childList.Add(filePath)
-		}
-	}
-
-	childBuffer := strings.Builder{}
-	for _, item := range childList {
-		childBuffer.WriteString("- " + item + "\n")
-	}
-	ret = childBuffer.String()
 	return
 }
