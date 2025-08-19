@@ -97,7 +97,7 @@ func (s *FlowManager) insertFlow(current *models.Flow, stage string, parts []str
 	// 查找是否已存在该子节点
 	var child *models.Flow
 	for _, c := range current.Childrens {
-		if c.Name == name {
+		if c.Name == name && c.Stage == stage && c.Level == level {
 			child = c
 			break
 		}
@@ -142,6 +142,7 @@ func (s *FlowManager) InitFlow(flowPath []string, stage string) (err error) {
 func (s *FlowManager) Reset() {
 	s.localFlows = s.localFlows[:1]
 	s.currentFlowPtr = s.localFlows[0]
+	s.currentFlowPtr.Childrens = []*models.Flow{}
 }
 
 func (s *FlowManager) getID(parentPtr *models.Flow) string {

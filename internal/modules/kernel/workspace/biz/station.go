@@ -91,6 +91,7 @@ func NewStation(
 
 func (s *Station) Refesh(workspacePtr *models.Workspace) {
 	s.currentWorkspace = *workspacePtr
+	log.Warnf("refesh station, workspace:%s, stage:%s", s.currentWorkspace.GetName(), s.currentWorkspace.GetStage())
 	if _, oErr := os.Stat(workspacePtr.GetWorkingPath()); oErr != nil {
 		oErr = os.MkdirAll(workspacePtr.GetWorkingPath(), 0755)
 		if oErr != nil {
