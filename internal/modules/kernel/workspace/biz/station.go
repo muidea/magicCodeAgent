@@ -99,6 +99,8 @@ func (s *Station) Refesh(workspacePtr *models.Workspace) {
 			return
 		}
 	}
+
+	s.chatRunningStatus = Idle
 	s.localFlowManger.Reset()
 	if s.currentWorkspace.GetStage() == models.CodeStage {
 		referenceStageVal := models.GetStageReferenceStage(s.currentWorkspace.GetStage())
@@ -407,7 +409,7 @@ func (s *Station) BroadcastReady() {
 func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.MessageItem) (err *cd.Error) {
 	if s.chatRunningStatus == Terminate || s.chatRunningStatus == Finished {
 		// 表示从结束状态恢复过来，目前是重新开始，这里要主动的重置
-		s.localFlowManger.Reset()
+		s.Refesh(&s.currentWorkspace)
 	}
 
 	s.bizBasePtr.AsyncTask(func() {
