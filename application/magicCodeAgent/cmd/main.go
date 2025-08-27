@@ -12,6 +12,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 
+	_ "github.com/muidea/magicCodeAgent/internal/initiators/embedtext"
 	_ "github.com/muidea/magicCodeAgent/internal/initiators/pprof"
 	_ "github.com/muidea/magicCodeAgent/internal/initiators/prompts"
 	_ "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry"

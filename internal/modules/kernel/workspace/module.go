@@ -42,7 +42,7 @@ func (s *Workspace) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundR
 		return
 	}
 
-	var promptsRegistryHelperVal iipc.PromptsRegistryHeper
+	var promptsRegistryHelperVal iipc.PromptsRegistryHelper
 	var promptsRegistryHelperErr *cd.Error
 	promptsRegistryHelperVal, promptsRegistryHelperErr = initiator.GetEntity(iipc.PromptsInitiator, promptsRegistryHelperVal)
 	if promptsRegistryHelperErr != nil {

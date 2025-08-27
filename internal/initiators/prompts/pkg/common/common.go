@@ -20,7 +20,7 @@ const (
 	Global = "*"
 )
 
-type PromptsRegistryHeper interface {
+type PromptsRegistryHelper interface {
 	GetPromptsRegistry() (ret PromptsRegistry)
 }
 

@@ -32,7 +32,7 @@ func (s *Tools) ID() string {
 }
 
 func (s *Tools) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
-	var promptsRegistryHelperVal iipc.PromptsRegistryHeper
+	var promptsRegistryHelperVal iipc.PromptsRegistryHelper
 	var promptsRegistryHelperErr *cd.Error
 	promptsRegistryHelperVal, promptsRegistryHelperErr = initiator.GetEntity(iipc.PromptsInitiator, promptsRegistryHelperVal)
 	if promptsRegistryHelperErr != nil {
