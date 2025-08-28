@@ -25,8 +25,11 @@ codeCli:
 codeDebug:
 	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeDebug ./application/magicCodeDebug/cmd
 
-codeAgent:
+codeAgent: downloadDuckdb
 	go build -x -tags "no_duckdb_arrow duckdb_use_static_lib" -ldflags "$(LDFLAGS)" -o bin/magicCodeAgent ./application/magicCodeAgent/cmd
+
+downloadDuckdb:
+	./deps/download_duckdb.sh v1.3.2
 
 fmt:
 	go fmt ./...
