@@ -35,7 +35,7 @@ func NewMCPServer(name, version string) *server.MCPServer {
 	//hooks.AddOnSuccess(func(id any, method mcp.MCPMethod, message any, result any) {
 	//	fmt.Printf("onSuccess: %s, %v, %v, %v\n", method, id, message, result)
 	//})
-	hooks.AddOnError(func(id any, method mcp.MCPMethod, message any, err error) {
+	hooks.AddOnError(func(ctx context.Context, id any, method mcp.MCPMethod, message any, err error) {
 		fmt.Printf("onError: %s, %v, %v, %v\n", method, id, message, err)
 	})
 	//hooks.AddBeforeInitialize(func(id any, message *mcp.InitializeRequest) {
@@ -128,7 +128,7 @@ func handleEchoTool(
 	request mcp.CallToolRequest,
 ) (*mcp.CallToolResult, error) {
 	arguments := request.Params.Arguments
-	message, ok := arguments["message"].(string)
+	message, ok := arguments.(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid message argument")
 	}
