@@ -6,11 +6,14 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledge/dao"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledge/pkg/common"
 )
 
 type Knowledge struct {
 	biz.Base
+
+	daoPtr *dao.Knowledge
 }
 
 func New(
