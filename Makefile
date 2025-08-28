@@ -1,7 +1,10 @@
 export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
 LDFLAGS := -X 'main.buildTime=$(shell date -u +"%Y-%m-%d %H:%M:%S UTC")' -X 'main.gitCommit=$(shell git log --pretty=format:"%h" -1)' -X 'main.version=$(shell git describe --tags --exact-match 2>/dev/null || echo "DailyBuild")'
-export CGO_LDFLAGS = "-lc++ -lduckdb_bundle -L/path/to/folder/with/lib"
+MKFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+GOOS       := $(shell go env GOOS)
+GOARCH     := $(shell go env GOARCH)
+export CGO_LDFLAGS = -lstdc++ -lm -lduckdb_bundle -L$(MKFILE_DIR)deps/$(GOOS)-$(GOARCH)
 
 all: fmt vet build
 
@@ -26,7 +29,7 @@ codeDebug:
 	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeDebug ./application/magicCodeDebug/cmd
 
 codeAgent: downloadDuckdb
-	go build -x -tags "no_duckdb_arrow duckdb_use_static_lib" -ldflags "$(LDFLAGS)" -o bin/magicCodeAgent ./application/magicCodeAgent/cmd
+	go build -tags "no_duckdb_arrow duckdb_use_static_lib" -ldflags "$(LDFLAGS)" -o bin/magicCodeAgent ./application/magicCodeAgent/cmd
 
 downloadDuckdb:
 	./deps/download_duckdb.sh v1.3.2
