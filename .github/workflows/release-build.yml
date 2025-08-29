@@ -29,7 +29,7 @@ jobs:
           go test ./... -v
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.ref == 'refs/heads/master'
     timeout-minutes: 60
     strategy:
       matrix:
@@ -60,6 +60,28 @@ jobs:
       - name: Build for ${{ matrix.platform }}
         timeout-minutes: 60
         run: |
+          sudo apt update
+          sudo apt install -y cmake g++ git make \
+              libboost-all-dev libssl-dev zlib1g-dev \
+              libprotobuf-dev protobuf-compiler
+
+          git clone https://github.com/apache/arrow.git
+          cd arrow/cpp
+          mkdir build && cd build
+
+          cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DARROW_COMPUTE=ON \
+            -DARROW_PARQUET=ON \
+            -DARROW_CSV=ON \
+            -DARROW_JSON=ON \
+            -DARROW_FILESYSTEM=ON
+
+          make -j$(nproc)
+          sudo make install
+
+          # 设置 Go 编译环境
+          export CGO_CFLAGS="-I/usr/local/include"
+          export CGO_LDFLAGS="-L/usr/local/lib -larrow -lparquet"        
           mkdir -p bin build/magicCodeAgent
           export GOOS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)
           export GOARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
