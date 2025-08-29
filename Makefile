@@ -2,8 +2,6 @@ export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
 LDFLAGS := -X 'main.buildTime=$(shell date -u +"%Y-%m-%d %H:%M:%S UTC")' -X 'main.gitCommit=$(shell git log --pretty=format:"%h" -1)' -X 'main.version=$(shell git describe --tags --exact-match 2>/dev/null || echo "DailyBuild")'
 MKFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-GOOS       := $(shell go env GOOS)
-GOARCH     := $(shell go env GOARCH)
 
 all: fmt vet build
 
