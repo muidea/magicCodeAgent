@@ -4,7 +4,6 @@ LDFLAGS := -X 'main.buildTime=$(shell date -u +"%Y-%m-%d %H:%M:%S UTC")' -X 'mai
 MKFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 GOOS       := $(shell go env GOOS)
 GOARCH     := $(shell go env GOARCH)
-export CGO_LDFLAGS = -lstdc++ -lm -lduckdb_bundle -L$(MKFILE_DIR)deps/$(GOOS)-$(GOARCH)
 
 all: fmt vet build
 
@@ -28,8 +27,8 @@ codeCli:
 codeDebug:
 	env CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/magicCodeDebug ./application/magicCodeDebug/cmd
 
-codeAgent: downloadDuckdb
-	go build -tags "no_duckdb_arrow duckdb_use_static_lib" -ldflags "$(LDFLAGS)" -o bin/magicCodeAgent ./application/magicCodeAgent/cmd
+codeAgent:
+	env CGO_ENABLED=1 go build -tags "no_duckdb_arrow duckdb_use_static_lib" -ldflags "$(LDFLAGS)" -mod=vendor -o bin/magicCodeAgent ./application/magicCodeAgent/cmd
 
 downloadDuckdb:
 	./deps/download_duckdb.sh v1.3.2
