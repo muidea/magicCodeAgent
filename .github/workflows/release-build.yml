@@ -60,6 +60,7 @@ jobs:
       - name: Build for ${{ matrix.platform }}
         timeout-minutes: 60
         run: |
+          prePath=$(pwd)
           sudo apt update
           sudo apt install -y cmake g++ git make \
               libboost-all-dev libssl-dev zlib1g-dev \
@@ -81,7 +82,8 @@ jobs:
 
           # 设置 Go 编译环境
           export CGO_CFLAGS="-I/usr/local/include"
-          export CGO_LDFLAGS="-L/usr/local/lib -larrow -lparquet"        
+          export CGO_LDFLAGS="-L/usr/local/lib -larrow -lparquet"
+          cd ${prePath}
           mkdir -p bin build/magicCodeAgent
           export GOOS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)
           export GOARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
