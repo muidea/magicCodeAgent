@@ -55,7 +55,7 @@ func (s *Knowledge) NewWorkspace(workspaceName string) error {
 			id INTEGER,
 			embedding FLOAT[],
 			content TEXT,
-			source TEXT
+			tags TEXT[]
 		);
 	`, tableName))
 	if err != nil {
