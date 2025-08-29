@@ -30,10 +30,10 @@ jobs:
 
   publish:
     if: github.ref == 'refs/heads/master'
-    timeout-minutes: 600
+    timeout-minutes: 60
     strategy:
       matrix:
-        platform: [linux/amd64, linux/arm64]
+        platform: [linux/amd64]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -47,28 +47,9 @@ jobs:
           go-version: '1.23'
 
       - name: Build for ${{ matrix.platform }}
-        timeout-minutes: 600
+        timeout-minutes: 60
         run: |
           prePath=$(pwd)
-          sudo apt update
-          sudo apt install -y cmake g++ git make \
-              libboost-all-dev libssl-dev zlib1g-dev \
-              libprotobuf-dev protobuf-compiler
-
-          git clone https://github.com/apache/arrow.git
-          cd arrow/cpp
-          mkdir build && cd build
-
-          cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local \
-            -DARROW_COMPUTE=ON \
-            -DARROW_PARQUET=ON \
-            -DARROW_CSV=ON \
-            -DARROW_JSON=ON \
-            -DARROW_FILESYSTEM=ON
-
-          make -j$(nproc)
-          sudo make install
-
           # 设置 Go 编译环境
           export CGO_CFLAGS="-I/usr/local/include"
           export CGO_LDFLAGS="-L/usr/local/lib -larrow -lparquet"
