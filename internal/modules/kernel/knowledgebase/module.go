@@ -10,7 +10,7 @@ import (
 
 	iirc "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
+	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/service"
 )
 
@@ -28,7 +28,7 @@ func New() *KnowledgeBase {
 }
 
 func (s *KnowledgeBase) ID() string {
-	return common.KnowledgeBaseModule
+	return imkkc.KnowledgeBaseModule
 }
 
 func (s *KnowledgeBase) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
@@ -59,4 +59,5 @@ func (s *KnowledgeBase) Run() (err *cd.Error) {
 }
 
 func (s *KnowledgeBase) Teardown() {
+	s.bizPtr.Stop()
 }

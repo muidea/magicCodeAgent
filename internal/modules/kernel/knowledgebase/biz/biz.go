@@ -7,7 +7,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/dao"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
+	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
 type KnowledgeBase struct {
@@ -21,12 +21,18 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *KnowledgeBase {
 	ptr := &KnowledgeBase{
-		Base: biz.New(common.KnowledgeBaseModule, eventHub, backgroundRoutine),
+		Base:   biz.New(imkkc.KnowledgeBaseModule, eventHub, backgroundRoutine),
+		daoPtr: dao.New(),
 	}
 
 	return ptr
 }
 
 func (s *KnowledgeBase) Run() (err *cd.Error) {
+	s.daoPtr.Open()
 	return
+}
+
+func (s *KnowledgeBase) Stop() {
+	s.daoPtr.Close()
 }
