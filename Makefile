@@ -30,9 +30,6 @@ codeDebug:
 codeAgent:
 	env CGO_ENABLED=1 GOARCH=$(GOARCH) GOOS=$(GOOS) go build -tags "no_duckdb_arrow duckdb_use_static_lib" -ldflags "$(LDFLAGS)" -mod=vendor -o bin/magicCodeAgent ./application/magicCodeAgent/cmd
 
-downloadDuckdb:
-	./deps/download_duckdb.sh v1.3.2
-
 fmt:
 	go fmt ./...
 
