@@ -30,10 +30,10 @@ func (s *KnowledgeBase) Open() error {
 	if !fp.Exist(dataPath) {
 		os.MkdirAll(dataPath, 0755)
 	}
-	dsn := fmt.Sprintf("file:%s/knowledge.db?access_mode=read_write", dataPath)
+	dsn := fmt.Sprintf("%s/knowledge.db?access_mode=read_write", dataPath)
 	db, err := sql.Open("duckdb", dsn)
 	if err != nil {
-		log.Errorf("open knowledge db failed, err:%v", err)
+		log.Errorf("open knowledge db failed, dataPath:%s, err:%v", dataPath, err)
 		return err
 	}
 
@@ -48,6 +48,9 @@ func (s *KnowledgeBase) Open() error {
 }
 
 func (s *KnowledgeBase) Close() {
+	if s.dbInstancePtr == nil {
+		return
+	}
 	_ = s.dbInstancePtr.Close()
 }
 
@@ -83,6 +86,16 @@ func (s *KnowledgeBase) DropWorkspace(workspaceName string) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s *KnowledgeBase) CheckWorkspace(workspaceName string) error {
+	tableName := fmt.Sprintf("tbl_%s", workspaceName)
+	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`SELECT * FROM %s LIMIT 1`, tableName))
+	if err != nil {
+		log.Errorf("check table %s error:%s", tableName, err.Error())
+		return err
+	}
 	return nil
 }
 
