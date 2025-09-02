@@ -25,7 +25,7 @@ import (
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/templatemanager"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tools"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer"
-	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledge"
+	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/llm"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/mcp"
 	_ "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace"

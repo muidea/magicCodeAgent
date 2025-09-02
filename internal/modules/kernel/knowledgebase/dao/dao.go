@@ -14,15 +14,15 @@ import (
 	"github.com/muidea/magicCodeAgent/internal/config"
 )
 
-type Knowledge struct {
+type KnowledgeBase struct {
 	dbInstancePtr *sql.DB
 }
 
-func New() *Knowledge {
-	return &Knowledge{}
+func New() *KnowledgeBase {
+	return &KnowledgeBase{}
 }
 
-func (s *Knowledge) Open() error {
+func (s *KnowledgeBase) Open() error {
 	dataPath := filepath.Join(config.RootConfigDir(), "data")
 	if !fp.Exist(dataPath) {
 		os.MkdirAll(dataPath, 0755)
@@ -44,11 +44,11 @@ func (s *Knowledge) Open() error {
 	return nil
 }
 
-func (s *Knowledge) Close() {
+func (s *KnowledgeBase) Close() {
 	_ = s.dbInstancePtr.Close()
 }
 
-func (s *Knowledge) NewWorkspace(workspaceName string) error {
+func (s *KnowledgeBase) NewWorkspace(workspaceName string) error {
 	tableName := fmt.Sprintf("tbl_%s", workspaceName)
 	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s(
@@ -70,4 +70,27 @@ func (s *Knowledge) NewWorkspace(workspaceName string) error {
 	}
 
 	return nil
+}
+
+func (s *KnowledgeBase) DropWorkspace(workspaceName string) error {
+	tableName := fmt.Sprintf("tbl_%s", workspaceName)
+	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS %s`, tableName))
+	if err != nil {
+		log.Errorf("drop table %s error:%s", tableName, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *KnowledgeBase) Load(workspaceName, content string, tags []string) error {
+	return nil
+}
+
+func (s *KnowledgeBase) Insert(workspaceName string, embedding []float32, content string, tags []string) error {
+	tableName := fmt.Sprintf("tbl_%s", workspaceName)
+	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`
+		INSERT INTO %s(id, embedding, content, tags) VALUES(NULL, $1, $2, $3);
+	`, tableName), embedding, content, tags)
+	return err
 }

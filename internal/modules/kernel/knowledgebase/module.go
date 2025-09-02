@@ -9,29 +9,29 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	iirc "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledge/biz"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledge/pkg/common"
-	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledge/service"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/biz"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
+	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/service"
 )
 
 func init() {
 	module.Register(New())
 }
 
-type Knowledge struct {
-	bizPtr     *biz.Knowledge
-	servicePtr *service.Knowledge
+type KnowledgeBase struct {
+	bizPtr     *biz.KnowledgeBase
+	servicePtr *service.KnowledgeBase
 }
 
-func New() *Knowledge {
-	return &Knowledge{}
+func New() *KnowledgeBase {
+	return &KnowledgeBase{}
 }
 
-func (s *Knowledge) ID() string {
-	return common.KnowledgeModule
+func (s *KnowledgeBase) ID() string {
+	return common.KnowledgeBaseModule
 }
 
-func (s *Knowledge) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+func (s *KnowledgeBase) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
 	var routeRegistryHelperVal iirc.RouteRegistryHelper
 	var routeRegistryHelperErr *cd.Error
 	routeRegistryHelperVal, routeRegistryHelperErr = initiator.GetEntity(iirc.RouteRegistryInitiator, routeRegistryHelperVal)
@@ -48,7 +48,7 @@ func (s *Knowledge) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundR
 	return nil
 }
 
-func (s *Knowledge) Run() (err *cd.Error) {
+func (s *KnowledgeBase) Run() (err *cd.Error) {
 	err = s.bizPtr.Run()
 	if err != nil {
 		return
@@ -58,5 +58,5 @@ func (s *Knowledge) Run() (err *cd.Error) {
 	return
 }
 
-func (s *Knowledge) Teardown() {
+func (s *KnowledgeBase) Teardown() {
 }
