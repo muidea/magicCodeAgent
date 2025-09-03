@@ -8,11 +8,12 @@ replace (
 )
 
 require (
-	github.com/duckdb/duckdb-go-bindings v0.1.17
+	github.com/duckdb/duckdb-go-bindings/linux-amd64 v0.1.12
+	github.com/duckdb/duckdb-go-bindings/linux-arm64 v0.1.12
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/marcboeker/go-duckdb/v2 v2.3.3
 	github.com/mark3labs/mcp-go v0.37.0
-	github.com/muidea/magicCommon v1.4.1
+	github.com/muidea/magicCommon v1.4.11
 	github.com/muidea/magicEngine v0.0.0-00010101000000-000000000000
 	github.com/sashabaranov/go-openai v1.41.1
 	github.com/stretchr/testify v1.10.0
@@ -24,10 +25,9 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/duckdb/duckdb-go-bindings v0.1.17 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-amd64 v0.1.12 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-arm64 v0.1.12 // indirect
-	github.com/duckdb/duckdb-go-bindings/linux-amd64 v0.1.12 // indirect
-	github.com/duckdb/duckdb-go-bindings/linux-arm64 v0.1.12 // indirect
 	github.com/duckdb/duckdb-go-bindings/windows-amd64 v0.1.12 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.6 // indirect

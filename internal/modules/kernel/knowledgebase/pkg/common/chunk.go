@@ -9,12 +9,13 @@ import (
 type Chunk struct {
 	ID       int64
 	Text     string
+	FilePath string
 	Metadata map[string]string
 	Vector   []float32
 }
 
 // -------------------- Markdown 分片（分层 + overlap） --------------------
-func SplitMarkdown(filename, content string, chunkSize, overlap int) []*Chunk {
+func SplitMarkdown(filePath, content string, chunkSize, overlap int) []*Chunk {
 	lines := strings.Split(content, "\n")
 
 	var chunks []*Chunk
@@ -33,9 +34,10 @@ func SplitMarkdown(filename, content string, chunkSize, overlap int) []*Chunk {
 		parts := splitIntoChunks(text, chunkSize, overlap)
 		for _, p := range parts {
 			chunks = append(chunks, &Chunk{
-				Text: p,
+				Text:     p,
+				FilePath: filePath,
 				Metadata: map[string]string{
-					"source":   filename,
+					"source":   filePath,
 					"section":  currentSection,
 					"secIndex": fmt.Sprintf("%d", sectionIndex),
 					"chunkId":  fmt.Sprintf("%d", chunkIndex),

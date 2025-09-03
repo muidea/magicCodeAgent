@@ -5,6 +5,7 @@ import (
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 
+	iiec "github.com/muidea/magicCodeAgent/internal/initiators/embedtext/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/dao"
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
@@ -13,7 +14,8 @@ import (
 type KnowledgeBase struct {
 	biz.Base
 
-	daoPtr *dao.KnowledgeBase
+	daoPtr          *dao.KnowledgeBase
+	embedTextWorker iiec.EmbedTextWorker
 }
 
 func New(
