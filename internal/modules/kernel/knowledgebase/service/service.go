@@ -50,6 +50,11 @@ func (s *KnowledgeBase) MiddleWareHandle(ctx engine.RequestContext, res http.Res
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if !s.bizPtr.ExistWorkspace(workspace) {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	newContext := context.WithValue(ctx.Context(), engine.RelativePath{}, workspace)
 	ctx.Update(newContext)
 	ctx.Next()

@@ -21,7 +21,7 @@ func (s *KnowledgeBase) ImportKnowledge(ctx context.Context, res http.ResponseWr
 		log.Errorf("parse body error: %s", err.Error())
 		return
 	}
-	err := s.bizPtr.ImportKnowledge(param.FilePath, param.Warehouse)
+	err := s.bizPtr.ImportKnowledge(param.Warehouse, param.FilePath)
 	if err != nil {
 		result.Error = cd.NewError(cd.Unexpected, err.Error())
 		log.Errorf("import knowledge error: %s", err.Error())

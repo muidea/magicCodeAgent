@@ -49,3 +49,9 @@ func (s *KnowledgeBase) ListWarehouse() (ret []string, err error) {
 	}
 	return
 }
+
+func (s *KnowledgeBase) ExistWorkspace(workspace string) bool {
+	warehousePath := filepath.Join(s.baseStaticPath, workspace)
+	_, err := os.Stat(warehousePath)
+	return err == nil
+}
