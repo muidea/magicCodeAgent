@@ -61,10 +61,6 @@ func (s *KnowledgeBase) CheckWarehouse(warehouse string) error {
 	return nil
 }
 
-func (s *KnowledgeBase) ListWarehouse() (ret []string, err error) {
-	return
-}
-
 func (s *KnowledgeBase) AddChunk(warehouse string, chunkPtr *imkkc.Chunk, embedTextWorker iiec.EmbedTextWorker) error {
 	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
 	meta, _ := json.Marshal(chunkPtr.Metadata)

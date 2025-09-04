@@ -4,28 +4,26 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	_ "github.com/marcboeker/go-duckdb/v2"
 
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
-
-	"github.com/muidea/magicCodeAgent/internal/config"
-
-	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
 type KnowledgeBase struct {
 	dbInstancePtr *sql.DB
+	baseDataPath  string
 }
 
-func New() *KnowledgeBase {
-	return &KnowledgeBase{}
+func New(dataPath string) *KnowledgeBase {
+	return &KnowledgeBase{
+		baseDataPath: dataPath,
+	}
 }
 
 func (s *KnowledgeBase) Open() error {
-	dataPath := filepath.Join(config.RootConfigDir(), imkkc.BasePath, imkkc.DataPath)
+	dataPath := s.baseDataPath
 	if !fp.Exist(dataPath) {
 		os.MkdirAll(dataPath, 0755)
 	}

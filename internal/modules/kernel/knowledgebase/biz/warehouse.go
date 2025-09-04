@@ -17,5 +17,5 @@ func (s *KnowledgeBase) DropWarehouse(warehouse string) error {
 }
 
 func (s *KnowledgeBase) ListWarehouse() (ret []string, err error) {
-	return s.daoPtr.ListWarehouse()
+	return
 }

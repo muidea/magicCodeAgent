@@ -1,6 +1,8 @@
 package biz
 
 import (
+	"path/filepath"
+
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
@@ -16,15 +18,20 @@ type KnowledgeBase struct {
 
 	daoPtr          *dao.KnowledgeBase
 	embedTextWorker iiec.EmbedTextWorker
+	baseStaticPath  string
 }
 
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
+	embedTextWorker iiec.EmbedTextWorker,
+	basePath string,
 ) *KnowledgeBase {
 	ptr := &KnowledgeBase{
-		Base:   biz.New(imkkc.KnowledgeBaseModule, eventHub, backgroundRoutine),
-		daoPtr: dao.New(),
+		Base:            biz.New(imkkc.KnowledgeBaseModule, eventHub, backgroundRoutine),
+		daoPtr:          dao.New(filepath.Join(basePath, imkkc.DataPath)),
+		embedTextWorker: embedTextWorker,
+		baseStaticPath:  filepath.Join(basePath, imkkc.StaticPath),
 	}
 
 	return ptr

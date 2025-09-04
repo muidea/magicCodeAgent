@@ -1,6 +1,8 @@
 package knowledge
 
 import (
+	"path/filepath"
+
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -8,6 +10,8 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
+	"github.com/muidea/magicCodeAgent/internal/config"
+	iiec "github.com/muidea/magicCodeAgent/internal/initiators/embedtext/pkg/common"
 	iirc "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/biz"
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
@@ -41,9 +45,19 @@ func (s *KnowledgeBase) Setup(eventHub event.Hub, backgroundRoutine task.Backgro
 		return
 	}
 
-	s.bizPtr = biz.New(eventHub, backgroundRoutine)
+	var embedTextWorkerHelperVal iiec.EmbedTextHelper
+	var embedTextWorkerHelperErr *cd.Error
+	embedTextWorkerHelperVal, embedTextWorkerHelperErr = initiator.GetEntity(iiec.EmbedtextInitiator, embedTextWorkerHelperVal)
+	if embedTextWorkerHelperErr != nil {
+		err = embedTextWorkerHelperErr
+		log.Errorf("Knowledge setup failed, initiator.GetEntity error:%s", embedTextWorkerHelperErr.Error())
+		return
+	}
 
-	s.servicePtr = service.New(routeRegistryHelperVal.GetRouteRegistry(), s.bizPtr)
+	basePath := filepath.Join(config.RootConfigDir(), imkkc.BasePath)
+	s.bizPtr = biz.New(eventHub, backgroundRoutine, embedTextWorkerHelperVal.GetEmbedText(), basePath)
+
+	s.servicePtr = service.New(routeRegistryHelperVal.GetRouteRegistry(), s.bizPtr, basePath)
 
 	return nil
 }
