@@ -41,6 +41,8 @@ func (s *KnowledgeBase) ImportKnowledge(warehouse, filePath string) error {
 func (s *KnowledgeBase) DeleteKnowledge(warehouse, filePath string) error {
 	_ = s.daoPtr.DelChunks(warehouse, filePath)
 	_ = s.daoPtr.DelWarehouseKnowledge(warehouse, filePath)
+	finalFilePath := filepath.Join(s.baseStaticPath, filePath)
+	_ = os.Remove(finalFilePath)
 	return nil
 }
 
