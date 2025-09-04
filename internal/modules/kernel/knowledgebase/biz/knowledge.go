@@ -34,7 +34,8 @@ func (s *KnowledgeBase) ImportKnowledge(warehouse, filePath string) error {
 		return err
 	}
 
-	return nil
+	name := filepath.Base(filePath)
+	return s.daoPtr.AddWarehouseKnowledge(warehouse, name, filePath)
 }
 
 func (s *KnowledgeBase) DeleteKnowledge(warehouse, filePath string) error {
@@ -83,7 +84,7 @@ func (s *KnowledgeBase) ListKnowledge(warehouse string) (ret []*imkkc.KnowledgeI
 
 			ret = append(ret, &imkkc.KnowledgeItem{
 				Name:      entry.Name(),
-				FilePath:  entry.Name(),
+				FilePath:  filepath.Join(warehouse, entry.Name()),
 				Warehouse: warehouse,
 				Status:    imkkc.IdleState,
 				CreatedAt: fileInfo.ModTime().UTC().UnixMilli(),

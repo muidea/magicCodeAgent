@@ -13,14 +13,15 @@ import (
 func (s *KnowledgeBase) NewWarehouse(warehouse string) error {
 	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
 	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`
+		CREATE SEQUENCE %s_seq;
 		CREATE TABLE IF NOT EXISTS %s(
-			id INTEGER PRIMARY KEY,
+			id BIGINT PRIMARY KEY DEFAULT nextval('%s_seq'),
 			text TEXT,
 			metadata TEXT,
 			filePath TEXT,
 			embedding FLOAT[512]
 		);
-	`, warehouseTableName))
+	`, warehouseTableName, warehouseTableName, warehouseTableName))
 	if err != nil {
 		log.Errorf("create table %s error:%s", warehouseTableName, err.Error())
 		return err

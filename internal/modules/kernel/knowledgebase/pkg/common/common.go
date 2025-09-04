@@ -48,7 +48,7 @@ type DestroyWarehouseResult struct {
 }
 
 type KnowledgeItem struct {
-	ID        uint64 `json:"id"`
+	ID        uint64 `json:"-"`
 	Name      string `json:"name"`
 	FilePath  string `json:"filePath"`
 	Warehouse string `json:"warehouse"`
