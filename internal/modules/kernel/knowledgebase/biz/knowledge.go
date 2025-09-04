@@ -68,9 +68,10 @@ func (s *KnowledgeBase) ListKnowledge(warehouse string) (ret []*imkkc.KnowledgeI
 			continue
 		}
 
+		filePath := filepath.Join(warehouse, entry.Name())
 		existFlag := false
 		for _, sv := range dbItemList {
-			if entry.Name() == sv.FilePath {
+			if filePath == sv.FilePath {
 				existFlag = true
 				ret = append(ret, sv)
 				break
@@ -84,7 +85,7 @@ func (s *KnowledgeBase) ListKnowledge(warehouse string) (ret []*imkkc.KnowledgeI
 
 			ret = append(ret, &imkkc.KnowledgeItem{
 				Name:      entry.Name(),
-				FilePath:  filepath.Join(warehouse, entry.Name()),
+				FilePath:  filePath,
 				Warehouse: warehouse,
 				Status:    imkkc.IdleState,
 				CreatedAt: fileInfo.ModTime().UTC().UnixMilli(),

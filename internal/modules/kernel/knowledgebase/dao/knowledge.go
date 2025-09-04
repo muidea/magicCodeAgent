@@ -13,7 +13,7 @@ import (
 func (s *KnowledgeBase) init(dbPtr *sql.DB) error {
 	knowledgeTableName := "tbl_knowledge"
 	sql := fmt.Sprintf(`
-	CREATE SEQUENCE tbl_knowledge_seq;
+	CREATE SEQUENCE IF NOT EXISTS tbl_knowledge_seq;
 	CREATE TABLE IF NOT EXISTS %s (
 		id BIGINT PRIMARY KEY DEFAULT nextval('tbl_knowledge_seq'),
 		name TEXT,
