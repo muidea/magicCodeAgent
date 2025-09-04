@@ -12,16 +12,18 @@ import (
 
 func (s *KnowledgeBase) init(dbPtr *sql.DB) error {
 	knowledgeTableName := "tbl_knowledge"
-	_, err := dbPtr.Exec(fmt.Sprintf(`
+	sql := fmt.Sprintf(`
 	CREATE TABLE IF NOT EXISTS %s (
-	id INTEGER PRIMARY KEY AUTOINCREMENT, 
-	name TEXT,
-	filePath TEXT,
-	warehouse TEXT,
-	createdAt INTEGER
-	);`, knowledgeTableName))
+		id INTEGER PRIMARY KEY,
+		name TEXT,
+		filePath TEXT,
+		warehouse TEXT,
+		createdAt INTEGER
+	);
+	`, knowledgeTableName)
+	_, err := dbPtr.Exec(sql)
 	if err != nil {
-		log.Errorf("create table %s error: %v", knowledgeTableName, err)
+		log.Errorf("create table %s, error: %v", knowledgeTableName, err)
 		return err
 	}
 	_, err = dbPtr.Exec(fmt.Sprintf(`
@@ -53,7 +55,7 @@ func (s *KnowledgeBase) QueryWarehouseKnowledge(warehouse string) ([]*imkkc.Know
 
 	ret := []*imkkc.KnowledgeItem{}
 	for rowsPtr.Next() {
-		var id uint32
+		var id uint64
 		var name string
 		var filePath string
 		var warehouse string

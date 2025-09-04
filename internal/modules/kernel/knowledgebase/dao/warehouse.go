@@ -14,7 +14,7 @@ func (s *KnowledgeBase) NewWarehouse(warehouse string) error {
 	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
 	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s(
-			id BIGINT AUTO_INCREMENT,
+			id INTEGER PRIMARY KEY,
 			text TEXT,
 			metadata TEXT,
 			filePath TEXT,
