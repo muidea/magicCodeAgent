@@ -18,7 +18,7 @@ func (s *KnowledgeBase) NewWarehouse(warehouse string) error {
 			text TEXT,
 			metadata TEXT,
 			filePath TEXT,
-			embedding FLOAT[]
+			embedding FLOAT[512]
 		);
 	`, warehouseTableName))
 	if err != nil {
@@ -26,9 +26,10 @@ func (s *KnowledgeBase) NewWarehouse(warehouse string) error {
 		return err
 	}
 
-	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_embedding ON %s USING vss(embedding) WITH (metric='cosine')`, warehouseTableName, warehouseTableName))
+	sql := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_embedding ON %s USING HNSW (embedding) WITH (metric = 'cosine');`, warehouseTableName, warehouseTableName)
+	_, err = s.dbInstancePtr.Exec(sql)
 	if err != nil {
-		log.Errorf("create index %s_idx_embedding error:%s", warehouseTableName, err.Error())
+		log.Errorf("create index %s_idx_embedding, sql:%s, error:%s", warehouseTableName, sql, err.Error())
 		return err
 	}
 	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_filePath ON %s(filePath)`, warehouseTableName, warehouseTableName))

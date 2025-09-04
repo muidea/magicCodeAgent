@@ -29,7 +29,6 @@ const (
 
 type ListWarehouseResult struct {
 	cd.Result
-	Total  int64    `json:"total"`
 	Values []string `json:"values"`
 }
 
@@ -57,7 +56,14 @@ type KnowledgeItem struct {
 	CreatedAt int64  `json:"createdAt"`
 }
 
+type ImportKnowledgeParam struct {
+	FilePath  string `json:"filePath"`
+	Warehouse string `json:"warehouse"`
+}
+
+type DeleteKnowledgeParam ImportKnowledgeParam
+
 type ListKnowledgeResult struct {
 	cd.Result
-	Values []KnowledgeItem `json:"values"`
+	Values []*KnowledgeItem `json:"values"`
 }

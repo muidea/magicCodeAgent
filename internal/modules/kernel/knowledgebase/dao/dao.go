@@ -40,6 +40,12 @@ func (s *KnowledgeBase) Open() error {
 		return err
 	}
 
+	_, err = dbPtr.Exec(`PRAGMA hnsw_enable_experimental_persistence = true;`)
+	if err != nil {
+		log.Errorf("init knowledge db failed, err:%v", err)
+		return err
+	}
+
 	err = s.init(dbPtr)
 	if err != nil {
 		log.Errorf("init knowledge db failed, err:%v", err)

@@ -1,21 +1,51 @@
 package biz
 
+import (
+	"os"
+	"path/filepath"
+
+	fp "github.com/muidea/magicCommon/foundation/path"
+)
+
 func (s *KnowledgeBase) NewWarehouse(warehouse string) error {
-	if err := s.daoPtr.CheckWarehouse(warehouse); err == nil {
-		return err
+	warehousePath := filepath.Join(s.baseStaticPath, warehouse)
+	if fp.Exist(warehousePath) {
+		return nil
 	}
 
+	_ = os.MkdirAll(warehousePath, 0755)
 	return s.daoPtr.NewWarehouse(warehouse)
 }
 
 func (s *KnowledgeBase) DropWarehouse(warehouse string) error {
-	if err := s.daoPtr.CheckWarehouse(warehouse); err != nil {
+	warehousePath := filepath.Join(s.baseStaticPath, warehouse)
+	if !fp.Exist(warehousePath) {
+		return nil
+	}
+
+	if err := s.daoPtr.DropWarehouse(warehouse); err != nil {
 		return err
 	}
 
-	return s.daoPtr.DropWarehouse(warehouse)
+	if err := s.daoPtr.CleanWarehouseKnowledge(warehouse); err != nil {
+		return err
+	}
+
+	_ = os.RemoveAll(warehousePath)
+	return nil
 }
 
 func (s *KnowledgeBase) ListWarehouse() (ret []string, err error) {
+	entryList, entryErr := os.ReadDir(s.baseStaticPath)
+	if entryErr != nil {
+		err = entryErr
+		return
+	}
+
+	for _, entry := range entryList {
+		if entry.IsDir() {
+			ret = append(ret, entry.Name())
+		}
+	}
 	return
 }

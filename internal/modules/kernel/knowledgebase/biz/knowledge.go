@@ -1,14 +1,20 @@
 package biz
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fp "github.com/muidea/magicCommon/foundation/path"
 
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
 func (s *KnowledgeBase) ImportKnowledge(warehouse, filePath string) error {
+	_ = s.daoPtr.DelWarehouseKnowledge(warehouse, filePath)
+	_ = s.daoPtr.DelChunks(warehouse, filePath)
+
 	if err := s.daoPtr.CheckWarehouse(warehouse); err != nil {
 		log.Errorf("check warehouse %s failed, error:%s", warehouse, err.Error())
 		return err
@@ -36,6 +42,53 @@ func (s *KnowledgeBase) DeleteKnowledge(warehouse, filePath string) error {
 	return nil
 }
 
-func (s *KnowledgeBase) ListKnowledge(warehouse string) (ret []string, err error) {
+func (s *KnowledgeBase) ListKnowledge(warehouse string) (ret []*imkkc.KnowledgeItem, err error) {
+	warehousePath := filepath.Join(s.baseStaticPath, warehouse)
+	if !fp.Exist(warehousePath) {
+		err = fmt.Errorf("warehouse:%s not exist", warehouse)
+		return
+	}
+
+	entryList, entryErr := os.ReadDir(warehousePath)
+	if entryErr != nil {
+		err = entryErr
+		return
+	}
+
+	dbItemList, dbItemErr := s.daoPtr.QueryWarehouseKnowledge(warehouse)
+	if dbItemErr != nil {
+		err = dbItemErr
+		return
+	}
+
+	for _, entry := range entryList {
+		if entry.IsDir() {
+			continue
+		}
+
+		existFlag := false
+		for _, sv := range dbItemList {
+			if entry.Name() == sv.FilePath {
+				existFlag = true
+				ret = append(ret, sv)
+				break
+			}
+		}
+		if !existFlag {
+			fileInfo, fileErr := entry.Info()
+			if fileErr != nil {
+				continue
+			}
+
+			ret = append(ret, &imkkc.KnowledgeItem{
+				Name:      entry.Name(),
+				FilePath:  entry.Name(),
+				Warehouse: warehouse,
+				Status:    imkkc.IdleState,
+				CreatedAt: fileInfo.ModTime().UTC().UnixMilli(),
+			})
+		}
+	}
+
 	return
 }

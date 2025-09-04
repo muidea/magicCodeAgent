@@ -99,3 +99,14 @@ func (s *KnowledgeBase) DelWarehouseKnowledge(warehouse, filePath string) error 
 	}
 	return deleteErr
 }
+
+func (s *KnowledgeBase) CleanWarehouseKnowledge(warehouse string) error {
+	knowledgeTableName := "tbl_knowledge"
+	sql := fmt.Sprintf("DELETE FROM %s WHERE warehouse = ?", knowledgeTableName)
+	_, deleteErr := s.dbInstancePtr.Exec(sql, warehouse)
+	if deleteErr != nil {
+		log.Errorf("delete warehouse knowledge failed, error:%s", deleteErr.Error())
+		return deleteErr
+	}
+	return deleteErr
+}
