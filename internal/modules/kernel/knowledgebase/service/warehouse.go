@@ -12,7 +12,7 @@ import (
 )
 
 func (s *KnowledgeBase) CreateWarehouse(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkkc.CreateWarehouseResult{Result: cd.NewResult()}
+	result := &imkkc.CreateWarehouseResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &imkkc.CreateWarehouseParam{}
@@ -31,7 +31,7 @@ func (s *KnowledgeBase) CreateWarehouse(ctx context.Context, res http.ResponseWr
 }
 
 func (s *KnowledgeBase) DestroyWarehouse(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkkc.DestroyWarehouseResult{Result: cd.NewResult()}
+	result := &imkkc.DestroyWarehouseResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &imkkc.DestroyWarehouseParam{}
@@ -51,7 +51,7 @@ func (s *KnowledgeBase) DestroyWarehouse(ctx context.Context, res http.ResponseW
 }
 
 func (s *KnowledgeBase) ListWarehouse(ctx context.Context, rw http.ResponseWriter, req *http.Request) {
-	result := &imkkc.ListWarehouseResult{Result: cd.NewResult()}
+	result := &imkkc.ListWarehouseResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(rw, result)
 	valList, valErr := s.bizPtr.ListWarehouse()
 	if valErr != nil {

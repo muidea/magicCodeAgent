@@ -47,7 +47,7 @@ func (s *Workspace) switchWorkspaceStage(ctx context.Context, res http.ResponseW
 | `extension`  | string | 否   | 文件扩展名精确匹配（如 `pdf`，不区分大小写）                          |
 */
 func (s *Workspace) filterFile(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkwc.FileListResult{Result: cd.NewResult()}
+	result := &imkwc.FileListResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	filter := &imkwc.FileFilter{}
@@ -56,7 +56,7 @@ func (s *Workspace) filterFile(ctx context.Context, res http.ResponseWriter, req
 }
 
 func (s *Workspace) filterFileTree(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkwc.FileTreeListResult{Result: cd.NewResult()}
+	result := &imkwc.FileTreeListResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	workspace := req.URL.Query().Get("workspace")

@@ -13,7 +13,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/marcboeker/go-duckdb/v2 v2.3.3
 	github.com/mark3labs/mcp-go v0.37.0
-	github.com/muidea/magicCommon v1.4.11
+	github.com/muidea/magicCommon v1.4.12
 	github.com/muidea/magicEngine v0.0.0-00010101000000-000000000000
 	github.com/sashabaranov/go-openai v1.41.1
 	github.com/stretchr/testify v1.10.0

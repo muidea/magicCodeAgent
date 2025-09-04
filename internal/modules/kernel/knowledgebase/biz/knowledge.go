@@ -21,7 +21,6 @@ func (s *KnowledgeBase) ImportKnowledge(warehouse, filePath string) error {
 	}
 
 	finalFilePath := filepath.Join(s.baseStaticPath, filePath)
-	log.Infof("finalFilePath:%s", finalFilePath)
 	mdBytes, err := os.ReadFile(finalFilePath)
 	if err != nil {
 		log.Errorf("open file failed, filePath:%s, err:%v", filePath, err)

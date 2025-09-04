@@ -49,7 +49,7 @@ func (s *KnowledgeBase) DeleteKnowledge(ctx context.Context, res http.ResponseWr
 }
 
 func (s *KnowledgeBase) ListKnowledge(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkkc.ListKnowledgeResult{Result: cd.NewResult()}
+	result := &imkkc.ListKnowledgeResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	warehouse := req.URL.Query().Get("warehouse")

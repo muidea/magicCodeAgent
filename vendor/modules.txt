@@ -135,7 +135,7 @@ github.com/marcboeker/go-duckdb/v2
 github.com/mark3labs/mcp-go/mcp
 github.com/mark3labs/mcp-go/server
 github.com/mark3labs/mcp-go/util
-# github.com/muidea/magicCommon v1.4.11 => ../magicCommon
+# github.com/muidea/magicCommon v1.4.12 => ../magicCommon
 ## explicit; go 1.24
 github.com/muidea/magicCommon/def
 github.com/muidea/magicCommon/event
