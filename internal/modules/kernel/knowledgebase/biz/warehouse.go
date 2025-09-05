@@ -4,17 +4,18 @@ import (
 	"os"
 	"path/filepath"
 
+	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 	fp "github.com/muidea/magicCommon/foundation/path"
 )
 
-func (s *KnowledgeBase) NewWarehouse(warehouse string) error {
+func (s *KnowledgeBase) NewWarehouse(warehouse, description string) error {
 	warehousePath := filepath.Join(s.baseStaticPath, warehouse)
 	if fp.Exist(warehousePath) {
 		return nil
 	}
 
 	_ = os.MkdirAll(warehousePath, 0755)
-	return s.daoPtr.NewWarehouse(warehouse)
+	return s.daoPtr.NewWarehouse(warehouse, description)
 }
 
 func (s *KnowledgeBase) DropWarehouse(warehouse string) error {
@@ -35,22 +36,15 @@ func (s *KnowledgeBase) DropWarehouse(warehouse string) error {
 	return nil
 }
 
-func (s *KnowledgeBase) ListWarehouse() (ret []string, err error) {
-	entryList, entryErr := os.ReadDir(s.baseStaticPath)
-	if entryErr != nil {
-		err = entryErr
-		return
-	}
-
-	for _, entry := range entryList {
-		if entry.IsDir() {
-			ret = append(ret, entry.Name())
-		}
-	}
-	return
+func (s *KnowledgeBase) ListWarehouse() (ret []*imkkc.WarehouseItem, err error) {
+	return s.daoPtr.ListWarehouse()
 }
 
 func (s *KnowledgeBase) ExistWorkspace(workspace string) bool {
+	if err := s.daoPtr.CheckWarehouse(workspace); err != nil {
+		return false
+	}
+
 	warehousePath := filepath.Join(s.baseStaticPath, workspace)
 	_, err := os.Stat(warehousePath)
 	return err == nil

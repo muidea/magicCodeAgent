@@ -10,7 +10,7 @@ import (
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
-func (s *KnowledgeBase) init(dbPtr *sql.DB) error {
+func (s *KnowledgeBase) initKnowledge(dbPtr *sql.DB) error {
 	knowledgeTableName := "tbl_knowledge"
 	sql := fmt.Sprintf(`
 	CREATE SEQUENCE IF NOT EXISTS tbl_knowledge_seq;

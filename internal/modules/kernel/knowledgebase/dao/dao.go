@@ -46,9 +46,15 @@ func (s *KnowledgeBase) Open() error {
 		return err
 	}
 
-	err = s.init(dbPtr)
+	err = s.initKnowledge(dbPtr)
 	if err != nil {
 		log.Errorf("init knowledge db failed, err:%v", err)
+		return err
+	}
+
+	err = s.initWarehouse(dbPtr)
+	if err != nil {
+		log.Errorf("init warehouse db failed, err:%v", err)
 		return err
 	}
 

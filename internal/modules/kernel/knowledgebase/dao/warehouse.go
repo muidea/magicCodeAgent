@@ -1,8 +1,10 @@
 package dao
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
 
@@ -10,8 +12,100 @@ import (
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
-func (s *KnowledgeBase) NewWarehouse(warehouse string) error {
-	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
+func (s *KnowledgeBase) getWarehouseTableName() string {
+	return "tbl_warehouse"
+}
+
+func (s *KnowledgeBase) getWarehouseVectTableName(warehouse string) string {
+	return fmt.Sprintf("tbl_%s_vect", warehouse)
+}
+
+func (s *KnowledgeBase) initWarehouse(dbPtr *sql.DB) error {
+	warehouseTableName := s.getWarehouseTableName()
+	sql := fmt.Sprintf(`
+	CREATE SEQUENCE IF NOT EXISTS tbl_warehouse_seq;
+	CREATE TABLE IF NOT EXISTS %s (
+		id BIGINT PRIMARY KEY DEFAULT nextval('tbl_warehouse_seq'),
+		name TEXT,
+		description TEXT,
+		createdAt BIGINT,
+	);
+	`, warehouseTableName)
+	_, err := dbPtr.Exec(sql)
+	if err != nil {
+		log.Errorf("create table %s, error: %v", warehouseTableName, err)
+		return err
+	}
+	_, err = dbPtr.Exec(fmt.Sprintf(`
+	CREATE INDEX IF NOT EXISTS %s_idx_warehouse ON %s (name);`, warehouseTableName, warehouseTableName))
+	if err != nil {
+		log.Errorf("create index %s_idx_warehouse error: %v", warehouseTableName, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *KnowledgeBase) addWarehouse(warehouse, description string) error {
+	warehouseTableName := s.getWarehouseTableName()
+	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`
+	INSERT INTO %s (name, description, createdAt) VALUES (?, ?, ?)`, warehouseTableName), warehouse, description, time.Now().UTC().UnixMilli())
+	if err != nil {
+		log.Errorf("insert table %s failed, error:%s", warehouseTableName, err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *KnowledgeBase) deleteWarehouse(warehouse string) error {
+	warehouseTableName := s.getWarehouseTableName()
+	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`DELETE FROM %s WHERE name = ?`, warehouseTableName), warehouse)
+	if err != nil {
+		log.Errorf("delete table %s failed, error:%s", warehouseTableName, err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *KnowledgeBase) CheckWarehouse(warehouse string) error {
+	warehouseTableName := s.getWarehouseTableName()
+	rowPtr := s.dbInstancePtr.QueryRow(fmt.Sprintf(`SELECT * FROM %s WHERE name = ?`, warehouseTableName), warehouse)
+	if rowPtr.Err() != nil {
+		log.Errorf("check table %s error:%s", warehouseTableName, rowPtr.Err().Error())
+		return rowPtr.Err()
+	}
+	return nil
+}
+
+func (s *KnowledgeBase) ListWarehouse() ([]*imkkc.WarehouseItem, error) {
+	warehouseTableName := s.getWarehouseTableName()
+	rows, err := s.dbInstancePtr.Query(fmt.Sprintf(`SELECT name, description, createdAt FROM %s`, warehouseTableName))
+	if err != nil {
+		log.Errorf("query table %s records failed, error:%s", warehouseTableName, err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+	var ret []*imkkc.WarehouseItem
+	for rows.Next() {
+		var name string
+		var description string
+		var createdAt int64
+		err := rows.Scan(&name, &description, &createdAt)
+		if err != nil {
+			log.Errorf("scan row failed, error:%s", err.Error())
+			return nil, err
+		}
+		ret = append(ret, &imkkc.WarehouseItem{
+			Name:        name,
+			Description: description,
+			CreatedAt:   createdAt,
+		})
+	}
+	return ret, nil
+}
+
+func (s *KnowledgeBase) NewWarehouse(warehouse, description string) error {
+	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`
 		CREATE SEQUENCE IF NOT EXISTS %s_seq;
 		CREATE TABLE IF NOT EXISTS %s(
@@ -21,50 +115,40 @@ func (s *KnowledgeBase) NewWarehouse(warehouse string) error {
 			filePath TEXT,
 			embedding FLOAT[512]
 		);
-	`, warehouseTableName, warehouseTableName, warehouseTableName))
+	`, warehouseVectTableName, warehouseVectTableName, warehouseVectTableName))
 	if err != nil {
-		log.Errorf("create table %s error:%s", warehouseTableName, err.Error())
+		log.Errorf("create table %s error:%s", warehouseVectTableName, err.Error())
 		return err
 	}
 
-	sql := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_embedding ON %s USING HNSW (embedding) WITH (metric = 'cosine');`, warehouseTableName, warehouseTableName)
+	sql := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_embedding ON %s USING HNSW (embedding) WITH (metric = 'cosine');`, warehouseVectTableName, warehouseVectTableName)
 	_, err = s.dbInstancePtr.Exec(sql)
 	if err != nil {
-		log.Errorf("create index %s_idx_embedding, sql:%s, error:%s", warehouseTableName, sql, err.Error())
+		log.Errorf("create index %s_idx_embedding, sql:%s, error:%s", warehouseVectTableName, sql, err.Error())
 		return err
 	}
-	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_filePath ON %s(filePath)`, warehouseTableName, warehouseTableName))
+	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_filePath ON %s(filePath)`, warehouseVectTableName, warehouseVectTableName))
 	if err != nil {
-		log.Errorf("create index %s_idx_filePath error:%s", warehouseTableName, err.Error())
+		log.Errorf("create index %s_idx_filePath error:%s", warehouseVectTableName, err.Error())
 		return err
 	}
 
-	return nil
+	return s.addWarehouse(warehouse, description)
 }
 
 func (s *KnowledgeBase) DropWarehouse(warehouse string) error {
-	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
-	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS %s`, warehouseTableName))
+	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
+	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS %s`, warehouseVectTableName))
 	if err != nil {
-		log.Errorf("drop table %s error:%s", warehouseTableName, err.Error())
+		log.Errorf("drop table %s error:%s", warehouseVectTableName, err.Error())
 		return err
 	}
 
-	return nil
-}
-
-func (s *KnowledgeBase) CheckWarehouse(warehouse string) error {
-	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
-	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`SELECT * FROM %s LIMIT 1`, warehouseTableName))
-	if err != nil {
-		log.Errorf("check table %s error:%s", warehouseTableName, err.Error())
-		return err
-	}
-	return nil
+	return s.deleteWarehouse(warehouse)
 }
 
 func (s *KnowledgeBase) AddChunk(warehouse string, chunkPtr *imkkc.Chunk, embedTextWorker iiec.EmbedTextWorker) error {
-	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
+	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	meta, _ := json.Marshal(chunkPtr.Metadata)
 	vectorVal, vectorErr := embedTextWorker.EmbedText(chunkPtr.Text)
 	if vectorErr != nil {
@@ -73,13 +157,13 @@ func (s *KnowledgeBase) AddChunk(warehouse string, chunkPtr *imkkc.Chunk, embedT
 	}
 	vecLit := floatSliceToArrayLiteral(vectorVal)
 	// insert: pass text and metadata as parameters, vec inline to avoid driver binding issues
-	sqlStmt := fmt.Sprintf(`INSERT INTO %s (text, metadata, filePath, embedding) VALUES (?, ?, ?, %s)`, warehouseTableName, vecLit)
+	sqlStmt := fmt.Sprintf(`INSERT INTO %s (text, metadata, filePath, embedding) VALUES (?, ?, ?, %s)`, warehouseVectTableName, vecLit)
 	_, err := s.dbInstancePtr.Exec(sqlStmt, chunkPtr.Text, string(meta), chunkPtr.FilePath)
 	return err
 }
 
 func (s *KnowledgeBase) AddChunksBulk(warehouse string, chunkPtrs []*imkkc.Chunk, embedTextWorker iiec.EmbedTextWorker) (err error) {
-	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
+	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	txVal, txErr := s.dbInstancePtr.Begin()
 	if txErr != nil {
 		err = txErr
@@ -94,7 +178,7 @@ func (s *KnowledgeBase) AddChunksBulk(warehouse string, chunkPtrs []*imkkc.Chunk
 		err = txVal.Rollback()
 	}()
 
-	stmtVal, stmtErr := txVal.Prepare(fmt.Sprintf(`INSERT INTO %s (text, metadata, filePath, embedding) VALUES (?, ?, ?, ?)`, warehouseTableName))
+	stmtVal, stmtErr := txVal.Prepare(fmt.Sprintf(`INSERT INTO %s (text, metadata, filePath, embedding) VALUES (?, ?, ?, ?)`, warehouseVectTableName))
 	if stmtErr != nil {
 		err = stmtErr
 		return
@@ -121,22 +205,22 @@ func (s *KnowledgeBase) AddChunksBulk(warehouse string, chunkPtrs []*imkkc.Chunk
 }
 
 func (s *KnowledgeBase) DelChunks(warehouse, filePath string) (err error) {
-	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
-	sql := fmt.Sprintf("DELETE FROM %s WHERE filePath = ?", warehouseTableName)
+	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
+	sql := fmt.Sprintf("DELETE FROM %s WHERE filePath = ?", warehouseVectTableName)
 	_, err = s.dbInstancePtr.Exec(sql, filePath)
 	return
 }
 
 func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK int) ([]*imkkc.Chunk, error) {
-	warehouseTableName := fmt.Sprintf("tbl_%s", warehouse)
+	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	vecLit := floatSliceToArrayLiteral(vector)
 	sqlStmt := fmt.Sprintf(`
 		SELECT id, text, metadata, filePath, distance
 		FROM vss_search('%s', 'embedding', %s, %d);
-	`, warehouseTableName, vecLit, topK)
+	`, warehouseVectTableName, vecLit, topK)
 	rows, err := s.dbInstancePtr.Query(sqlStmt)
 	if err != nil {
-		log.Errorf("query table %s records failed, error:%s", warehouseTableName, err.Error())
+		log.Errorf("query table %s records failed, error:%s", warehouseVectTableName, err.Error())
 		return nil, err
 	}
 	defer rows.Close()

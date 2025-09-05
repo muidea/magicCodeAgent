@@ -27,25 +27,28 @@ const (
 	ListWorkspaceKnowledge        = "/knowledgebase/knowledge/list"
 )
 
+type WarehouseItem struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CreatedAt   int64  `json:"createdAt"`
+}
+
 type ListWarehouseResult struct {
 	cd.Result
-	Values []string `json:"values"`
+	Values []*WarehouseItem `json:"values"`
 }
 
 type CreateWarehouseParam struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
-type CreateWarehouseResult struct {
-	cd.Result
-}
+type CreateWarehouseResult ListWarehouseResult
 
 type DestroyWarehouseParam struct {
 	Name string `json:"name"`
 }
-type DestroyWarehouseResult struct {
-	cd.Result
-}
+type DestroyWarehouseResult ListWarehouseResult
 
 type KnowledgeItem struct {
 	ID        uint64 `json:"-"`

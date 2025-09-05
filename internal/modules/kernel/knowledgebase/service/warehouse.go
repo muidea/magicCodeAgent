@@ -12,7 +12,7 @@ import (
 )
 
 func (s *KnowledgeBase) CreateWarehouse(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkkc.ListWarehouseResult{Result: *cd.NewResult()}
+	result := &imkkc.CreateWarehouseResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &imkkc.CreateWarehouseParam{}
@@ -21,7 +21,7 @@ func (s *KnowledgeBase) CreateWarehouse(ctx context.Context, res http.ResponseWr
 		log.Errorf("parse body error: %s", err.Error())
 		return
 	}
-	if err := s.bizPtr.NewWarehouse(param.Name); err != nil {
+	if err := s.bizPtr.NewWarehouse(param.Name, param.Description); err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, err.Error())
 		log.Errorf("new warehouse error: %s", err.Error())
 		return
@@ -37,7 +37,7 @@ func (s *KnowledgeBase) CreateWarehouse(ctx context.Context, res http.ResponseWr
 }
 
 func (s *KnowledgeBase) DestroyWarehouse(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkkc.ListWarehouseResult{Result: *cd.NewResult()}
+	result := &imkkc.DestroyWarehouseResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &imkkc.DestroyWarehouseParam{}
