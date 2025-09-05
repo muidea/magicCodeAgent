@@ -27,8 +27,7 @@ func (s *KnowledgeBase) Open() error {
 	if !fp.Exist(dataPath) {
 		os.MkdirAll(dataPath, 0755)
 	}
-	dsn := fmt.Sprintf("%s/knowledge.db?access_mode=read_write", dataPath)
-	dbPtr, err := sql.Open("duckdb", dsn)
+	dbPtr, err := sql.Open("duckdb", ":memory:")
 	if err != nil {
 		log.Errorf("open knowledge db failed, dataPath:%s, err:%v", dataPath, err)
 		return err
@@ -40,9 +39,17 @@ func (s *KnowledgeBase) Open() error {
 		return err
 	}
 
-	_, err = dbPtr.Exec(`PRAGMA hnsw_enable_experimental_persistence = true;`)
+	_, err = dbPtr.Exec(`SET hnsw_enable_experimental_persistence = true;`)
 	if err != nil {
 		log.Errorf("init knowledge db failed, err:%v", err)
+		return err
+	}
+
+	dsn := fmt.Sprintf("%s/knowledge.db", dataPath)
+	sql := fmt.Sprintf(`ATTACH '%s' AS kb; SET schema 'kb';`, dsn)
+	_, err = dbPtr.Exec(sql)
+	if err != nil {
+		log.Errorf("attach local knowledge.db failed, error:%s", err.Error())
 		return err
 	}
 
