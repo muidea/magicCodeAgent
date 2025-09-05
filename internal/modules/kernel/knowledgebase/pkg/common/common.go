@@ -45,9 +45,6 @@ type CreateWarehouseParam struct {
 
 type CreateWarehouseResult ListWarehouseResult
 
-type DestroyWarehouseParam struct {
-	Name string `json:"name"`
-}
 type DestroyWarehouseResult ListWarehouseResult
 
 type KnowledgeItem struct {
@@ -63,8 +60,6 @@ type ImportKnowledgeParam struct {
 	FilePath  string `json:"filePath"`
 	Warehouse string `json:"warehouse"`
 }
-
-type DeleteKnowledgeParam ImportKnowledgeParam
 
 type ListKnowledgeResult struct {
 	cd.Result

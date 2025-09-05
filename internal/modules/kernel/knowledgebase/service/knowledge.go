@@ -42,18 +42,19 @@ func (s *KnowledgeBase) DeleteKnowledge(ctx context.Context, res http.ResponseWr
 	result := &imkkc.ListKnowledgeResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &imkkc.DeleteKnowledgeParam{}
-	if err := fn.ParseJSONBody(req, nil, param); err != nil {
-		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
-		log.Errorf("parse body error: %s", err.Error())
+	warehouse := req.URL.Query().Get("warehouse")
+	filePath := req.URL.Query().Get("filePath")
+	if warehouse == "" || filePath == "" {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to get request parameters")
+		log.Errorf("missing request parameters")
 		return
 	}
-	if err := s.bizPtr.DeleteKnowledge(param.Warehouse, param.FilePath); err != nil {
+	if err := s.bizPtr.DeleteKnowledge(warehouse, filePath); err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, err.Error())
 		log.Errorf("delete knowledge error: %s", err.Error())
 		return
 	}
-	valList, valErr := s.bizPtr.ListKnowledge(param.Warehouse)
+	valList, valErr := s.bizPtr.ListKnowledge(warehouse)
 	if valErr != nil {
 		result.Error = cd.NewError(cd.Unexpected, valErr.Error())
 		log.Errorf("list knowledge error: %s", valErr.Error())
