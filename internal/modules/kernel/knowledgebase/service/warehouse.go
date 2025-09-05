@@ -40,14 +40,14 @@ func (s *KnowledgeBase) DestroyWarehouse(ctx context.Context, res http.ResponseW
 	result := &imkkc.DestroyWarehouseResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
-	param := &imkkc.DestroyWarehouseParam{}
-	if err := fn.ParseJSONBody(req, nil, param); err != nil {
+	warehouse := req.URL.Query().Get("name")
+	if warehouse == "" {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
-		log.Errorf("parse body error: %s", err.Error())
+		log.Errorf("missing required parameter: name")
 		return
 	}
 
-	if err := s.bizPtr.DropWarehouse(param.Name); err != nil {
+	if err := s.bizPtr.DropWarehouse(warehouse); err != nil {
 		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
 		log.Errorf("drop warehouse error: %s", err.Error())
 		return
