@@ -12,7 +12,7 @@ import (
 )
 
 func (s *KnowledgeBase) ImportKnowledge(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := cd.NewResult()
+	result := &imkkc.ListKnowledgeResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &imkkc.ImportKnowledgeParam{}
@@ -27,11 +27,19 @@ func (s *KnowledgeBase) ImportKnowledge(ctx context.Context, res http.ResponseWr
 		log.Errorf("import knowledge error: %s", err.Error())
 		return
 	}
+	valList, valErr := s.bizPtr.ListKnowledge(param.Warehouse)
+	if valErr != nil {
+		result.Error = cd.NewError(cd.Unexpected, valErr.Error())
+		log.Errorf("list knowledge error: %s", valErr.Error())
+		return
+	}
+
+	result.Values = valList
 	result.Error = nil
 }
 
 func (s *KnowledgeBase) DeleteKnowledge(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := cd.NewResult()
+	result := &imkkc.ListKnowledgeResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &imkkc.DeleteKnowledgeParam{}
@@ -45,6 +53,14 @@ func (s *KnowledgeBase) DeleteKnowledge(ctx context.Context, res http.ResponseWr
 		log.Errorf("delete knowledge error: %s", err.Error())
 		return
 	}
+	valList, valErr := s.bizPtr.ListKnowledge(param.Warehouse)
+	if valErr != nil {
+		result.Error = cd.NewError(cd.Unexpected, valErr.Error())
+		log.Errorf("list knowledge error: %s", valErr.Error())
+		return
+	}
+
+	result.Values = valList
 	result.Error = nil
 }
 

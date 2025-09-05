@@ -12,7 +12,7 @@ import (
 )
 
 func (s *KnowledgeBase) CreateWarehouse(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkkc.CreateWarehouseResult{Result: *cd.NewResult()}
+	result := &imkkc.ListWarehouseResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &imkkc.CreateWarehouseParam{}
@@ -27,11 +27,17 @@ func (s *KnowledgeBase) CreateWarehouse(ctx context.Context, res http.ResponseWr
 		return
 	}
 
+	valList, valErr := s.bizPtr.ListWarehouse()
+	if valErr != nil {
+		result.Error = cd.NewError(cd.Unexpected, valErr.Error())
+		return
+	}
+	result.Values = valList
 	result.Error = nil
 }
 
 func (s *KnowledgeBase) DestroyWarehouse(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkkc.DestroyWarehouseResult{Result: *cd.NewResult()}
+	result := &imkkc.ListWarehouseResult{Result: *cd.NewResult()}
 	defer fn.PackageHTTPResponse(res, result)
 
 	param := &imkkc.DestroyWarehouseParam{}
@@ -47,6 +53,12 @@ func (s *KnowledgeBase) DestroyWarehouse(ctx context.Context, res http.ResponseW
 		return
 	}
 
+	valList, valErr := s.bizPtr.ListWarehouse()
+	if valErr != nil {
+		result.Error = cd.NewError(cd.Unexpected, valErr.Error())
+		return
+	}
+	result.Values = valList
 	result.Error = nil
 }
 
