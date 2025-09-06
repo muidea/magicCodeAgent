@@ -22,7 +22,6 @@ const (
 	CreateKnowledgebaseWarehouse  = "/knowledgebase/warehouse/create"
 	DestroyKnowledgebaseWarehouse = "/knowledgebase/warehouse/destroy"
 	UploadWarehouseKnowledge      = "/knowledgebase/knowledge/upload"
-	ImportWarehouseKnowledge      = "/knowledgebase/knowledge/import"
 	DeleteWarehouseKnowledge      = "/knowledgebase/knowledge/delete"
 	ListWarehouseKnowledge        = "/knowledgebase/knowledge/list"
 	GetWarehouseKnowledgeContent  = "/knowledgebase/knowledge/content"

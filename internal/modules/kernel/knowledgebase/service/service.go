@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/muidea/magicCommon/foundation/log"
 	engine "github.com/muidea/magicEngine/http"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/biz"
@@ -40,7 +39,6 @@ func (s *KnowledgeBase) RegisterRoute() {
 		"",
 		engine.DefaultMaxFileSize, s.uploadKnowledgeCallback)
 	s.routeRegistry.AddRoute(uploadRoute, s)
-	s.routeRegistry.AddHandler(imkkc.ImportWarehouseKnowledge, engine.POST, s.ImportKnowledge)
 	s.routeRegistry.AddHandler(imkkc.DeleteWarehouseKnowledge, engine.DELETE, s.DeleteKnowledge)
 	s.routeRegistry.AddHandler(imkkc.ListWarehouseKnowledge, engine.GET, s.ListKnowledge)
 	s.routeRegistry.AddHandler(imkkc.GetWarehouseKnowledgeContent, engine.GET, s.GetKnowledgeContent)
@@ -63,7 +61,6 @@ func (s *KnowledgeBase) MiddleWareHandle(ctx engine.RequestContext, res http.Res
 		return
 	}
 
-	log.Infof("warehouse:%s", warehouse)
 	newContext := context.WithValue(ctx.Context(), engine.RelativePath{}, warehouse)
 	ctx.Update(newContext)
 	ctx.Next()

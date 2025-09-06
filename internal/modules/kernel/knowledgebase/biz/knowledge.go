@@ -12,10 +12,14 @@ import (
 )
 
 func (s *KnowledgeBase) InsertKnowlege(warehouse, name, description, filePath string) error {
+	if err := s.importKnowledge(warehouse, filePath); err != nil {
+		return err
+	}
+
 	return s.daoPtr.AddWarehouseKnowledge(warehouse, name, description, filePath)
 }
 
-func (s *KnowledgeBase) ImportKnowledge(warehouse, filePath string) error {
+func (s *KnowledgeBase) importKnowledge(warehouse, filePath string) error {
 	_ = s.daoPtr.DelWarehouseKnowledge(warehouse, filePath)
 	_ = s.daoPtr.DelChunks(warehouse, filePath)
 
@@ -55,48 +59,13 @@ func (s *KnowledgeBase) ListKnowledge(warehouse string) (ret []*imkkc.KnowledgeI
 		return
 	}
 
-	entryList, entryErr := os.ReadDir(warehousePath)
-	if entryErr != nil {
-		err = entryErr
-		return
-	}
-
 	dbItemList, dbItemErr := s.daoPtr.QueryWarehouseKnowledge(warehouse)
 	if dbItemErr != nil {
 		err = dbItemErr
 		return
 	}
 
-	for _, entry := range entryList {
-		if entry.IsDir() {
-			continue
-		}
-
-		filePath := filepath.Join(warehouse, entry.Name())
-		existFlag := false
-		for _, sv := range dbItemList {
-			if filePath == sv.FilePath {
-				existFlag = true
-				ret = append(ret, sv)
-				break
-			}
-		}
-		if !existFlag {
-			fileInfo, fileErr := entry.Info()
-			if fileErr != nil {
-				continue
-			}
-
-			ret = append(ret, &imkkc.KnowledgeItem{
-				Name:      entry.Name(),
-				FilePath:  filePath,
-				Warehouse: warehouse,
-				Status:    imkkc.IdleState,
-				CreatedAt: fileInfo.ModTime().UTC().UnixMilli(),
-			})
-		}
-	}
-
+	ret = dbItemList
 	return
 }
 
