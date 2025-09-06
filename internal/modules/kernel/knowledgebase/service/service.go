@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/muidea/magicCommon/foundation/log"
 	engine "github.com/muidea/magicEngine/http"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/biz"
@@ -37,7 +38,7 @@ func (s *KnowledgeBase) RegisterRoute() {
 		engine.POST,
 		baseStaticPath,
 		"",
-		engine.DefaultMaxFileSize)
+		engine.DefaultMaxFileSize, s.uploadKnowledgeCallback)
 	s.routeRegistry.AddRoute(uploadRoute, s)
 	s.routeRegistry.AddHandler(imkkc.ImportWorkspaceKnowledge, engine.POST, s.ImportKnowledge)
 	s.routeRegistry.AddHandler(imkkc.DeleteWorkspaceKnowledge, engine.DELETE, s.DeleteKnowledge)
@@ -45,17 +46,24 @@ func (s *KnowledgeBase) RegisterRoute() {
 }
 
 func (s *KnowledgeBase) MiddleWareHandle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {
-	workspace := req.URL.Query().Get("workspace")
-	if workspace == "" {
-		res.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if !s.bizPtr.ExistWorkspace(workspace) {
+	err := req.ParseMultipartForm(engine.DefaultMaxFileSize)
+	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	newContext := context.WithValue(ctx.Context(), engine.RelativePath{}, workspace)
+	warehouse := req.PostFormValue("warehouse")
+	if warehouse == "" {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !s.bizPtr.ExistWarehouse(warehouse) {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	log.Infof("warehouse:%s", warehouse)
+	newContext := context.WithValue(ctx.Context(), engine.RelativePath{}, warehouse)
 	ctx.Update(newContext)
 	ctx.Next()
 }

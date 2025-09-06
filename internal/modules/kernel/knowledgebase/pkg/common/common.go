@@ -48,12 +48,13 @@ type CreateWarehouseResult ListWarehouseResult
 type DestroyWarehouseResult ListWarehouseResult
 
 type KnowledgeItem struct {
-	ID        uint64 `json:"-"`
-	Name      string `json:"name"`
-	FilePath  string `json:"filePath"`
-	Warehouse string `json:"warehouse"`
-	Status    int    `json:"status"`
-	CreatedAt int64  `json:"createdAt"`
+	ID          uint64 `json:"-"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	FilePath    string `json:"filePath"`
+	Warehouse   string `json:"warehouse"`
+	Status      int    `json:"status"`
+	CreatedAt   int64  `json:"createdAt"`
 }
 
 type ImportKnowledgeParam struct {

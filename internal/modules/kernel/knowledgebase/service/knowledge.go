@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"net/http"
+	"path/filepath"
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/foundation/log"
@@ -10,6 +11,34 @@ import (
 
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
+
+func (s *KnowledgeBase) uploadKnowledgeCallback(ctx context.Context, res http.ResponseWriter, req *http.Request, filePath string, err error) {
+	result := &imkkc.ListKnowledgeResult{Result: *cd.NewResult()}
+	defer fn.PackageHTTPResponse(res, result)
+	if err != nil {
+		result.Error = cd.NewError(cd.Unexpected, err.Error())
+		return
+	}
+
+	name := filepath.Base(filePath)
+	description := req.PostFormValue("description")
+	warehouse := req.PostFormValue("warehouse")
+	err = s.bizPtr.InsertKnowlege(warehouse, name, description, filePath)
+	if err != nil {
+		result.Error = cd.NewError(cd.Unexpected, err.Error())
+		return
+	}
+
+	valList, valErr := s.bizPtr.ListKnowledge(warehouse)
+	if valErr != nil {
+		result.Error = cd.NewError(cd.Unexpected, valErr.Error())
+		log.Errorf("list knowledge error: %s", valErr.Error())
+		return
+	}
+
+	result.Values = valList
+	result.Error = nil
+}
 
 func (s *KnowledgeBase) ImportKnowledge(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	result := &imkkc.ListKnowledgeResult{Result: *cd.NewResult()}

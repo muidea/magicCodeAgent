@@ -46,7 +46,7 @@ func (s *KnowledgeBase) Open() error {
 	}
 
 	dsn := fmt.Sprintf("%s/knowledge.db", dataPath)
-	sql := fmt.Sprintf(`ATTACH '%s' AS kb; SET schema 'kb';`, dsn)
+	sql := fmt.Sprintf(`ATTACH '%s' AS kb; USE 'kb';`, dsn)
 	_, err = dbPtr.Exec(sql)
 	if err != nil {
 		log.Errorf("attach local knowledge.db failed, error:%s", err.Error())

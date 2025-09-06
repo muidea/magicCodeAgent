@@ -11,6 +11,10 @@ import (
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
+func (s *KnowledgeBase) InsertKnowlege(warehouse, name, description, filePath string) error {
+	return s.daoPtr.AddWarehouseKnowledge(warehouse, name, description, filePath)
+}
+
 func (s *KnowledgeBase) ImportKnowledge(warehouse, filePath string) error {
 	_ = s.daoPtr.DelWarehouseKnowledge(warehouse, filePath)
 	_ = s.daoPtr.DelChunks(warehouse, filePath)
@@ -33,9 +37,7 @@ func (s *KnowledgeBase) ImportKnowledge(warehouse, filePath string) error {
 		log.Errorf("add chunks failed, warehouseName:%s, err:%v", warehouse, err)
 		return err
 	}
-
-	name := filepath.Base(filePath)
-	return s.daoPtr.AddWarehouseKnowledge(warehouse, name, filePath)
+	return nil
 }
 
 func (s *KnowledgeBase) DeleteKnowledge(warehouse, filePath string) error {

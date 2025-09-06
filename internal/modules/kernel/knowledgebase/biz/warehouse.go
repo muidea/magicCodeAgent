@@ -40,12 +40,12 @@ func (s *KnowledgeBase) ListWarehouse() (ret []*imkkc.WarehouseItem, err error) 
 	return s.daoPtr.ListWarehouse()
 }
 
-func (s *KnowledgeBase) ExistWorkspace(workspace string) bool {
-	if err := s.daoPtr.CheckWarehouse(workspace); err != nil {
+func (s *KnowledgeBase) ExistWarehouse(warehouse string) bool {
+	if err := s.daoPtr.CheckWarehouse(warehouse); err != nil {
 		return false
 	}
 
-	warehousePath := filepath.Join(s.baseStaticPath, workspace)
+	warehousePath := filepath.Join(s.baseStaticPath, warehouse)
 	_, err := os.Stat(warehousePath)
 	return err == nil
 }

@@ -13,11 +13,18 @@ import (
 )
 
 func (s *KnowledgeBase) getWarehouseTableName() string {
-	return "tbl_warehouse"
+	return "kb.tbl_warehouse"
+}
+func (s *KnowledgeBase) getWarehouseIndexName() string {
+	return "kb_tbl_warehouse"
 }
 
 func (s *KnowledgeBase) getWarehouseVectTableName(warehouse string) string {
-	return fmt.Sprintf("tbl_%s_vect", warehouse)
+	return fmt.Sprintf("kb.tbl_%s_vect", warehouse)
+}
+
+func (s *KnowledgeBase) getWarehouseVectIndexName(warehouse string) string {
+	return fmt.Sprintf("kb_tbl_%s_vect", warehouse)
 }
 
 func (s *KnowledgeBase) initWarehouse(dbPtr *sql.DB) error {
@@ -37,7 +44,7 @@ func (s *KnowledgeBase) initWarehouse(dbPtr *sql.DB) error {
 		return err
 	}
 	_, err = dbPtr.Exec(fmt.Sprintf(`
-	CREATE INDEX IF NOT EXISTS %s_idx_warehouse ON %s (name);`, warehouseTableName, warehouseTableName))
+	CREATE INDEX IF NOT EXISTS %s_idx_warehouse ON %s (name);`, s.getWarehouseIndexName(), warehouseTableName))
 	if err != nil {
 		log.Errorf("create index %s_idx_warehouse error: %v", warehouseTableName, err)
 		return err
@@ -121,13 +128,13 @@ func (s *KnowledgeBase) NewWarehouse(warehouse, description string) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_embedding ON %s USING HNSW (embedding) WITH (metric = 'cosine');`, warehouseVectTableName, warehouseVectTableName)
+	sql := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_embedding ON %s USING HNSW (embedding) WITH (metric = 'cosine');`, s.getWarehouseVectIndexName(warehouse), warehouseVectTableName)
 	_, err = s.dbInstancePtr.Exec(sql)
 	if err != nil {
 		log.Errorf("create index %s_idx_embedding, sql:%s, error:%s", warehouseVectTableName, sql, err.Error())
 		return err
 	}
-	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_filePath ON %s(filePath)`, warehouseVectTableName, warehouseVectTableName))
+	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_filePath ON %s(filePath)`, s.getWarehouseVectIndexName(warehouse), warehouseVectTableName))
 	if err != nil {
 		log.Errorf("create index %s_idx_filePath error:%s", warehouseVectTableName, err.Error())
 		return err
