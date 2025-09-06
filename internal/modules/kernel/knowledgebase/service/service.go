@@ -34,15 +34,16 @@ func (s *KnowledgeBase) RegisterRoute() {
 
 	baseStaticPath := filepath.Join(s.basePath, imkkc.StaticPath)
 	uploadRoute := engine.CreateUploadRoute(
-		imkkc.UploadWorkspaceKnowledge,
+		imkkc.UploadWarehouseKnowledge,
 		engine.POST,
 		baseStaticPath,
 		"",
 		engine.DefaultMaxFileSize, s.uploadKnowledgeCallback)
 	s.routeRegistry.AddRoute(uploadRoute, s)
-	s.routeRegistry.AddHandler(imkkc.ImportWorkspaceKnowledge, engine.POST, s.ImportKnowledge)
-	s.routeRegistry.AddHandler(imkkc.DeleteWorkspaceKnowledge, engine.DELETE, s.DeleteKnowledge)
-	s.routeRegistry.AddHandler(imkkc.ListWorkspaceKnowledge, engine.GET, s.ListKnowledge)
+	s.routeRegistry.AddHandler(imkkc.ImportWarehouseKnowledge, engine.POST, s.ImportKnowledge)
+	s.routeRegistry.AddHandler(imkkc.DeleteWarehouseKnowledge, engine.DELETE, s.DeleteKnowledge)
+	s.routeRegistry.AddHandler(imkkc.ListWarehouseKnowledge, engine.GET, s.ListKnowledge)
+	s.routeRegistry.AddHandler(imkkc.GetWarehouseKnowledgeContent, engine.GET, s.GetKnowledgeContent)
 }
 
 func (s *KnowledgeBase) MiddleWareHandle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {

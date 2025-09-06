@@ -115,3 +115,24 @@ func (s *KnowledgeBase) ListKnowledge(ctx context.Context, res http.ResponseWrit
 	result.Values = valList
 	result.Error = nil
 }
+
+func (s *KnowledgeBase) GetKnowledgeContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkkc.GetKnowledgeContentResult{Result: *cd.NewResult()}
+	defer fn.PackageHTTPResponse(res, result)
+	warehouse := req.URL.Query().Get("warehouse")
+	filePath := req.URL.Query().Get("filePath")
+	if warehouse == "" || filePath == "" {
+		result.Error = cd.NewError(cd.IllegalParam, "missing required parameter: warehouse or filePath")
+		log.Errorf("GetKnowledgeContent failed, missing warehouse or filePath parameter")
+		return
+	}
+	contentVal, contentErr := s.bizPtr.GetKnowledgeContent(warehouse, filePath)
+	if contentErr != nil {
+		result.Error = cd.NewError(cd.Unexpected, contentErr.Error())
+		log.Errorf("get knowledge content error: %s", contentErr.Error())
+		return
+	}
+
+	result.Value = contentVal
+	result.Error = nil
+}

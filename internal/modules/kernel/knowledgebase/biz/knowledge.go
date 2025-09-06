@@ -99,3 +99,16 @@ func (s *KnowledgeBase) ListKnowledge(warehouse string) (ret []*imkkc.KnowledgeI
 
 	return
 }
+
+func (s *KnowledgeBase) GetKnowledgeContent(warehouse, filePath string) (ret string, err error) {
+	finalFilePath := filepath.Join(s.baseStaticPath, filePath)
+	mdBytes, mdErr := os.ReadFile(finalFilePath)
+	if mdErr != nil {
+		err = mdErr
+		log.Errorf("open file failed, filePath:%s, err:%v", filePath, err)
+		return
+	}
+
+	ret = string(mdBytes)
+	return
+}

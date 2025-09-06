@@ -21,10 +21,11 @@ const (
 	ListKnowledgebaseWarehouse    = "/knowledgebase/warehouse/list"
 	CreateKnowledgebaseWarehouse  = "/knowledgebase/warehouse/create"
 	DestroyKnowledgebaseWarehouse = "/knowledgebase/warehouse/destroy"
-	UploadWorkspaceKnowledge      = "/knowledgebase/knowledge/upload"
-	ImportWorkspaceKnowledge      = "/knowledgebase/knowledge/import"
-	DeleteWorkspaceKnowledge      = "/knowledgebase/knowledge/delete"
-	ListWorkspaceKnowledge        = "/knowledgebase/knowledge/list"
+	UploadWarehouseKnowledge      = "/knowledgebase/knowledge/upload"
+	ImportWarehouseKnowledge      = "/knowledgebase/knowledge/import"
+	DeleteWarehouseKnowledge      = "/knowledgebase/knowledge/delete"
+	ListWarehouseKnowledge        = "/knowledgebase/knowledge/list"
+	GetWarehouseKnowledgeContent  = "/knowledgebase/knowledge/content"
 )
 
 type WarehouseItem struct {
@@ -65,4 +66,9 @@ type ImportKnowledgeParam struct {
 type ListKnowledgeResult struct {
 	cd.Result
 	Values []*KnowledgeItem `json:"values"`
+}
+
+type GetKnowledgeContentResult struct {
+	cd.Result
+	Value string `json:"value"`
 }
