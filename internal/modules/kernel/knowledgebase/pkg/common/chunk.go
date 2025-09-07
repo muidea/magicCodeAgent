@@ -11,7 +11,7 @@ type Chunk struct {
 	Text     string
 	FilePath string
 	Metadata map[string]string
-	Vector   []float32
+	Vector   []float64
 }
 
 // -------------------- Markdown 分片（分层 + overlap） --------------------

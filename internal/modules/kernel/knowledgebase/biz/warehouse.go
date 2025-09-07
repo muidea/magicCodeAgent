@@ -4,8 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
+	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
+
+	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
 func (s *KnowledgeBase) NewWarehouse(warehouse, description string) error {
@@ -48,4 +50,9 @@ func (s *KnowledgeBase) ExistWarehouse(warehouse string) bool {
 	warehousePath := filepath.Join(s.baseStaticPath, warehouse)
 	_, err := os.Stat(warehousePath)
 	return err == nil
+}
+
+func (s *KnowledgeBase) SearchKnowledge(warehouse, text string, topK int) (ret []*imkkc.Chunk, err error) {
+	log.Infof("search knowledgewarehouse, warehouse:%s, text:%s, topK:%d", warehouse, text, topK)
+	return s.daoPtr.SearchByText(warehouse, text, topK, s.embedTextWorker)
 }

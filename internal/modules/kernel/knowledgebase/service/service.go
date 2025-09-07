@@ -42,6 +42,7 @@ func (s *KnowledgeBase) RegisterRoute() {
 	s.routeRegistry.AddHandler(imkkc.DeleteWarehouseKnowledge, engine.DELETE, s.DeleteKnowledge)
 	s.routeRegistry.AddHandler(imkkc.ListWarehouseKnowledge, engine.GET, s.ListKnowledge)
 	s.routeRegistry.AddHandler(imkkc.GetWarehouseKnowledgeContent, engine.GET, s.GetKnowledgeContent)
+	s.routeRegistry.AddHandler(imkkc.SearchWarehouseKnowledge, engine.POST, s.SearchKnowledge)
 }
 
 func (s *KnowledgeBase) MiddleWareHandle(ctx engine.RequestContext, res http.ResponseWriter, req *http.Request) {

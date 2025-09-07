@@ -218,12 +218,13 @@ func (s *KnowledgeBase) DelChunks(warehouse, filePath string) (err error) {
 	return
 }
 
-func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK int) ([]*imkkc.Chunk, error) {
+func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float64, topK int) ([]*imkkc.Chunk, error) {
 	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	vecLit := floatSliceToArrayLiteral(vector)
+	log.Infof("vecList:%s", vecLit)
 	sqlStmt := fmt.Sprintf(`
 		SELECT id, text, metadata, filePath, distance
-		FROM vss_search('%s', 'embedding', %s, %d);
+		FROM vss_match('%s', 'embedding', %s, %d);
 	`, warehouseVectTableName, vecLit, topK)
 	rows, err := s.dbInstancePtr.Query(sqlStmt)
 	if err != nil {
@@ -237,7 +238,7 @@ func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK 
 		var text string
 		var metadata string
 		var filePath string
-		var distance float32
+		var distance float64
 		err = rows.Scan(&id, &text, &metadata, &filePath, &distance)
 		if err != nil {
 			log.Errorf("scan row failed, error:%s", err.Error())

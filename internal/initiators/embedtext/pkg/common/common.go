@@ -7,7 +7,7 @@ type EmbedTextHelper interface {
 }
 
 type EmbedTextWorker interface {
-	EmbedText(chunkText string) (ret []float32, err error)
+	EmbedText(chunkText string) (ret []float64, err error)
 }
 
 // embed service structures
@@ -15,5 +15,5 @@ type EmbedRequest struct {
 	Text string `json:"text"`
 }
 type EmbedResponse struct {
-	Vector []float32 `json:"vector"`
+	Vector []float64 `json:"vector"`
 }

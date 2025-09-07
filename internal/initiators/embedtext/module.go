@@ -5,6 +5,7 @@ import (
 
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
+	"github.com/muidea/magicCommon/foundation/log"
 	fn "github.com/muidea/magicCommon/foundation/net"
 	"github.com/muidea/magicCommon/framework/plugin/initiator"
 	"github.com/muidea/magicCommon/task"
@@ -42,12 +43,14 @@ func (s *Embedtext) GetEmbedText() common.EmbedTextWorker {
 	return s
 }
 
-func (s *Embedtext) EmbedText(chunkText string) (ret []float32, err error) {
+func (s *Embedtext) EmbedText(chunkText string) (ret []float64, err error) {
 	req := &common.EmbedRequest{Text: chunkText}
 	rsp := &common.EmbedResponse{}
 
-	_, err = fn.HTTPPost(http.DefaultClient, config.GetBgeAPIUrl(), req, &rsp)
+	url := config.GetBgeAPIUrl()
+	_, err = fn.HTTPPost(http.DefaultClient, url, req, &rsp)
 	if err != nil {
+		log.Errorf("http post url:%s, chunkTest:%s, error: %s", url, chunkText, err.Error())
 		return
 	}
 

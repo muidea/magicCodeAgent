@@ -25,6 +25,7 @@ const (
 	DeleteWarehouseKnowledge      = "/knowledgebase/knowledge/delete"
 	ListWarehouseKnowledge        = "/knowledgebase/knowledge/list"
 	GetWarehouseKnowledgeContent  = "/knowledgebase/knowledge/content"
+	SearchWarehouseKnowledge      = "/knowledgebase/knowledge/search"
 )
 
 type WarehouseItem struct {
@@ -70,4 +71,15 @@ type ListKnowledgeResult struct {
 type GetKnowledgeContentResult struct {
 	cd.Result
 	Value string `json:"value"`
+}
+
+type SearchKnowledgeParam struct {
+	Warehouse string `json:"warehouse"`
+	Text      string `json:"text"`
+	TopK      int    `json:"topK"`
+}
+
+type SearchKnowledgeResult struct {
+	cd.Result
+	Values []*Chunk `json:"values"`
 }

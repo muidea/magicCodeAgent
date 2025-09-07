@@ -108,3 +108,23 @@ func (s *KnowledgeBase) GetKnowledgeContent(ctx context.Context, res http.Respon
 	result.Value = contentVal
 	result.Error = nil
 }
+
+func (s *KnowledgeBase) SearchKnowledge(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkkc.SearchKnowledgeResult{Result: *cd.NewResult()}
+	defer fn.PackageHTTPResponse(res, result)
+
+	param := &imkkc.SearchKnowledgeParam{}
+	if err := fn.ParseJSONBody(req, nil, param); err != nil {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		return
+	}
+	chunkList, chunkErr := s.bizPtr.SearchKnowledge(param.Warehouse, param.Text, param.TopK)
+	if chunkErr != nil {
+		result.Error = cd.NewError(cd.Unexpected, "failed to search knowledge")
+		log.Errorf("search knowledge error: %s", chunkErr.Error())
+		return
+	}
+	result.Values = chunkList
+	result.Error = nil
+}
