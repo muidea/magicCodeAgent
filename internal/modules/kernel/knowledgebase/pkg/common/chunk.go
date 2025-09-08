@@ -7,11 +7,15 @@ import (
 )
 
 type Chunk struct {
-	ID       int64
-	Text     string
-	FilePath string
-	Metadata map[string]string
-	Vector   []float64
+	ID       int64             `json:"id"`
+	Text     string            `json:"text"`
+	FilePath string            `json:"filePath"`
+	Metadata map[string]string `json:"metadata"`
+	Vector   []float32         `json:"-"`
+}
+
+func (s *Chunk) String() string {
+	return fmt.Sprintf("filePath:%s, vector len:%d", s.FilePath, len(s.Vector))
 }
 
 // -------------------- Markdown 分片（分层 + overlap） --------------------

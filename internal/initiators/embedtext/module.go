@@ -43,7 +43,7 @@ func (s *Embedtext) GetEmbedText() common.EmbedTextWorker {
 	return s
 }
 
-func (s *Embedtext) EmbedText(chunkText string) (ret []float64, err error) {
+func (s *Embedtext) EmbedText(chunkText string) (ret []float32, err error) {
 	req := &common.EmbedRequest{Text: chunkText}
 	rsp := &common.EmbedResponse{}
 

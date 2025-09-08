@@ -139,7 +139,6 @@ func (s *KnowledgeBase) NewWarehouse(warehouse, description string) error {
 		log.Errorf("create index %s_idx_filePath error:%s", warehouseVectTableName, err.Error())
 		return err
 	}
-
 	return s.addWarehouse(warehouse, description)
 }
 
@@ -162,53 +161,12 @@ func (s *KnowledgeBase) AddChunk(warehouse string, chunkPtr *imkkc.Chunk, embedT
 		log.Errorf("embed text failed, text:%s, err:%v", chunkPtr.Text, vectorErr)
 		return vectorErr
 	}
-	vecLit := floatSliceToArrayLiteral(vectorVal)
-	// insert: pass text and metadata as parameters, vec inline to avoid driver binding issues
-	sqlStmt := fmt.Sprintf(`INSERT INTO %s (text, metadata, filePath, embedding) VALUES (?, ?, ?, %s)`, warehouseVectTableName, vecLit)
-	_, err := s.dbInstancePtr.Exec(sqlStmt, chunkPtr.Text, string(meta), chunkPtr.FilePath)
+	chunkPtr.Vector = vectorVal
+
+	log.Infof("warehouse:%s,chunk:%s", warehouse, chunkPtr)
+	sqlStmt := fmt.Sprintf(`INSERT INTO %s (text, metadata, filePath, embedding) VALUES (?, ?, ?, ?)`, warehouseVectTableName)
+	_, err := s.dbInstancePtr.Exec(sqlStmt, chunkPtr.Text, string(meta), chunkPtr.FilePath, chunkPtr.Vector)
 	return err
-}
-
-func (s *KnowledgeBase) AddChunksBulk(warehouse string, chunkPtrs []*imkkc.Chunk, embedTextWorker iiec.EmbedTextWorker) (err error) {
-	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
-	txVal, txErr := s.dbInstancePtr.Begin()
-	if txErr != nil {
-		err = txErr
-		log.Errorf("BeginTransaction failed, s.dbInstancePtr.Begin error:%s", txErr.Error())
-		return
-	}
-	defer func() {
-		if err == nil {
-			err = txVal.Commit()
-			return
-		}
-		err = txVal.Rollback()
-	}()
-
-	stmtVal, stmtErr := txVal.Prepare(fmt.Sprintf(`INSERT INTO %s (text, metadata, filePath, embedding) VALUES (?, ?, ?, ?)`, warehouseVectTableName))
-	if stmtErr != nil {
-		err = stmtErr
-		return
-	}
-	defer stmtVal.Close()
-	for _, chunk := range chunkPtrs {
-		meta, _ := json.Marshal(chunk.Metadata)
-		vectorVal, vectorErr := embedTextWorker.EmbedText(chunk.Text)
-		if vectorErr != nil {
-			log.Errorf("embed text failed, text:%s, err:%v", chunk.Text, vectorErr)
-			err = vectorErr
-			return
-		}
-
-		vecLit := floatSliceToArrayLiteral(vectorVal)
-		_, stmtErr = stmtVal.Exec(chunk.Text, string(meta), chunk.FilePath, vecLit)
-		if stmtErr != nil {
-			err = stmtErr
-			return
-		}
-	}
-
-	return
 }
 
 func (s *KnowledgeBase) DelChunks(warehouse, filePath string) (err error) {
@@ -218,14 +176,17 @@ func (s *KnowledgeBase) DelChunks(warehouse, filePath string) (err error) {
 	return
 }
 
-func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float64, topK int) ([]*imkkc.Chunk, error) {
+func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK int) ([]*imkkc.Chunk, error) {
 	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	vecLit := floatSliceToArrayLiteral(vector)
-	log.Infof("vecList:%s", vecLit)
 	sqlStmt := fmt.Sprintf(`
-		SELECT id, text, metadata, filePath, distance
-		FROM vss_match('%s', 'embedding', %s, %d);
-	`, warehouseVectTableName, vecLit, topK)
+		SELECT id, text, metadata, filePath, array_cosine_distance(embedding, %s) AS dist
+		FROM %s
+		ORDER BY dist
+		LIMIT %d;
+	`, vecLit, warehouseVectTableName, topK)
+
+	// Execute the query without additional parameters
 	rows, err := s.dbInstancePtr.Query(sqlStmt)
 	if err != nil {
 		log.Errorf("query table %s records failed, error:%s", warehouseVectTableName, err.Error())

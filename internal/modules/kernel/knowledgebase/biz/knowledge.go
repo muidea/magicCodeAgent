@@ -36,10 +36,12 @@ func (s *KnowledgeBase) importKnowledge(warehouse, filePath string) error {
 	}
 
 	chunks := imkkc.SplitMarkdown(filePath, string(mdBytes), 300, 60)
-	err = s.daoPtr.AddChunksBulk(warehouse, chunks, s.embedTextWorker)
-	if err != nil {
-		log.Errorf("add chunks failed, warehouseName:%s, err:%v", warehouse, err)
-		return err
+	for _, val := range chunks {
+		err = s.daoPtr.AddChunk(warehouse, val, s.embedTextWorker)
+		if err != nil {
+			log.Errorf("add chunk failed, chunk:%v, err:%v", val, err)
+			return err
+		}
 	}
 	return nil
 }
