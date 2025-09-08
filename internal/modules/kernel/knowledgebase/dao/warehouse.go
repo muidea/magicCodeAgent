@@ -30,14 +30,14 @@ func (s *KnowledgeBase) getWarehouseVectIndexName(warehouse string) string {
 func (s *KnowledgeBase) initWarehouse(dbPtr *sql.DB) error {
 	warehouseTableName := s.getWarehouseTableName()
 	sql := fmt.Sprintf(`
-	CREATE SEQUENCE IF NOT EXISTS tbl_warehouse_seq;
+	CREATE SEQUENCE IF NOT EXISTS %s_seq;
 	CREATE TABLE IF NOT EXISTS %s (
-		id BIGINT PRIMARY KEY DEFAULT nextval('tbl_warehouse_seq'),
+		id BIGINT PRIMARY KEY DEFAULT nextval('%s_seq'),
 		name TEXT,
 		description TEXT,
 		createdAt BIGINT,
 	);
-	`, warehouseTableName)
+	`, warehouseTableName, warehouseTableName, warehouseTableName)
 	_, err := dbPtr.Exec(sql)
 	if err != nil {
 		log.Errorf("create table %s, error: %v", warehouseTableName, err)

@@ -21,16 +21,16 @@ func (s *KnowledgeBase) getKnowledgeIndexName() string {
 func (s *KnowledgeBase) initKnowledge(dbPtr *sql.DB) error {
 	knowledgeTableName := s.getKnowledgeTableName()
 	sql := fmt.Sprintf(`
-	CREATE SEQUENCE IF NOT EXISTS tbl_knowledge_seq;
+	CREATE SEQUENCE IF NOT EXISTS %s_seq;
 	CREATE TABLE IF NOT EXISTS %s (
-		id BIGINT PRIMARY KEY DEFAULT nextval('tbl_knowledge_seq'),
+		id BIGINT PRIMARY KEY DEFAULT nextval('%s_seq'),
 		name TEXT,
 		description TEXT,
 		filePath TEXT,
 		warehouse TEXT,
 		createdAt BIGINT,
 	);
-	`, knowledgeTableName)
+	`, knowledgeTableName, knowledgeTableName, knowledgeTableName)
 	_, err := dbPtr.Exec(sql)
 	if err != nil {
 		log.Errorf("create table %s, error: %v", knowledgeTableName, err)
