@@ -8,10 +8,10 @@ import (
 const LLMModule = "/internal/modules/kernel/llm"
 
 const (
-	ChatCompletion = "/chat/completions"
-	BetaCompletion = "/beta/completions"
-	ModelsList     = "/models"
-	UserBalance    = "/user/balance"
+	ChatCompletionStream = "/chat/completions"
+	BetaCompletion       = "/beta/completions"
+	ModelsList           = "/models"
+	UserBalance          = "/user/balance"
 )
 
 type Usage struct {
@@ -63,12 +63,12 @@ type MessageSink interface {
 	OnRecvMessage(msgPtr *models.MessageInfo, usagePtr *Usage)
 }
 
-// ChatCompletionStreamRequest 兼容OpenAI的聊天完成请求结构
-type ChatCompletionStreamRequest struct {
+// ChatCompletionRequest 兼容OpenAI的聊天完成请求结构
+type ChatCompletionRequest struct {
 	openai.ChatCompletionRequest
 }
 
-func (s *ChatCompletionStreamRequest) IsStream() bool {
+func (s *ChatCompletionRequest) IsStream() bool {
 	return s.Stream
 }
 

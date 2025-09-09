@@ -212,15 +212,18 @@ func (s *Provider) OnRecv(event, content string, usagePtr *imklc.Usage) {
 func (s *Provider) ChatCompletion(
 	workspaceName string,
 	chatContext context.Context,
-	paramPtr *imklc.ChatCompletionStreamRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
+	paramPtr *imklc.ChatCompletionRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
 	providerType := imklc.RemoteDeepseek
 	if val := chatContext.Value(imklc.DeepseekProvider{}); val != nil {
 		providerType = val.(string)
 	}
+
+	paramPtr.Model = config.GetDeepSeekModelName(providerType)
+
 	resultPtr := &imklc.ChatCompletionStreamResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(providerType))
-	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletionStream)
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Accept", "application/json;charset=utf-8")
@@ -238,14 +241,14 @@ func (s *Provider) ChatCompletion(
 func (s *Provider) ChatCompletionStream(
 	workspaceName string,
 	chatContext context.Context,
-	paramPtr *imklc.ChatCompletionStreamRequest) error {
+	paramPtr *imklc.ChatCompletionRequest) error {
 	providerType := imklc.RemoteDeepseek
 	if val := chatContext.Value(imklc.DeepseekProvider{}); val != nil {
 		providerType = val.(string)
 	}
 
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(providerType))
-	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletion)
+	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletionStream)
 
 	header := url.Values{}
 	header.Set("Content-Type", "application/json;charset=utf-8")

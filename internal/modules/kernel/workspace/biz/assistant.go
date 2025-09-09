@@ -48,7 +48,7 @@ func (s *Workspace) Chat(
 		Content: []string{workspaceEnvPrompt},
 	})
 	preTime := time.Now()
-	ev := event.NewEvent(imklc.ChatCompletion, s.ID(), imklc.LLMModule, nil, userMessageList)
+	ev := event.NewEvent(imklc.ChatCompletionStream, s.ID(), imklc.LLMModule, nil, userMessageList)
 	ev.SetData("context", chatContext)
 	ev.SetData("workspace", workspaceConfig.Name)
 	ev.SetData("systemMessage", systemMessage)

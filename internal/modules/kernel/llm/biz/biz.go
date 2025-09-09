@@ -35,7 +35,7 @@ func New(
 		Base: biz.New(imklc.LLMModule, eventHub, backgroundRoutine),
 	}
 
-	ptr.SubscribeFunc(imklc.ChatCompletion, ptr.chatCompletion)
+	ptr.SubscribeFunc(imklc.ChatCompletionStream, ptr.chatCompletionStream)
 	return ptr
 }
 
@@ -45,8 +45,8 @@ func (s *LLM) Run() (err *cd.Error) {
 
 func (s *LLM) constructRequest(
 	systemMessage *models.MessageItem,
-	userMessageList models.MessageItemList) *imklc.ChatCompletionStreamRequest {
-	request := &imklc.ChatCompletionStreamRequest{
+	userMessageList models.MessageItemList) *imklc.ChatCompletionRequest {
+	request := &imklc.ChatCompletionRequest{
 		ChatCompletionRequest: openai.ChatCompletionRequest{
 			Messages:    []openai.ChatCompletionMessage{},
 			Temperature: 0,   //采样温度，介于 0 和 2 之间。更高的值，如 0.8，会使输出更随机，而更低的值，如 0.2，会使其更加集中和确定。 我们通常建议可以更改这个值或者更改 top_p，但不建议同时对两者进行修改。
@@ -94,7 +94,7 @@ func (s *LLM) constructRequest(
 	return request
 }
 
-func (s *LLM) chatCompletion(ev event.Event, re event.Result) {
+func (s *LLM) chatCompletionStream(ev event.Event, re event.Result) {
 	preTime := time.Now()
 	defer func() {
 		log.Infof("chat completion, workspace:%s, elapse:%v", ev.GetData("workspace"), time.Since(preTime))
@@ -139,7 +139,7 @@ func (s *LLM) chatCompletion(ev event.Event, re event.Result) {
 func (s *LLM) ChatCompletion(
 	workspaceName string,
 	ctx context.Context,
-	param *imklc.ChatCompletionStreamRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
+	param *imklc.ChatCompletionRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
 	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
 	if !providerOK {
 		providerPtr := provider.NewProvider(workspaceName, s)
@@ -153,7 +153,7 @@ func (s *LLM) ChatCompletion(
 func (s *LLM) ChatCompletionStream(
 	workspaceName string,
 	chatContext context.Context,
-	param *imklc.ChatCompletionStreamRequest) error {
+	param *imklc.ChatCompletionRequest) error {
 	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
 	if !providerOK {
 		providerPtr := provider.NewProvider(workspaceName, s)
