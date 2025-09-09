@@ -74,9 +74,10 @@ type GetKnowledgeContentResult struct {
 }
 
 type SearchKnowledgeParam struct {
-	Warehouse string `json:"warehouse"`
-	Text      string `json:"text"`
-	TopK      int    `json:"topK"`
+	Warehouse  string  `json:"warehouse"`
+	Text       string  `json:"text"`
+	TopK       int     `json:"topK"`
+	Similarity float32 `json:"similarity"`
 }
 
 type SearchKnowledgeResult struct {

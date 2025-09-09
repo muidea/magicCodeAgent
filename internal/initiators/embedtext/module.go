@@ -1,6 +1,7 @@
 package embedtext
 
 import (
+	"math"
 	"net/http"
 
 	cd "github.com/muidea/magicCommon/def"
@@ -54,6 +55,22 @@ func (s *Embedtext) EmbedText(chunkText string) (ret []float32, err error) {
 		return
 	}
 
-	ret = rsp.Vector
+	ret = s.normalize(rsp.Vector)
 	return
+}
+
+func (s *Embedtext) normalize(vec []float32) []float32 {
+	norm := float32(0.0)
+	for _, v := range vec {
+		norm += v * v
+	}
+	if norm == 0 {
+		return vec
+	}
+	inv := 1.0 / float32(math.Sqrt(float64(norm)))
+	out := make([]float32, len(vec))
+	for i, v := range vec {
+		out[i] = v * inv
+	}
+	return out
 }

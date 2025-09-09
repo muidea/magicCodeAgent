@@ -176,15 +176,16 @@ func (s *KnowledgeBase) DelChunks(warehouse, filePath string) (err error) {
 	return
 }
 
-func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK int) ([]*imkkc.Chunk, error) {
+func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK int, similarity float32) ([]*imkkc.Chunk, error) {
 	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	vecLit := floatSliceToArrayLiteral(vector)
 	sqlStmt := fmt.Sprintf(`
 		SELECT id, text, metadata, filePath, array_cosine_distance(embedding, %s) AS dist
 		FROM %s
+		WHERE array_cosine_distance(embedding, %s) < %g
 		ORDER BY dist
 		LIMIT %d;
-	`, vecLit, warehouseVectTableName, topK)
+	`, vecLit, warehouseVectTableName, vecLit, similarity, topK)
 
 	// Execute the query without additional parameters
 	rows, err := s.dbInstancePtr.Query(sqlStmt)
@@ -211,6 +212,7 @@ func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK 
 			Metadata: make(map[string]string),
 			FilePath: filePath,
 			Vector:   vector,
+			Distance: distance,
 		}
 		err = json.Unmarshal([]byte(metadata), &chunk.Metadata)
 		if err != nil {
@@ -223,11 +225,12 @@ func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK 
 	return ret, nil
 }
 
-func (s *KnowledgeBase) SearchByText(warehouse, text string, topK int, embedTextWorker iiec.EmbedTextWorker) ([]*imkkc.Chunk, error) {
+func (s *KnowledgeBase) SearchByText(warehouse, text string, topK int, similarity float32, embedTextWorker iiec.EmbedTextWorker) ([]*imkkc.Chunk, error) {
 	vector, err := embedTextWorker.EmbedText(text)
 	if err != nil {
 		log.Errorf("embed text failed, error:%s", err.Error())
 		return nil, err
 	}
-	return s.SearchByVector(warehouse, vector, topK)
+
+	return s.SearchByVector(warehouse, vector, topK, similarity)
 }

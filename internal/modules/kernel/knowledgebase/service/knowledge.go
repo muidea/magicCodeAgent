@@ -119,7 +119,12 @@ func (s *KnowledgeBase) SearchKnowledge(ctx context.Context, res http.ResponseWr
 		log.Errorf("parse body error: %s", err.Error())
 		return
 	}
-	chunkList, chunkErr := s.bizPtr.SearchKnowledge(param.Warehouse, param.Text, param.TopK)
+
+	if param.Similarity <= 0.0001 {
+		param.Similarity = 0.6
+	}
+
+	chunkList, chunkErr := s.bizPtr.SearchKnowledge(param.Warehouse, param.Text, param.TopK, param.Similarity)
 	if chunkErr != nil {
 		result.Error = cd.NewError(cd.Unexpected, "failed to search knowledge")
 		log.Errorf("search knowledge error: %s", chunkErr.Error())
