@@ -35,7 +35,7 @@ func (s *KnowledgeBase) importKnowledge(warehouse, filePath string) error {
 		return err
 	}
 
-	chunks := imkkc.SplitMarkdown(filePath, string(mdBytes), 300, 60)
+	chunks := imkkc.SplitMarkdown(filePath, string(mdBytes), 400, 10)
 	for _, val := range chunks {
 		err = s.daoPtr.AddChunk(warehouse, val, s.embedTextWorker)
 		if err != nil {

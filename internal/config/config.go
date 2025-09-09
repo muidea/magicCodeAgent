@@ -5,6 +5,7 @@ import (
 	"embed"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -129,11 +130,19 @@ func Workspaces() []*models.Workspace {
 }
 
 func WorkspaceSetting() *models.WorkspaceSetting {
+	var ret *models.WorkspaceSetting
 	if sysConfig != nil {
-		return sysConfig.WorkspaceSetting
+		ret = sysConfig.WorkspaceSetting
+	}
+	if ret == nil {
+		ret = &models.WorkspaceSetting{
+			RootPath:   filepath.Join(fo.GetHomeDir(), "codespace"),
+			Similarity: 0.5,
+			TopK:       5,
+		}
 	}
 
-	return nil
+	return ret
 }
 
 // AddWorkspace 添加工作区配置
@@ -326,6 +335,13 @@ func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo, 
 		sysConfig.Models = models
 	}
 	if workspaceSetting != nil {
+		if workspaceSetting.TopK == 0 {
+			workspaceSetting.TopK = 5
+		}
+		if workspaceSetting.Similarity <= 0.0001 {
+			workspaceSetting.Similarity = 0.5
+		}
+
 		sysConfig.WorkspaceSetting = workspaceSetting
 	}
 
