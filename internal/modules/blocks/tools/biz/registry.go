@@ -104,6 +104,7 @@ func (s *ToolRegistry) loadInnerTools(templatePtr *models.Template) {
 		workspacePtr: s.currentWorkspace,
 		templatePtr:  templatePtr,
 	})
+	s.Register(&UpdateTodoListTool{})
 }
 
 func (s *ToolRegistry) loadWorkspaceTools(templatePtr *models.Template) {

@@ -165,6 +165,22 @@ func (s *Station) getWorkspaceSpecialInstruction() string {
 	return s.innerPromptsRegistry.ReadSectionPromptContent(fmt.Sprintf("special-%s-instruction", s.currentWorkspace.GetStage()), param)
 }
 
+func (s *Station) getTodoListContent(ptr *models.Flow) string {
+	var todoListContent strings.Builder
+	todoList := ptr.GetTodoList()
+	if len(todoList) > 0 {
+		todoListContent.WriteString(`====
+
+REMINDERS
+
+Below is your current list of reminders for this task. Keep them updated as you progress.
+`)
+		todoListContent.WriteString(todoList.String())
+		todoListContent.WriteString("IMPORTANT: When task status changes, remember to call the `update_todo_list` tool to update your progress.")
+	}
+	return todoListContent.String()
+}
+
 func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
@@ -282,6 +298,12 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 			stringBuilder.WriteString(structContent)
 			stringBuilder.WriteString("\n\n")
 		}
+	}
+
+	todoListContent := s.getTodoListContent(ptr)
+	if todoListContent != "" {
+		stringBuilder.WriteString(todoListContent)
+		stringBuilder.WriteString("\n\n")
 	}
 
 	stringBuilder.WriteString("</environment_details>")
@@ -628,6 +650,10 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 		case "attempt_completion":
 			curFlow.AppendMessage(msgPtr)
 			curFlow = s.tryToCompleteFlow(curFlow, workParam)
+		case "update_todo_list":
+			curFlow.AppendMessage(msgPtr)
+			curFlow.AppendMessage(msgItem)
+			curFlow = s.updateTodoList(curFlow, workParam)
 		default:
 			curFlow.AppendMessage(msgPtr)
 			curFlow.AppendMessage(msgItem)
@@ -740,6 +766,17 @@ func (s *Station) tryToCompleteFlow(curFlow *models.Flow, _ imbtc.ToolParam) (re
 	log.Infof("try to complete flow %v", curFlow)
 	ret = s.localFlowManger.CompleteFlow(curFlow)
 	return
+}
+
+func (s *Station) updateTodoList(curFlow *models.Flow, param imbtc.ToolParam) *models.Flow {
+	todos := param["todos"].(string)
+	if todos == "" {
+		return curFlow
+	}
+
+	todoList := models.ParseTodoList(todos)
+	curFlow.UpdateTodoList(todoList)
+	return curFlow
 }
 
 func (s *Station) GetFlows() *models.Flow {

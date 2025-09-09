@@ -94,6 +94,7 @@ type Flow struct {
 	AddFiles      fu.StringSortSet `json:"addFiles,omitempty"`
 	ModFiles      fu.StringSortSet `json:"modFiles,omitempty"`
 	DelFiles      fu.StringSortSet `json:"delFiles,omitempty"`
+	TodoList      TodoList         `json:"todoList"`
 	Parent        *Flow            `json:"-"`
 	Childrens     []*Flow          `json:"childrens"`
 }
@@ -243,6 +244,14 @@ func (s *Flow) ModFile(filePath string) {
 func (s *Flow) DelFile(filePath string) {
 	s.DelFiles = s.DelFiles.Add(filePath)
 	s.AddFiles = s.AddFiles.Remove(filePath)
+}
+
+func (s *Flow) GetTodoList() TodoList {
+	return s.TodoList
+}
+
+func (s *Flow) UpdateTodoList(todoList TodoList) {
+	s.TodoList = todoList
 }
 
 func (s *Flow) GetLatestUnFinishFlow() *Flow {
