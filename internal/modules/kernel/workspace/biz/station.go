@@ -490,7 +490,7 @@ func (s *Station) internalChat(chatContext context.Context, chatFlow *models.Flo
 
 	contentContext := context.WithValue(chatContext, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	msgErr := s.localAssistant.Chat(providerContext, &s.currentWorkspace, sysPrompt, envPrompt, chatFlow.GetFlowPath())
+	msgErr := s.localAssistant.ChatStream(providerContext, &s.currentWorkspace, sysPrompt, envPrompt, chatFlow.GetFlowPath())
 	if msgErr != nil {
 		err = msgErr
 		log.Errorf("internalChat, s.localAssistant.Chat error:%v", msgErr)
@@ -835,7 +835,7 @@ func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
 	envPrompt := string(envByte)
 	contentContext := context.WithValue(ctx, common.ContentSink{}, s)
 	providerContext := context.WithValue(contentContext, imklc.DeepseekProvider{}, imklc.RemoteDeepseek)
-	msgErr := s.localAssistant.Chat(providerContext, &s.currentWorkspace, systemPrompt, envPrompt, debugFlow.GetFlowPath())
+	msgErr := s.localAssistant.ChatStream(providerContext, &s.currentWorkspace, systemPrompt, envPrompt, debugFlow.GetFlowPath())
 	if msgErr != nil {
 		log.Errorf("chat error:%v", msgErr)
 		return

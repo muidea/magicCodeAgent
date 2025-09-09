@@ -13,10 +13,10 @@ import (
 )
 
 type Assistant interface {
-	Chat(ctx context.Context, workspaceConfig *models.Workspace, systemPrompt, workspaceEnvPromp string, flowPathList []*models.Flow) *cd.Error
+	ChatStream(ctx context.Context, workspaceConfig *models.Workspace, systemPrompt, workspaceEnvPromp string, flowPathList []*models.Flow) *cd.Error
 }
 
-func (s *Workspace) Chat(
+func (s *Workspace) ChatStream(
 	chatContext context.Context,
 	workspaceConfig *models.Workspace,
 	systemPrompt string,
