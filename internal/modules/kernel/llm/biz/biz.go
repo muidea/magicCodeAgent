@@ -35,6 +35,7 @@ func New(
 		Base: biz.New(imklc.LLMModule, eventHub, backgroundRoutine),
 	}
 
+	ptr.SubscribeFunc(imklc.ChatCompletionTermial, ptr.chatCompletionTermilal)
 	ptr.SubscribeFunc(imklc.ChatCompletionStream, ptr.chatCompletionStream)
 	return ptr
 }
@@ -94,10 +95,52 @@ func (s *LLM) constructRequest(
 	return request
 }
 
+func (s *LLM) chatCompletionTermilal(ev event.Event, re event.Result) {
+	preTime := time.Now()
+	defer func() {
+		log.Infof("chat completion terminal, workspace:%s, elapse:%v", ev.GetData("workspace"), time.Since(preTime))
+	}()
+
+	messageListVal, messageListOK := ev.Data().(models.MessageItemList)
+	if !messageListOK {
+		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid message list"))
+		return
+	}
+	workspaceVal, workspaceOK := ev.GetData("workspace").(string)
+	if !workspaceOK {
+		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid workspace"))
+		return
+	}
+
+	contextVal, contextOK := ev.GetData("context").(context.Context)
+	if !contextOK {
+		re.Set(nil, cd.NewError(cd.IllegalParam, "invalid context"))
+		return
+	}
+
+	var systemMessage *models.MessageItem
+	systemMessageVal := ev.GetData("systemMessage")
+	if systemMessageVal != nil {
+		systemMessage = systemMessageVal.(*models.MessageItem)
+	}
+
+	requestVal := s.constructRequest(systemMessage, messageListVal)
+	rsp, err := s.ChatCompletion(workspaceVal, contextVal, requestVal)
+	if re != nil {
+		if err != nil {
+			log.Errorf("chat completion stream failed, err:%v", err)
+			re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
+			return
+		}
+
+		re.Set(rsp, nil)
+	}
+}
+
 func (s *LLM) chatCompletionStream(ev event.Event, re event.Result) {
 	preTime := time.Now()
 	defer func() {
-		log.Infof("chat completion, workspace:%s, elapse:%v", ev.GetData("workspace"), time.Since(preTime))
+		log.Infof("chat completion stream, workspace:%s, elapse:%v", ev.GetData("workspace"), time.Since(preTime))
 	}()
 
 	messageListVal, messageListOK := ev.Data().(models.MessageItemList)
