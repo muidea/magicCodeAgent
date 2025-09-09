@@ -38,7 +38,6 @@ type Config struct {
 	Models           []*models.ModelInfo      `json:"models"`    // AI模型列表
 	WorkspaceSetting *models.WorkspaceSetting `json:"workspaceSetting"`
 	AuthorConfig     *models.AuthorInfo       `json:"authorConfig"`
-	WorkspaceDir     string                   `json:"workspaceDir"`
 	DebugFlag        bool                     `json:"debugFlag"`
 }
 
@@ -334,10 +333,6 @@ func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo, 
 	if err != nil {
 		log.Errorf("save config failed, err:%s", err.Error())
 	}
-}
-
-func GetWorkspaceDir() string {
-	return sysConfig.WorkspaceDir
 }
 
 // SetEmbedTemplateFS 设置嵌入模板文件系统
