@@ -77,6 +77,11 @@ type ChatCompletionStreamResponse struct {
 	Usage *Usage `json:"usage,omitempty"`
 }
 
+type ChatCompletionResponse struct {
+	openai.ChatCompletionResponse
+	Usage *Usage `json:"usage,omitempty"`
+}
+
 // BetaCompletionRequest 测试版完成请求
 type BetaCompletionRequest struct {
 	openai.ChatCompletionRequest

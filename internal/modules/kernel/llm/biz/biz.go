@@ -139,7 +139,7 @@ func (s *LLM) chatCompletionStream(ev event.Event, re event.Result) {
 func (s *LLM) ChatCompletion(
 	workspaceName string,
 	ctx context.Context,
-	param *imklc.ChatCompletionRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
+	param *imklc.ChatCompletionRequest) (ret *imklc.ChatCompletionResponse, err error) {
 	providerVal, providerOK := s.workspaceProvider.Load(workspaceName)
 	if !providerOK {
 		providerPtr := provider.NewProvider(workspaceName, s)

@@ -212,7 +212,7 @@ func (s *Provider) OnRecv(event, content string, usagePtr *imklc.Usage) {
 func (s *Provider) ChatCompletion(
 	workspaceName string,
 	chatContext context.Context,
-	paramPtr *imklc.ChatCompletionRequest) (ret *imklc.ChatCompletionStreamResponse, err error) {
+	paramPtr *imklc.ChatCompletionRequest) (ret *imklc.ChatCompletionResponse, err error) {
 	providerType := imklc.RemoteDeepseek
 	if val := chatContext.Value(imklc.DeepseekProvider{}); val != nil {
 		providerType = val.(string)
@@ -220,7 +220,7 @@ func (s *Provider) ChatCompletion(
 
 	paramPtr.Model = config.GetDeepSeekModelName(providerType)
 
-	resultPtr := &imklc.ChatCompletionStreamResponse{}
+	resultPtr := &imklc.ChatCompletionResponse{}
 	clnt := http.DefaultClient
 	urlVal, _ := url.ParseRequestURI(config.GetDeepSeekUrl(providerType))
 	urlVal.Path = path.Join(urlVal.Path, imklc.ChatCompletionStream)
