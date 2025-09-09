@@ -29,13 +29,13 @@ func New(routeRegistry engine.RouteRegistry, bizPtr *biz.LLM) *LLM {
 
 func (s *LLM) RegisterRoute() {
 	s.routeRegistry.SetApiVersion("")
-	s.routeRegistry.AddHandler(imklc.ChatCompletionStream, engine.POST, s.ChatCompletion)
+	s.routeRegistry.AddHandler(imklc.ChatCompletionStream, engine.POST, s.ChatCompletionStream)
 	s.routeRegistry.AddHandler(imklc.BetaCompletion, engine.POST, s.BetaCompletion)
 	s.routeRegistry.AddHandler(imklc.ModelsList, engine.GET, s.ModelsList)
 	s.routeRegistry.AddHandler(imklc.UserBalance, engine.GET, s.UserBalance)
 }
 
-func (s *LLM) ChatCompletion(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *LLM) ChatCompletionStream(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	paramPtr := &imklc.ChatCompletionRequest{}
 	if err := fn.ParseJSONBody(req, nil, paramPtr); err != nil {
 		log.Errorf("parse json body error:%s", err.Error())
