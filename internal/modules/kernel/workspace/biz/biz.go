@@ -423,6 +423,10 @@ func (s *Workspace) FilterWorkspace(filter fu.Filter) (ret []*models.Workspace, 
 		if !models.ValidStage(val.Stage) {
 			val.Stage = models.DesignStage
 		}
+		if !fp.Exist(val.WorkspaceDir) {
+			val.Stage = models.OfflineStatus
+			s.UpdateWorkspace(val)
+		}
 	}
 	return
 }
