@@ -185,6 +185,12 @@ func UpdateWorkspace(workspace *models.Workspace) (err error) {
 				if !models.ValidStage(workspace.Stage) {
 					workspace.Stage = sysConfig.Workspace[idx].Stage
 				}
+				if workspace.Template == "" {
+					workspace.Template = sysConfig.Workspace[idx].Template
+				}
+				if workspace.KnowledgeWarehouse == "" {
+					workspace.KnowledgeWarehouse = sysConfig.Workspace[idx].KnowledgeWarehouse
+				}
 				if workspace.WorkspaceDir == "" {
 					workspace.WorkspaceDir = sysConfig.Workspace[idx].WorkspaceDir
 				}
