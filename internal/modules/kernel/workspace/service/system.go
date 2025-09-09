@@ -15,10 +15,10 @@ func (s *Workspace) querySystemConfig(ctx context.Context, res http.ResponseWrit
 	result := &imkwc.SystemConfigResult{}
 	defer fn.PackageHTTPResponse(res, result)
 
-	authorConfig, localModel, remoteModel := s.bizPtr.GetSystemConfig()
+	authorConfig, remoteModel, workspaceSetting := s.bizPtr.GetSystemConfig()
 	result.AuthorInfo = authorConfig
-	result.LocalModel = localModel
 	result.RemoteModel = remoteModel
+	result.WorkspaceSetting = workspaceSetting
 	result.VersionInfo = s.bizPtr.GetVersionInfo()
 }
 

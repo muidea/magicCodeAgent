@@ -33,12 +33,13 @@ var (
 
 // Config 定义系统配置结构
 type Config struct {
-	BindPort     string              `json:"bindPort"`  // 绑定端口
-	Workspace    []*models.Workspace `json:"workspace"` // 工作区列表
-	Models       []*models.ModelInfo `json:"models"`    // AI模型列表
-	AuthorConfig *models.AuthorInfo  `json:"authorConfig"`
-	WorkspaceDir string              `json:"workspaceDir"`
-	DebugFlag    bool                `json:"debugFlag"`
+	BindPort         string                   `json:"bindPort"`  // 绑定端口
+	Workspace        []*models.Workspace      `json:"workspace"` // 工作区列表
+	Models           []*models.ModelInfo      `json:"models"`    // AI模型列表
+	WorkspaceSetting *models.WorkspaceSetting `json:"workspaceSetting"`
+	AuthorConfig     *models.AuthorInfo       `json:"authorConfig"`
+	WorkspaceDir     string                   `json:"workspaceDir"`
+	DebugFlag        bool                     `json:"debugFlag"`
 }
 
 // init 初始化当前工作目录路径
@@ -126,6 +127,14 @@ func Workspaces() []*models.Workspace {
 	}
 
 	return []*models.Workspace{}
+}
+
+func WorkspaceSetting() *models.WorkspaceSetting {
+	if sysConfig != nil {
+		return sysConfig.WorkspaceSetting
+	}
+
+	return nil
 }
 
 // AddWorkspace 添加工作区配置
@@ -307,7 +316,7 @@ func AuthorConfig() *models.AuthorInfo {
 	return nil
 }
 
-func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo) {
+func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo, workspaceSetting *models.WorkspaceSetting) {
 	if sysConfig == nil {
 		return
 	}
@@ -316,6 +325,9 @@ func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo) 
 	}
 	if models != nil {
 		sysConfig.Models = models
+	}
+	if workspaceSetting != nil {
+		sysConfig.WorkspaceSetting = workspaceSetting
 	}
 
 	err := fu.SaveConfig(currentConfigPath, sysConfig)

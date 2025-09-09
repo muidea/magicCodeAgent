@@ -64,15 +64,16 @@ func GetStageReferenceLabel(stage string) string {
 }
 
 type Workspace struct {
-	Name         string   `json:"name"`
-	Description  string   `json:"description"`
-	Template     string   `json:"template"`
-	Status       string   `json:"status"`
-	Stage        string   `json:"stage"`
-	WorkspaceDir string   `json:"workspaceDir"`
-	TechStack    []string `json:"techStack"`
-	Ignores      []string `json:"ignores"`
-	UpdateTime   string   `json:"updateTime"`
+	Name               string   `json:"name"`
+	Description        string   `json:"description"`
+	Template           string   `json:"template"`
+	Status             string   `json:"status"`
+	Stage              string   `json:"stage"`
+	WorkspaceDir       string   `json:"workspaceDir"`
+	KnowledgeWarehouse string   `json:"knowledgeWarehouse"`
+	TechStack          []string `json:"techStack"`
+	Ignores            []string `json:"ignores"`
+	UpdateTime         string   `json:"updateTime"`
 }
 
 func (s *Workspace) GetName() string {
@@ -101,6 +102,10 @@ func (s *Workspace) GetStageWorkingPath(stage string) string {
 	default:
 		return ""
 	}
+}
+
+func (s *Workspace) GetKnowledgeWarehouse() string {
+	return s.KnowledgeWarehouse
 }
 
 func (s *Workspace) GetTemplate() string {

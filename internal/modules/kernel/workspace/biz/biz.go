@@ -3,6 +3,7 @@ package biz
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -159,14 +160,22 @@ func (s *Workspace) createWorkspace(ev event.Event, re event.Result) {
 }
 
 func (s *Workspace) CreateWorkspace(workspacePtr *models.Workspace) (ret *models.Workspace, err *cd.Error) {
+	workspaceSetting := config.WorkspaceSetting()
+	if workspaceSetting == nil {
+		err = cd.NewError(cd.Unexpected, "invalid workspaceSetting")
+		log.Errorf("create workspace failed, invalid workspaceSetting")
+		return
+	}
+	workspaceDir := filepath.Join(workspaceSetting.RootPath, workspacePtr.Name)
 	// 检查路径是否为空目录
-	if fp.Exist(workspacePtr.WorkspaceDir) {
+	if fp.Exist(workspaceDir) {
 		emptyVal, emptyErr := fp.IsDirEmpty(workspacePtr.WorkspaceDir)
 		if !emptyVal || emptyErr != nil {
-			err = cd.NewError(cd.Unexpected, fmt.Sprintf("workspace path:%s is not empty", workspacePtr.WorkspaceDir))
+			err = cd.NewError(cd.Unexpected, fmt.Sprintf("workspace path:%s is busy", workspacePtr.WorkspaceDir))
 			return
 		}
 	} else {
+		workspacePtr.WorkspaceDir = workspaceDir
 		// 创建目录
 		if e := os.MkdirAll(workspacePtr.WorkspaceDir, 0755); e != nil {
 			err = cd.NewError(cd.Unexpected, e.Error())

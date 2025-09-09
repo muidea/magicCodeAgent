@@ -21,7 +21,7 @@ func (s *Workspace) GetVersionInfo() *imkwc.VersionInfo {
 	}
 }
 
-func (s *Workspace) GetSystemConfig() (authPtr *imkwc.AuthorInfo, localModel *imkwc.ModelInfo, remoteModel *imkwc.ModelInfo) {
+func (s *Workspace) GetSystemConfig() (authPtr *imkwc.AuthorInfo, remoteModel *imkwc.ModelInfo, workspaceSetting *models.WorkspaceSetting) {
 	authorConfig := config.AuthorConfig()
 	if authorConfig != nil {
 		authPtr = &imkwc.AuthorInfo{
@@ -40,15 +40,9 @@ func (s *Workspace) GetSystemConfig() (authPtr *imkwc.AuthorInfo, localModel *im
 				Provider: val.Provider,
 			}
 		}
-		if val.Name == imklc.LocalDeepseek {
-			localModel = &imkwc.ModelInfo{
-				APIKey:   "sk-***",
-				BaseUrl:  val.BaseUrl,
-				Model:    val.Model,
-				Provider: val.Provider,
-			}
-		}
 	}
+
+	workspaceSetting = config.WorkspaceSetting()
 
 	return
 }
@@ -68,39 +62,18 @@ func (s *Workspace) SetSystemConfig(paramPtr *imkwc.SystemConfigParam) (err *cd.
 	}
 
 	modelList := config.Models()
-	var curLocal *models.ModelInfo
 	var curRemote *models.ModelInfo
 	newList := []*models.ModelInfo{}
 	for _, val := range modelList {
-		if val.Name == imklc.LocalDeepseek {
-			curLocal = val
-		}
 		if val.Name == imklc.RemoteDeepseek {
 			curRemote = val
 		}
 	}
 
-	if curLocal == nil {
-		curLocal = imklcfg.GetDefaultLocalModel()
-	}
 	if curRemote == nil {
 		curRemote = imklcfg.GetDefaultRemoteModel()
 	}
 
-	if paramPtr.LocalModel != nil {
-		if paramPtr.LocalModel.BaseUrl != "" {
-			curLocal.BaseUrl = paramPtr.LocalModel.BaseUrl
-		}
-		if paramPtr.LocalModel.Model != "" {
-			curLocal.Model = paramPtr.LocalModel.Model
-		}
-		if paramPtr.LocalModel.Provider != "" {
-			curLocal.Provider = paramPtr.LocalModel.Provider
-		}
-		if paramPtr.LocalModel.APIKey != "" && paramPtr.LocalModel.APIKey != apiKeyMask {
-			curLocal.APIKey = paramPtr.LocalModel.APIKey
-		}
-	}
 	if paramPtr.RemoteModel != nil {
 		if paramPtr.RemoteModel.BaseUrl != "" {
 			curRemote.BaseUrl = paramPtr.RemoteModel.BaseUrl
@@ -116,8 +89,7 @@ func (s *Workspace) SetSystemConfig(paramPtr *imkwc.SystemConfigParam) (err *cd.
 		}
 	}
 
-	newList = append(newList, curLocal)
 	newList = append(newList, curRemote)
-	config.UpdateConfig(authorConfig, newList)
+	config.UpdateConfig(authorConfig, newList, paramPtr.WorkspaceSetting)
 	return
 }

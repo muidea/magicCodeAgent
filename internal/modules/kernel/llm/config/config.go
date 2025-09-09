@@ -56,15 +56,6 @@ func GetDeepSeekRetryInterval() time.Duration {
 	return retryInterval
 }
 
-func GetDefaultLocalModel() *models.ModelInfo {
-	return &models.ModelInfo{
-		Name:     common.LocalDeepseek,
-		BaseUrl:  "http://127.0.0.1:11434/v1",
-		Model:    "deepseek-r1:7b",
-		Provider: common.Deepseek,
-	}
-}
-
 func GetDefaultRemoteModel() *models.ModelInfo {
 	return &models.ModelInfo{
 		Name:     common.RemoteDeepseek,
