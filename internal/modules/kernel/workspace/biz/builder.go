@@ -149,3 +149,15 @@ func (s *Workspace) DebugWorkspaceContent(ctx context.Context, paramPtr *imkwc.C
 	err = stationPtr.DebugContent(ctx)
 	return
 }
+
+func (s *Workspace) ChatWorkspaceTerminalContent(ctx context.Context, paramPtr *imkwc.ChatMessage) (ret string, err *cd.Error) {
+	curWorkspace, ok := s.workspaceStationCache.Load(paramPtr.Workspace)
+	if !ok {
+		err = cd.NewError(cd.NotFound, fmt.Sprintf("workspace:%s not found", paramPtr.Workspace))
+		log.Errorf("workspace:%s not found", paramPtr.Workspace)
+		return
+	}
+	stationPtr := curWorkspace.(*Station)
+	ret, err = stationPtr.ChatTerminal(ctx, paramPtr.Content)
+	return
+}

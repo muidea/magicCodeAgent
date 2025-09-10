@@ -44,10 +44,11 @@ func (s *Workspace) RegisterRoute() {
 	s.routeRegistry.AddHandler(imkwc.QueryWorkspaceExplorerFileContent, engine.GET, s.queryFileContent)
 	s.routeRegistry.AddHandler(imkwc.CreateChatStreamSSE, engine.GET, s.createChatWorkspaceStreamSSE)
 	s.routeRegistry.AddHandler(imkwc.SubmitChatStreamMessage, engine.POST, s.submitChatWorkspaceStreamMessage)
-	s.routeRegistry.AddHandler(imkwc.TerminateChat, engine.POST, s.terminateChatWorkspaceContent)
+	s.routeRegistry.AddHandler(imkwc.TerminateChatStream, engine.POST, s.terminateChatWorkspaceStream)
 	s.routeRegistry.AddHandler(imkwc.FlterChatHistory, engine.GET, s.filterChatWorkspaceContentHistory)
 	s.routeRegistry.AddHandler(imkwc.DebugChatMessage, engine.POST, s.debugChatWorkspaceContent)
 	s.routeRegistry.AddHandler(imkwc.FilterChatFlow, engine.GET, s.filterChatWorkspaceContentFlow)
 	s.routeRegistry.AddHandler(imkwc.QuerySystemConfig, engine.GET, s.querySystemConfig)
 	s.routeRegistry.AddHandler(imkwc.UpdateSystemConfig, engine.POST, s.updateSystemConfig)
+	s.routeRegistry.AddHandler(imkwc.SubmitChatTerminalMessage, engine.POST, s.submitChatWorkspaceTerminalMessage)
 }

@@ -14,6 +14,7 @@ import (
 
 type Assistant interface {
 	ChatStream(ctx context.Context, workspaceConfig *models.Workspace, systemPrompt, workspaceEnvPromp string, flowPathList []*models.Flow) *cd.Error
+	ChatTerminal(ctx context.Context, workspaceConfig *models.Workspace, systemPrompt, workspaceEnvPromp, content string) (string, *cd.Error)
 }
 
 func (s *Workspace) ChatStream(
@@ -54,6 +55,34 @@ func (s *Workspace) ChatStream(
 	ev.SetData("systemMessage", systemMessage)
 	result := s.SendEvent(ev)
 	err = result.Error()
+	log.Infof("chat llm elapse time:%v", time.Since(preTime))
+	return
+}
+
+func (s *Workspace) ChatTerminal(
+	chatContext context.Context,
+	workspaceConfig *models.Workspace,
+	systemPrompt, workspaceEnvPrompt,
+	content string) (ret string, err *cd.Error) {
+	systemMessage := &models.MessageItem{
+		Content: []string{systemPrompt},
+	}
+
+	userMessageList := models.MessageItemList{}
+	userMessageList = append(userMessageList, models.MessageItem{
+		Role:    common.User,
+		Content: []string{content},
+	})
+	userMessageList = append(userMessageList, models.MessageItem{
+		Role:    common.User,
+		Content: []string{workspaceEnvPrompt},
+	})
+	preTime := time.Now()
+	ev := event.NewEvent(imklc.ChatCompletionTerminal, s.ID(), imklc.LLMModule, nil, userMessageList)
+	ev.SetData("context", chatContext)
+	ev.SetData("workspace", workspaceConfig.Name)
+	ev.SetData("systemMessage", systemMessage)
+	ret, err = event.GetAs[string](s.SendEvent(ev))
 	log.Infof("chat llm elapse time:%v", time.Since(preTime))
 	return
 }

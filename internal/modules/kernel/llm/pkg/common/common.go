@@ -8,11 +8,11 @@ import (
 const LLMModule = "/internal/modules/kernel/llm"
 
 const (
-	ChatCompletionStream  = "/chat/completions"
-	ChatCompletionTermial = "/chat/completions/termial"
-	BetaCompletion        = "/beta/completions"
-	ModelsList            = "/models"
-	UserBalance           = "/user/balance"
+	ChatCompletionStream   = "/chat/completions"
+	ChatCompletionTerminal = "/chat/completions/terminal"
+	BetaCompletion         = "/beta/completions"
+	ModelsList             = "/models"
+	UserBalance            = "/user/balance"
 )
 
 type Usage struct {

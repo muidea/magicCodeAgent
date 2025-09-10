@@ -35,7 +35,7 @@ func New(
 		Base: biz.New(imklc.LLMModule, eventHub, backgroundRoutine),
 	}
 
-	ptr.SubscribeFunc(imklc.ChatCompletionTermial, ptr.chatCompletionTermilal)
+	ptr.SubscribeFunc(imklc.ChatCompletionTerminal, ptr.chatCompletionTerminal)
 	ptr.SubscribeFunc(imklc.ChatCompletionStream, ptr.chatCompletionStream)
 	return ptr
 }
@@ -95,7 +95,7 @@ func (s *LLM) constructRequest(
 	return request
 }
 
-func (s *LLM) chatCompletionTermilal(ev event.Event, re event.Result) {
+func (s *LLM) chatCompletionTerminal(ev event.Event, re event.Result) {
 	preTime := time.Now()
 	defer func() {
 		log.Infof("chat completion terminal, workspace:%s, elapse:%v", ev.GetData("workspace"), time.Since(preTime))
@@ -132,8 +132,7 @@ func (s *LLM) chatCompletionTermilal(ev event.Event, re event.Result) {
 			re.Set(nil, cd.NewError(cd.Unexpected, err.Error()))
 			return
 		}
-
-		re.Set(rsp, nil)
+		re.Set(rsp.Choices[0].Message.Content, nil)
 	}
 }
 

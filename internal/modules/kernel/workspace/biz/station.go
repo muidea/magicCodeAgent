@@ -181,7 +181,7 @@ Below is your current list of reminders for this task. Keep them updated as you 
 	return todoListContent.String()
 }
 
-func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
+func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 	stringBuilder := bytes.NewBufferString("")
 	stringBuilder.WriteString("<environment_details>\n")
 	stringBuilder.WriteString("# 项目名称\n\n" + s.currentWorkspace.Name + "\n\n")
@@ -196,14 +196,16 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	stringBuilder.WriteString("\n\n")
 
 	//## 项目状态
-	statusContent, statusErr := s.getWorkspaceStatus(ptr)
-	if statusErr != nil {
-		log.Errorf("get workspace status failed, flow:%v error:%s", ptr, statusErr)
-		return "", statusErr
-	}
-	if statusContent != "" {
-		stringBuilder.WriteString(statusContent)
-		stringBuilder.WriteString("\n\n")
+	if flowPtr != nil {
+		statusContent, statusErr := s.getWorkspaceStatus(flowPtr)
+		if statusErr != nil {
+			log.Errorf("get workspace status failed, flow:%v error:%s", flowPtr, statusErr)
+			return "", statusErr
+		}
+		if statusContent != "" {
+			stringBuilder.WriteString(statusContent)
+			stringBuilder.WriteString("\n\n")
+		}
 	}
 
 	// 参考内容清单
@@ -212,7 +214,8 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 	referencePath := s.currentWorkspace.GetStageWorkingPath(referenceStageVal)
 	if referencePath != "" {
 		hasReference := false
-		stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", referenceLabel))
+		//stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", referenceLabel))
+		fmt.Fprintf(stringBuilder, "### %s\n\n", referenceLabel)
 		s.workspaceFileManager.Range(func(filePath string) bool {
 			if strings.HasPrefix(filePath, referencePath) {
 				relativePath := filePath[len(referencePath)+1:]
@@ -222,54 +225,13 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 			return true
 		})
 		if hasReference {
-			stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", referenceStageVal))
+			//stringBuilder.WriteString(fmt.Sprintf("\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", referenceStageVal))
+			fmt.Fprintf(stringBuilder, "\n* 可以使用`read_stage_file`工具, 指定stage为: %s 读取对应的内容\n", referenceStageVal)
 			stringBuilder.WriteString("\n\n")
 		}
 	}
 
 	workingPath := s.currentWorkspace.GetWorkingPath()
-	/*
-		if ptr != nil {
-			// 当前进度
-			// 新增，删除，修改的文件清单
-			stringBuilder.WriteString("### 当前进度\n\n")
-			if ptr.AddFiles.Len() > 0 {
-				stringBuilder.WriteString("#### 新增清单\n\n")
-				ptr.AddFiles.Range(func(filePath string) bool {
-					if strings.HasPrefix(filePath, workingPath) {
-						relativePath := filePath[len(workingPath)+1:]
-						stringBuilder.WriteString("- " + relativePath + "\n")
-					}
-					return true
-				})
-				stringBuilder.WriteString("\n")
-			}
-			if ptr.DelFiles.Len() > 0 {
-				stringBuilder.WriteString("#### 删除清单\n\n")
-				ptr.DelFiles.Range(func(filePath string) bool {
-					if strings.HasPrefix(filePath, workingPath) {
-						relativePath := filePath[len(workingPath)+1:]
-						stringBuilder.WriteString("- " + relativePath + "\n")
-					}
-					return true
-				})
-				stringBuilder.WriteString("\n")
-			}
-			if ptr.ModFiles.Len() > 0 {
-				stringBuilder.WriteString("#### 修改清单\n\n")
-				ptr.ModFiles.Range(func(filePath string) bool {
-					if strings.HasPrefix(filePath, workingPath) {
-						relativePath := filePath[len(workingPath)+1:]
-						stringBuilder.WriteString("- " + relativePath + "\n")
-					}
-					return true
-				})
-				stringBuilder.WriteString("\n")
-			}
-			stringBuilder.WriteString("\n\n")
-		}
-	*/
-
 	stringBuilder.WriteString("### 当前输出清单\n\n")
 	s.workspaceFileManager.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, workingPath) {
@@ -300,10 +262,12 @@ func (s *Station) envPrompt(ptr *models.Flow) (string, error) {
 		}
 	}
 
-	todoListContent := s.getTodoListContent(ptr)
-	if todoListContent != "" {
-		stringBuilder.WriteString(todoListContent)
-		stringBuilder.WriteString("\n\n")
+	if flowPtr != nil {
+		todoListContent := s.getTodoListContent(flowPtr)
+		if todoListContent != "" {
+			stringBuilder.WriteString(todoListContent)
+			stringBuilder.WriteString("\n\n")
+		}
 	}
 
 	stringBuilder.WriteString("</environment_details>")
@@ -842,4 +806,14 @@ func (s *Station) DebugContent(ctx context.Context) (err *cd.Error) {
 	}
 
 	return
+}
+
+func (s *Station) ChatTerminal(ctx context.Context, content string) (string, *cd.Error) {
+	sysPrompt := s.systemPrompt()
+	envPrompt, envErr := s.envPrompt(nil)
+	if envErr != nil {
+		log.Errorf("env prompt error:%v", envErr)
+		return "", cd.NewError(cd.Unexpected, envErr.Error())
+	}
+	return s.localAssistant.ChatTerminal(ctx, &s.currentWorkspace, sysPrompt, envPrompt, content)
 }

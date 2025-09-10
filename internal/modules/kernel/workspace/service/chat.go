@@ -49,14 +49,15 @@ func (s *Workspace) submitChatWorkspaceStreamMessage(ctx context.Context, res ht
 		return
 	}
 
-	result := &imkwc.ChatMessageResult{}
-	defer fn.PackageHTTPResponse(res, result)
 	holder := s.sseHolderRegistry.GetHolder(res, req)
 	if holder == nil {
 		log.Errorf("invalid sse request")
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	result := &imkwc.ChatMessageStreamResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
 	taskFunc := func() error {
 		errVal := s.bizPtr.ChatWorkspaceContentMessage(ctx, param)
 		if errVal != nil {
@@ -76,7 +77,7 @@ func (s *Workspace) submitChatWorkspaceStreamMessage(ctx context.Context, res ht
 	result.Error = nil
 }
 
-func (s *Workspace) terminateChatWorkspaceContent(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) terminateChatWorkspaceStream(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	param := &imkwc.ChatMessage{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
@@ -85,14 +86,15 @@ func (s *Workspace) terminateChatWorkspaceContent(ctx context.Context, res http.
 		return
 	}
 
-	result := &imkwc.ChatMessageResult{}
-	defer fn.PackageHTTPResponse(res, result)
 	holder := s.sseHolderRegistry.GetHolder(res, req)
 	if holder == nil {
 		log.Errorf("invalid sse request")
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	result := &imkwc.ChatMessageStreamResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
 	taskFunc := func() error {
 		errVal := s.bizPtr.ChatWorkspaceContentTerminate(ctx, param)
 		if errVal != nil {
@@ -128,14 +130,15 @@ func (s *Workspace) debugChatWorkspaceContent(ctx context.Context, res http.Resp
 		return
 	}
 
-	result := &imkwc.DebugWorkspaceResult{}
-	defer fn.PackageHTTPResponse(res, result)
 	holder := s.sseHolderRegistry.GetHolder(res, req)
 	if holder == nil {
 		log.Errorf("invalid sse request")
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	result := &imkwc.DebugWorkspaceResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
 	taskFunc := func() error {
 		errVal := s.bizPtr.DebugWorkspaceContent(ctx, param)
 		if errVal != nil {
@@ -160,4 +163,19 @@ func (s *Workspace) filterChatWorkspaceContentFlow(ctx context.Context, res http
 
 	workspaceName := req.URL.Query().Get("workspace")
 	result.Value, result.Error = s.bizPtr.FilterWorkspaceFlow(workspaceName)
+}
+
+func (s *Workspace) submitChatWorkspaceTerminalMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkwc.ChatMessageTerminalResult{}
+	defer fn.PackageHTTPResponse(res, result)
+
+	param := &imkwc.ChatMessage{}
+	err := fn.ParseJSONBody(req, nil, param)
+	if err != nil {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		return
+	}
+
+	result.Value, result.Error = s.bizPtr.ChatWorkspaceTerminalContent(ctx, param)
 }

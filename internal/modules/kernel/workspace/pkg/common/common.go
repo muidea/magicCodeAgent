@@ -32,12 +32,13 @@ const (
 	FilterWorkspaceExplorerFile       = "/workspace/explorer/file/filter"
 	FilterWorkspaceExplorerFileTree   = "/workspace/explorer/file/tree/filter"
 	QueryWorkspaceExplorerFileContent = "/workspace/explorer/file/content/query"
-	CreateChatStreamSSE               = "/workspace/chat/sse"
-	SubmitChatStreamMessage           = "/workspace/chat/message"
-	TerminateChat                     = "/workspace/chat/terminate"
+	CreateChatStreamSSE               = "/workspace/chat/stream/sse"
+	SubmitChatStreamMessage           = "/workspace/chat/stream/message"
+	TerminateChatStream               = "/workspace/chat/stream/terminate"
 	FlterChatHistory                  = "/workspace/chat/history/filter"
 	DebugChatMessage                  = "/workspace/chat/debug"
 	FilterChatFlow                    = "/workspace/chat/flow/filter"
+	SubmitChatTerminalMessage         = "/workspace/chat/terminal/message"
 )
 
 type AuthorInfo struct {
@@ -170,8 +171,13 @@ type ChatMessage struct {
 	Content   string `json:"content"`
 }
 
-type ChatMessageResult struct {
+type ChatMessageStreamResult struct {
 	cd.Result
+}
+
+type ChatMessageTerminalResult struct {
+	cd.Result
+	Value string `json:"value"`
 }
 
 type ChatHistoryResult struct {
