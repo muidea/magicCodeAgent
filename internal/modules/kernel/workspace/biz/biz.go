@@ -15,6 +15,7 @@ import (
 	"github.com/muidea/magicCommon/task"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
+	iiec "github.com/muidea/magicCodeAgent/internal/initiators/embedtext/pkg/common"
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
@@ -28,12 +29,14 @@ type Workspace struct {
 	workspaceStationCache sync.Map
 
 	promptsRegistry iipc.PromptsRegistry
+	embedTextWorker iiec.EmbedTextWorker
 }
 
 func New(
 	eventHub event.Hub,
 	backgroundRoutine task.BackgroundRoutine,
 	promptsRegistry iipc.PromptsRegistry,
+	embedTextWorker iiec.EmbedTextWorker,
 ) *Workspace {
 	monitorPtr, monitorErr := fp.NewMonitor([]string{".git", ".idea", ".vscode"})
 	if monitorErr != nil {
@@ -45,6 +48,7 @@ func New(
 		Base:            biz.New(imkwc.WorkspaceModule, eventHub, backgroundRoutine),
 		fileMonitor:     monitorPtr,
 		promptsRegistry: promptsRegistry,
+		embedTextWorker: embedTextWorker,
 	}
 
 	ptr.SubscribeFunc(imkwc.QueryWorkspace, ptr.queryWorkspace)

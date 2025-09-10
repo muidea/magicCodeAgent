@@ -8,6 +8,7 @@ import (
 	"github.com/muidea/magicCommon/framework/plugin/module"
 	"github.com/muidea/magicCommon/task"
 
+	iiec "github.com/muidea/magicCodeAgent/internal/initiators/embedtext/pkg/common"
 	iipc "github.com/muidea/magicCodeAgent/internal/initiators/prompts/pkg/common"
 	iirc "github.com/muidea/magicCodeAgent/internal/initiators/routeregistry/pkg/common"
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/biz"
@@ -51,7 +52,16 @@ func (s *Workspace) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundR
 		return
 	}
 
-	s.bizPtr = biz.New(eventHub, backgroundRoutine, promptsRegistryHelperVal.GetPromptsRegistry())
+	var embedTextWorkerHelperVal iiec.EmbedTextHelper
+	var embedTextWorkerHelperErr *cd.Error
+	embedTextWorkerHelperVal, embedTextWorkerHelperErr = initiator.GetEntity(iiec.EmbedtextInitiator, embedTextWorkerHelperVal)
+	if embedTextWorkerHelperErr != nil {
+		err = embedTextWorkerHelperErr
+		log.Errorf("Knowledge setup failed, initiator.GetEntity error:%s", embedTextWorkerHelperErr.Error())
+		return
+	}
+
+	s.bizPtr = biz.New(eventHub, backgroundRoutine, promptsRegistryHelperVal.GetPromptsRegistry(), embedTextWorkerHelperVal.GetEmbedText())
 
 	s.servicePtr = service.New(routeRegistryHelperVal.GetRouteRegistry(), s.bizPtr)
 

@@ -7,6 +7,6 @@ import (
 )
 
 func TestGetBulkURL(t *testing.T) {
-	bgeAPIURL := GetBgeAPIUrl()
+	bgeAPIURL := GetBgeEmbedAPIUrl()
 	assert.Equal(t, defaultBgeAPIUrl, bgeAPIURL)
 }

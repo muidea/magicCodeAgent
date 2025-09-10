@@ -17,8 +17,8 @@ func GetBgeAPIServer() string {
 	return defaultBgeAPIServer
 }
 
-func GetBgeAPIUrl() string {
-	apiVal, apiOK := os.LookupEnv("BgeAPIUrl")
+func GetBgeEmbedAPIUrl() string {
+	apiVal, apiOK := os.LookupEnv("BgeEmbedAPIUrl")
 	if apiOK {
 		return apiVal
 	}
@@ -26,11 +26,20 @@ func GetBgeAPIUrl() string {
 	return fmt.Sprintf("%s/%s", GetBgeAPIServer(), "bge/embed")
 }
 
-func GetBgeAPIBulkUrl() string {
-	apiVal, apiOK := os.LookupEnv("BgeAPIBulkUrl")
+func GetBgeEmbedBulkAPIUrl() string {
+	apiVal, apiOK := os.LookupEnv("BgeEmbedBulkAPIUrl")
 	if apiOK {
 		return apiVal
 	}
 
 	return fmt.Sprintf("%s/%s", GetBgeAPIServer(), "bge/embed_bulk")
+}
+
+func GetBgeKeywordsAPIUrl() string {
+	apiVal, apiOK := os.LookupEnv("BgeKeywordsAPIUrl")
+	if apiOK {
+		return apiVal
+	}
+
+	return fmt.Sprintf("%s/%s", GetBgeAPIServer(), "bge/keywords")
 }
