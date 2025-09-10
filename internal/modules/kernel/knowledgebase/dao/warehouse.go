@@ -176,7 +176,7 @@ func (s *KnowledgeBase) DelChunks(warehouse, filePath string) (err error) {
 	return
 }
 
-func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK int, similarity float32) ([]*imkkc.Chunk, error) {
+func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK int, threshold float32) ([]*imkkc.Chunk, error) {
 	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	vecLit := floatSliceToArrayLiteral(vector)
 	sqlStmt := fmt.Sprintf(`
@@ -185,7 +185,7 @@ func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK 
 		WHERE array_cosine_distance(embedding, %s) < %g
 		ORDER BY dist
 		LIMIT %d;
-	`, vecLit, warehouseVectTableName, vecLit, similarity, topK)
+	`, vecLit, warehouseVectTableName, vecLit, threshold, topK)
 
 	// Execute the query without additional parameters
 	rows, err := s.dbInstancePtr.Query(sqlStmt)
@@ -211,7 +211,6 @@ func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK 
 			Text:     text,
 			Metadata: make(map[string]string),
 			FilePath: filePath,
-			Vector:   vector,
 			Distance: distance,
 		}
 		err = json.Unmarshal([]byte(metadata), &chunk.Metadata)
@@ -225,12 +224,75 @@ func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK 
 	return ret, nil
 }
 
-func (s *KnowledgeBase) SearchByText(warehouse, text string, topK int, similarity float32, embedTextWorker iiec.EmbedTextWorker) ([]*imkkc.Chunk, error) {
+func (s *KnowledgeBase) SearchByText(warehouse, text string, topK int, threshold float32, embedTextWorker iiec.EmbedTextWorker) ([]*imkkc.Chunk, error) {
 	vector, err := embedTextWorker.EmbedText(text)
 	if err != nil {
 		log.Errorf("embed text failed, error:%s", err.Error())
 		return nil, err
 	}
 
-	return s.SearchByVector(warehouse, vector, topK, similarity)
+	return s.SearchByVector(warehouse, vector, topK, threshold)
+}
+
+func (s *KnowledgeBase) SearchByVectorBulk(warehouse string, vectorList [][]float32, topK int, threshold float32) ([]*imkkc.Chunk, error) {
+	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
+	var unionSQL string
+	for i, vec := range vectorList {
+		vecLit := floatSliceToArrayLiteral(vec)
+		if i > 0 {
+			unionSQL += " UNION ALL "
+		}
+		unionSQL += fmt.Sprintf(`
+			(
+				SELECT id, text, metadata, filePath, array_cosine_distance(embedding, %s) AS dist
+				FROM %s
+				WHERE array_cosine_distance(embedding, %s) < %g
+				ORDER BY dist
+				LIMIT %d
+			)
+		`, vecLit, warehouseVectTableName, vecLit, threshold, topK)
+	}
+	rows, err := s.dbInstancePtr.Query(unionSQL)
+	if err != nil {
+		log.Errorf("query table %s records failed, error:%s", warehouseVectTableName, err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+	var ret []*imkkc.Chunk
+	for rows.Next() {
+		var id int64
+		var text string
+		var metadata string
+		var filePath string
+		var distance float64
+		err = rows.Scan(&id, &text, &metadata, &filePath, &distance)
+		if err != nil {
+			log.Errorf("scan row failed, error:%s", err.Error())
+			return nil, err
+		}
+		chunk := &imkkc.Chunk{
+			ID:       id,
+			Text:     text,
+			Metadata: make(map[string]string),
+			FilePath: filePath,
+			Distance: distance,
+		}
+		err = json.Unmarshal([]byte(metadata), &chunk.Metadata)
+		if err != nil {
+			log.Errorf("unmarshal metadata failed, error:%s", err.Error())
+			return nil, err
+		}
+		ret = append(ret, chunk)
+	}
+
+	return ret, nil
+}
+
+func (s *KnowledgeBase) SearchByTextBulk(warehouse string, textList []string, topK int, threshold float32, embedTextWorker iiec.EmbedTextWorker) (ret []*imkkc.Chunk, err error) {
+	vectorList, err := embedTextWorker.EmbedTextBulk(textList)
+	if err != nil {
+		log.Errorf("embed text failed, error:%s", err.Error())
+		return nil, err
+	}
+	return s.SearchByVectorBulk(warehouse, vectorList, topK, threshold)
 }

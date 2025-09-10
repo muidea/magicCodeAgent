@@ -52,7 +52,12 @@ func (s *KnowledgeBase) ExistWarehouse(warehouse string) bool {
 	return err == nil
 }
 
-func (s *KnowledgeBase) SearchKnowledge(warehouse, text string, topK int, similarity float32) (ret []*imkkc.Chunk, err error) {
-	log.Infof("search knowledgewarehouse, warehouse:%s, text:%s, topK:%d", warehouse, text, topK)
-	return s.daoPtr.SearchByText(warehouse, text, topK, similarity, s.embedTextWorker)
+func (s *KnowledgeBase) SearchKnowledge(warehouse, text string, topK int, threshold float32) (ret []*imkkc.Chunk, err error) {
+	log.Infof("search knowledgewarehouse, warehouse:%s, text:%s, topK:%d, threshold:%g", warehouse, text, topK, threshold)
+	return s.daoPtr.SearchByText(warehouse, text, topK, threshold, s.embedTextWorker)
+}
+
+func (s *KnowledgeBase) SearchKnowledgeBulk(warehouse string, texts []string, topK int, threshold float32) (ret []*imkkc.Chunk, err error) {
+	log.Infof("search knowledgewarehouse, warehouse:%s, text:%v, topK:%d, threshold:%g", warehouse, texts, topK, threshold)
+	return s.daoPtr.SearchByTextBulk(warehouse, texts, topK, threshold, s.embedTextWorker)
 }

@@ -119,12 +119,23 @@ func (s *KnowledgeBase) SearchKnowledge(ctx context.Context, res http.ResponseWr
 		log.Errorf("parse body error: %s", err.Error())
 		return
 	}
-
-	if param.Similarity <= 0.0001 {
-		param.Similarity = 0.6
+	if param.Warehouse == "" || len(param.Text) == 0 {
+		result.Error = cd.NewError(cd.IllegalParam, "warehouse and text can not be empty")
+		log.Errorf("warehouse and text can not be empty")
+		return
 	}
 
-	chunkList, chunkErr := s.bizPtr.SearchKnowledge(param.Warehouse, param.Text, param.TopK, param.Similarity)
+	if param.Threshold <= 0.0001 {
+		param.Threshold = 0.6
+	}
+
+	var chunkList []*imkkc.Chunk
+	var chunkErr error
+	if len(param.Text) > 1 {
+		chunkList, chunkErr = s.bizPtr.SearchKnowledgeBulk(param.Warehouse, param.Text, param.TopK, param.Threshold)
+	} else {
+		chunkList, chunkErr = s.bizPtr.SearchKnowledge(param.Warehouse, param.Text[0], param.TopK, param.Threshold)
+	}
 	if chunkErr != nil {
 		result.Error = cd.NewError(cd.Unexpected, "failed to search knowledge")
 		log.Errorf("search knowledge error: %s", chunkErr.Error())

@@ -59,6 +59,23 @@ func (s *Embedtext) EmbedText(chunkText string) (ret []float32, err error) {
 	return
 }
 
+func (s *Embedtext) EmbedTextBulk(chunkText []string) (ret [][]float32, err error) {
+	req := &common.EmbedBulkRequest{Texts: chunkText}
+	rsp := &common.EmbedBulkResponse{}
+
+	url := config.GetBgeAPIBulkUrl()
+	_, err = fn.HTTPPost(http.DefaultClient, url, req, &rsp)
+	if err != nil {
+		log.Errorf("http post url:%s, chunkTest:%s, error: %s", url, chunkText, err.Error())
+		return
+	}
+
+	for _, v := range rsp.Vectors {
+		ret = append(ret, s.normalize(v))
+	}
+	return
+}
+
 func (s *Embedtext) normalize(vec []float32) []float32 {
 	norm := float32(0.0)
 	for _, v := range vec {

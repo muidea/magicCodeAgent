@@ -136,9 +136,9 @@ func WorkspaceSetting() *models.WorkspaceSetting {
 	}
 	if ret == nil {
 		ret = &models.WorkspaceSetting{
-			RootPath:   filepath.Join(fo.GetHomeDir(), "codespace"),
-			Similarity: 0.5,
-			TopK:       5,
+			RootPath:  filepath.Join(fo.GetHomeDir(), "codespace"),
+			Threshold: 0.5,
+			TopK:      5,
 		}
 	}
 
@@ -344,8 +344,8 @@ func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo, 
 		if workspaceSetting.TopK == 0 {
 			workspaceSetting.TopK = 5
 		}
-		if workspaceSetting.Similarity <= 0.0001 {
-			workspaceSetting.Similarity = 0.5
+		if workspaceSetting.Threshold <= 0.0001 {
+			workspaceSetting.Threshold = 0.5
 		}
 
 		sysConfig.WorkspaceSetting = workspaceSetting
