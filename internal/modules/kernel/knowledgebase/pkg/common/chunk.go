@@ -12,7 +12,7 @@ type Chunk struct {
 	FilePath string            `json:"filePath"`
 	Metadata map[string]string `json:"metadata"`
 	Vector   []float32         `json:"-"`
-	Distance float64           `json:"distance"`
+	Distance float64           `json:"-"`
 }
 
 func (s *Chunk) String() string {

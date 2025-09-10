@@ -61,3 +61,7 @@ func (s *KnowledgeBase) SearchKnowledgeBulk(warehouse string, texts []string, to
 	log.Infof("search knowledgewarehouse, warehouse:%s, text:%v, topK:%d, threshold:%g", warehouse, texts, topK, threshold)
 	return s.daoPtr.SearchByTextBulk(warehouse, texts, topK, threshold, s.embedTextWorker)
 }
+
+func (s *KnowledgeBase) HybridSearchKnowledge(warehouse string, text string, topK int, threshold float32) (ret []*imkkc.Chunk, err error) {
+	return s.daoPtr.HybridSearchByText(warehouse, text, topK, threshold, s.embedTextWorker)
+}

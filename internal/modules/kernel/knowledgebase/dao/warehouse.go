@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -232,6 +234,141 @@ func (s *KnowledgeBase) SearchByText(warehouse, text string, topK int, threshold
 	}
 
 	return s.SearchByVector(warehouse, vector, topK, threshold)
+}
+
+func (s *KnowledgeBase) HybridSearchByText(warehouse, text string, topK int, threshold float32, embedTextWorker iiec.EmbedTextWorker) ([]*imkkc.Chunk, error) {
+	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
+	keywords, err := embedTextWorker.EmbedKeywords(text, topK)
+	if err != nil {
+		log.Errorf("embed keywords failed: %s", err.Error())
+		return nil, err
+	}
+
+	vectorWeight, ftsWeight := AutoAdjustWeights(text, ContextMixed, keywords)
+	vector, err := embedTextWorker.EmbedText(text)
+	if err != nil {
+		log.Errorf("embed text failed: %s", err.Error())
+		return nil, err
+	}
+	vecLit := floatSliceToArrayLiteral(vector)
+
+	log.Infof("warehouse:%s, keywords:%v, vector weight:%f, fts weight:%f, topK:%d, threshold:%g", warehouse, keywords, vectorWeight, ftsWeight, topK, threshold)
+
+	vectorSQL := fmt.Sprintf(`
+		SELECT id, text, metadata, filePath, array_cosine_distance(embedding, %s) AS dist
+		FROM %s
+		WHERE array_cosine_distance(embedding, %s) < %g
+		LIMIT %d
+	`, vecLit, warehouseVectTableName, vecLit, threshold, topK)
+
+	rows, err := s.dbInstancePtr.Query(vectorSQL)
+	if err != nil {
+		log.Errorf("vector query failed: %s", err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	type weightedChunk struct {
+		chunk      *imkkc.Chunk
+		vectorDist float32
+		ftsScore   float32
+		score      float32
+	}
+
+	chunkMap := make(map[int64]*weightedChunk)
+	for rows.Next() {
+		var id int64
+		var text, metadata, filePath string
+		var distance float64
+		if err := rows.Scan(&id, &text, &metadata, &filePath, &distance); err != nil {
+			log.Errorf("scan row failed: %s", err.Error())
+			return nil, err
+		}
+
+		ch := &imkkc.Chunk{
+			ID:       id,
+			Text:     text,
+			FilePath: filePath,
+			Distance: distance,
+			Metadata: make(map[string]string),
+		}
+		if err := json.Unmarshal([]byte(metadata), &ch.Metadata); err != nil {
+			log.Warnf("unmarshal metadata failed: %s", err.Error())
+		}
+
+		chunkMap[id] = &weightedChunk{
+			chunk:      ch,
+			vectorDist: float32(distance),
+			ftsScore:   0,
+			score:      0,
+		}
+	}
+
+	if len(keywords) > 0 {
+		likeClauses := make([]string, 0, len(keywords))
+		for _, kw := range keywords {
+			likeClauses = append(likeClauses, fmt.Sprintf("text LIKE '%%%s%%'", kw))
+		}
+		ftsSQL := fmt.Sprintf(`
+			SELECT id, text, metadata, filePath
+			FROM %s
+			WHERE %s
+		`, warehouseVectTableName, strings.Join(likeClauses, " OR "))
+
+		ftsRows, err := s.dbInstancePtr.Query(ftsSQL)
+		if err != nil {
+			log.Warnf("FTS query failed: %s", err.Error())
+		} else {
+			defer ftsRows.Close()
+			for ftsRows.Next() {
+				var id int64
+				var text, metadata, filePath string
+				if err := ftsRows.Scan(&id, &text, &metadata, &filePath); err != nil {
+					log.Warnf("scan FTS row failed: %s", err.Error())
+					continue
+				}
+				if wc, exists := chunkMap[id]; exists {
+					wc.ftsScore = 1.0 // 简单赋值1.0表示匹配
+				} else {
+					chunkPtr := &imkkc.Chunk{
+						ID:       id,
+						Text:     text,
+						FilePath: filePath,
+						Metadata: make(map[string]string),
+					}
+					if err := json.Unmarshal([]byte(metadata), &chunkPtr.Metadata); err != nil {
+						log.Warnf("unmarshal metadata failed: %s", err.Error())
+					}
+					chunkMap[id] = &weightedChunk{
+						chunk:      chunkPtr,
+						vectorDist: 1.0,
+						ftsScore:   1.0,
+						score:      0,
+					}
+				}
+			}
+		}
+	}
+
+	for _, wc := range chunkMap {
+		wc.score = vectorWeight*(1.0-wc.vectorDist) + ftsWeight*wc.ftsScore
+	}
+
+	wcList := make([]*weightedChunk, 0, len(chunkMap))
+	for _, wc := range chunkMap {
+		wcList = append(wcList, wc)
+	}
+
+	sort.SliceStable(wcList, func(i, j int) bool {
+		return wcList[i].score > wcList[j].score
+	})
+
+	finalList := make([]*imkkc.Chunk, 0, topK)
+	for i := 0; i < len(wcList) && i < topK; i++ {
+		finalList = append(finalList, wcList[i].chunk)
+	}
+
+	return finalList, nil
 }
 
 func (s *KnowledgeBase) SearchByVectorBulk(warehouse string, vectorList [][]float32, topK int, threshold float32) ([]*imkkc.Chunk, error) {

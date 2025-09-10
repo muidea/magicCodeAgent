@@ -144,3 +144,33 @@ func (s *KnowledgeBase) SearchKnowledge(ctx context.Context, res http.ResponseWr
 	result.Values = chunkList
 	result.Error = nil
 }
+
+func (s *KnowledgeBase) HybridSearchKnowledge(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+	result := &imkkc.HybridSearchKnowledgeResult{Result: *cd.NewResult()}
+	defer fn.PackageHTTPResponse(res, result)
+
+	param := &imkkc.HybridSearchKnowledgeParam{}
+	if err := fn.ParseJSONBody(req, nil, param); err != nil {
+		result.Error = cd.NewError(cd.IllegalParam, "failed to parse request parameters")
+		log.Errorf("parse body error: %s", err.Error())
+		return
+	}
+	if param.Warehouse == "" || len(param.Text) == 0 {
+		result.Error = cd.NewError(cd.IllegalParam, "warehouse and text can not be empty")
+		log.Errorf("warehouse and text can not be empty")
+		return
+	}
+
+	if param.Threshold <= 0.0001 {
+		param.Threshold = 0.6
+	}
+
+	chunkList, chunkErr := s.bizPtr.HybridSearchKnowledge(param.Warehouse, param.Text, param.TopK, param.Threshold)
+	if chunkErr != nil {
+		result.Error = cd.NewError(cd.Unexpected, "failed to search knowledge")
+		log.Errorf("search knowledge error: %s", chunkErr.Error())
+		return
+	}
+	result.Values = chunkList
+	result.Error = nil
+}

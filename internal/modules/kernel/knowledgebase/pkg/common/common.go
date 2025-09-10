@@ -18,14 +18,15 @@ const (
 )
 
 const (
-	ListKnowledgebaseWarehouse    = "/knowledgebase/warehouse/list"
-	CreateKnowledgebaseWarehouse  = "/knowledgebase/warehouse/create"
-	DestroyKnowledgebaseWarehouse = "/knowledgebase/warehouse/destroy"
-	UploadWarehouseKnowledge      = "/knowledgebase/knowledge/upload"
-	DeleteWarehouseKnowledge      = "/knowledgebase/knowledge/delete"
-	ListWarehouseKnowledge        = "/knowledgebase/knowledge/list"
-	GetWarehouseKnowledgeContent  = "/knowledgebase/knowledge/content"
-	SearchWarehouseKnowledge      = "/knowledgebase/knowledge/search"
+	ListKnowledgebaseWarehouse     = "/knowledgebase/warehouse/list"
+	CreateKnowledgebaseWarehouse   = "/knowledgebase/warehouse/create"
+	DestroyKnowledgebaseWarehouse  = "/knowledgebase/warehouse/destroy"
+	UploadWarehouseKnowledge       = "/knowledgebase/knowledge/upload"
+	DeleteWarehouseKnowledge       = "/knowledgebase/knowledge/delete"
+	ListWarehouseKnowledge         = "/knowledgebase/knowledge/list"
+	GetWarehouseKnowledgeContent   = "/knowledgebase/knowledge/content"
+	SearchWarehouseKnowledge       = "/knowledgebase/knowledge/search"
+	HybridSearchWarehouseKnowledge = "/knowledgebase/knowledge/hybrid_search"
 )
 
 type WarehouseItem struct {
@@ -81,6 +82,18 @@ type SearchKnowledgeParam struct {
 }
 
 type SearchKnowledgeResult struct {
+	cd.Result
+	Values []*Chunk `json:"values"`
+}
+
+type HybridSearchKnowledgeParam struct {
+	Warehouse string  `json:"warehouse"`
+	Text      string  `json:"text"`
+	TopK      int     `json:"topK"`
+	Threshold float32 `json:"threshold"`
+}
+
+type HybridSearchKnowledgeResult struct {
 	cd.Result
 	Values []*Chunk `json:"values"`
 }
