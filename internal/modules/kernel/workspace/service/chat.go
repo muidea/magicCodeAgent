@@ -14,7 +14,7 @@ import (
 	imkwc "github.com/muidea/magicCodeAgent/internal/modules/kernel/workspace/pkg/common"
 )
 
-func (s *Workspace) createChatWorkspaceContentSSE(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) createChatWorkspaceStreamSSE(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	if !sse.IsSSE(req) {
 		log.Errorf("invalid sse request")
 		res.WriteHeader(http.StatusBadRequest)
@@ -40,7 +40,7 @@ func (s *Workspace) createChatWorkspaceContentSSE(ctx context.Context, res http.
 	}
 }
 
-func (s *Workspace) submitChatWorkspaceContentMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
+func (s *Workspace) submitChatWorkspaceStreamMessage(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	param := &imkwc.ChatMessage{}
 	err := fn.ParseJSONBody(req, nil, param)
 	if err != nil {
