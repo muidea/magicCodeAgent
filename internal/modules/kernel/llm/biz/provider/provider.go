@@ -219,6 +219,7 @@ func (s *Provider) ChatCompletion(
 	}
 
 	paramPtr.Model = config.GetDeepSeekModelName(providerType)
+	paramPtr.Stream = false
 
 	resultPtr := &imklc.ChatCompletionResponse{}
 	clnt := http.DefaultClient
