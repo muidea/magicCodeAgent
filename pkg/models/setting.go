@@ -8,7 +8,7 @@ import (
 
 type WorkspaceSetting struct {
 	RootPath        string  `json:"rootPath"`
-	VectThreshold   float32 `json:"threshold"`
+	VectThreshold   float32 `json:"vectThreshold"`
 	HybridThreshold int     `json:"hybridThreshold"`
 	TopK            int     `json:"topK"`
 	ChunkSize       int     `json:"chunkSize"`

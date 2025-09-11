@@ -136,6 +136,21 @@ func WorkspaceSetting() *models.WorkspaceSetting {
 	if ret == nil {
 		ret = models.DefaultWorkspaceSetting()
 	}
+	if ret.VectThreshold <= 0.0001 {
+		ret.VectThreshold = models.DefaultWorkspaceSetting().VectThreshold
+	}
+	if ret.HybridThreshold <= 0 {
+		ret.HybridThreshold = models.DefaultWorkspaceSetting().HybridThreshold
+	}
+	if ret.TopK <= 0 {
+		ret.TopK = models.DefaultWorkspaceSetting().TopK
+	}
+	if ret.ChunkSize <= 0 {
+		ret.ChunkSize = models.DefaultWorkspaceSetting().ChunkSize
+	}
+	if ret.Overlap <= 0 {
+		ret.Overlap = models.DefaultWorkspaceSetting().Overlap
+	}
 
 	return ret
 }
