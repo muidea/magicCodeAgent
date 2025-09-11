@@ -8,6 +8,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
 
+	imkkcfg "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/config"
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
@@ -35,7 +36,7 @@ func (s *KnowledgeBase) importKnowledge(warehouse, filePath string) error {
 		return err
 	}
 
-	chunks := imkkc.SplitMarkdown(filePath, string(mdBytes), 400, 10)
+	chunks := imkkc.SplitMarkdown(filePath, string(mdBytes), imkkcfg.GetChunkSize(), imkkcfg.GetOverlap())
 	for _, val := range chunks {
 		err = s.daoPtr.AddChunk(warehouse, val, s.embedTextWorker)
 		if err != nil {
