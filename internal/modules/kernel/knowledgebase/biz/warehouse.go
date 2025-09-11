@@ -7,6 +7,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	fp "github.com/muidea/magicCommon/foundation/path"
 
+	imkkcfg "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/config"
 	imkkc "github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/pkg/common"
 )
 
@@ -63,5 +64,5 @@ func (s *KnowledgeBase) SearchKnowledgeBulk(warehouse string, texts []string, to
 }
 
 func (s *KnowledgeBase) HybridSearchKnowledge(warehouse string, text string, topK int, threshold float32, contextType imkkc.ContextType) (ret []*imkkc.Chunk, err error) {
-	return s.daoPtr.HybridSearchByText(warehouse, text, topK, threshold, contextType, s.embedTextWorker)
+	return s.daoPtr.HybridSearchByText(warehouse, text, topK, threshold, contextType, imkkcfg.GetHybridThreshold(), s.embedTextWorker)
 }

@@ -5,7 +5,6 @@ import (
 	"embed"
 	"os"
 	"path"
-	"path/filepath"
 	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
@@ -135,11 +134,7 @@ func WorkspaceSetting() *models.WorkspaceSetting {
 		ret = sysConfig.WorkspaceSetting
 	}
 	if ret == nil {
-		ret = &models.WorkspaceSetting{
-			RootPath:  filepath.Join(fo.GetHomeDir(), "codespace"),
-			Threshold: 0.5,
-			TopK:      5,
-		}
+		ret = models.DefaultWorkspaceSetting()
 	}
 
 	return ret
@@ -344,8 +339,11 @@ func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo, 
 		if workspaceSetting.TopK == 0 {
 			workspaceSetting.TopK = 5
 		}
-		if workspaceSetting.Threshold <= 0.0001 {
-			workspaceSetting.Threshold = 0.5
+		if workspaceSetting.VectThreshold <= 0.0001 {
+			workspaceSetting.VectThreshold = 0.5
+		}
+		if workspaceSetting.HybridThreshold <= 0 {
+			workspaceSetting.HybridThreshold = 1000
 		}
 
 		sysConfig.WorkspaceSetting = workspaceSetting
