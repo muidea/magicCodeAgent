@@ -165,7 +165,7 @@ func (s *KnowledgeBase) HybridSearchKnowledge(ctx context.Context, res http.Resp
 		param.Threshold = 0.6
 	}
 
-	chunkList, chunkErr := s.bizPtr.HybridSearchKnowledge(param.Warehouse, param.Text, param.TopK, param.Threshold)
+	chunkList, chunkErr := s.bizPtr.HybridSearchKnowledge(param.Warehouse, param.Text, param.TopK, param.Threshold, param.ContextType)
 	if chunkErr != nil {
 		result.Error = cd.NewError(cd.Unexpected, "failed to search knowledge")
 		log.Errorf("search knowledge error: %s", chunkErr.Error())

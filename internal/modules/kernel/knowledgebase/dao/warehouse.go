@@ -236,7 +236,7 @@ func (s *KnowledgeBase) SearchByText(warehouse, text string, topK int, threshold
 	return s.SearchByVector(warehouse, vector, topK, threshold)
 }
 
-func (s *KnowledgeBase) HybridSearchByText(warehouse, text string, topK int, threshold float32, embedTextWorker iiec.EmbedTextWorker) ([]*imkkc.Chunk, error) {
+func (s *KnowledgeBase) HybridSearchByText(warehouse, text string, topK int, threshold float32, contextType imkkc.ContextType, embedTextWorker iiec.EmbedTextWorker) ([]*imkkc.Chunk, error) {
 	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	keywords, err := embedTextWorker.EmbedKeywords(text, topK)
 	if err != nil {
@@ -244,7 +244,7 @@ func (s *KnowledgeBase) HybridSearchByText(warehouse, text string, topK int, thr
 		return nil, err
 	}
 
-	vectorWeight, ftsWeight := AutoAdjustWeights(text, ContextMixed, keywords)
+	vectorWeight, ftsWeight := AutoAdjustWeights(text, contextType, keywords)
 	vector, err := embedTextWorker.EmbedText(text)
 	if err != nil {
 		log.Errorf("embed text failed: %s", err.Error())

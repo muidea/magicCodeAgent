@@ -62,6 +62,6 @@ func (s *KnowledgeBase) SearchKnowledgeBulk(warehouse string, texts []string, to
 	return s.daoPtr.SearchByTextBulk(warehouse, texts, topK, threshold, s.embedTextWorker)
 }
 
-func (s *KnowledgeBase) HybridSearchKnowledge(warehouse string, text string, topK int, threshold float32) (ret []*imkkc.Chunk, err error) {
-	return s.daoPtr.HybridSearchByText(warehouse, text, topK, threshold, s.embedTextWorker)
+func (s *KnowledgeBase) HybridSearchKnowledge(warehouse string, text string, topK int, threshold float32, contextType imkkc.ContextType) (ret []*imkkc.Chunk, err error) {
+	return s.daoPtr.HybridSearchByText(warehouse, text, topK, threshold, contextType, s.embedTextWorker)
 }

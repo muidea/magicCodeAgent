@@ -17,6 +17,15 @@ const (
 	LoadedState
 )
 
+// ContextType 表示当前查询的上下文类型
+type ContextType int
+
+const (
+	ContextFAQ          ContextType = iota // 精确问答
+	ContextOpenDialogue                    // 开放式对话
+	ContextMixed                           // 混合场景
+)
+
 const (
 	ListKnowledgebaseWarehouse     = "/knowledgebase/warehouse/list"
 	CreateKnowledgebaseWarehouse   = "/knowledgebase/warehouse/create"
@@ -87,10 +96,11 @@ type SearchKnowledgeResult struct {
 }
 
 type HybridSearchKnowledgeParam struct {
-	Warehouse string  `json:"warehouse"`
-	Text      string  `json:"text"`
-	TopK      int     `json:"topK"`
-	Threshold float32 `json:"threshold"`
+	Warehouse   string      `json:"warehouse"`
+	Text        string      `json:"text"`
+	TopK        int         `json:"topK"`
+	Threshold   float32     `json:"threshold"`
+	ContextType ContextType `json:"contextType"`
 }
 
 type HybridSearchKnowledgeResult struct {
