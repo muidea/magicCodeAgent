@@ -51,7 +51,7 @@ func (s *Embedtext) EmbedText(chunkText string) (ret []float32, err error) {
 	url := config.GetBgeEmbedAPIUrl()
 	_, err = fn.HTTPPost(http.DefaultClient, url, req, &rsp)
 	if err != nil {
-		log.Errorf("http post url:%s, chunkTest:%s, error: %s", url, chunkText, err.Error())
+		log.Errorf("http post url:%s, chunkText:%s, error: %s", url, chunkText, err.Error())
 		return
 	}
 
@@ -66,7 +66,7 @@ func (s *Embedtext) EmbedTextBulk(chunkText []string) (ret [][]float32, err erro
 	url := config.GetBgeEmbedBulkAPIUrl()
 	_, err = fn.HTTPPost(http.DefaultClient, url, req, &rsp)
 	if err != nil {
-		log.Errorf("http post url:%s, chunkTest:%s, error: %s", url, chunkText, err.Error())
+		log.Errorf("http post url:%s, chunkText:%s, error: %s", url, chunkText, err.Error())
 		return
 	}
 
@@ -83,7 +83,7 @@ func (s *Embedtext) EmbedKeywords(chunkText string, topK int) (ret []string, err
 	url := config.GetBgeKeywordsAPIUrl()
 	_, err = fn.HTTPPost(http.DefaultClient, url, req, &rsp)
 	if err != nil {
-		log.Errorf("http post url:%s, chunkTest:%s, error: %s", url, chunkText, err.Error())
+		log.Errorf("http post url:%s, chunkText:%s, error: %s", url, chunkText, err.Error())
 		return
 	}
 	ret = rsp.Keywords

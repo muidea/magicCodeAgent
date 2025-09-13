@@ -19,7 +19,7 @@ func (s *Chunk) String() string {
 	return fmt.Sprintf("filePath:%s, vector len:%d", s.FilePath, len(s.Vector))
 }
 
-// -------------------- Markdown 分片（分层 + overlap） --------------------
+// -------------------- Markdown 分片（章节优先，章节超长才切分） --------------------
 func SplitMarkdown(filePath, content string, chunkSize, overlap int) []*Chunk {
 	lines := strings.Split(content, "\n")
 
@@ -36,10 +36,15 @@ func SplitMarkdown(filePath, content string, chunkSize, overlap int) []*Chunk {
 			return
 		}
 		text := strings.TrimSpace(strings.Join(buffer, "\n"))
-		parts := splitIntoChunks(text, chunkSize, overlap)
-		for _, p := range parts {
+		if text == "" {
+			buffer = nil
+			return
+		}
+
+		if len([]rune(text)) <= chunkSize || chunkSize <= 0 {
+			// 不超过 chunkSize，直接作为一个chunk
 			chunks = append(chunks, &Chunk{
-				Text:     p,
+				Text:     text,
 				FilePath: filePath,
 				Metadata: map[string]string{
 					"source":   filePath,
@@ -49,6 +54,25 @@ func SplitMarkdown(filePath, content string, chunkSize, overlap int) []*Chunk {
 				},
 			})
 			chunkIndex++
+		} else {
+			// 超过 chunkSize，再进行切分
+			parts := splitIntoChunks(text, chunkSize, overlap)
+			for _, p := range parts {
+				if strings.TrimSpace(p) == "" {
+					continue
+				}
+				chunks = append(chunks, &Chunk{
+					Text:     p,
+					FilePath: filePath,
+					Metadata: map[string]string{
+						"source":   filePath,
+						"section":  currentSection,
+						"secIndex": fmt.Sprintf("%d", sectionIndex),
+						"chunkId":  fmt.Sprintf("%d", chunkIndex),
+					},
+				})
+				chunkIndex++
+			}
 		}
 		buffer = nil
 	}
@@ -68,14 +92,19 @@ func SplitMarkdown(filePath, content string, chunkSize, overlap int) []*Chunk {
 
 func splitIntoChunks(text string, size, overlap int) []string {
 	if size <= 0 {
-		return []string{text}
+		if strings.TrimSpace(text) != "" {
+			return []string{text}
+		}
+		return nil
 	}
+
 	runes := []rune(text)
 	var result []string
 	step := size - overlap
 	if step <= 0 {
 		step = size
 	}
+
 	for start := 0; start < len(runes); start += step {
 		end := start + size
 		if end > len(runes) {
