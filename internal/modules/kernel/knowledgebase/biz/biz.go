@@ -34,6 +34,8 @@ func New(
 		baseStaticPath:  filepath.Join(basePath, imkkc.StaticPath),
 	}
 
+	ptr.SubscribeFunc(imkkc.HybridSearchWarehouseKnowledge, ptr.searchKnowledge)
+
 	return ptr
 }
 
@@ -44,4 +46,8 @@ func (s *KnowledgeBase) Run() (err *cd.Error) {
 
 func (s *KnowledgeBase) Stop() {
 	s.daoPtr.Close()
+}
+
+func (s *KnowledgeBase) searchKnowledge(ev event.Event, re event.Result) {
+
 }
