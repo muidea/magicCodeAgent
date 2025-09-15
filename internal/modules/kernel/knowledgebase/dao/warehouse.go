@@ -115,6 +115,7 @@ func (s *KnowledgeBase) ListWarehouse() ([]*imkkc.WarehouseItem, error) {
 
 func (s *KnowledgeBase) NewWarehouse(warehouse, description string) error {
 	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
+	warehouseVectIndexName := s.getWarehouseVectIndexName(warehouse)
 	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`
 		CREATE SEQUENCE IF NOT EXISTS %s_seq;
 		CREATE TABLE IF NOT EXISTS %s(
@@ -130,13 +131,13 @@ func (s *KnowledgeBase) NewWarehouse(warehouse, description string) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_embedding ON %s USING HNSW (embedding) WITH (metric = 'cosine');`, s.getWarehouseVectIndexName(warehouse), warehouseVectTableName)
+	sql := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_embedding ON %s USING HNSW (embedding) WITH (metric = 'cosine');`, warehouseVectIndexName, warehouseVectTableName)
 	_, err = s.dbInstancePtr.Exec(sql)
 	if err != nil {
 		log.Errorf("create index %s_idx_embedding, sql:%s, error:%s", warehouseVectTableName, sql, err.Error())
 		return err
 	}
-	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_filePath ON %s(filePath)`, s.getWarehouseVectIndexName(warehouse), warehouseVectTableName))
+	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`CREATE INDEX IF NOT EXISTS %s_idx_filePath ON %s(filePath)`, warehouseVectIndexName, warehouseVectTableName))
 	if err != nil {
 		log.Errorf("create index %s_idx_filePath error:%s", warehouseVectTableName, err.Error())
 		return err
@@ -146,7 +147,30 @@ func (s *KnowledgeBase) NewWarehouse(warehouse, description string) error {
 
 func (s *KnowledgeBase) DropWarehouse(warehouse string) error {
 	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
-	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS %s`, warehouseVectTableName))
+	warehouseVectIndexName := s.getWarehouseVectIndexName(warehouse)
+
+	// 删除索引
+	_, err := s.dbInstancePtr.Exec(fmt.Sprintf(`DROP INDEX IF EXISTS %s_idx_embedding`, warehouseVectIndexName))
+	if err != nil {
+		log.Errorf("drop index %s_idx_embedding error:%s", warehouseVectIndexName, err.Error())
+		return err
+	}
+
+	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`DROP INDEX IF EXISTS %s_idx_filePath`, warehouseVectIndexName))
+	if err != nil {
+		log.Errorf("drop index %s_idx_filePath error:%s", warehouseVectIndexName, err.Error())
+		return err
+	}
+
+	// 删除序列
+	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`DROP SEQUENCE IF EXISTS %s_seq`, warehouseVectTableName))
+	if err != nil {
+		log.Errorf("drop sequence %s_seq error:%s", warehouseVectTableName, err.Error())
+		return err
+	}
+
+	// 删除表
+	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS %s`, warehouseVectTableName))
 	if err != nil {
 		log.Errorf("drop table %s error:%s", warehouseVectTableName, err.Error())
 		return err
