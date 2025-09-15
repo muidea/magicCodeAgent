@@ -49,5 +49,24 @@ func (s *KnowledgeBase) Stop() {
 }
 
 func (s *KnowledgeBase) searchKnowledge(ev event.Event, re event.Result) {
+	paramVal := ev.Data()
+	if paramVal == nil {
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.IllegalParam, "illegal param"))
+		}
+		return
+	}
 
+	paramPtr := paramVal.(*imkkc.HybridSearchKnowledgeParam)
+	chunkList, chunkErr := s.HybridSearchKnowledge(paramPtr.Warehouse, paramPtr.Text, paramPtr.TopK, paramPtr.Threshold, paramPtr.ContextType)
+	if chunkErr != nil {
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.Unexpected, chunkErr.Error()))
+		}
+		return
+	}
+
+	if re != nil {
+		re.Set(chunkList, nil)
+	}
 }
