@@ -283,7 +283,7 @@ func (s *KnowledgeBase) HybridSearchByText(
 	useHybrid := docCount >= hybridThreshold
 
 	// === Step 2. 嵌入向量 & 关键词 ===
-	keywords, err := embedTextWorker.EmbedKeywords(text, topK)
+	keywords, err := embedTextWorker.ExtractKeywords(text, topK)
 	if err != nil {
 		log.Errorf("embed keywords failed: %s", err.Error())
 		return nil, err

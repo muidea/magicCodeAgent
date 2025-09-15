@@ -76,9 +76,9 @@ func (s *Embedtext) EmbedTextBulk(chunkText []string) (ret [][]float32, err erro
 	return
 }
 
-func (s *Embedtext) EmbedKeywords(chunkText string, topK int) (ret []string, err error) {
-	req := &common.EmbedKeywordsRequest{Text: chunkText, TopK: topK}
-	rsp := &common.EmbedKeywordsResponse{}
+func (s *Embedtext) ExtractKeywords(chunkText string, topK int) (ret []string, err error) {
+	req := &common.ExtractKeywordsRequest{Text: chunkText, TopK: topK}
+	rsp := &common.ExtractKeywordsResponse{}
 
 	url := config.GetBgeKeywordsAPIUrl()
 	_, err = fn.HTTPPost(http.DefaultClient, url, req, &rsp)

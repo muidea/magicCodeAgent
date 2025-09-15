@@ -9,7 +9,7 @@ type EmbedTextHelper interface {
 type EmbedTextWorker interface {
 	EmbedText(chunkText string) (ret []float32, err error)
 	EmbedTextBulk(chunkText []string) (ret [][]float32, err error)
-	EmbedKeywords(chunkText string, topK int) (ret []string, err error)
+	ExtractKeywords(chunkText string, topK int) (ret []string, err error)
 }
 
 // embed service structures
@@ -27,11 +27,11 @@ type EmbedBulkResponse struct {
 	Vectors [][]float32 `json:"vectors"`
 }
 
-type EmbedKeywordsRequest struct {
+type ExtractKeywordsRequest struct {
 	Text string `json:"text"`
 	TopK int    `json:"topK"`
 }
 
-type EmbedKeywordsResponse struct {
+type ExtractKeywordsResponse struct {
 	Keywords []string `json:"keywords"`
 }
