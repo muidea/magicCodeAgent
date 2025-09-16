@@ -46,8 +46,8 @@ type Station struct {
 	bizBasePtr           *biz.Base
 	currentWorkspace     models.Workspace
 	workspaceFileManager util.FileManager
-
-	chatRunningStatus string
+	currentKnowledge     KnowledgeList
+	chatRunningStatus    string
 
 	chatMaxLoopCount     int64
 	chatCurrentLoopCount int64
@@ -61,6 +61,7 @@ type Station struct {
 	localAssistant       Assistant
 	localPromptReader    PromptReader
 	localFlowManger      *FlowManager
+	localKnowledge       LocalKnowledge
 	innerPromptsRegistry iipc.PromptsRegistry
 }
 
@@ -70,6 +71,7 @@ func NewStation(
 	worker Worker,
 	assistant Assistant,
 	reader PromptReader,
+	knowledge LocalKnowledge,
 	promptsRegistry iipc.PromptsRegistry,
 ) *Station {
 	ret := &Station{
@@ -82,6 +84,7 @@ func NewStation(
 		localWorker:          worker,
 		localAssistant:       assistant,
 		localPromptReader:    reader,
+		localKnowledge:       knowledge,
 		localFlowManger:      NewFlowManager(workspacePtr.GetName()),
 		innerPromptsRegistry: promptsRegistry,
 	}
@@ -576,6 +579,7 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 		return
 	}
 
+	var thinkingContent string
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	for _, block := range blockList {
 		workParam, workResult, workErr := s.internalDoWork(&s.currentWorkspace, chatLoopCount, block)
@@ -591,7 +595,8 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 		//workResult.Result.Role = common.User
 		switch workResult.Name {
 		case "thinking":
-			// noting todo
+			//curFlow.AppendThinking(workParam["thinking"].(string))
+			thinkingContent = workParam["thinking"].(string)
 			continue
 		case "attempt_finish_task":
 			curFlow.AppendMessage(msgPtr)
@@ -611,6 +616,13 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 			}
 			curFlow.AppendMessage(msgPtr)
 			curFlow.AppendMessage(msgItem)
+			// 这里要主动进行知识库回召
+			knowledgeVal, knowledgeErr := s.localKnowledge.ReCallKnowledge(&s.currentWorkspace, curFlow, thinkingContent)
+			if knowledgeErr != nil {
+				log.Errorf("tryToFinishFlow, s.localKnowledge.ReCallKnowledge err:%v", knowledgeErr)
+			} else {
+				s.currentKnowledge = knowledgeVal
+			}
 		case "attempt_completion":
 			curFlow.AppendMessage(msgPtr)
 			curFlow = s.tryToCompleteFlow(curFlow, workParam)
@@ -625,6 +637,8 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 
 		s.disposeMessage(msgItem)
 	}
+	// thinking conent 放在最后加
+	curFlow.AppendThinking(thinkingContent)
 
 	if chatLoopCount >= s.chatMaxLoopCount {
 		finalStatus = Paused

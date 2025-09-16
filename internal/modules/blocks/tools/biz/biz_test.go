@@ -220,3 +220,32 @@ clean:
 	assert.Equal(t, "CategoryQuery", param16["name"], "param16 name error")
 	assert.Equal(t, "true", param16["needContinue"], "param16 level error")
 }
+
+func TestParseThinking(t *testing.T) {
+	rawVal := `<thinking>
+根据任务要求，我需要核对WarehouseQuery功能模块的代码实现是否符合设计文档要求。从之前的检查可以看出：
+
+1. 代码已经实现了WarehouseQuery功能模块的所有要求：
+   - 提供了仓库信息查询功能
+   - 支持按名称、地址、状态等条件筛选
+   - 实现了分页和排序功能
+   - 使用了ProTable组件，符合Ant Design Pro风格
+   - 接口调用与设计文档一致
+
+2. 代码实现与设计文档完全一致：
+   - 接口定义：filterWarehouseList接口URL和方法与设计文档一致
+   - 查询条件：支持名称、地址、状态筛选，与设计文档一致
+   - 分页功能：支持页码和每页条数，与设计文档一致
+   - 响应格式：与设计文档一致
+
+3. 没有添加设计以外的功能，代码简洁且符合要求
+
+现在我需要提交WarehouseQuery功能模块的开发任务完成确认。
+</thinking>
+`
+
+	tagName, paramVal, parseErr := parseParamContent(rawVal)
+	assert.NoError(t, parseErr, "parseParamContent error")
+	assert.Equal(t, "thinking", tagName, "tagName error")
+	t.Log(paramVal)
+}

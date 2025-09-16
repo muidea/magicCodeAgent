@@ -372,7 +372,7 @@ func (s *Workspace) enableWorkspaceInternal(workspacePtr *models.Workspace) (ret
 		return
 	}
 
-	workspaceStation := NewStation(&s.Base, workspacePtr, s, s, s, s.promptsRegistry)
+	workspaceStation := NewStation(&s.Base, workspacePtr, s, s, s, s, s.promptsRegistry)
 	s.workspaceStationCache.Store(workspacePtr.Name, workspaceStation)
 
 	_ = s.fileMonitor.AddPath(workspacePtr.WorkspaceDir)

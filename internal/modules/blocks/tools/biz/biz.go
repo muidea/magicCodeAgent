@@ -177,6 +177,14 @@ func parseParamContent(content string) (string, imbtc.ToolParam, error) {
 		return tagName, param, nil
 	}
 
+	if tagName == "thinking" {
+		pathStart := strings.Index(content, "<thinking>")
+		pathEnd := strings.Index(content, "</thinking>")
+		thinkingVal := strings.TrimSpace(content[pathStart+10 : pathEnd])
+		param["thinking"] = thinkingVal
+		return tagName, param, nil
+	}
+
 	// 对于其他工具，使用标准XML解析
 	// 预处理XML内容，转义特殊字符
 	processedContent := content
