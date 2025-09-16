@@ -58,7 +58,13 @@ func (s *KnowledgeBase) searchKnowledge(ev event.Event, re event.Result) {
 	}
 
 	paramPtr := paramVal.(*imkkc.HybridSearchKnowledgeParam)
-	chunkList, chunkErr := s.HybridSearchKnowledge(paramPtr.Warehouse, paramPtr.Text, paramPtr.TopK, paramPtr.Threshold, paramPtr.ContextType)
+	chunkList, chunkErr := s.HybridSearchKnowledge(
+		paramPtr.Warehouse,
+		paramPtr.Text,
+		paramPtr.TopK,
+		paramPtr.BusinessContext,
+		paramPtr.Threshold,
+		paramPtr.ContextType)
 	if chunkErr != nil {
 		if re != nil {
 			re.Set(nil, cd.NewError(cd.Unexpected, chunkErr.Error()))

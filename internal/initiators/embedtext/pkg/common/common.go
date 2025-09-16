@@ -9,7 +9,7 @@ type EmbedTextHelper interface {
 type EmbedTextWorker interface {
 	EmbedText(chunkText string) (ret []float32, err error)
 	EmbedTextBulk(chunkText []string) (ret [][]float32, err error)
-	ExtractKeywords(chunkText string, topK int) (ret []string, err error)
+	ExtractKeywords(chunkText string, topK int, businessContext string, simThreshold float32) (ret []string, err error)
 }
 
 // embed service structures
@@ -28,8 +28,10 @@ type EmbedBulkResponse struct {
 }
 
 type ExtractKeywordsRequest struct {
-	Text string `json:"text"`
-	TopK int    `json:"topK"`
+	Text            string  `json:"text"`
+	TopK            int     `json:"top_k"`
+	BusinessContext string  `json:"business_context"`
+	Threshold       float32 `json:"threshold"`
 }
 
 type ExtractKeywordsResponse struct {

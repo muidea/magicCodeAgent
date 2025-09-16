@@ -96,11 +96,12 @@ type SearchKnowledgeResult struct {
 }
 
 type HybridSearchKnowledgeParam struct {
-	Warehouse   string      `json:"warehouse"`
-	Text        string      `json:"text"`
-	TopK        int         `json:"topK"`
-	Threshold   float32     `json:"threshold"`
-	ContextType ContextType `json:"contextType"`
+	Warehouse       string      `json:"warehouse"`
+	Text            string      `json:"text"`
+	TopK            int         `json:"topK"`
+	BusinessContext string      `json:"businessContext"`
+	Threshold       float32     `json:"threshold"`
+	ContextType     ContextType `json:"contextType"`
 }
 
 type HybridSearchKnowledgeResult struct {

@@ -76,8 +76,13 @@ func (s *Embedtext) EmbedTextBulk(chunkText []string) (ret [][]float32, err erro
 	return
 }
 
-func (s *Embedtext) ExtractKeywords(chunkText string, topK int) (ret []string, err error) {
-	req := &common.ExtractKeywordsRequest{Text: chunkText, TopK: topK}
+func (s *Embedtext) ExtractKeywords(chunkText string, topK int, businessContext string, simThreshold float32) (ret []string, err error) {
+	req := &common.ExtractKeywordsRequest{
+		Text:            chunkText,
+		TopK:            topK,
+		BusinessContext: businessContext,
+		Threshold:       simThreshold,
+	}
 	rsp := &common.ExtractKeywordsResponse{}
 
 	url := config.GetBgeKeywordsAPIUrl()

@@ -90,12 +90,22 @@ func (s *KnowledgeBase) SearchKnowledge(warehouse, text string, topK int, thresh
 	return s.daoPtr.SearchByText(warehouse, text, topK, threshold, s.embedTextWorker)
 }
 
-func (s *KnowledgeBase) SearchKnowledgeBulk(warehouse string, texts []string, topK int, threshold float32) (ret []*imkkc.Chunk, err error) {
+func (s *KnowledgeBase) SearchKnowledgeBulk(
+	warehouse string,
+	texts []string,
+	topK int,
+	threshold float32) (ret []*imkkc.Chunk, err error) {
 	log.Infof("bulk search knowledgewarehouse, warehouse:%s, text:%v, topK:%d, threshold:%g", warehouse, texts, topK, threshold)
 	return s.daoPtr.SearchByTextBulk(warehouse, texts, topK, threshold, s.embedTextWorker)
 }
 
-func (s *KnowledgeBase) HybridSearchKnowledge(warehouse string, text string, topK int, threshold float32, contextType imkkc.ContextType) (ret []*imkkc.Chunk, err error) {
-	log.Infof("hybrid search knowledgewarehouse, warehouse:%s, text:%v, topK:%d, threshold:%g", warehouse, text, topK, threshold)
-	return s.daoPtr.HybridSearchByText(warehouse, text, topK, threshold, contextType, imkkcfg.GetHybridThreshold(), s.embedTextWorker)
+func (s *KnowledgeBase) HybridSearchKnowledge(
+	warehouse string,
+	text string,
+	topK int,
+	businessContext string,
+	threshold float32,
+	contextType imkkc.ContextType) (ret []*imkkc.Chunk, err error) {
+	log.Infof("hybrid search knowledgewarehouse, warehouse:%s, text:%v, topK:%d, businessContext:%s, threshold:%g", warehouse, text, topK, businessContext, threshold)
+	return s.daoPtr.HybridSearchByText(warehouse, text, topK, businessContext, threshold, contextType, imkkcfg.GetHybridThreshold(), s.embedTextWorker)
 }

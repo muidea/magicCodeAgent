@@ -263,6 +263,7 @@ func (s *KnowledgeBase) SearchByText(warehouse, text string, topK int, threshold
 func (s *KnowledgeBase) HybridSearchByText(
 	warehouse, text string,
 	topK int,
+	businessContext string,
 	threshold float32,
 	contextType imkkc.ContextType,
 	hybridThreshold int,
@@ -283,7 +284,7 @@ func (s *KnowledgeBase) HybridSearchByText(
 	useHybrid := docCount >= hybridThreshold
 
 	// === Step 2. 嵌入向量 & 关键词 ===
-	keywords, err := embedTextWorker.ExtractKeywords(text, topK)
+	keywords, err := embedTextWorker.ExtractKeywords(text, topK, businessContext, threshold)
 	if err != nil {
 		log.Errorf("embed keywords failed: %s", err.Error())
 		return nil, err
