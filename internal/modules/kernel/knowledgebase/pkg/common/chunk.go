@@ -7,12 +7,12 @@ import (
 )
 
 type Chunk struct {
-	ID       int64             `json:"id"`
-	Text     string            `json:"text"`
-	FilePath string            `json:"filePath"`
-	Metadata map[string]string `json:"metadata"`
-	Vector   []float32         `json:"-"`
-	Distance float64           `json:"distance"`
+	ID         int64             `json:"id"`
+	Text       string            `json:"text"`
+	FilePath   string            `json:"filePath"`
+	Metadata   map[string]string `json:"metadata"`
+	Vector     []float32         `json:"-"`
+	Similarity float64           `json:"similarity"`
 }
 
 func (s *Chunk) String() string {

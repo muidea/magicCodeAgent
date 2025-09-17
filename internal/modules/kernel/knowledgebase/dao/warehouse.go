@@ -162,17 +162,16 @@ func (s *KnowledgeBase) DropWarehouse(warehouse string) error {
 		return err
 	}
 
-	// 删除序列
-	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`DROP SEQUENCE IF EXISTS %s_seq`, warehouseVectTableName))
-	if err != nil {
-		log.Errorf("drop sequence %s_seq error:%s", warehouseVectTableName, err.Error())
-		return err
-	}
-
 	// 删除表
 	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS %s`, warehouseVectTableName))
 	if err != nil {
 		log.Errorf("drop table %s error:%s", warehouseVectTableName, err.Error())
+		return err
+	}
+	// 删除序列
+	_, err = s.dbInstancePtr.Exec(fmt.Sprintf(`DROP SEQUENCE IF EXISTS %s_seq`, warehouseVectTableName))
+	if err != nil {
+		log.Errorf("drop sequence %s_seq error:%s", warehouseVectTableName, err.Error())
 		return err
 	}
 
@@ -206,10 +205,10 @@ func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK 
 	warehouseVectTableName := s.getWarehouseVectTableName(warehouse)
 	vecLit := floatSliceToArrayLiteral(vector)
 	sqlStmt := fmt.Sprintf(`
-		SELECT id, text, metadata, filePath, array_cosine_distance(embedding, %s) AS dist
+		SELECT id, text, metadata, filePath, (1 - array_cosine_distance(embedding, %s)) AS similarity
 		FROM %s
-		WHERE array_cosine_distance(embedding, %s) < %g
-		ORDER BY dist
+		WHERE (1 - array_cosine_distance(embedding, %s)) > %g
+		ORDER BY similarity DESC
 		LIMIT %d;
 	`, vecLit, warehouseVectTableName, vecLit, threshold, topK)
 
@@ -226,18 +225,18 @@ func (s *KnowledgeBase) SearchByVector(warehouse string, vector []float32, topK 
 		var text string
 		var metadata string
 		var filePath string
-		var distance float64
-		err = rows.Scan(&id, &text, &metadata, &filePath, &distance)
+		var similarity float64
+		err = rows.Scan(&id, &text, &metadata, &filePath, &similarity)
 		if err != nil {
 			log.Errorf("scan row failed, error:%s", err.Error())
 			return nil, err
 		}
 		chunk := &imkkc.Chunk{
-			ID:       id,
-			Text:     text,
-			Metadata: make(map[string]string),
-			FilePath: filePath,
-			Distance: distance,
+			ID:         id,
+			Text:       text,
+			Metadata:   make(map[string]string),
+			FilePath:   filePath,
+			Similarity: similarity,
 		}
 		err = json.Unmarshal([]byte(metadata), &chunk.Metadata)
 		if err != nil {
@@ -305,10 +304,10 @@ func (s *KnowledgeBase) HybridSearchByText(
 
 	// ===== 向量检索 =====
 	vectorSQL := fmt.Sprintf(`
-		SELECT id, text, metadata, filePath, array_cosine_distance(embedding, %s) AS dist
+		SELECT id, text, metadata, filePath, (1 - array_cosine_distance(embedding, %s)) AS similarity
 		FROM %s
-		WHERE array_cosine_distance(embedding, %s) < %g
-		ORDER BY dist
+		WHERE (1 - array_cosine_distance(embedding, %s)) >= %g
+		ORDER BY similarity DESC
 		LIMIT %d
 	`, vecLit, warehouseVectTableName, vecLit, threshold, topK)
 
@@ -320,37 +319,37 @@ func (s *KnowledgeBase) HybridSearchByText(
 	defer rows.Close()
 
 	type weightedChunk struct {
-		chunk      *imkkc.Chunk
-		vectorDist float32
-		ftsScore   float32
-		score      float32
+		chunk            *imkkc.Chunk
+		vectorSimilarity float32
+		ftsScore         float32
+		score            float32
 	}
 	chunkMap := make(map[int64]*weightedChunk)
 
 	for rows.Next() {
 		var id int64
 		var text, metadata, filePath string
-		var distance float64
-		if err := rows.Scan(&id, &text, &metadata, &filePath, &distance); err != nil {
+		var similarity float64
+		if err := rows.Scan(&id, &text, &metadata, &filePath, &similarity); err != nil {
 			log.Errorf("scan row failed: %s", err.Error())
 			return nil, err
 		}
 		chPtr := &imkkc.Chunk{
-			ID:       id,
-			Text:     text,
-			FilePath: filePath,
-			Distance: distance,
-			Metadata: make(map[string]string),
+			ID:         id,
+			Text:       text,
+			FilePath:   filePath,
+			Similarity: similarity,
+			Metadata:   make(map[string]string),
 		}
 		if err := json.Unmarshal([]byte(metadata), &chPtr.Metadata); err != nil {
 			log.Warnf("unmarshal metadata failed: %s", err.Error())
 		}
 
 		chunkMap[id] = &weightedChunk{
-			chunk:      chPtr,
-			vectorDist: float32(distance),
-			ftsScore:   0,
-			score:      0,
+			chunk:            chPtr,
+			vectorSimilarity: float32(similarity),
+			ftsScore:         0,
+			score:            0,
 		}
 	}
 
@@ -382,20 +381,20 @@ func (s *KnowledgeBase) HybridSearchByText(
 					wc.ftsScore = 1.0
 				} else {
 					chunkPtr := &imkkc.Chunk{
-						ID:       id,
-						Text:     text,
-						FilePath: filePath,
-						Metadata: make(map[string]string),
-						Distance: 1.0,
+						ID:         id,
+						Text:       text,
+						FilePath:   filePath,
+						Metadata:   make(map[string]string),
+						Similarity: 1,
 					}
 					if err := json.Unmarshal([]byte(metadata), &chunkPtr.Metadata); err != nil {
 						log.Warnf("unmarshal metadata failed: %s", err.Error())
 					}
 					chunkMap[id] = &weightedChunk{
-						chunk:      chunkPtr,
-						vectorDist: 1.0,
-						ftsScore:   1.0,
-						score:      0,
+						chunk:            chunkPtr,
+						vectorSimilarity: 0,
+						ftsScore:         1.0,
+						score:            0,
 					}
 				}
 			}
@@ -404,7 +403,7 @@ func (s *KnowledgeBase) HybridSearchByText(
 
 	// ===== 融合打分 =====
 	for _, wc := range chunkMap {
-		wc.score = vectorWeight*(1.0-wc.vectorDist) + ftsWeight*wc.ftsScore
+		wc.score = vectorWeight*wc.vectorSimilarity + ftsWeight*wc.ftsScore
 	}
 
 	// 排序
@@ -435,10 +434,10 @@ func (s *KnowledgeBase) SearchByVectorBulk(warehouse string, vectorList [][]floa
 		}
 		unionSQL += fmt.Sprintf(`
 			(
-				SELECT id, text, metadata, filePath, array_cosine_distance(embedding, %s) AS dist
+				SELECT id, text, metadata, filePath, array_cosine_distance(embedding, %s) AS similarity
 				FROM %s
-				WHERE array_cosine_distance(embedding, %s) < %g
-				ORDER BY dist
+				WHERE array_cosine_distance(embedding, %s) >= (1 - %g)
+				ORDER BY similarity
 				LIMIT %d
 			)
 		`, vecLit, warehouseVectTableName, vecLit, threshold, topK)
@@ -455,18 +454,18 @@ func (s *KnowledgeBase) SearchByVectorBulk(warehouse string, vectorList [][]floa
 		var text string
 		var metadata string
 		var filePath string
-		var distance float64
-		err = rows.Scan(&id, &text, &metadata, &filePath, &distance)
+		var similarity float64
+		err = rows.Scan(&id, &text, &metadata, &filePath, &similarity)
 		if err != nil {
 			log.Errorf("scan row failed, error:%s", err.Error())
 			return nil, err
 		}
 		chunk := &imkkc.Chunk{
-			ID:       id,
-			Text:     text,
-			Metadata: make(map[string]string),
-			FilePath: filePath,
-			Distance: distance,
+			ID:         id,
+			Text:       text,
+			Metadata:   make(map[string]string),
+			FilePath:   filePath,
+			Similarity: similarity,
 		}
 		err = json.Unmarshal([]byte(metadata), &chunk.Metadata)
 		if err != nil {
