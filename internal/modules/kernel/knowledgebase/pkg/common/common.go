@@ -84,10 +84,10 @@ type GetKnowledgeContentResult struct {
 }
 
 type SearchKnowledgeParam struct {
-	Warehouse string   `json:"warehouse"`
-	Text      []string `json:"text"`
-	TopK      int      `json:"topK"`
-	Threshold float32  `json:"threshold"`
+	Warehouse  string   `json:"warehouse"`
+	Text       []string `json:"text"`
+	TopK       int      `json:"topK"`
+	Similarity float32  `json:"similarity"`
 }
 
 type SearchKnowledgeResult struct {
@@ -100,7 +100,7 @@ type HybridSearchKnowledgeParam struct {
 	Text            string      `json:"text"`
 	TopK            int         `json:"topK"`
 	BusinessContext string      `json:"businessContext"`
-	Threshold       float32     `json:"threshold"`
+	Similarity      float32     `json:"similarity"`
 	ContextType     ContextType `json:"contextType"`
 }
 

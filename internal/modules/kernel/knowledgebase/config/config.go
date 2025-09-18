@@ -12,11 +12,11 @@ func init() {
 }
 
 func GetVectThreshold() float32 {
-	if workspaceSetting == nil || workspaceSetting.VectThreshold <= 0.0 {
-		return models.DefaultWorkspaceSetting().VectThreshold
+	if workspaceSetting == nil || workspaceSetting.VectSimilarity <= 0.0 {
+		return models.DefaultWorkspaceSetting().VectSimilarity
 	}
 
-	return workspaceSetting.VectThreshold
+	return workspaceSetting.VectSimilarity
 }
 
 func GetHybridThreshold() int {

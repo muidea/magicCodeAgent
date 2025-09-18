@@ -63,7 +63,7 @@ func (s *KnowledgeBase) searchKnowledge(ev event.Event, re event.Result) {
 		paramPtr.Text,
 		paramPtr.TopK,
 		paramPtr.BusinessContext,
-		paramPtr.Threshold,
+		paramPtr.Similarity,
 		paramPtr.ContextType)
 	if chunkErr != nil {
 		if re != nil {

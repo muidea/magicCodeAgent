@@ -8,7 +8,7 @@ import (
 
 type WorkspaceSetting struct {
 	RootPath        string  `json:"rootPath"`
-	VectThreshold   float32 `json:"vectThreshold"`
+	VectSimilarity  float32 `json:"vectSimilarity"`
 	HybridThreshold int     `json:"hybridThreshold"`
 	TopK            int     `json:"topK"`
 	ChunkSize       int     `json:"chunkSize"`
@@ -17,7 +17,7 @@ type WorkspaceSetting struct {
 
 var defaultWorkspaceSetting = &WorkspaceSetting{
 	RootPath:        filepath.Join(fo.GetHomeDir(), "codespace"),
-	VectThreshold:   0.5,
+	VectSimilarity:  0.5,
 	HybridThreshold: 1000,
 	TopK:            5,
 	ChunkSize:       512,

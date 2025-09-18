@@ -136,8 +136,8 @@ func WorkspaceSetting() *models.WorkspaceSetting {
 	if ret == nil {
 		ret = models.DefaultWorkspaceSetting()
 	}
-	if ret.VectThreshold <= 0.0001 {
-		ret.VectThreshold = models.DefaultWorkspaceSetting().VectThreshold
+	if ret.VectSimilarity <= 0.0001 {
+		ret.VectSimilarity = models.DefaultWorkspaceSetting().VectSimilarity
 	}
 	if ret.HybridThreshold <= 0 {
 		ret.HybridThreshold = models.DefaultWorkspaceSetting().HybridThreshold
@@ -354,8 +354,8 @@ func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo, 
 		if workspaceSetting.TopK == 0 {
 			workspaceSetting.TopK = 5
 		}
-		if workspaceSetting.VectThreshold <= 0.0001 {
-			workspaceSetting.VectThreshold = 0.5
+		if workspaceSetting.VectSimilarity <= 0.0001 {
+			workspaceSetting.VectSimilarity = 0.5
 		}
 		if workspaceSetting.HybridThreshold <= 0 {
 			workspaceSetting.HybridThreshold = 1000

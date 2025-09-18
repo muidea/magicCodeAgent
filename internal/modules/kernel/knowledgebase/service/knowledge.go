@@ -125,16 +125,16 @@ func (s *KnowledgeBase) SearchKnowledge(ctx context.Context, res http.ResponseWr
 		return
 	}
 
-	if param.Threshold <= 0.0001 {
-		param.Threshold = 0.6
+	if param.Similarity <= 0.0001 {
+		param.Similarity = 0.6
 	}
 
 	var chunkList []*imkkc.Chunk
 	var chunkErr error
 	if len(param.Text) > 1 {
-		chunkList, chunkErr = s.bizPtr.SearchKnowledgeBulk(param.Warehouse, param.Text, param.TopK, param.Threshold)
+		chunkList, chunkErr = s.bizPtr.SearchKnowledgeBulk(param.Warehouse, param.Text, param.TopK, param.Similarity)
 	} else {
-		chunkList, chunkErr = s.bizPtr.SearchKnowledge(param.Warehouse, param.Text[0], param.TopK, param.Threshold)
+		chunkList, chunkErr = s.bizPtr.SearchKnowledge(param.Warehouse, param.Text[0], param.TopK, param.Similarity)
 	}
 	if chunkErr != nil {
 		result.Error = cd.NewError(cd.Unexpected, "failed to search knowledge")
@@ -161,11 +161,11 @@ func (s *KnowledgeBase) HybridSearchKnowledge(ctx context.Context, res http.Resp
 		return
 	}
 
-	if param.Threshold <= 0.0001 {
-		param.Threshold = 0.6
+	if param.Similarity <= 0.0001 {
+		param.Similarity = 0.6
 	}
 
-	chunkList, chunkErr := s.bizPtr.HybridSearchKnowledge(param.Warehouse, param.Text, param.TopK, param.BusinessContext, param.Threshold, param.ContextType)
+	chunkList, chunkErr := s.bizPtr.HybridSearchKnowledge(param.Warehouse, param.Text, param.TopK, param.BusinessContext, param.Similarity, param.ContextType)
 	if chunkErr != nil {
 		result.Error = cd.NewError(cd.Unexpected, "failed to search knowledge")
 		log.Errorf("search knowledge error: %s", chunkErr.Error())
