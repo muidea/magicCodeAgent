@@ -7,6 +7,6 @@ import (
 )
 
 func TestGetBulkURL(t *testing.T) {
-	bgeAPIURL := GetBgeEmbedAPIUrl()
-	assert.Equal(t, defaultBgeAPIUrl, bgeAPIURL)
+	nlpAPIURL := GetNlpEmbedAPIUrl()
+	assert.Equal(t, defaultNlpAPIUrl, nlpAPIURL)
 }

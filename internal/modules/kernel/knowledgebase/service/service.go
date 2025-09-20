@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/muidea/magicCommon/foundation/log"
 	engine "github.com/muidea/magicEngine/http"
 
 	"github.com/muidea/magicCodeAgent/internal/modules/kernel/knowledgebase/biz"
@@ -59,6 +60,7 @@ func (s *KnowledgeBase) MiddleWareHandle(ctx engine.RequestContext, res http.Res
 		return
 	}
 	if !s.bizPtr.ExistWarehouse(warehouse) {
+		log.Errorf("warehouse:%s not exist", warehouse)
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}

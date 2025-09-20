@@ -5,41 +5,41 @@ import (
 	"os"
 )
 
-var defaultBgeAPIServer = "https://api.mulife.vip"
-var defaultBgeAPIUrl = "https://api.mulife.vip/bge/embed"
+var defaultNlpAPIServer = "https://api.mulife.vip"
+var defaultNlpAPIUrl = "https://api.mulife.vip/api/v1/nlp_service"
 
-func GetBgeAPIServer() string {
-	apiServer, apiOK := os.LookupEnv("BgeAPIServer")
+func GetNLPAPIServer() string {
+	apiServer, apiOK := os.LookupEnv("NlpAPIServer")
 	if apiOK {
 		return apiServer
 	}
 
-	return defaultBgeAPIServer
+	return defaultNlpAPIServer
 }
 
-func GetBgeEmbedAPIUrl() string {
-	apiVal, apiOK := os.LookupEnv("BgeEmbedAPIUrl")
+func GetNlpEmbedAPIUrl() string {
+	apiVal, apiOK := os.LookupEnv("NlpEmbedAPIUrl")
 	if apiOK {
 		return apiVal
 	}
 
-	return fmt.Sprintf("%s/%s", GetBgeAPIServer(), "bge/embed")
+	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "api/v1/nlp_service/embedding/single")
 }
 
-func GetBgeEmbedBulkAPIUrl() string {
-	apiVal, apiOK := os.LookupEnv("BgeEmbedBulkAPIUrl")
+func GetNlpEmbedBatchAPIUrl() string {
+	apiVal, apiOK := os.LookupEnv("NlpEmbedBatchAPIUrl")
 	if apiOK {
 		return apiVal
 	}
 
-	return fmt.Sprintf("%s/%s", GetBgeAPIServer(), "bge/embed_bulk")
+	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "api/v1/nlp_service/embedding/batch")
 }
 
-func GetBgeKeywordsAPIUrl() string {
-	apiVal, apiOK := os.LookupEnv("BgeKeywordsAPIUrl")
+func GetNlpKeywordsAPIUrl() string {
+	apiVal, apiOK := os.LookupEnv("NlpKeywordsAPIUrl")
 	if apiOK {
 		return apiVal
 	}
 
-	return fmt.Sprintf("%s/%s", GetBgeAPIServer(), "bge/keywords")
+	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "api/v1/nlp_service/keywords/extract")
 }
