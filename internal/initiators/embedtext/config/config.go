@@ -6,7 +6,7 @@ import (
 )
 
 var defaultNlpAPIServer = "https://api.mulife.vip"
-var defaultNlpAPIUrl = "https://api.mulife.vip/api/v1/nlp_service"
+var defaultNlpAPIUrl = "https://api.mulife.vip/api/v1/nlp_service/embedding/single"
 
 func GetNLPAPIServer() string {
 	apiServer, apiOK := os.LookupEnv("NlpAPIServer")
