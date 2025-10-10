@@ -46,7 +46,7 @@ type Station struct {
 	bizBasePtr           *biz.Base
 	currentWorkspace     models.Workspace
 	workspaceFileManager util.FileManager
-	currentKnowledge     KnowledgeList
+	currentKnowledgeList KnowledgeList
 	chatRunningStatus    string
 
 	chatMaxLoopCount     int64
@@ -125,9 +125,27 @@ func (s *Station) systemPrompt() string {
 	return s.innerPromptsRegistry.GetStagePromptsContent(s.currentWorkspace.GetStage())
 }
 
+// ## 目录结构规划
 func (s *Station) getWorkspaceProjectStruct() (string, error) {
 	param := map[string]string{}
 	return s.localPromptReader.ReadPrompt(&s.currentWorkspace, "project-struct", param)
+}
+
+// ## 知识参考
+func (s *Station) getWorkspaceKnowledge() string {
+	if len(s.currentKnowledgeList) == 0 {
+		return ""
+	}
+
+	var knowledgeBuilder strings.Builder
+	knowledgeBuilder.WriteString("---\n")
+	knowledgeBuilder.WriteString("## 知识参考\n\n")
+	knowledgeBuilder.WriteString(" > 以下是从知识库中检索到的相关资料，请作为参考信息使用\n\n")
+	for _, knowledge := range s.currentKnowledgeList {
+		knowledgeBuilder.WriteString(knowledge + "\n\n")
+	}
+
+	return knowledgeBuilder.String()
 }
 
 func (s *Station) getWorkspaceStatus(ptr *models.Flow) (string, error) {
@@ -261,6 +279,12 @@ func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 
 		if structContent != "" {
 			stringBuilder.WriteString(structContent)
+			stringBuilder.WriteString("\n\n")
+		}
+
+		knowledgeContent := s.getWorkspaceKnowledge()
+		if knowledgeContent != "" {
+			stringBuilder.WriteString(knowledgeContent)
 			stringBuilder.WriteString("\n\n")
 		}
 	}
@@ -621,7 +645,7 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 			if knowledgeErr != nil {
 				log.Errorf("tryToFinishFlow, s.localKnowledge.ReCallKnowledge err:%v", knowledgeErr)
 			} else {
-				s.currentKnowledge = knowledgeVal
+				s.currentKnowledgeList = knowledgeVal
 			}
 		case "attempt_completion":
 			curFlow.AppendMessage(msgPtr)

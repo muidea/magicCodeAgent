@@ -112,7 +112,7 @@ func (s *Stmt) ParamType(n int) (Type, error) {
 	}
 
 	t := mapping.ParamType(*s.preparedStmt, mapping.IdxT(n))
-	return Type(t), nil
+	return t, nil
 }
 
 func (s *Stmt) paramLogicalType(n int) (mapping.LogicalType, error) {
@@ -162,7 +162,7 @@ func (s *Stmt) bindHugeint(val *big.Int, n int) (mapping.State, error) {
 	if err != nil {
 		return mapping.StateError, err
 	}
-	state := mapping.BindHugeInt(*s.preparedStmt, mapping.IdxT(n+1), *hugeint)
+	state := mapping.BindHugeInt(*s.preparedStmt, mapping.IdxT(n+1), hugeint)
 	return state, nil
 }
 
@@ -170,39 +170,39 @@ func (s *Stmt) bindTimestamp(val driver.NamedValue, t Type, n int) (mapping.Stat
 	var state mapping.State
 	switch t {
 	case TYPE_TIMESTAMP:
-		v, err := getMappedTimestamp(t, val.Value)
+		v, err := inferTimestamp(t, val.Value)
 		if err != nil {
 			return mapping.StateError, err
 		}
-		state = mapping.BindTimestamp(*s.preparedStmt, mapping.IdxT(n+1), *v)
+		state = mapping.BindTimestamp(*s.preparedStmt, mapping.IdxT(n+1), v)
 	case TYPE_TIMESTAMP_TZ:
-		v, err := getMappedTimestamp(t, val.Value)
+		v, err := inferTimestamp(t, val.Value)
 		if err != nil {
 			return mapping.StateError, err
 		}
-		state = mapping.BindTimestampTZ(*s.preparedStmt, mapping.IdxT(n+1), *v)
+		state = mapping.BindTimestampTZ(*s.preparedStmt, mapping.IdxT(n+1), v)
 	case TYPE_TIMESTAMP_S:
-		v, err := getMappedTimestampS(val.Value)
+		v, err := inferTimestampS(val.Value)
 		if err != nil {
 			return mapping.StateError, err
 		}
-		tS := mapping.CreateTimestampS(*v)
+		tS := mapping.CreateTimestampS(v)
 		state = mapping.BindValue(*s.preparedStmt, mapping.IdxT(n+1), tS)
 		mapping.DestroyValue(&tS)
 	case TYPE_TIMESTAMP_MS:
-		v, err := getMappedTimestampMS(val.Value)
+		v, err := inferTimestampMS(val.Value)
 		if err != nil {
 			return mapping.StateError, err
 		}
-		tMS := mapping.CreateTimestampMS(*v)
+		tMS := mapping.CreateTimestampMS(v)
 		state = mapping.BindValue(*s.preparedStmt, mapping.IdxT(n+1), tMS)
 		mapping.DestroyValue(&tMS)
 	case TYPE_TIMESTAMP_NS:
-		v, err := getMappedTimestampNS(val.Value)
+		v, err := inferTimestampNS(val.Value)
 		if err != nil {
 			return mapping.StateError, err
 		}
-		tMS := mapping.CreateTimestampNS(*v)
+		tMS := mapping.CreateTimestampNS(v)
 		state = mapping.BindValue(*s.preparedStmt, mapping.IdxT(n+1), tMS)
 		mapping.DestroyValue(&tMS)
 	}
@@ -210,11 +210,11 @@ func (s *Stmt) bindTimestamp(val driver.NamedValue, t Type, n int) (mapping.Stat
 }
 
 func (s *Stmt) bindDate(val driver.NamedValue, n int) (mapping.State, error) {
-	date, err := getMappedDate(val.Value)
+	date, err := inferDate(val.Value)
 	if err != nil {
 		return mapping.StateError, err
 	}
-	state := mapping.BindDate(*s.preparedStmt, mapping.IdxT(n+1), *date)
+	state := mapping.BindDate(*s.preparedStmt, mapping.IdxT(n+1), date)
 	return state, nil
 }
 
@@ -226,7 +226,7 @@ func (s *Stmt) bindTime(val driver.NamedValue, t Type, n int) (mapping.State, er
 
 	if t == TYPE_TIME {
 		ti := mapping.NewTime(ticks)
-		state := mapping.BindTime(*s.preparedStmt, mapping.IdxT(n+1), *ti)
+		state := mapping.BindTime(*s.preparedStmt, mapping.IdxT(n+1), ti)
 		return state, nil
 	}
 
@@ -244,8 +244,10 @@ func (s *Stmt) bindJSON(val driver.NamedValue, n int) (mapping.State, error) {
 		return mapping.BindVarchar(*s.preparedStmt, mapping.IdxT(n+1), string(v)), nil
 	case string:
 		return mapping.BindVarchar(*s.preparedStmt, mapping.IdxT(n+1), v), nil
+	case nil:
+		return mapping.BindNull(*s.preparedStmt, mapping.IdxT(n+1)), nil
 	}
-	return mapping.StateError, addIndexToError(unsupportedTypeError("JSON interface, need []byte or string"), n+1)
+	return mapping.StateError, addIndexToError(unsupportedTypeError("JSON interface, need []byte, string or nil"), n+1)
 }
 
 func (s *Stmt) bindUUID(val driver.NamedValue, n int) (mapping.State, error) {
@@ -280,7 +282,7 @@ func (s *Stmt) bindCompositeValue(val driver.NamedValue, n int) (mapping.State, 
 }
 
 func (s *Stmt) tryBindComplexValue(val driver.NamedValue, n int) (mapping.State, error) {
-	lt, mappedVal, err := createValueByReflection(val.Value)
+	lt, mappedVal, err := inferLogicalTypeAndValue(val.Value)
 	defer mapping.DestroyLogicalType(&lt)
 	defer mapping.DestroyValue(&mappedVal)
 	if err != nil {
@@ -332,17 +334,29 @@ func (s *Stmt) bindValue(val driver.NamedValue, n int) (mapping.State, error) {
 
 	if t != TYPE_INVALID {
 		lt, e := s.paramLogicalType(n + 1)
+		defer mapping.DestroyLogicalType(&lt)
 		if e != nil {
 			return mapping.StateError, e
 		}
 		alias := mapping.LogicalTypeGetAlias(lt)
-		switch alias {
-		case aliasJSON:
+		if alias == aliasJSON {
 			return s.bindJSON(val, n)
 		}
 	}
 
-	switch v := val.Value.(type) {
+	// Check for driver.Valuer interface first (takes precedence over type switching)
+	valueToBind := val.Value
+	isDriverValue := false
+	if valuer, ok := val.Value.(driver.Valuer); ok {
+		driverVal, err := valuer.Value()
+		if err != nil {
+			return mapping.StateError, addIndexToError(err, n+1)
+		}
+		valueToBind = driverVal
+		isDriverValue = true
+	}
+
+	switch v := valueToBind.(type) {
 	case bool:
 		return mapping.BindBoolean(*s.preparedStmt, mapping.IdxT(n+1), v), nil
 	case int8:
@@ -379,10 +393,24 @@ func (s *Stmt) bindValue(val driver.NamedValue, n int) (mapping.State, error) {
 	case []byte:
 		return mapping.BindBlob(*s.preparedStmt, mapping.IdxT(n+1), v), nil
 	case Interval:
-		return mapping.BindInterval(*s.preparedStmt, mapping.IdxT(n+1), *v.getMappedInterval()), nil
+		i, inferErr := inferInterval(v)
+		if inferErr != nil {
+			return mapping.StateError, inferErr
+		}
+		return mapping.BindInterval(*s.preparedStmt, mapping.IdxT(n+1), i), nil
 	case nil:
 		return mapping.BindNull(*s.preparedStmt, mapping.IdxT(n+1)), nil
 	}
+
+	// For other types after driver.Valuer conversion, fall back to reflection-based binding
+	if isDriverValue {
+		return s.tryBindComplexValue(driver.NamedValue{
+			Name:    val.Name,
+			Ordinal: val.Ordinal,
+			Value:   valueToBind,
+		}, n)
+	}
+
 	return s.bindComplexValue(val, n, t, name)
 }
 
@@ -392,7 +420,7 @@ func (s *Stmt) bind(args []driver.NamedValue) error {
 	}
 
 	// relaxed length check allow for unused parameters.
-	for i := 0; i < s.NumInput(); i++ {
+	for i := range s.NumInput() {
 		name := mapping.ParameterName(*s.preparedStmt, mapping.IdxT(i+1))
 
 		// fallback on index position
@@ -438,7 +466,7 @@ func (s *Stmt) ExecContext(ctx context.Context, nargs []driver.NamedValue) (driv
 	}
 	defer mapping.DestroyResult(res)
 
-	ra := mapping.ValueInt64(res, 0, 0)
+	ra := int64(mapping.RowsChanged(res))
 	return &result{ra}, nil
 }
 
@@ -462,7 +490,7 @@ func (s *Stmt) ExecBound(ctx context.Context) (driver.Result, error) {
 	}
 	defer mapping.DestroyResult(res)
 
-	ra := mapping.ValueInt64(res, 0, 0)
+	ra := int64(mapping.RowsChanged(res))
 	return &result{ra}, nil
 }
 
@@ -560,12 +588,7 @@ func (s *Stmt) executeBound(ctx context.Context) (*mapping.Result, error) {
 	<-bgDoneCh
 
 	if state == mapping.StateError {
-		if ctx.Err() != nil {
-			mapping.DestroyResult(&res)
-			return nil, ctx.Err()
-		}
-
-		err := getDuckDBError(mapping.ResultError(&res))
+		err := errors.Join(ctx.Err(), getDuckDBError(mapping.ResultError(&res)))
 		mapping.DestroyResult(&res)
 		return nil, err
 	}

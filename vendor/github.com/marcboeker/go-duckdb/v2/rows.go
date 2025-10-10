@@ -4,10 +4,8 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"io"
-	"math/big"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/marcboeker/go-duckdb/mapping"
 )
@@ -28,22 +26,33 @@ type rows struct {
 	chunkIdx mapping.IdxT
 	// rowCount is the number of scanned rows.
 	rowCount int
+	// cached column metadata to avoid repeated CGO calls
+	scanTypes   []reflect.Type
+	dbTypeNames []string
 }
 
 func newRowsWithStmt(res mapping.Result, stmt *Stmt) *rows {
 	columnCount := mapping.ColumnCount(&res)
 	r := rows{
-		res:        res,
-		stmt:       stmt,
-		chunk:      DataChunk{},
-		chunkCount: mapping.ResultChunkCount(res),
-		chunkIdx:   0,
-		rowCount:   0,
+		res:         res,
+		stmt:        stmt,
+		chunk:       DataChunk{},
+		chunkCount:  mapping.ResultChunkCount(res),
+		chunkIdx:    0,
+		rowCount:    0,
+		scanTypes:   make([]reflect.Type, columnCount),
+		dbTypeNames: make([]string, columnCount),
 	}
 
 	for i := mapping.IdxT(0); i < columnCount; i++ {
-		columnName := mapping.ColumnName(&res, mapping.IdxT(i))
+		columnName := mapping.ColumnName(&res, i)
 		r.chunk.columnNames = append(r.chunk.columnNames, columnName)
+
+		// Cache column metadata
+		logicalType := mapping.ColumnLogicalType(&res, i)
+		r.scanTypes[i] = r.getScanType(logicalType, i)
+		r.dbTypeNames[i] = logicalTypeString(logicalType)
+		mapping.DestroyLogicalType(&logicalType)
 	}
 
 	return &r
@@ -73,7 +82,7 @@ func (r *rows) Next(dst []driver.Value) error {
 	}
 
 	columnCount := len(r.chunk.columns)
-	for colIdx := 0; colIdx < columnCount; colIdx++ {
+	for colIdx := range columnCount {
 		var err error
 		if dst[colIdx], err = r.chunk.GetValue(colIdx, r.rowCount); err != nil {
 			return err
@@ -86,65 +95,65 @@ func (r *rows) Next(dst []driver.Value) error {
 
 // ColumnTypeScanType implements driver.RowsColumnTypeScanType.
 func (r *rows) ColumnTypeScanType(index int) reflect.Type {
-	logicalType := mapping.ColumnLogicalType(&r.res, mapping.IdxT(index))
-	defer mapping.DestroyLogicalType(&logicalType)
+	return r.scanTypes[index]
+}
 
+func (r *rows) getScanType(logicalType mapping.LogicalType, index mapping.IdxT) reflect.Type {
 	alias := mapping.LogicalTypeGetAlias(logicalType)
-	switch alias {
-	case aliasJSON:
-		return reflect.TypeFor[any]()
+	if alias == aliasJSON {
+		return reflectTypeAny
 	}
 
-	t := Type(mapping.ColumnType(&r.res, mapping.IdxT(index)))
+	t := mapping.ColumnType(&r.res, index)
 	switch t {
 	case TYPE_INVALID:
 		return nil
 	case TYPE_BOOLEAN:
-		return reflect.TypeOf(true)
+		return reflectTypeBool
 	case TYPE_TINYINT:
-		return reflect.TypeOf(int8(0))
+		return reflectTypeInt8
 	case TYPE_SMALLINT:
-		return reflect.TypeOf(int16(0))
+		return reflectTypeInt16
 	case TYPE_INTEGER:
-		return reflect.TypeOf(int32(0))
+		return reflectTypeInt32
 	case TYPE_BIGINT:
-		return reflect.TypeOf(int64(0))
+		return reflectTypeInt64
 	case TYPE_UTINYINT:
-		return reflect.TypeOf(uint8(0))
+		return reflectTypeUint8
 	case TYPE_USMALLINT:
-		return reflect.TypeOf(uint16(0))
+		return reflectTypeUint16
 	case TYPE_UINTEGER:
-		return reflect.TypeOf(uint32(0))
+		return reflectTypeUint32
 	case TYPE_UBIGINT:
-		return reflect.TypeOf(uint64(0))
+		return reflectTypeUint64
 	case TYPE_FLOAT:
-		return reflect.TypeOf(float32(0))
+		return reflectTypeFloat32
 	case TYPE_DOUBLE:
-		return reflect.TypeOf(float64(0))
+		return reflectTypeFloat64
 	case TYPE_TIMESTAMP, TYPE_TIMESTAMP_S, TYPE_TIMESTAMP_MS, TYPE_TIMESTAMP_NS, TYPE_DATE, TYPE_TIME, TYPE_TIME_TZ, TYPE_TIMESTAMP_TZ:
-		return reflect.TypeOf(time.Time{})
+		return reflectTypeTime
 	case TYPE_INTERVAL:
-		return reflect.TypeOf(Interval{})
+		return reflectTypeInterval
 	case TYPE_HUGEINT:
-		return reflect.TypeOf(big.NewInt(0))
+		return reflectTypeBigInt
 	case TYPE_VARCHAR, TYPE_ENUM:
-		return reflect.TypeOf("")
+		return reflectTypeString
 	case TYPE_BLOB:
-		return reflect.TypeOf([]byte{})
+		return reflectTypeBytes
 	case TYPE_DECIMAL:
-		return reflect.TypeOf(Decimal{})
+		return reflectTypeDecimal
 	case TYPE_LIST:
-		return reflect.TypeOf([]any{})
+		return reflectTypeSliceAny
 	case TYPE_STRUCT:
-		return reflect.TypeOf(map[string]any{})
+		return reflectTypeMapString
 	case TYPE_MAP:
-		return reflect.TypeOf(Map{})
+		return reflectTypeMap
 	case TYPE_ARRAY:
-		return reflect.TypeOf([]any{})
+		return reflectTypeSliceAny
 	case TYPE_UNION:
-		return reflect.TypeOf(Union{})
+		return reflectTypeUnion
 	case TYPE_UUID:
-		return reflect.TypeOf([]byte{})
+		return reflectTypeBytes
 	default:
 		return nil
 	}
@@ -152,22 +161,7 @@ func (r *rows) ColumnTypeScanType(index int) reflect.Type {
 
 // ColumnTypeDatabaseTypeName implements driver.RowsColumnTypeScanType.
 func (r *rows) ColumnTypeDatabaseTypeName(index int) string {
-	logicalType := mapping.ColumnLogicalType(&r.res, mapping.IdxT(index))
-	defer mapping.DestroyLogicalType(&logicalType)
-
-	alias := mapping.LogicalTypeGetAlias(logicalType)
-	switch alias {
-	case aliasJSON:
-		return aliasJSON
-	}
-
-	t := Type(mapping.ColumnType(&r.res, mapping.IdxT(index)))
-	switch t {
-	case TYPE_DECIMAL, TYPE_ENUM, TYPE_LIST, TYPE_STRUCT, TYPE_MAP, TYPE_ARRAY, TYPE_UNION:
-		return logicalTypeName(logicalType)
-	default:
-		return typeToStringMap[t]
-	}
+	return r.dbTypeNames[index]
 }
 
 func (r *rows) Close() error {
@@ -188,8 +182,24 @@ func (r *rows) Close() error {
 	return err
 }
 
+// logicalTypeString converts a LogicalType to its string representation.
+func logicalTypeString(logicalType mapping.LogicalType) string {
+	alias := mapping.LogicalTypeGetAlias(logicalType)
+	if alias == aliasJSON {
+		return aliasJSON
+	}
+
+	t := mapping.GetTypeId(logicalType)
+	switch t {
+	case TYPE_DECIMAL, TYPE_ENUM, TYPE_LIST, TYPE_STRUCT, TYPE_MAP, TYPE_ARRAY, TYPE_UNION:
+		return logicalTypeName(logicalType)
+	default:
+		return typeToStringMap[t]
+	}
+}
+
 func logicalTypeName(logicalType mapping.LogicalType) string {
-	t := Type(mapping.GetTypeId(logicalType))
+	t := mapping.GetTypeId(logicalType)
 	switch t {
 	case TYPE_DECIMAL:
 		return logicalTypeNameDecimal(logicalType)
@@ -225,22 +235,29 @@ func logicalTypeNameList(logicalType mapping.LogicalType) string {
 }
 
 func logicalTypeNameStruct(logicalType mapping.LogicalType) string {
+	var sb strings.Builder
+	sb.WriteString("STRUCT(")
+
 	count := mapping.StructTypeChildCount(logicalType)
-	name := "STRUCT("
 
 	for i := mapping.IdxT(0); i < count; i++ {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+
 		childName := mapping.StructTypeChildName(logicalType, i)
 		childType := mapping.StructTypeChildType(logicalType, i)
 
-		// Add comma if not at the end of the list.
-		name += escapeStructFieldName(childName) + " " + logicalTypeName(childType)
-		if i != count-1 {
-			name += ", "
-		}
+		sb.WriteString(escapeStructFieldName(childName))
+		sb.WriteByte(' ')
+		sb.WriteString(logicalTypeName(childType))
+
 		mapping.DestroyLogicalType(&childType)
 	}
 
-	return name + ")"
+	sb.WriteByte(')')
+
+	return sb.String()
 }
 
 func logicalTypeNameMap(logicalType mapping.LogicalType) string {
@@ -263,22 +280,28 @@ func logicalTypeNameArray(logicalType mapping.LogicalType) string {
 }
 
 func logicalTypeNameUnion(logicalType mapping.LogicalType) string {
-	count := int(mapping.UnionTypeMemberCount(logicalType))
-	name := "UNION("
+	var sb strings.Builder
+	sb.WriteString("UNION(")
 
-	for i := 0; i < count; i++ {
+	count := int(mapping.UnionTypeMemberCount(logicalType))
+
+	for i := range count {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+
 		memberName := mapping.UnionTypeMemberName(logicalType, mapping.IdxT(i))
 		memberType := mapping.UnionTypeMemberType(logicalType, mapping.IdxT(i))
 
-		// Add comma if not at the end of the list
-		name += memberName + " " + logicalTypeName(memberType)
-		if i != count-1 {
-			name += ", "
-		}
+		sb.WriteString(escapeStructFieldName(memberName))
+		sb.WriteByte(' ')
+		sb.WriteString(logicalTypeName(memberType))
 
 		mapping.DestroyLogicalType(&memberType)
 	}
-	return name + ")"
+
+	sb.WriteByte(')')
+	return sb.String()
 }
 
 func escapeStructFieldName(s string) string {

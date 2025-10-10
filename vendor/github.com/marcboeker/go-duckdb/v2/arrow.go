@@ -66,12 +66,12 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/marcboeker/go-duckdb/arrowmapping"
-	"github.com/marcboeker/go-duckdb/mapping"
-
 	"github.com/apache/arrow-go/v18/arrow"
 	"github.com/apache/arrow-go/v18/arrow/array"
 	"github.com/apache/arrow-go/v18/arrow/cdata"
+
+	"github.com/marcboeker/go-duckdb/arrowmapping"
+	"github.com/marcboeker/go-duckdb/mapping"
 )
 
 // Arrow exposes DuckDB Apache Arrow interface.
@@ -93,6 +93,8 @@ func NewArrowFromConn(driverConn driver.Conn) (*Arrow, error) {
 	return &Arrow{conn: conn}, nil
 }
 
+var _ array.RecordReader = (*arrowStreamReader)(nil)
+
 // arrowStreamReader implements array.RecordReader for streaming DuckDB results.
 type arrowStreamReader struct {
 	ctx      context.Context
@@ -104,6 +106,7 @@ type arrowStreamReader struct {
 	refCount   int64
 	readCount  uint64
 	currentRec arrow.Record
+	closed     bool // tracks if the reader has been closed/released
 	err        error
 }
 
@@ -112,8 +115,8 @@ type arrowStreamReader struct {
 func (r *arrowStreamReader) Retain() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if r.err != nil {
-		return // Do not increase refCount if there is an error.
+	if r.err != nil || r.closed {
+		return // Do not increase refCount if there is an error or if closed.
 	}
 	r.refCount++
 }
@@ -124,6 +127,7 @@ func (r *arrowStreamReader) Retain() {
 func (r *arrowStreamReader) Release() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
 	if r.refCount <= 0 {
 		return // Do not release if refCount is already zero.
 	}
@@ -131,7 +135,9 @@ func (r *arrowStreamReader) Release() {
 	if r.refCount != 0 {
 		return // Do not release if there are still references.
 	}
+
 	// If this is the last reference, we need to clean up.
+	r.closed = true
 	if r.res != nil {
 		arrowmapping.DestroyArrow(r.res)
 		r.res = nil
@@ -153,11 +159,24 @@ func (r *arrowStreamReader) Next() bool {
 		return false
 	}
 
+	if r.closed {
+		r.err = errors.New("arrow reader has been closed")
+		return false
+	}
+
+	if r.res == nil {
+		r.err = errors.New("arrow result has already been released")
+		return false
+	}
+
 	select {
 	case <-r.ctx.Done():
 		r.err = r.ctx.Err()
 		return false
 	default:
+		if r.currentRec != nil {
+			r.currentRec.Release() // Release the previous record.
+		}
 		rec, err := queryArrowArray(r.res, r.schema)
 		if err != nil {
 			r.err = err
@@ -170,7 +189,12 @@ func (r *arrowStreamReader) Next() bool {
 	}
 }
 
+// Deprecated: use RecordBatch() instead.
 func (r *arrowStreamReader) Record() arrow.Record {
+	return r.RecordBatch()
+}
+
+func (r *arrowStreamReader) RecordBatch() arrow.RecordBatch {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.currentRec
@@ -188,6 +212,9 @@ func (a *Arrow) QueryContext(ctx context.Context, query string, args ...any) (ar
 	if a.conn.closed {
 		return nil, errClosedCon
 	}
+
+	cleanupCtx := a.conn.setContext(ctx)
+	defer cleanupCtx()
 
 	stmts, size, errExtract := a.conn.extractStmts(query)
 	if errExtract != nil {
@@ -215,18 +242,16 @@ func (a *Arrow) QueryContext(ctx context.Context, query string, args ...any) (ar
 	if err != nil {
 		return nil, err
 	}
+	defer stmt.Close()
 
 	res, err := a.execute(stmt, a.anyArgsToNamedArgs(args))
 	if err != nil {
-		stmt.Close()
 		return nil, err
 	}
-	defer stmt.Close()
 
 	sc, err := a.queryArrowSchema(res)
 	if err != nil {
 		arrowmapping.DestroyArrow(res)
-		stmt.Close()
 		return nil, err
 	}
 
@@ -328,6 +353,7 @@ func (a *Arrow) RegisterView(reader array.RecordReader, name string) (release fu
 
 	stream := C.calloc(1, C.sizeof_struct_ArrowArrayStream)
 	release = func() {
+		cdata.ReleaseCArrowArrayStream((*cdata.CArrowArrayStream)(stream))
 		C.free(stream)
 	}
 	cdata.ExportRecordReader(reader, (*cdata.CArrowArrayStream)(stream))
