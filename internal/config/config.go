@@ -20,15 +20,15 @@ var templateFS embed.FS
 
 // 全局配置变量
 var (
-	currentConfigPath = ""               // 当前配置文件路径
-	currentWorkPath   = ""               // 当前工作目录路径
-	currentEndpoint   = "magicCodeAgent" // 默认端点名称
-	currentBuildTime  = ""
-	currentGitCommit  = ""
-	currentVersion    = "0.0.1"
-	listenPort        = "8090" // 默认监听端口
-	sysConfig         *Config  // 系统配置实例
-	debugWorkspace    = true
+	currentConfigPath  = ""               // 当前配置文件路径
+	currentWorkPath    = ""               // 当前工作目录路径
+	currentEndpoint    = "magicCodeAgent" // 默认端点名称
+	currentBuildTime   = ""
+	currentGitCommit   = ""
+	currentVersion     = "0.0.1"
+	currentEnableTrace = false
+	listenPort         = "8090" // 默认监听端口
+	sysConfig          *Config  // 系统配置实例
 )
 
 // Config 定义系统配置结构
@@ -38,7 +38,6 @@ type Config struct {
 	Models           []*models.ModelInfo      `json:"models"`    // AI模型列表
 	WorkspaceSetting *models.WorkspaceSetting `json:"workspaceSetting"`
 	AuthorConfig     *models.AuthorInfo       `json:"authorConfig"`
-	DebugFlag        bool                     `json:"debugFlag"`
 }
 
 // init 初始化当前工作目录路径
@@ -86,11 +85,12 @@ func LoadConfig(cfgFile string) (err error) {
 	return
 }
 
-func SetApplicationInfo(endpointName, buildTime, gitCommit, version string) {
+func SetApplicationInfo(endpointName, buildTime, gitCommit, version string, enableTrace bool) {
 	currentEndpoint = endpointName
 	currentBuildTime = buildTime
 	currentGitCommit = gitCommit
 	currentVersion = version
+	currentEnableTrace = enableTrace
 }
 
 // SetEndpoint 设置当前端点名称
@@ -99,8 +99,16 @@ func SetEndpoint(endpointName string) {
 	currentEndpoint = endpointName
 }
 
-func EnableDebug() {
-	debugWorkspace = true
+func EnableTrace() {
+	currentEnableTrace = true
+}
+
+func EnableTraceFlag() bool {
+	if sysConfig != nil {
+		return sysConfig.WorkspaceSetting.EnableTrace || currentEnableTrace
+	}
+
+	return currentEnableTrace
 }
 
 // BindPort 获取绑定端口
@@ -152,6 +160,7 @@ func WorkspaceSetting() *models.WorkspaceSetting {
 		ret.Overlap = models.DefaultWorkspaceSetting().Overlap
 	}
 
+	ret.EnableTrace = EnableTraceFlag()
 	return ret
 }
 
@@ -404,12 +413,4 @@ func Version() string {
 // 返回: 路径字符串
 func CurrentWorkingPath() string {
 	return currentWorkPath
-}
-
-func DebugFlag() bool {
-	if sysConfig != nil {
-		return sysConfig.DebugFlag || debugWorkspace
-	}
-
-	return debugWorkspace
 }

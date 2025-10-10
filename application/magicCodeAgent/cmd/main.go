@@ -32,9 +32,10 @@ import (
 )
 
 var (
-	buildTime string
-	gitCommit string
-	version   string
+	buildTime   string
+	gitCommit   string
+	version     string
+	enableTrace string
 )
 
 var configFile = ""
@@ -45,7 +46,7 @@ func main() {
 
 	fmt.Printf("magicCodeAgent %s\n", version)
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
-	config.SetApplicationInfo("magicCodeAgent", buildTime, gitCommit, version)
+	config.SetApplicationInfo("magicCodeAgent", buildTime, gitCommit, version, enableTrace == "true")
 
 	if configFile != "" {
 		configErr := config.LoadConfig(configFile)

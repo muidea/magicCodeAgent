@@ -8,12 +8,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sashabaranov/go-openai"
+
 	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/foundation/net"
 	"github.com/muidea/magicCommon/task"
-	"github.com/sashabaranov/go-openai"
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
@@ -38,11 +39,8 @@ func New(
 		Base: biz.New(imkdc.RecorderModule, eventHub, backgroundRoutine),
 	}
 
-	if config.DebugFlag() {
-		ptr.SubscribeFunc(imkdc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
-
-		ptr.SubscribeFunc(imkdc.RecordHistoryMessage, ptr.recordHistoryMessage)
-	}
+	ptr.SubscribeFunc(imkdc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
+	ptr.SubscribeFunc(imkdc.RecordHistoryMessage, ptr.recordHistoryMessage)
 
 	return ptr
 }

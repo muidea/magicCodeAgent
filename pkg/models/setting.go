@@ -13,6 +13,7 @@ type WorkspaceSetting struct {
 	TopK            int     `json:"topK"`
 	ChunkSize       int     `json:"chunkSize"`
 	Overlap         int     `json:"overlap"`
+	EnableTrace     bool    `json:"enableTrace"`
 }
 
 var defaultWorkspaceSetting = &WorkspaceSetting{

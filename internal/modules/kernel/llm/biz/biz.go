@@ -12,6 +12,7 @@ import (
 	"github.com/muidea/magicCommon/foundation/log"
 	"github.com/muidea/magicCommon/task"
 
+	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
 	imbrc "github.com/muidea/magicCodeAgent/internal/modules/blocks/recorder/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
@@ -245,6 +246,10 @@ func (s *LLM) UserBalance() (ret *imklc.UserBalanceResponse, err error) {
 }
 
 func (s *LLM) OnTerminate(msgPtr *models.MessageInfo) {
+	if !config.EnableTraceFlag() {
+		return
+	}
+
 	appendEvent := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
 	appendResult := s.SendEvent(appendEvent)
 	appendVal, appendErr := appendResult.Get()
@@ -258,6 +263,10 @@ func (s *LLM) OnTerminate(msgPtr *models.MessageInfo) {
 }
 
 func (s *LLM) OnSendMessage(msgPtr *models.MessageInfo) {
+	if !config.EnableTraceFlag() {
+		return
+	}
+
 	appendEvent := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
 	appendResult := s.SendEvent(appendEvent)
 	appendVal, appendErr := appendResult.Get()
@@ -271,6 +280,10 @@ func (s *LLM) OnSendMessage(msgPtr *models.MessageInfo) {
 }
 
 func (s *LLM) OnRecvMessage(msgPtr *models.MessageInfo, usePtr *imklc.Usage) {
+	if !config.EnableTraceFlag() {
+		return
+	}
+
 	appendEvent := event.NewEvent(imbtc.AppendMessage, s.ID(), imbtc.TracerModule, nil, msgPtr)
 	appendResult := s.SendEvent(appendEvent)
 	appendVal, appendErr := appendResult.Get()

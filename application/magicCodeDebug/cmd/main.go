@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	buildTime string
-	gitCommit string
-	version   string
+	buildTime   string
+	gitCommit   string
+	version     string
+	enableTrace string
 )
 
 var configFile = "/etc/magicCodeAgent/config.json"
@@ -29,8 +30,8 @@ func main() {
 
 	fmt.Printf("magicCodeDebug %s\n", version)
 	fmt.Printf("buildTime:%s, gitCommit:%s\n", buildTime, gitCommit)
-	config.SetApplicationInfo("magicCodeDebug", buildTime, gitCommit, version)
-	config.EnableDebug()
+	config.SetApplicationInfo("magicCodeDebug", buildTime, gitCommit, version, enableTrace == "true")
+	config.EnableTrace()
 
 	if configFile != "" {
 		configErr := config.LoadConfig(configFile)

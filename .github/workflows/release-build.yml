@@ -76,7 +76,7 @@ jobs:
           mkdir -p bin build/magicCodeAgent
           export GOOS=$(echo ${{ matrix.platform }} | cut -d'/' -f1)
           export GOARCH=$(echo ${{ matrix.platform }} | cut -d'/' -f2)
-          make release || (echo "Build failed with exit code $?"; exit 1)
+          ENABLE_TRACE_VALUE=false make release || (echo "Build failed with exit code $?"; exit 1)
 
       - name: Get Release
         id: get_release
