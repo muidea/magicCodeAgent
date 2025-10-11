@@ -35,7 +35,7 @@ func (s *KnowledgeBase) Open() error {
 
 	_, err = dbPtr.Exec(`INSTALL vss; LOAD vss;`)
 	if err != nil {
-		log.Errorf("init knowledge db failed, err:%v", err)
+		log.Errorf("init knowledge db vss failed, err:%v", err)
 		return err
 	}
 
