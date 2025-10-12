@@ -668,8 +668,10 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 
 		s.disposeMessage(msgItem)
 	}
-	// thinking conent 放在最后加
-	curFlow.AppendThinking(thinkingContent)
+	if curFlow != nil {
+		// thinking conent 放在最后加
+		curFlow.AppendThinking(thinkingContent)
+	}
 
 	if chatLoopCount >= s.chatMaxLoopCount {
 		finalStatus = Paused
