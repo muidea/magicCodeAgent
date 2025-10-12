@@ -18,7 +18,7 @@ type LocalKnowledge interface {
 
 func (s *Workspace) ReCallKnowledge(workspacePtr *models.Workspace, flowPtr *models.Flow, thinkingContent string) (KnowledgeList, error) {
 	workspaceSetting := config.WorkspaceSetting()
-	paramPtr := imkkc.HybridSearchKnowledgeParam{
+	paramPtr := &imkkc.HybridSearchKnowledgeParam{
 		Warehouse:       workspacePtr.KnowledgeWarehouse,
 		Text:            thinkingContent,
 		TopK:            workspaceSetting.TopK,

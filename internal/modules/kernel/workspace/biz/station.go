@@ -282,11 +282,12 @@ func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 			stringBuilder.WriteString("\n\n")
 		}
 
-		knowledgeContent := s.getWorkspaceKnowledge()
-		if knowledgeContent != "" {
-			stringBuilder.WriteString(knowledgeContent)
-			stringBuilder.WriteString("\n\n")
-		}
+	}
+
+	knowledgeContent := s.getWorkspaceKnowledge()
+	if knowledgeContent != "" {
+		stringBuilder.WriteString(knowledgeContent)
+		stringBuilder.WriteString("\n\n")
 	}
 
 	if flowPtr != nil {
@@ -620,7 +621,10 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 		switch workResult.Name {
 		case "thinking":
 			//curFlow.AppendThinking(workParam["thinking"].(string))
-			thinkingContent = workParam["thinking"].(string)
+			thinkingVal, thkingOK := workParam["thinking"]
+			if thkingOK {
+				thinkingContent = thinkingVal.(string)
+			}
 			continue
 		case "attempt_finish_task":
 			curFlow.AppendMessage(msgPtr)
@@ -640,12 +644,15 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 			}
 			curFlow.AppendMessage(msgPtr)
 			curFlow.AppendMessage(msgItem)
-			// 这里要主动进行知识库回召
-			knowledgeVal, knowledgeErr := s.localKnowledge.ReCallKnowledge(&s.currentWorkspace, curFlow, thinkingContent)
-			if knowledgeErr != nil {
-				log.Errorf("tryToFinishFlow, s.localKnowledge.ReCallKnowledge err:%v", knowledgeErr)
-			} else {
-				s.currentKnowledgeList = knowledgeVal
+
+			if s.currentWorkspace.GetStage() != models.DesignStage {
+				// 这里要主动进行知识库回召
+				knowledgeVal, knowledgeErr := s.localKnowledge.ReCallKnowledge(&s.currentWorkspace, curFlow, thinkingContent)
+				if knowledgeErr != nil {
+					log.Errorf("tryToSwitchFlow, s.localKnowledge.ReCallKnowledge err:%v", knowledgeErr)
+				} else {
+					s.currentKnowledgeList = knowledgeVal
+				}
 			}
 		case "attempt_completion":
 			curFlow.AppendMessage(msgPtr)
