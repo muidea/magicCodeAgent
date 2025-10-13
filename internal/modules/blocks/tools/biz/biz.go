@@ -79,7 +79,7 @@ func (s *Tools) execDataContent(dataContent string) (imbtc.ToolParam, *imbtc.Too
 	}
 
 	if toolName == "thinking" {
-		return nil, &imbtc.ToolResult{
+		return toolParam, &imbtc.ToolResult{
 			Name: toolName,
 			Result: models.MessageItem{
 				Role:    common.Tool,
