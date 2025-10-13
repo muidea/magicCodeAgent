@@ -89,7 +89,6 @@ type Flow struct {
 	Stage         string           `json:"stage"`
 	Status        int              `json:"status"`
 	Path          string           `json:"path"`
-	Thinkings     []string         `json:"-"`
 	Message       []*MessageItem   `json:"-"`
 	MessageResume bool             `json:"-"`
 	AddFiles      fu.StringSortSet `json:"addFiles,omitempty"`
@@ -147,13 +146,6 @@ func (s *Flow) String() string {
 	var stringBuff strings.Builder
 	stringBuff.WriteString(fmt.Sprintf("id:%s, name:%s, level:%s, path:%s, stage:%s, status:%d, parent is %s", s.Id, s.Name, s.Level, s.Path, s.Stage, s.Status, s.Parent.Id))
 	return stringBuff.String()
-}
-
-func (s *Flow) AppendThinking(t string) {
-	if s.Thinkings == nil {
-		s.Thinkings = make([]string, 0)
-	}
-	s.Thinkings = append(s.Thinkings, t)
 }
 
 func (s *Flow) AppendMessage(m *MessageItem) {

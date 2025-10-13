@@ -138,7 +138,7 @@ func (s *Station) getWorkspaceKnowledge() string {
 	}
 
 	var knowledgeBuilder strings.Builder
-	knowledgeBuilder.WriteString("---\n")
+	knowledgeBuilder.WriteString("====\n")
 	knowledgeBuilder.WriteString("## 知识参考\n\n")
 	knowledgeBuilder.WriteString(" > 以下是从知识库中检索到的相关资料，请作为参考信息使用\n\n")
 	for _, knowledge := range s.currentKnowledgeList {
@@ -604,7 +604,6 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 		return
 	}
 
-	var thinkingContent string
 	curFlow := s.localFlowManger.GetCurrentFlow()
 	for _, block := range blockList {
 		workParam, workResult, workErr := s.internalDoWork(&s.currentWorkspace, chatLoopCount, block)
@@ -621,10 +620,6 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 		switch workResult.Name {
 		case "thinking":
 			//curFlow.AppendThinking(workParam["thinking"].(string))
-			thinkingVal, thkingOK := workParam["thinking"]
-			if thkingOK {
-				thinkingContent = thinkingVal.(string)
-			}
 			continue
 		case "attempt_finish_task":
 			curFlow.AppendMessage(msgPtr)
@@ -647,11 +642,15 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 
 			if s.currentWorkspace.GetStage() != models.DesignStage {
 				// 这里要主动进行知识库回召
-				knowledgeVal, knowledgeErr := s.localKnowledge.ReCallKnowledge(&s.currentWorkspace, curFlow, thinkingContent)
-				if knowledgeErr != nil {
-					log.Errorf("tryToSwitchFlow, s.localKnowledge.ReCallKnowledge err:%v", knowledgeErr)
-				} else {
-					s.currentKnowledgeList = knowledgeVal
+				descriptionVal, descriptionOK := workParam["description"]
+				if descriptionOK {
+					description := descriptionVal.(string)
+					knowledgeVal, knowledgeErr := s.localKnowledge.ReCallKnowledge(&s.currentWorkspace, curFlow, strings.TrimSpace(description))
+					if knowledgeErr != nil {
+						log.Errorf("tryToSwitchFlow, s.localKnowledge.ReCallKnowledge err:%v", knowledgeErr)
+					} else {
+						s.currentKnowledgeList = knowledgeVal
+					}
 				}
 			}
 		case "attempt_completion":
@@ -667,10 +666,6 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 		}
 
 		s.disposeMessage(msgItem)
-	}
-	if curFlow != nil {
-		// thinking conent 放在最后加
-		curFlow.AppendThinking(thinkingContent)
 	}
 
 	if chatLoopCount >= s.chatMaxLoopCount {
