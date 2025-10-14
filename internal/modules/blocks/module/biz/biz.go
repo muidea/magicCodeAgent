@@ -99,8 +99,8 @@ func (s *Module) create(ev event.Event, re event.Result) {
 	templatePtr := ev.GetData("template").(*models.Template)
 
 	workingPath := config.CurrentWorkingPath()
-	moduleWorkingPath := filepath.Join(workingPath, imbmcfg.GetPath())
-	modulePath, err := s.verifyWorkingPath(moduleWorkingPath, templatePtr)
+	workingPath = filepath.Join(workingPath, imbmcfg.GetPath())
+	modulePath, err := s.verifyWorkingPath(workingPath, templatePtr)
 	if err != nil {
 		log.Errorf("create module failed, verify module working path failed, err: %v", err)
 		if re != nil {
@@ -109,7 +109,7 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		return
 	}
 
-	moduleWorkingPath = path.Join(workingPath, modulePath, util.ToLower(imbmcfg.GetName()))
+	moduleWorkingPath := path.Join(workingPath, util.ToLower(imbmcfg.GetName()))
 	if oErr := os.MkdirAll(moduleWorkingPath, 0755); oErr != nil {
 		log.Errorf("create module failed, create module working path failed, err: %v", oErr)
 		if re != nil {
@@ -117,6 +117,7 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		}
 		return
 	}
+
 	log.Infof("create module working path: %v", moduleWorkingPath)
 	moduleTemplateBasePath := path.Join(models.TemplatePath, templatePtr.Category, templatePtr.Name, "template", "module")
 	createrHelper := biz.NewHelper(templatePtr.HostRootFS, moduleTemplateBasePath)
