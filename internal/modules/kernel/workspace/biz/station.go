@@ -136,11 +136,10 @@ func (s *Station) getWorkspaceKnowledge() string {
 	}
 
 	var knowledgeBuilder strings.Builder
-	knowledgeBuilder.WriteString("====\n")
 	knowledgeBuilder.WriteString("## 知识参考\n\n")
 	knowledgeBuilder.WriteString(" > 以下是从知识库中检索到的相关资料，请作为参考信息使用\n\n")
 	for _, knowledge := range s.currentKnowledgeList {
-		knowledgeBuilder.WriteString(knowledge + "\n\n")
+		knowledgeBuilder.WriteString(knowledge + "\n\n---\n\n")
 	}
 
 	return knowledgeBuilder.String()
