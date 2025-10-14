@@ -24,7 +24,7 @@ var defaultWorkspaceSetting = &WorkspaceSetting{
 	TopK:            10,
 	ChunkSize:       512,
 	Overlap:         30,
-	MaxLoopCount:    100,
+	MaxLoopCount:    200,
 }
 
 func DefaultWorkspaceSetting() *WorkspaceSetting {

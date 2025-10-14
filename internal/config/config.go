@@ -352,28 +352,67 @@ func AuthorConfig() *models.AuthorInfo {
 	return nil
 }
 
-func UpdateConfig(authConfigPtr *models.AuthorInfo, models []*models.ModelInfo, workspaceSetting *models.WorkspaceSetting) {
+func UpdateConfig(authConfigPtr *models.AuthorInfo, modelInfos []*models.ModelInfo, workspaceSetting *models.WorkspaceSetting) {
 	if sysConfig == nil {
 		return
 	}
 	if authConfigPtr != nil {
-		sysConfig.AuthorConfig = authConfigPtr
+		newAuthConfig := sysConfig.AuthorConfig
+		if authConfigPtr.Author != "" {
+			newAuthConfig.Author = authConfigPtr.Author
+		}
+		if authConfigPtr.EMail != "" {
+			newAuthConfig.EMail = authConfigPtr.EMail
+		}
+		sysConfig.AuthorConfig = newAuthConfig
 	}
-	if models != nil {
-		sysConfig.Models = models
+	if modelInfos != nil {
+		sysConfig.Models = modelInfos
 	}
 	if workspaceSetting != nil {
-		if workspaceSetting.TopK == 0 {
-			workspaceSetting.TopK = 5
+		newWorkspaceSetting := sysConfig.WorkspaceSetting
+		if workspaceSetting.RootPath != "" {
+			newWorkspaceSetting.RootPath = workspaceSetting.RootPath
 		}
-		if workspaceSetting.VectSimilarity <= 0.0001 {
-			workspaceSetting.VectSimilarity = 0.5
+		if workspaceSetting.VectSimilarity != 0 {
+			newWorkspaceSetting.VectSimilarity = workspaceSetting.VectSimilarity
 		}
-		if workspaceSetting.HybridThreshold <= 0 {
-			workspaceSetting.HybridThreshold = 1000
+		if workspaceSetting.HybridThreshold != 0 {
+			newWorkspaceSetting.HybridThreshold = workspaceSetting.HybridThreshold
+		}
+		if workspaceSetting.TopK != 0 {
+			newWorkspaceSetting.TopK = workspaceSetting.TopK
+		}
+		if workspaceSetting.ChunkSize != 0 {
+			newWorkspaceSetting.ChunkSize = workspaceSetting.ChunkSize
+		}
+		if workspaceSetting.Overlap != 0 {
+			newWorkspaceSetting.Overlap = workspaceSetting.Overlap
+		}
+		if workspaceSetting.MaxLoopCount != 0 {
+			newWorkspaceSetting.MaxLoopCount = workspaceSetting.MaxLoopCount
 		}
 
-		sysConfig.WorkspaceSetting = workspaceSetting
+		if newWorkspaceSetting.VectSimilarity <= 0.0001 {
+			newWorkspaceSetting.VectSimilarity = models.DefaultWorkspaceSetting().VectSimilarity
+		}
+		if newWorkspaceSetting.HybridThreshold <= 0 {
+			newWorkspaceSetting.HybridThreshold = models.DefaultWorkspaceSetting().HybridThreshold
+		}
+		if newWorkspaceSetting.TopK == 0 {
+			newWorkspaceSetting.TopK = models.DefaultWorkspaceSetting().TopK
+		}
+		if newWorkspaceSetting.ChunkSize == 0 {
+			newWorkspaceSetting.ChunkSize = models.DefaultWorkspaceSetting().ChunkSize
+		}
+		if newWorkspaceSetting.Overlap == 0 {
+			newWorkspaceSetting.Overlap = models.DefaultWorkspaceSetting().Overlap
+		}
+		if newWorkspaceSetting.MaxLoopCount == 0 {
+			newWorkspaceSetting.MaxLoopCount = models.DefaultWorkspaceSetting().MaxLoopCount
+		}
+
+		sysConfig.WorkspaceSetting = newWorkspaceSetting
 	}
 
 	err := fu.SaveConfig(currentConfigPath, sysConfig)
