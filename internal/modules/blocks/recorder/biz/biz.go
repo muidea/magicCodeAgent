@@ -18,7 +18,7 @@ import (
 
 	"github.com/muidea/magicCodeAgent/internal/config"
 	"github.com/muidea/magicCodeAgent/internal/modules/base/biz"
-	imkdc "github.com/muidea/magicCodeAgent/internal/modules/blocks/recorder/pkg/common"
+	imbrc "github.com/muidea/magicCodeAgent/internal/modules/blocks/recorder/pkg/common"
 	imbtc "github.com/muidea/magicCodeAgent/internal/modules/blocks/tracer/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/common"
 	"github.com/muidea/magicCodeAgent/pkg/models"
@@ -36,11 +36,11 @@ func New(
 	backgroundRoutine task.BackgroundRoutine,
 ) *Recorder {
 	ptr := &Recorder{
-		Base: biz.New(imkdc.RecorderModule, eventHub, backgroundRoutine),
+		Base: biz.New(imbrc.RecorderModule, eventHub, backgroundRoutine),
 	}
 
-	ptr.SubscribeFunc(imkdc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
-	ptr.SubscribeFunc(imkdc.RecordHistoryMessage, ptr.recordHistoryMessage)
+	ptr.SubscribeFunc(imbrc.RecordRealtimeMessage, ptr.recordRealtimeMessage)
+	ptr.SubscribeFunc(imbrc.RecordHistoryMessage, ptr.recordHistoryMessage)
 
 	return ptr
 }
