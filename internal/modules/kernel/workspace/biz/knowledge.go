@@ -13,14 +13,14 @@ import (
 type KnowledgeList []string
 
 type LocalKnowledge interface {
-	ReCallKnowledge(workspacePtr *models.Workspace, flowPtr *models.Flow, thinkingContent string) (KnowledgeList, error)
+	ReCallKnowledge(workspacePtr *models.Workspace, flowPtr *models.Flow, contentVal string) (KnowledgeList, error)
 }
 
-func (s *Workspace) ReCallKnowledge(workspacePtr *models.Workspace, flowPtr *models.Flow, thinkingContent string) (KnowledgeList, error) {
+func (s *Workspace) ReCallKnowledge(workspacePtr *models.Workspace, flowPtr *models.Flow, contentVal string) (KnowledgeList, error) {
 	workspaceSetting := config.WorkspaceSetting()
 	paramPtr := &imkkc.HybridSearchKnowledgeParam{
 		Warehouse:       workspacePtr.KnowledgeWarehouse,
-		Text:            thinkingContent,
+		Text:            contentVal,
 		TopK:            workspaceSetting.TopK,
 		BusinessContext: strings.Join(workspacePtr.TechStack, ","),
 		Similarity:      workspaceSetting.VectSimilarity,

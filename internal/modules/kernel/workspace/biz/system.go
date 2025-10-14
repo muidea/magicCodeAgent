@@ -34,7 +34,7 @@ func (s *Workspace) GetSystemConfig() (authPtr *imkwc.AuthorInfo, remoteModel *i
 	for _, val := range models {
 		if val.Name == imklc.RemoteDeepseek {
 			remoteModel = &imkwc.ModelInfo{
-				APIKey:   "sk-***",
+				APIKey:   apiKeyMask,
 				BaseUrl:  val.BaseUrl,
 				Model:    val.Model,
 				Provider: val.Provider,
