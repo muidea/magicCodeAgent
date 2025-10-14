@@ -10,7 +10,7 @@ import (
 	"github.com/muidea/magicCodeAgent/pkg/models"
 )
 
-var apiKeyMask = "sk-***"
+var apiKeyMask = "sk-******"
 
 func (s *Workspace) GetVersionInfo() *imkwc.VersionInfo {
 	return &imkwc.VersionInfo{

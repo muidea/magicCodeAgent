@@ -35,8 +35,6 @@ const (
 	Finished  = "finished"
 )
 
-const maxLoopCount = 200
-
 type Observer interface {
 	ID() string
 	OnMessage(msgPtr *models.MessageInfo)
@@ -224,6 +222,7 @@ func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 			return "", statusErr
 		}
 		if statusContent != "" {
+			stringBuilder.WriteString("====\n\n")
 			stringBuilder.WriteString(statusContent)
 			stringBuilder.WriteString("\n\n")
 		}
@@ -236,6 +235,7 @@ func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 	if referencePath != "" {
 		hasReference := false
 		//stringBuilder.WriteString(fmt.Sprintf("### %s\n\n", referenceLabel))
+		stringBuilder.WriteString("====\n\n")
 		fmt.Fprintf(stringBuilder, "### %s\n\n", referenceLabel)
 		s.workspaceFileManager.Range(func(filePath string) bool {
 			if strings.HasPrefix(filePath, referencePath) {
@@ -253,6 +253,7 @@ func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 	}
 
 	workingPath := s.currentWorkspace.GetWorkingPath()
+	stringBuilder.WriteString("====\n\n")
 	stringBuilder.WriteString("### 当前输出清单\n\n")
 	s.workspaceFileManager.Range(func(filePath string) bool {
 		if strings.HasPrefix(filePath, workingPath) {
@@ -263,6 +264,7 @@ func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 	})
 	stringBuilder.WriteString("\n\n")
 
+	stringBuilder.WriteString("====\n\n")
 	instructContent := s.getWorkspaceSpecialInstruction()
 	if instructContent != "" {
 		stringBuilder.WriteString(instructContent)
@@ -271,6 +273,7 @@ func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 
 	//## 项目规划目录
 	if s.currentWorkspace.GetStage() != models.DesignStage {
+		stringBuilder.WriteString("====\n\n")
 		structContent, structErr := s.getWorkspaceProjectStruct()
 		if structErr != nil {
 			log.Errorf("get workspace project struct failed, %s", structErr)
@@ -284,13 +287,17 @@ func (s *Station) envPrompt(flowPtr *models.Flow) (string, error) {
 
 	}
 
+	// Knowledge
 	knowledgeContent := s.getWorkspaceKnowledge()
 	if knowledgeContent != "" {
+		stringBuilder.WriteString("====\n\n")
 		stringBuilder.WriteString(knowledgeContent)
 		stringBuilder.WriteString("\n\n")
 	}
 
+	// TODOList
 	if flowPtr != nil {
+		stringBuilder.WriteString("====\n\n")
 		todoListContent := s.getTodoListContent(flowPtr)
 		if todoListContent != "" {
 			stringBuilder.WriteString(todoListContent)
@@ -430,7 +437,7 @@ func (s *Station) ChatMessage(chatContext context.Context, itemPtr *models.Messa
 		curFlow := s.localFlowManger.GetCurrentFlow()
 		curFlow.AppendMessage(itemPtr)
 
-		s.chatMaxLoopCount = maxLoopCount
+		s.chatMaxLoopCount = int64(config.WorkspaceSetting().MaxLoopCount)
 		s.chatRunningStatus = Chatting
 		s.chatCurrentLoopCount = 0
 
@@ -616,10 +623,8 @@ func (s *Station) disposeContent(content string) (ret *models.Flow) {
 
 		msgItem := &workResult.Result
 		msgItem.Role = common.User
-		//workResult.Result.Role = common.User
 		switch workResult.Name {
 		case "thinking":
-			//curFlow.AppendThinking(workParam["thinking"].(string))
 			continue
 		case "attempt_finish_task":
 			curFlow.AppendMessage(msgPtr)

@@ -13,6 +13,7 @@ type WorkspaceSetting struct {
 	TopK            int     `json:"topK"`
 	ChunkSize       int     `json:"chunkSize"`
 	Overlap         int     `json:"overlap"`
+	MaxLoopCount    int     `json:"maxLoopCount"`
 	EnableTrace     bool    `json:"enableTrace"`
 }
 
@@ -20,9 +21,10 @@ var defaultWorkspaceSetting = &WorkspaceSetting{
 	RootPath:        filepath.Join(fo.GetHomeDir(), "codespace"),
 	VectSimilarity:  0.5,
 	HybridThreshold: 1000,
-	TopK:            5,
+	TopK:            10,
 	ChunkSize:       512,
 	Overlap:         30,
+	MaxLoopCount:    100,
 }
 
 func DefaultWorkspaceSetting() *WorkspaceSetting {

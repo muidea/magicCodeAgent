@@ -159,6 +159,9 @@ func WorkspaceSetting() *models.WorkspaceSetting {
 	if ret.Overlap <= 0 {
 		ret.Overlap = models.DefaultWorkspaceSetting().Overlap
 	}
+	if ret.MaxLoopCount <= 0 {
+		ret.MaxLoopCount = models.DefaultWorkspaceSetting().MaxLoopCount
+	}
 
 	ret.EnableTrace = EnableTraceFlag()
 	return ret
