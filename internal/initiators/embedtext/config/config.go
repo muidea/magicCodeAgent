@@ -6,7 +6,7 @@ import (
 )
 
 var defaultNlpAPIServer = "https://api.mulife.vip"
-var defaultNlpAPIUrl = "https://api.mulife.vip/api/v1/nlp_service/embedding/single"
+var defaultNlpAPIUrl = "https://api.mulife.vip/nlp_service/api/v1/embedding/single"
 
 func GetNLPAPIServer() string {
 	apiServer, apiOK := os.LookupEnv("NlpAPIServer")
@@ -23,7 +23,7 @@ func GetNlpEmbedAPIUrl() string {
 		return apiVal
 	}
 
-	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "api/v1/nlp_service/embedding/single")
+	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "nlp_service/api/v1/embedding/single")
 }
 
 func GetNlpEmbedBatchAPIUrl() string {
@@ -32,7 +32,7 @@ func GetNlpEmbedBatchAPIUrl() string {
 		return apiVal
 	}
 
-	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "api/v1/nlp_service/embedding/batch")
+	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "nlp_service/api/v1/embedding/batch")
 }
 
 func GetNlpKeywordsAPIUrl() string {
@@ -41,5 +41,5 @@ func GetNlpKeywordsAPIUrl() string {
 		return apiVal
 	}
 
-	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "api/v1/nlp_service/keywords/extract")
+	return fmt.Sprintf("%s/%s", GetNLPAPIServer(), "nlp_service/api/v1/keywords/extract")
 }
