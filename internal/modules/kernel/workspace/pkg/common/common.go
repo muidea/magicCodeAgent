@@ -60,6 +60,14 @@ type VersionInfo struct {
 	Version      string `json:"version"`
 }
 
+type SystemConfig struct {
+	AuthorInfo       *AuthorInfo              `json:"authorInfo"`
+	WorkspaceDir     string                   `json:"workspaceDir"`
+	RemoteModel      *ModelInfo               `json:"remoteModel"`
+	WorkspaceSetting *models.WorkspaceSetting `json:"workspaceSetting"`
+	VersionInfo      *VersionInfo             `json:"versionInfo"`
+}
+
 type SystemConfigParam struct {
 	AuthorInfo       *AuthorInfo              `json:"authorInfo"`
 	RemoteModel      *ModelInfo               `json:"remoteModel"`
@@ -68,11 +76,7 @@ type SystemConfigParam struct {
 
 type SystemConfigResult struct {
 	cd.Result
-	AuthorInfo       *AuthorInfo              `json:"authorInfo"`
-	WorkspaceDir     string                   `json:"workspaceDir"`
-	RemoteModel      *ModelInfo               `json:"remoteModel"`
-	WorkspaceSetting *models.WorkspaceSetting `json:"workspaceSetting"`
-	VersionInfo      *VersionInfo             `json:"versionInfo"`
+	Value *SystemConfig `json:"value"`
 }
 
 type WorkspaceResult struct {

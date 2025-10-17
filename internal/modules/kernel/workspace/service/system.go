@@ -12,14 +12,16 @@ import (
 )
 
 func (s *Workspace) querySystemConfig(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	result := &imkwc.SystemConfigResult{}
+	result := &imkwc.SystemConfigResult{
+		Value: &imkwc.SystemConfig{},
+	}
 	defer fn.PackageHTTPResponse(res, result)
 
 	authorConfig, remoteModel, workspaceSetting := s.bizPtr.GetSystemConfig()
-	result.AuthorInfo = authorConfig
-	result.RemoteModel = remoteModel
-	result.WorkspaceSetting = workspaceSetting
-	result.VersionInfo = s.bizPtr.GetVersionInfo()
+	result.Value.AuthorInfo = authorConfig
+	result.Value.RemoteModel = remoteModel
+	result.Value.WorkspaceSetting = workspaceSetting
+	result.Value.VersionInfo = s.bizPtr.GetVersionInfo()
 }
 
 func (s Workspace) updateSystemConfig(ctx context.Context, res http.ResponseWriter, req *http.Request) {
