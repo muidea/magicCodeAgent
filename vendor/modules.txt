@@ -147,6 +147,7 @@ github.com/muidea/magicCommon/foundation/path
 github.com/muidea/magicCommon/foundation/system
 github.com/muidea/magicCommon/foundation/util
 github.com/muidea/magicCommon/framework/application
+github.com/muidea/magicCommon/framework/configuration
 github.com/muidea/magicCommon/framework/plugin/common
 github.com/muidea/magicCommon/framework/plugin/initiator
 github.com/muidea/magicCommon/framework/plugin/module
@@ -160,6 +161,13 @@ github.com/muidea/magicEngine/sse
 # github.com/muidea/seelog v1.0.0
 ## explicit
 github.com/muidea/seelog
+# github.com/pelletier/go-toml/v2 v2.2.4
+## explicit; go 1.21.0
+github.com/pelletier/go-toml/v2
+github.com/pelletier/go-toml/v2/internal/characters
+github.com/pelletier/go-toml/v2/internal/danger
+github.com/pelletier/go-toml/v2/internal/tracker
+github.com/pelletier/go-toml/v2/unstable
 # github.com/pierrec/lz4/v4 v4.1.22
 ## explicit; go 1.14
 github.com/pierrec/lz4/v4

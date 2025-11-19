@@ -55,7 +55,7 @@ func main() {
 			return
 		}
 	}
-	err := application.Startup(service.HoldService(config.EndpointName()))
+	err := application.Startup(service.HoldService())
 	if err != nil {
 		log.Errorf("application.Startup err:%s", err.Error())
 		return

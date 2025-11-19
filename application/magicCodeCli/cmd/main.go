@@ -40,7 +40,7 @@ func main() {
 	os.Setenv("BindPort", "2"+bindPort)
 
 	config.SetApplicationInfo("magicCodeCli", buildTime, gitCommit, version, false)
-	err := application.Startup(service.DefaultService(config.EndpointName()))
+	err := application.Startup(service.DefaultService())
 	if err != nil {
 		log.Errorf("application.Startup err:%s", err.Error())
 		return

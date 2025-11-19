@@ -11,6 +11,7 @@ import (
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 
+	"github.com/muidea/magicCommon/framework/configuration"
 	"github.com/muidea/magicCommon/framework/service"
 )
 
@@ -76,8 +77,18 @@ type appImpl struct {
 }
 
 func (s *appImpl) Startup(service service.Service) *cd.Error {
+	err := configuration.InitDefaultConfigManager("")
+	if err != nil {
+		return cd.NewError(cd.Unexpected, err.Error())
+	}
+
+	nameVal, nameErr := configuration.GetString("endpointName")
+	if nameErr != nil {
+		nameVal = "magicPlatform"
+	}
+
 	s.service = service
-	return s.service.Startup(s.eventHub, s.backgroundRoutine)
+	return s.service.Startup(nameVal, s.eventHub, s.backgroundRoutine)
 }
 
 func (s *appImpl) Run() *cd.Error {
@@ -94,6 +105,7 @@ func (s *appImpl) Shutdown() {
 	}
 
 	s.service.Shutdown()
+	configuration.CloseConfigManager()
 }
 
 func (s *appImpl) EventHub() event.Hub {
