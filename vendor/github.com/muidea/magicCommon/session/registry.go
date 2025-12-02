@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/muidea/magicCommon/foundation/log"
+	fn "github.com/muidea/magicCommon/foundation/net"
 	"github.com/muidea/magicCommon/foundation/util"
 )
 
@@ -62,7 +63,7 @@ func (s *sessionRegistryImpl) GetSession(res http.ResponseWriter, req *http.Requ
 		return sessionInfo
 	}
 
-	return s.createSession(createUUID())
+	return s.createSession(req, createUUID())
 }
 
 func (s *sessionRegistryImpl) Release() {
@@ -105,6 +106,7 @@ func (s *sessionRegistryImpl) getSession(req *http.Request) *sessionImpl {
 	}()
 
 	if sessionPtr != nil {
+		sessionPtr.context[innerRemoteAccessAddr] = fn.GetHTTPRemoteAddress(req)
 		curSession := s.findSession(sessionPtr.id)
 		if curSession != nil {
 			sessionPtr = curSession
@@ -121,9 +123,10 @@ func (s *sessionRegistryImpl) getSession(req *http.Request) *sessionImpl {
 }
 
 // createSession 新建Session
-func (s *sessionRegistryImpl) createSession(sessionID string) *sessionImpl {
-	expiryValue := time.Now().Add(DefaultSessionTimeOutValue).UTC().Unix()
-	sessionPtr := &sessionImpl{id: sessionID, context: map[string]interface{}{expiryTime: expiryValue}, observer: map[string]Observer{}, registry: s}
+func (s *sessionRegistryImpl) createSession(req *http.Request, sessionID string) *sessionImpl {
+	expireValue := time.Now().Add(DefaultSessionTimeOutValue).UTC().UnixMilli()
+	sessionPtr := &sessionImpl{id: sessionID, context: map[string]any{innerExpireTime: expireValue}, observer: map[string]Observer{}, registry: s}
+	sessionPtr.context[innerRemoteAccessAddr] = fn.GetHTTPRemoteAddress(req)
 	sessionPtr = s.commandChan.insert(sessionPtr)
 
 	return sessionPtr
@@ -242,10 +245,13 @@ func (right commandChanImpl) run() {
 			session := command.value.(*sessionImpl)
 			curSession, curOK := sessionContextMap[session.id]
 			if !curOK {
-				curSession = &sessionImpl{id: session.id, context: session.context, observer: session.observer, registry: session.registry}
+				curSession = &sessionImpl{
+					id:      session.id,
+					context: session.context, observer: session.observer, registry: session.registry}
+				curSession.context[innerSessionStartTime] = time.Now().UTC().UnixMilli()
 				sessionContextMap[session.id] = curSession
 			}
-
+			curSession.refresh()
 			command.result <- curSession
 		case remove:
 			id := command.value.(string)
@@ -262,7 +268,7 @@ func (right commandChanImpl) run() {
 			id := command.value.(string)
 			var session *sessionImpl
 			cur, found := sessionContextMap[id]
-			if found {
+			if found && !cur.timeout() {
 				cur.refresh()
 				session = cur
 				command.result <- session
