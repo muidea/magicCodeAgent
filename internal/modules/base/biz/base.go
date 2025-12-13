@@ -62,10 +62,6 @@ func (s *Base) SendEvent(event event.Event) event.Result {
 	return s.eventHub.Send(event)
 }
 
-func (s *Base) CallEvent(event event.Event) event.Result {
-	return s.eventHub.Call(event)
-}
-
 func (s *Base) SyncTask(funcPtr func()) {
 	taskPtr := &routineTask{funcPtr: funcPtr}
 

@@ -34,7 +34,7 @@ func (s *routeRegistry) ID() string {
 }
 
 func (s *routeRegistry) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
-	sessionRegistry := session.CreateRegistry()
+	sessionRegistry := session.DefaultRegistry()
 	routeRegistry := engine.NewRouteRegistry()
 	routeRegistry.SetApiVersion(tc.ApiVersion)
 	s.eventHub = eventHub
