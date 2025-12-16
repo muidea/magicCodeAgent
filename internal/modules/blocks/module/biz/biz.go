@@ -50,40 +50,41 @@ func (s *Module) verifyWorkingPath(workingPath string, templatePtr *models.Templ
 		return
 	}
 
-	if vErr := imbmcfg.Validate(); vErr != nil {
-		err = cd.NewError(cd.IllegalParam, vErr.Error())
-		return
-	}
-
 	if templatePtr.IsWeb() {
 		ret = "src/pages"
 		return
 	}
 
 	normalizedPath := filepath.Clean(workingPath)
-	if strings.HasSuffix(normalizedPath, "/internal/modules/kernel") {
-		codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/modules/kernel")]
-		goModPath := filepath.Join(codeRootPath, "go.mod")
-		if _, oErr := os.Stat(goModPath); oErr != nil {
-			err = cd.NewError(cd.IllegalParam, "working path must be a go module")
-			return
+	// 检查是否以 /modules/kernel 或 /modules/blocks 结尾
+	if strings.HasSuffix(normalizedPath, "/modules/kernel") || strings.HasSuffix(normalizedPath, "/modules/blocks") {
+		// 逐级向上查找 go.mod
+		dir := normalizedPath
+		for {
+			goModPath := filepath.Join(dir, "go.mod")
+			if _, statErr := os.Stat(goModPath); statErr == nil {
+				// 找到 go.mod，计算相对路径
+				relPath, relErr := filepath.Rel(dir, normalizedPath)
+				if relErr != nil {
+					err = cd.NewError(cd.Unexpected, "failed to compute relative path")
+					return
+				}
+				ret = relPath
+				return
+			}
+			// 向上移动一级
+			parentDir := filepath.Dir(dir)
+			if parentDir == dir {
+				// 到达根目录，未找到 go.mod
+				break
+			}
+			dir = parentDir
 		}
-		ret = "internal/modules/kernel"
+		err = cd.NewError(cd.IllegalParam, "working path must be a go module")
 		return
 	}
 
-	if strings.HasSuffix(normalizedPath, "/internal/modules/blocks") {
-		codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/modules/blocks")]
-		goModPath := filepath.Join(codeRootPath, "go.mod")
-		if _, oErr := os.Stat(goModPath); oErr != nil {
-			err = cd.NewError(cd.IllegalParam, "working path must be a go module")
-			return
-		}
-		ret = "internal/modules/blocks"
-		return
-	}
-
-	err = cd.NewError(cd.IllegalParam, "working path must be in /internal/modules/kernel or /internal/modules/blocks")
+	err = cd.NewError(cd.IllegalParam, "working path must be under {parentPath}/modules/kernel or {parentPath}/modules/blocks")
 	return
 }
 
@@ -96,6 +97,13 @@ func (s *Module) create(ev event.Event, re event.Result) {
 		}
 		return
 	}
+	if vErr := imbmcfg.Validate(); vErr != nil {
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.IllegalParam, vErr.Error()))
+		}
+		return
+	}
+
 	templatePtr := ev.GetData("template").(*models.Template)
 
 	workingPath := config.CurrentWorkingPath()

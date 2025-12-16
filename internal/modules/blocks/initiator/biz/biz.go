@@ -39,35 +39,51 @@ func New(
 	return ptr
 }
 
-func (s *Initiator) verifyWorkingPath(workingPath string) (ret string, err *cd.Error) {
-	if workingPath == "" {
+func (s *Initiator) verifyWorkingPath(initiatorPath string) (ret string, err *cd.Error) {
+	if initiatorPath == "" {
 		err = cd.NewError(cd.IllegalParam, "working path is empty")
 		return
 	}
 
-	if !filepath.IsAbs(workingPath) {
+	if !filepath.IsAbs(initiatorPath) {
 		err = cd.NewError(cd.IllegalParam, "working path must be absolute path")
 		return
 	}
 
-	if vErr := imbicfg.Validate(); vErr != nil {
-		err = cd.NewError(cd.IllegalParam, vErr.Error())
+	normalizedPath := filepath.Clean(initiatorPath)
+	if !strings.HasSuffix(normalizedPath, "/initiators") {
+		err = cd.NewError(cd.IllegalParam, "initiator path must be under {parentPath}/initiators")
 		return
 	}
-
-	normalizedPath := filepath.Clean(workingPath)
-	if !strings.HasSuffix(normalizedPath, "/internal/initiators") {
-		err = cd.NewError(cd.IllegalParam, "working path must be internal/initiators")
-		return
+	// 逐级检查其父级目录下是否包含go.mod，如果没有找到，则认为initiator path非法，报错返回
+	// 否则截取normalizedPath与parentPath的相对路径，作为initiator path
+	// 例如 normalizedPath值为/home/rangh/codespace/magicCodeAgent/internal/initiators
+	// go.mod在 /home/rangh/codespace/magicCodeAgent目录下
+	// 逐级检查后截取结果为internal/initiators, 将其赋值给ret
+	parentPath := normalizedPath[:len(normalizedPath)-len("/initiators")]
+	// 逐级检查父级目录是否包含go.mod
+	dir := parentPath
+	for {
+		goModPath := filepath.Join(dir, "go.mod")
+		if _, statErr := os.Stat(goModPath); statErr == nil {
+			// 找到go.mod，计算相对路径
+			relPath, relErr := filepath.Rel(dir, normalizedPath)
+			if relErr != nil {
+				err = cd.NewError(cd.Unexpected, "failed to compute relative path")
+				return
+			}
+			ret = relPath
+			return
+		}
+		// 向上移动一级
+		parentDir := filepath.Dir(dir)
+		if parentDir == dir {
+			// 到达根目录，未找到go.mod
+			break
+		}
+		dir = parentDir
 	}
-	codeRootPath := normalizedPath[:len(normalizedPath)-len("/internal/initiators")]
-	goModPath := filepath.Join(codeRootPath, "go.mod")
-	if _, oErr := os.Stat(goModPath); oErr != nil {
-		err = cd.NewError(cd.IllegalParam, "working path must be a go module")
-		return
-	}
-
-	ret = "internal/initiators"
+	err = cd.NewError(cd.IllegalParam, "no go.mod found in any parent directory")
 	return
 }
 
@@ -80,11 +96,19 @@ func (s *Initiator) create(ev event.Event, re event.Result) {
 		}
 		return
 	}
+
+	if vErr := imbicfg.Validate(); vErr != nil {
+		if re != nil {
+			re.Set(nil, cd.NewError(cd.IllegalParam, vErr.Error()))
+		}
+		return
+	}
+
 	templatePtr := ev.GetData("template").(*models.Template)
 
 	workingPath := config.CurrentWorkingPath()
-	workingPath = filepath.Join(workingPath, imbicfg.GetPath())
-	initiatorPath, err := s.verifyWorkingPath(workingPath)
+	initiatorPath := filepath.Join(workingPath, imbicfg.GetPath())
+	initiatorPath, err := s.verifyWorkingPath(initiatorPath)
 	if err != nil {
 		log.Errorf("create initiator failed, verify initiator working path failed, error: %v", err)
 		if re != nil {
