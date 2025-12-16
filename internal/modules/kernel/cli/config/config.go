@@ -122,14 +122,22 @@ func getDefaultWorkspace() *models.Workspace {
 	codeRootPath := workingPath
 	workingPath = filepath.ToSlash(workingPath)
 	suffixes := []string{
-		"/internal/initiators",
-		"/internal/modules/kernel",
-		"/internal/modules/blocks",
+		"/initiators",
+		"/modules/kernel",
+		"/modules/blocks",
 	}
 	for _, suffix := range suffixes {
 		if strings.HasSuffix(workingPath, suffix) {
 			codeRootPath = strings.TrimSuffix(workingPath, suffix)
-			codeRootPath = strings.TrimRight(codeRootPath, "/")
+			dir := codeRootPath
+			for {
+				goModPath := filepath.Join(dir, "go.mod")
+				if _, err := os.Stat(goModPath); err == nil {
+					codeRootPath = dir
+					break
+				}
+				dir = filepath.Dir(dir)
+			}
 			break
 		}
 	}
