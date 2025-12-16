@@ -69,7 +69,7 @@ func TestVerifyWorkingPath(t *testing.T) {
 		assert.NotNil(t, cdErr)
 		if cdErr != nil {
 			assert.Equal(t, int(cd.IllegalParam), int(cdErr.Code))
-			assert.Contains(t, cdErr.Message, "must be in /modules/kernel or /modules/blocks")
+			assert.Contains(t, cdErr.Message, "working path must be under {parentPath}/modules/kernel or {parentPath}/modules/blocks")
 		}
 	})
 
