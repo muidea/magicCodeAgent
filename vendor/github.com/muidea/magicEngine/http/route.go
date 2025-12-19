@@ -21,9 +21,9 @@ const (
 )
 
 const (
-	DynamicTag           = "X-ENGINE-DYNAMIC-TAG"
-	DynamicValue         = "X-ENGINE-DYNAMIC-VALUE"
-	DynamicRawUriPattern = "X-ENGINE-DYNAMIC-RAW-URI-PATTERN"
+	DynamicTag           = "X-Mp-Engine-Dynamic-Tag"
+	DynamicValue         = "X-Mp-Engine-Dynamic-Value"
+	DynamicRawUriPattern = "X-Mp-Engine-Dynamic-Raw-Uri-Pattern"
 )
 
 type RawUriPattern struct{}
