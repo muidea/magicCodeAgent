@@ -540,7 +540,7 @@ func (s *hubImpl) postInternal(ev Event) {
 			defer func() {
 				if err := recover(); err != nil {
 					stackInfo := util.GetStack(3)
-					log.Warnf("notify event exception, event-[id:%v, source:%s, destination:%s], \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
+					log.Warnf("notify event exception, event:[id-%v, source-%s, destination-%s], \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
 				}
 			}()
 			sv.Notify(ev, nil)
@@ -572,7 +572,7 @@ func (s *hubImpl) sendInternal(ev Event, re Result) {
 			defer func() {
 				if err := recover(); err != nil {
 					stackInfo := util.GetStack(3)
-					log.Warnf("notify event exception, event-[id:%v, source:%s, destination:%s] \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
+					log.Warnf("notify event exception, event:[id-%v, source-%s, destination-%s] \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
 
 					if re != nil {
 						re.Set(nil, cd.NewError(cd.Unexpected, fmt.Sprintf("%v", err)))
@@ -585,7 +585,7 @@ func (s *hubImpl) sendInternal(ev Event, re Result) {
 	}
 
 	if !finalFlag && re != nil {
-		re.Set(nil, cd.NewError(cd.Unexpected, fmt.Sprintf("missing observer, event-[id:%v, source:%s, destination:%s]", ev.ID(), ev.Source(), ev.Destination())))
+		re.Set(nil, cd.NewError(cd.Unexpected, fmt.Sprintf("missing observer, event:[id-%v, source-%s, destination-%s]", ev.ID(), ev.Source(), ev.Destination())))
 	}
 }
 
@@ -619,7 +619,7 @@ func (s *simpleObserver) Notify(ev Event, re Result) {
 			defer func() {
 				if err := recover(); err != nil {
 					stackInfo := util.GetStack(3)
-					log.Warnf("notify event exception, event-[id:%v, source:%s, destination:%s] \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
+					log.Warnf("notify event exception, event:[id-%v, source-%s, destination-%s] \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
 
 					if re != nil {
 						re.Set(nil, cd.NewError(cd.Unexpected, fmt.Sprintf("%v", err)))
