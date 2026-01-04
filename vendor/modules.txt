@@ -140,6 +140,7 @@ github.com/mark3labs/mcp-go/util
 github.com/muidea/magicCommon/def
 github.com/muidea/magicCommon/event
 github.com/muidea/magicCommon/execute
+github.com/muidea/magicCommon/foundation/helper
 github.com/muidea/magicCommon/foundation/log
 github.com/muidea/magicCommon/foundation/net
 github.com/muidea/magicCommon/foundation/os

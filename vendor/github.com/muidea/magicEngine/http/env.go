@@ -13,6 +13,8 @@ const (
 	Test string = "test"
 )
 
+const serverName = "magic_engine"
+
 var Env = Dev
 
 var Root string
