@@ -59,7 +59,7 @@ type static struct {
 // MiddleWareHandle 处理静态文件请求的中间件
 func (s *static) MiddleWareHandle(ctx RequestContext, res http.ResponseWriter, req *http.Request) {
 	var err error
-	staticOpt, staticOK := helper.GetValueFromContext[*StaticOptions](ctx.Context(), StaticOptions{})
+	staticOpt, staticOK := helper.GetValueFromContext[*StaticOptions](ctx.Context(), StaticOptionsKey{})
 	if !staticOK {
 		panicInfo("无法获取静态处理器")
 	}
@@ -175,7 +175,7 @@ func (s *static) MiddleWareHandle(ctx RequestContext, res http.ResponseWriter, r
 }
 
 func StaticHandler(ctx context.Context, res http.ResponseWriter, req *http.Request) {
-	staticOpt, staticOK := helper.GetValueFromContext[*StaticOptions](ctx, StaticOptions{})
+	staticOpt, staticOK := helper.GetValueFromContext[*StaticOptions](ctx, StaticOptionsKey{})
 	if !staticOK {
 		panicInfo("无法获取静态处理器")
 	}
