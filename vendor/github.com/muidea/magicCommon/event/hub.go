@@ -122,20 +122,35 @@ type ID2ObserverFuncMap map[string]ObserverFunc
 type actionChannel chan action
 type ID2ActionChanelMap map[string]actionChannel
 
+func notificationEvent(sv Observer, ev Event, re Result) {
+	defer func() {
+		if err := recover(); err != nil {
+			stackInfo := util.GetStack(3)
+			log.Warnf("notify event exception, event:[id-%v, source-%s, destination-%s] \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
+
+			if re != nil {
+				re.Set(nil, cd.NewError(cd.Unexpected, fmt.Sprintf("%v", err)))
+			}
+		}
+	}()
+
+	sv.Notify(ev, re)
+}
+
 func NewHub(capacitySize int) Hub {
 	hub := &hubImpl{
-		Execute:             execute.NewExecute(capacitySize),
-		event2Observer:      ID2ObserverMap{},
-		actionChannel:       make(chan action),
-		event2ActionChannel: ID2ActionChanelMap{},
-		terminateFlag:       false,
+		Execute:                  execute.NewExecute(capacitySize),
+		event2Observer:           ID2ObserverMap{},
+		hubActionChannel:         make(chan action),
+		observerID2ActionChannel: ID2ActionChanelMap{},
+		terminateFlag:            false,
 	}
 	go hub.run()
 	return hub
 }
 
 func NewSimpleObserver(id string, hub Hub) SimpleObserver {
-	return &simpleObserver{id: id, eventHub: hub, id2ObserverFunc: ID2ObserverFuncMap{}}
+	return &simpleObserver{id: id, eventHub: hub, eventID2ObserverFunc: ID2ObserverFuncMap{}}
 }
 
 func MatchValue(pattern, val string) bool {
@@ -287,34 +302,32 @@ func (s actionChannel) run(hubPtr *hubImpl) {
 			break
 		}
 
-		actionFunc := func() {
-			switch actionData.Code() {
-			case subscribe:
-				data := actionData.(*subscribeData)
-				hubPtr.subscribeInternal(data.eventID, data.observer)
-				data.result <- true
-			case unsubscribe:
-				data := actionData.(*unsubscribeData)
-				hubPtr.unsubscribeInternal(data.eventID, data.observer)
-				data.result <- true
-			case post:
-				data := actionData.(*postData)
-				hubPtr.postInternal(data.event)
-			case send:
-				data := actionData.(*sendData)
-				result := NewResult(data.event.ID(), data.event.Source(), data.event.Destination())
-				hubPtr.sendInternal(data.event, result)
-				data.result <- result
-			case terminate:
-				data := actionData.(*terminateData)
-				data.waitGroup.Done()
-				data.result <- true
-				terminateFlag = true
-			default:
-			}
+		// 所有操作都顺序执行，以保证同一个观察者的事件顺序
+		// 包括 post 和 send 操作都需要顺序执行
+		switch actionData.Code() {
+		case subscribe:
+			data := actionData.(*subscribeData)
+			hubPtr.subscribeInternal(data.eventID, data.observer)
+			data.result <- true
+		case unsubscribe:
+			data := actionData.(*unsubscribeData)
+			hubPtr.unsubscribeInternal(data.eventID, data.observer)
+			data.result <- true
+		case post:
+			data := actionData.(*postData)
+			hubPtr.postInternal(data.event)
+		case send:
+			data := actionData.(*sendData)
+			result := NewResult(data.event.ID(), data.event.Source(), data.event.Destination())
+			hubPtr.sendInternal(data.event, result)
+			data.result <- result
+		case terminate:
+			data := actionData.(*terminateData)
+			data.waitGroup.Done()
+			data.result <- true
+			terminateFlag = true
+		default:
 		}
-
-		hubPtr.Execute.Run(actionFunc)
 
 		if terminateFlag {
 			break
@@ -324,11 +337,12 @@ func (s actionChannel) run(hubPtr *hubImpl) {
 
 type hubImpl struct {
 	execute.Execute
-	event2Lock     sync.RWMutex
-	event2Observer ID2ObserverMap
+	event2ObserverlLock sync.RWMutex
+	event2Observer      ID2ObserverMap
 
-	actionChannel       actionChannel
-	event2ActionChannel ID2ActionChanelMap
+	hubActionChannel         actionChannel
+	observerID2ChanelLock    sync.RWMutex
+	observerID2ActionChannel ID2ActionChanelMap
 
 	terminateFlag bool
 }
@@ -343,7 +357,7 @@ func (s *hubImpl) Subscribe(eventID string, observer Observer) {
 	s.Execute.Run(func() {
 		actionData := &subscribeData{eventID: eventID, observer: observer, result: replay}
 
-		s.actionChannel <- actionData
+		s.hubActionChannel <- actionData
 	})
 	<-replay
 }
@@ -359,7 +373,7 @@ func (s *hubImpl) Unsubscribe(eventID string, observer Observer) {
 	s.Execute.Run(func() {
 		actionData := &unsubscribeData{eventID: eventID, observer: observer, result: replay}
 
-		s.actionChannel <- actionData
+		s.hubActionChannel <- actionData
 	})
 	<-replay
 }
@@ -372,14 +386,14 @@ func (s *hubImpl) Post(ev Event) {
 	actionData := &postData{event: ev}
 	var eventChannel actionChannel
 	func() {
-		s.event2Lock.Lock()
-		defer s.event2Lock.Unlock()
-		channelVal, channelOK := s.event2ActionChannel[ev.Destination()]
+		s.observerID2ChanelLock.Lock()
+		defer s.observerID2ChanelLock.Unlock()
+		channelVal, channelOK := s.observerID2ActionChannel[ev.Destination()]
 		if !channelOK {
 			channelVal = make(actionChannel)
 			go channelVal.run(s)
 
-			s.event2ActionChannel[ev.Destination()] = channelVal
+			s.observerID2ActionChannel[ev.Destination()] = channelVal
 		}
 
 		eventChannel = channelVal
@@ -406,14 +420,14 @@ func (s *hubImpl) Send(ev Event) (ret Result) {
 
 	var eventChannel actionChannel
 	func() {
-		s.event2Lock.Lock()
-		defer s.event2Lock.Unlock()
-		channelVal, channelOK := s.event2ActionChannel[ev.Destination()]
+		s.observerID2ChanelLock.Lock()
+		defer s.observerID2ChanelLock.Unlock()
+		channelVal, channelOK := s.observerID2ActionChannel[ev.Destination()]
 		if !channelOK {
 			channelVal = make(actionChannel)
 			go channelVal.run(s)
 
-			s.event2ActionChannel[ev.Destination()] = channelVal
+			s.observerID2ActionChannel[ev.Destination()] = channelVal
 		}
 
 		eventChannel = channelVal
@@ -442,39 +456,39 @@ func (s *hubImpl) Terminate() {
 	defer close(replay)
 	actionData := &terminateData{result: replay, waitGroup: &waitGroup}
 	go func() {
-		s.event2Lock.Lock()
-		defer s.event2Lock.Unlock()
+		s.observerID2ChanelLock.Lock()
+		defer s.observerID2ChanelLock.Unlock()
 
-		for _, val := range s.event2ActionChannel {
+		for _, val := range s.observerID2ActionChannel {
 			waitGroup.Add(1)
 			val <- actionData
 		}
 	}()
 	waitGroup.Add(1)
-	s.actionChannel <- actionData
+	s.hubActionChannel <- actionData
 
 	<-replay
 
 	waitGroup.Wait()
 
-	s.event2Lock.Lock()
-	defer s.event2Lock.Unlock()
-	for _, val := range s.event2ActionChannel {
+	s.observerID2ChanelLock.Lock()
+	defer s.observerID2ChanelLock.Unlock()
+	for _, val := range s.observerID2ActionChannel {
 		close(val)
 	}
 	s.event2Observer = ID2ObserverMap{}
-	s.event2ActionChannel = ID2ActionChanelMap{}
+	s.observerID2ActionChannel = ID2ActionChanelMap{}
 }
 
 func (s *hubImpl) run() {
-	s.actionChannel.run(s)
+	s.hubActionChannel.run(s)
 
-	close(s.actionChannel)
+	close(s.hubActionChannel)
 }
 
 func (s *hubImpl) subscribeInternal(eventID string, observer Observer) {
-	s.event2Lock.Lock()
-	defer s.event2Lock.Unlock()
+	s.event2ObserverlLock.Lock()
+	defer s.event2ObserverlLock.Unlock()
 
 	observerList, observerOK := s.event2Observer[eventID]
 	if !observerOK {
@@ -494,8 +508,8 @@ func (s *hubImpl) subscribeInternal(eventID string, observer Observer) {
 }
 
 func (s *hubImpl) unsubscribeInternal(eventID string, observer Observer) {
-	s.event2Lock.Lock()
-	defer s.event2Lock.Unlock()
+	s.event2ObserverlLock.Lock()
+	defer s.event2ObserverlLock.Unlock()
 
 	observerList, observerOK := s.event2Observer[eventID]
 	if !observerOK {
@@ -522,8 +536,8 @@ func (s *hubImpl) postInternal(ev Event) {
 	matchList := ObserverList{}
 
 	func() {
-		s.event2Lock.RLock()
-		defer s.event2Lock.RUnlock()
+		s.event2ObserverlLock.RLock()
+		defer s.event2ObserverlLock.RUnlock()
 		for key, value := range s.event2Observer {
 			if MatchValue(key, ev.ID()) {
 				for _, sv := range value {
@@ -536,15 +550,7 @@ func (s *hubImpl) postInternal(ev Event) {
 	}()
 
 	for _, sv := range matchList {
-		func() {
-			defer func() {
-				if err := recover(); err != nil {
-					stackInfo := util.GetStack(3)
-					log.Warnf("notify event exception, event:[id-%v, source-%s, destination-%s], \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
-				}
-			}()
-			sv.Notify(ev, nil)
-		}()
+		notificationEvent(sv, ev, nil)
 	}
 }
 
@@ -553,8 +559,8 @@ func (s *hubImpl) sendInternal(ev Event, re Result) {
 	finalFlag := false
 
 	func() {
-		s.event2Lock.RLock()
-		defer s.event2Lock.RUnlock()
+		s.event2ObserverlLock.RLock()
+		defer s.event2ObserverlLock.RUnlock()
 		for key, value := range s.event2Observer {
 			if MatchValue(key, ev.ID()) {
 				for _, sv := range value {
@@ -568,20 +574,7 @@ func (s *hubImpl) sendInternal(ev Event, re Result) {
 	}()
 
 	for _, sv := range matchList {
-		func() {
-			defer func() {
-				if err := recover(); err != nil {
-					stackInfo := util.GetStack(3)
-					log.Warnf("notify event exception, event:[id-%v, source-%s, destination-%s] \nPANIC:%v \nstack:%s", ev.ID(), ev.Source(), ev.Destination(), err, stackInfo)
-
-					if re != nil {
-						re.Set(nil, cd.NewError(cd.Unexpected, fmt.Sprintf("%v", err)))
-					}
-				}
-			}()
-
-			sv.Notify(ev, re)
-		}()
+		notificationEvent(sv, ev, re)
 	}
 
 	if !finalFlag && re != nil {
@@ -590,10 +583,10 @@ func (s *hubImpl) sendInternal(ev Event, re Result) {
 }
 
 type simpleObserver struct {
-	id              string
-	eventHub        Hub
-	id2ObserverFunc ID2ObserverFuncMap
-	idLock          sync.RWMutex
+	id                   string
+	eventHub             Hub
+	eventID2ObserverFunc ID2ObserverFuncMap
+	eventIDLock          sync.RWMutex
 }
 
 func (s *simpleObserver) ID() string {
@@ -603,10 +596,10 @@ func (s *simpleObserver) ID() string {
 func (s *simpleObserver) Notify(ev Event, re Result) {
 	var funcVal ObserverFunc
 	func() {
-		s.idLock.RLock()
-		defer s.idLock.RUnlock()
+		s.eventIDLock.RLock()
+		defer s.eventIDLock.RUnlock()
 
-		for k, v := range s.id2ObserverFunc {
+		for k, v := range s.eventID2ObserverFunc {
 			if ev.Match(k) {
 				funcVal = v
 				break
@@ -635,16 +628,16 @@ func (s *simpleObserver) Notify(ev Event, re Result) {
 func (s *simpleObserver) Subscribe(eventID string, observerFunc ObserverFunc) {
 	okFlag := false
 	func() {
-		s.idLock.Lock()
-		defer s.idLock.Unlock()
+		s.eventIDLock.Lock()
+		defer s.eventIDLock.Unlock()
 
-		_, ok := s.id2ObserverFunc[eventID]
+		_, ok := s.eventID2ObserverFunc[eventID]
 		if ok {
 			log.Warnf("duplicate eventID:%v", eventID)
 			return
 		}
 
-		s.id2ObserverFunc[eventID] = observerFunc
+		s.eventID2ObserverFunc[eventID] = observerFunc
 		okFlag = true
 	}()
 
@@ -656,16 +649,16 @@ func (s *simpleObserver) Subscribe(eventID string, observerFunc ObserverFunc) {
 func (s *simpleObserver) Unsubscribe(eventID string) {
 	okFlag := false
 	func() {
-		s.idLock.Lock()
-		defer s.idLock.Unlock()
+		s.eventIDLock.Lock()
+		defer s.eventIDLock.Unlock()
 
-		_, ok := s.id2ObserverFunc[eventID]
+		_, ok := s.eventID2ObserverFunc[eventID]
 		if !ok {
 			log.Warnf("not exist eventID:%v", eventID)
 			return
 		}
 
-		delete(s.id2ObserverFunc, eventID)
+		delete(s.eventID2ObserverFunc, eventID)
 		okFlag = true
 	}()
 
