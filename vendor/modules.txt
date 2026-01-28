@@ -139,7 +139,7 @@ github.com/mark3labs/mcp-go/mcp
 github.com/mark3labs/mcp-go/server
 github.com/mark3labs/mcp-go/util
 # github.com/muidea/magicCommon v1.5.0 => ../magicCommon
-## explicit; go 1.24
+## explicit; go 1.24.0
 github.com/muidea/magicCommon/def
 github.com/muidea/magicCommon/event
 github.com/muidea/magicCommon/execute
@@ -159,7 +159,7 @@ github.com/muidea/magicCommon/framework/service
 github.com/muidea/magicCommon/session
 github.com/muidea/magicCommon/task
 # github.com/muidea/magicEngine v0.0.0-00010101000000-000000000000 => ../magicEngine
-## explicit; go 1.24
+## explicit; go 1.24.0
 github.com/muidea/magicEngine/http
 github.com/muidea/magicEngine/sse
 # github.com/muidea/seelog v1.0.0
